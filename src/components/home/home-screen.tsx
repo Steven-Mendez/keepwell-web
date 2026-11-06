@@ -14,7 +14,6 @@ import {
 import { AnimatedNumber } from "@/components/kw/animated-number"
 import { AnimatedList, SpringFill } from "@/components/kw/motion"
 import { KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
-import type { KWIconName } from "@/components/kw/kw-icon-data"
 import { CategoryBadge, Page } from "@/components/kw/primitives"
 import { TransactionRow } from "@/components/kw/transaction-row"
 import { toast } from "@/components/ui/toast"
@@ -26,19 +25,15 @@ import {
   useTransactionDisplay,
 } from "@/hooks/use-ledger"
 import {
-  compareMonths,
   confirmPlannedTransaction,
   formatAmount,
   formatMoney,
   formatNumber,
   formatRate,
   homeOverview,
-  nextOccurrence,
   roundedHalfUp,
   savingsRate,
   settingsRate,
-  startOfDay,
-  yearMonthContaining,
   type Decimal,
   type HomeOverview,
   type Ledger,
@@ -46,14 +41,16 @@ import {
 import { useT, type Translator } from "@/lib/i18n"
 import {
   accountName,
-  cardShortName,
   categoryName,
   dayLabel,
   monthName,
+  type TransactionDisplay,
 } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
-import type { Account } from "@/lib/schema"
+import type { Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
+
+import { homeReminders, type Reminder } from "./home-reminders"
 
 const MASK = BALANCE_MASK
 
@@ -79,7 +76,106 @@ export function HomeScreen() {
   const display = useTransactionDisplay(ledger)
   const { openEditor, showDetail } = useAppActions()
   const [hidden, toggleHidden] = useHiddenBalances()
-  // Drafts being confirmed slide out of the list before the ledger drops them (iOS animates removal).
+  const { confirming, confirmDraft } = useConfirmDraft(t)
+  // Fixed per visit so the greeting and "this month" don't change under the person.
+  const [now] = useState(() => new Date())
+  useOpenEditorFromOnboarding(openEditor)
+  const overview = useMemo(
+    () => (ledger ? homeOverview(ledger, now) : undefined),
+    [ledger, now]
+  )
+
+  if (!ledger || !overview || !display) return <HomeSkeleton />
+
+  const hasCredit = ledger.accounts.some((account) => account.kind === "credit")
+  const reminders = homeReminders(t, ledger, overview, now)
+  const recent = ledger.transactions
+    .filter((transaction) => transaction.status === "confirmed")
+    .slice(0, 8)
+  const onSelect = (tx: Transaction) => showDetail(tx.id)
+
+  return (
+    <div className="flex flex-col">
+      <Hero
+        t={t}
+        overview={overview}
+        name={name}
+        now={now}
+        hidden={hidden}
+        onToggleHidden={toggleHidden}
+        month={
+          <MonthCard
+            t={t}
+            ledger={ledger}
+            overview={overview}
+            hidden={hidden}
+            variant="glass"
+          />
+        }
+      >
+        <HeroActions t={t} hasCredit={hasCredit} />
+      </Hero>
+
+      <Page className="pt-2 md:pt-2">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="flex min-w-0 flex-col gap-6">
+            {reminders.length > 0 ? <Reminders reminders={reminders} /> : null}
+
+            <RecentSection
+              t={t}
+              recent={recent}
+              display={display}
+              now={now}
+              onSelect={onSelect}
+            />
+
+            {overview.planned.length > 0 ? (
+              <DraftsSection
+                t={t}
+                overview={overview}
+                display={display}
+                now={now}
+                hidden={hidden}
+                confirming={confirming}
+                onConfirm={confirmDraft}
+                onSelect={onSelect}
+              />
+            ) : null}
+          </div>
+
+          <aside className="flex min-w-0 flex-col gap-6">
+            {/* From lg the month lives in the hero (glass panel); phones keep iOS's card here. */}
+            <div className="lg:hidden">
+              <MonthCard
+                t={t}
+                ledger={ledger}
+                overview={overview}
+                hidden={hidden}
+              />
+            </div>
+
+            <QuickLog
+              t={t}
+              ledger={ledger}
+              categoryIds={overview.frequentExpenseCategoryIds}
+              hasCredit={hasCredit}
+            />
+
+            <AccountsSection
+              t={t}
+              ledger={ledger}
+              overview={overview}
+              hidden={hidden}
+            />
+          </aside>
+        </div>
+      </Page>
+    </div>
+  )
+}
+
+/** Drafts being confirmed slide out of the list before the ledger drops them (iOS animates removal). */
+function useConfirmDraft(t: Translator) {
   const [confirming, setConfirming] = useState<ReadonlySet<string>>(new Set())
   const confirmDraft = (id: string, description: string) => {
     setConfirming((current) => new Set(current).add(id))
@@ -107,10 +203,14 @@ export function HomeScreen() {
         )
     }, 200)
   }
-  // Fixed per visit so the greeting and "this month" don't change under the person.
-  const [now] = useState(() => new Date())
+  return { confirming, confirmDraft }
+}
+
+/** "Log first expense" at the end of onboarding lands here with the editor open. */
+function useOpenEditorFromOnboarding(
+  openEditor: ReturnType<typeof useAppActions>["openEditor"]
+) {
   useEffect(() => {
-    // "Log first expense" at the end of onboarding lands here with the editor open.
     try {
       if (sessionStorage.getItem("keepwell.openEditor") === "expense") {
         sessionStorage.removeItem("keepwell.openEditor")
@@ -118,286 +218,266 @@ export function HomeScreen() {
       }
     } catch {}
   }, [openEditor])
-  const overview = useMemo(
-    () => (ledger ? homeOverview(ledger, now) : undefined),
-    [ledger, now]
-  )
+}
 
-  if (!ledger || !overview || !display) return <HomeSkeleton />
-
-  const hasCredit = ledger.accounts.some((account) => account.kind === "credit")
-  const reminders = homeReminders(t, ledger, overview, now)
-  const recent = ledger.transactions
-    .filter((transaction) => transaction.status === "confirmed")
-    .slice(0, 8)
-
+/** The hero's four translucent actions. */
+function HeroActions({ t, hasCredit }: { t: Translator; hasCredit: boolean }) {
+  const { openEditor } = useAppActions()
   return (
-    <div className="flex flex-col">
-      <Hero
-        t={t}
-        overview={overview}
-        name={name}
-        now={now}
-        hidden={hidden}
-        onToggleHidden={toggleHidden}
-        month={
-          <MonthCard
-            t={t}
-            ledger={ledger}
-            overview={overview}
-            hidden={hidden}
-            variant="glass"
-          />
-        }
-      >
-        {/* Phones only: on desktop "Log transaction" in the sidebar and the N/E/I/T shortcuts cover these. */}
-        <div className="grid w-full max-w-md grid-cols-4 gap-2 lg:hidden">
-          <KWActionButton
-            icon="plus"
-            title={t.in("home", "Expense")}
-            variant="translucent"
-            shortcut="E"
-            onClick={() => openEditor({ mode: "create", type: "expense" })}
-          />
-          <KWActionButton
-            icon="arrowDownLeft"
-            title={t.in("home", "action.income")}
-            variant="translucent"
-            shortcut="I"
-            onClick={() => openEditor({ mode: "create", type: "income" })}
-          />
-          <KWActionButton
-            icon="transfer"
-            title={t.in("home", "Move")}
-            variant="translucent"
-            shortcut="T"
-            onClick={() => openEditor({ mode: "create", type: "transfer" })}
-          />
-          <KWActionButton
-            icon="creditCard"
-            title={t.in("home", "Pay card")}
-            variant="translucent"
-            disabled={!hasCredit}
-            onClick={() => openEditor({ mode: "create", type: "cardPayment" })}
-          />
-        </div>
-      </Hero>
+    // Phones only: on desktop "Log transaction" in the sidebar and the N/E/I/T shortcuts cover these.
+    <div className="grid w-full max-w-md grid-cols-4 gap-2 lg:hidden">
+      <KWActionButton
+        icon="plus"
+        title={t.in("home", "Expense")}
+        variant="translucent"
+        shortcut="E"
+        onClick={() => openEditor({ mode: "create", type: "expense" })}
+      />
+      <KWActionButton
+        icon="arrowDownLeft"
+        title={t.in("home", "action.income")}
+        variant="translucent"
+        shortcut="I"
+        onClick={() => openEditor({ mode: "create", type: "income" })}
+      />
+      <KWActionButton
+        icon="transfer"
+        title={t.in("home", "Move")}
+        variant="translucent"
+        shortcut="T"
+        onClick={() => openEditor({ mode: "create", type: "transfer" })}
+      />
+      <KWActionButton
+        icon="creditCard"
+        title={t.in("home", "Pay card")}
+        variant="translucent"
+        disabled={!hasCredit}
+        onClick={() => openEditor({ mode: "create", type: "cardPayment" })}
+      />
+    </div>
+  )
+}
 
-      <Page className="pt-2 md:pt-2">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="flex min-w-0 flex-col gap-6">
-            {reminders.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {reminders.map((reminder) => (
-                  <div
-                    key={reminder.id}
-                    className="flex gap-3 rounded-2xl bg-card p-4"
-                  >
-                    <span
-                      className={cn(
-                        "flex size-10 shrink-0 items-center justify-center rounded-full",
-                        REMINDER_TONES[reminder.tone]
-                      )}
-                    >
-                      <KWIcon name={reminder.icon} size={20} />
-                    </span>
-                    <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <p className="type-label text-foreground">
-                        {reminder.title}
-                      </p>
-                      <p className="type-caption text-muted-foreground">
-                        {reminder.body}
-                      </p>
-                      {reminder.action ? (
-                        <KWButton
-                          size="mini"
-                          variant="primary"
-                          className="mt-2 self-start"
-                          onClick={reminder.action.run}
-                        >
-                          {reminder.action.label}
-                        </KWButton>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-
-            <KWSection
-              title={t.in("home", "Recent")}
-              action={
-                recent.length > 0 ? (
-                  <SeeAll
-                    href="/transactions"
-                    label={t.in("home", "See all")}
-                  />
-                ) : undefined
-              }
-            >
-              <div className={GROUPED_LIST}>
-                {recent.length === 0 ? (
-                  <KWEmptyState
-                    icon="list"
-                    title={t.in("home", "No transactions yet")}
-                    message={t.in(
-                      "home",
-                      "Log your first expense, income or transfer and you will see your month here."
-                    )}
-                    action={
-                      <KWButton
-                        icon="plus"
-                        shortcut="N"
-                        onClick={() => openEditor()}
-                      >
-                        {t.in("home", "Log transaction")}
-                      </KWButton>
-                    }
-                  />
-                ) : (
-                  <AnimatedList>
-                    {recent.map((transaction) => (
-                      <TransactionRow
-                        key={transaction.id}
-                        transaction={transaction}
-                        display={display}
-                        onSelect={(tx) => showDetail(tx.id)}
-                        dateLabel={dayLabel(t, new Date(transaction.date), now)}
-                      />
-                    ))}
-                  </AnimatedList>
-                )}
-              </div>
-            </KWSection>
-
-            {overview.planned.length > 0 ? (
-              <KWSection
-                title={t.in(
-                  "home",
-                  "Drafts · %lld",
-                  overview.plannedSummary.count
-                )}
-                action={
-                  <SeeAll
-                    href="/transactions?filter=planned"
-                    label={t.in("home", "See all")}
-                  />
-                }
+/** iOS's notifications, shown in place as cards above the recent movements. */
+function Reminders({ reminders }: { reminders: readonly Reminder[] }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {reminders.map((reminder) => (
+        <div key={reminder.id} className="flex gap-3 rounded-2xl bg-card p-4">
+          <span
+            className={cn(
+              "flex size-10 shrink-0 items-center justify-center rounded-full",
+              REMINDER_TONES[reminder.tone]
+            )}
+          >
+            <KWIcon name={reminder.icon} size={20} />
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <p className="type-label text-foreground">{reminder.title}</p>
+            <p className="type-caption text-muted-foreground">
+              {reminder.body}
+            </p>
+            {reminder.action ? (
+              <KWButton
+                size="mini"
+                variant="primary"
+                className="mt-2 self-start"
+                onClick={reminder.action.run}
               >
-                <div className={GROUPED_LIST}>
-                  <p className="px-4 py-3 type-caption text-muted-foreground">
-                    {plannedCaption(t, overview, hidden)}
-                  </p>
-                  <AnimatedList>
-                    {overview.planned.map((transaction) => (
-                      <TransactionRow
-                        key={transaction.id}
-                        transaction={transaction}
-                        display={display}
-                        onSelect={(tx) => showDetail(tx.id)}
-                        dateLabel={dayLabel(t, new Date(transaction.date), now)}
-                        className={
-                          confirming.has(transaction.id)
-                            ? "animate-row-out"
-                            : undefined
-                        }
-                        trailing={
-                          <KWButton
-                            size="mini"
-                            disabled={confirming.has(transaction.id)}
-                            onClick={() =>
-                              confirmDraft(
-                                transaction.id,
-                                transaction.description
-                              )
-                            }
-                          >
-                            {t.in("home", "Confirm")}
-                          </KWButton>
-                        }
-                      />
-                    ))}
-                  </AnimatedList>
-                </div>
-              </KWSection>
+                {reminder.action.label}
+              </KWButton>
             ) : null}
           </div>
-
-          <aside className="flex min-w-0 flex-col gap-6">
-            {/* From lg the month lives in the hero (glass panel); phones keep iOS's card here. */}
-            <div className="lg:hidden">
-              <MonthCard
-                t={t}
-                ledger={ledger}
-                overview={overview}
-                hidden={hidden}
-              />
-            </div>
-
-            <QuickLog
-              t={t}
-              ledger={ledger}
-              categoryIds={overview.frequentExpenseCategoryIds}
-              hasCredit={hasCredit}
-            />
-
-            <KWSection
-              title={t.in("accounts", "Accounts")}
-              action={
-                <SeeAll href="/accounts" label={t.in("home", "See all")} />
-              }
-            >
-              <KWGroupedCard>
-                {overview.balances.map(({ account, balance }) => {
-                  const card = ledger.cards.find(
-                    (candidate) =>
-                      candidate.accountId === account.id &&
-                      candidate.kind === "debit"
-                  )
-                  return (
-                    <Link
-                      key={account.id}
-                      href={`/accounts?id=${account.id}`}
-                      className="flex min-h-12 items-center gap-3 px-4 py-2.5 press-row outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50"
-                    >
-                      <KWMiniCard
-                        kind={account.kind === "cash" ? "cash" : "palette"}
-                        color={card?.color}
-                        size="tiny"
-                      />
-                      <span className="min-w-0 flex-1 truncate type-label text-foreground">
-                        {accountName(account)}
-                      </span>
-                      <AnimatedNumber
-                        value={hidden ? MASK : formatMoney(balance)}
-                        className="type-label text-foreground"
-                      />
-                    </Link>
-                  )
-                })}
-                {overview.cardDebt ? (
-                  <Link
-                    href="/accounts"
-                    className="flex min-h-12 items-center gap-3 px-4 py-2.5 press-row outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50"
-                  >
-                    <span className="flex w-8 justify-center text-text-faint">
-                      <KWIcon name="creditCard" size={18} />
-                    </span>
-                    <span className="min-w-0 flex-1 truncate type-label text-text-secondary">
-                      {t.in("home", "Cards (debt)")}
-                    </span>
-                    <AnimatedNumber
-                      value={hidden ? MASK : formatMoney(overview.cardDebt)}
-                      className="type-label text-foreground"
-                    />
-                  </Link>
-                ) : null}
-              </KWGroupedCard>
-            </KWSection>
-          </aside>
         </div>
-      </Page>
+      ))}
     </div>
+  )
+}
+
+/** iOS "Recent": the last confirmed movements, or the empty state that invites the first one. */
+function RecentSection({
+  t,
+  recent,
+  display,
+  now,
+  onSelect,
+}: {
+  t: Translator
+  recent: readonly Transaction[]
+  display: TransactionDisplay
+  now: Date
+  onSelect: (transaction: Transaction) => void
+}) {
+  const { openEditor } = useAppActions()
+  return (
+    <KWSection
+      title={t.in("home", "Recent")}
+      action={
+        recent.length > 0 ? (
+          <SeeAll href="/transactions" label={t.in("home", "See all")} />
+        ) : undefined
+      }
+    >
+      <div className={GROUPED_LIST}>
+        {recent.length === 0 ? (
+          <KWEmptyState
+            icon="list"
+            title={t.in("home", "No transactions yet")}
+            message={t.in(
+              "home",
+              "Log your first expense, income or transfer and you will see your month here."
+            )}
+            action={
+              <KWButton icon="plus" shortcut="N" onClick={() => openEditor()}>
+                {t.in("home", "Log transaction")}
+              </KWButton>
+            }
+          />
+        ) : (
+          <AnimatedList>
+            {recent.map((transaction) => (
+              <TransactionRow
+                key={transaction.id}
+                transaction={transaction}
+                display={display}
+                onSelect={onSelect}
+                dateLabel={dayLabel(t, new Date(transaction.date), now)}
+              />
+            ))}
+          </AnimatedList>
+        )}
+      </div>
+    </KWSection>
+  )
+}
+
+/** iOS drafts section: planned movements with the total and a Confirm button on each row. */
+function DraftsSection({
+  t,
+  overview,
+  display,
+  now,
+  hidden,
+  confirming,
+  onConfirm,
+  onSelect,
+}: {
+  t: Translator
+  overview: HomeOverview
+  display: TransactionDisplay
+  now: Date
+  hidden: boolean
+  confirming: ReadonlySet<string>
+  onConfirm: (id: string, description: string) => void
+  onSelect: (transaction: Transaction) => void
+}) {
+  return (
+    <KWSection
+      title={t.in("home", "Drafts · %lld", overview.plannedSummary.count)}
+      action={
+        <SeeAll
+          href="/transactions?filter=planned"
+          label={t.in("home", "See all")}
+        />
+      }
+    >
+      <div className={GROUPED_LIST}>
+        <p className="px-4 py-3 type-caption text-muted-foreground">
+          {plannedCaption(t, overview, hidden)}
+        </p>
+        <AnimatedList>
+          {overview.planned.map((transaction) => (
+            <TransactionRow
+              key={transaction.id}
+              transaction={transaction}
+              display={display}
+              onSelect={onSelect}
+              dateLabel={dayLabel(t, new Date(transaction.date), now)}
+              className={
+                confirming.has(transaction.id) ? "animate-row-out" : undefined
+              }
+              trailing={
+                <KWButton
+                  size="mini"
+                  disabled={confirming.has(transaction.id)}
+                  onClick={() =>
+                    onConfirm(transaction.id, transaction.description)
+                  }
+                >
+                  {t.in("home", "Confirm")}
+                </KWButton>
+              }
+            />
+          ))}
+        </AnimatedList>
+      </div>
+    </KWSection>
+  )
+}
+
+/** iOS accounts section: each balance with its card colour, then the credit cards' debt. */
+function AccountsSection({
+  t,
+  ledger,
+  overview,
+  hidden,
+}: {
+  t: Translator
+  ledger: Ledger
+  overview: HomeOverview
+  hidden: boolean
+}) {
+  return (
+    <KWSection
+      title={t.in("accounts", "Accounts")}
+      action={<SeeAll href="/accounts" label={t.in("home", "See all")} />}
+    >
+      <KWGroupedCard>
+        {overview.balances.map(({ account, balance }) => {
+          const card = ledger.cards.find(
+            (candidate) =>
+              candidate.accountId === account.id && candidate.kind === "debit"
+          )
+          return (
+            <Link
+              key={account.id}
+              href={`/accounts?id=${account.id}`}
+              className="flex min-h-12 items-center gap-3 px-4 py-2.5 press-row outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50"
+            >
+              <KWMiniCard
+                kind={account.kind === "cash" ? "cash" : "palette"}
+                color={card?.color}
+                size="tiny"
+              />
+              <span className="min-w-0 flex-1 truncate type-label text-foreground">
+                {accountName(account)}
+              </span>
+              <AnimatedNumber
+                value={hidden ? MASK : formatMoney(balance)}
+                className="type-label text-foreground"
+              />
+            </Link>
+          )
+        })}
+        {overview.cardDebt ? (
+          <Link
+            href="/accounts"
+            className="flex min-h-12 items-center gap-3 px-4 py-2.5 press-row outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50"
+          >
+            <span className="flex w-8 justify-center text-text-faint">
+              <KWIcon name="creditCard" size={18} />
+            </span>
+            <span className="min-w-0 flex-1 truncate type-label text-text-secondary">
+              {t.in("home", "Cards (debt)")}
+            </span>
+            <AnimatedNumber
+              value={hidden ? MASK : formatMoney(overview.cardDebt)}
+              className="type-label text-foreground"
+            />
+          </Link>
+        ) : null}
+      </KWGroupedCard>
+    </KWSection>
   )
 }
 
@@ -794,131 +874,4 @@ function plannedCaption(
     "They don't count toward balances until you confirm them · %@",
     total
   )
-}
-
-interface Reminder {
-  id: string
-  icon: KWIconName
-  tone: "pending" | "accent" | "negative"
-  title: string
-  body: string
-  action?: { label: string; run: () => void }
-}
-
-/**
- * What iOS sends as notifications, shown in place on the web: drafts due today, card payments
- * within the reminder window, statements closing today and plastics expiring this month.
- */
-function homeReminders(
-  t: Translator,
-  ledger: Ledger,
-  overview: HomeOverview,
-  now: Date
-): Reminder[] {
-  const today = startOfDay(now).getTime()
-  const endOfToday = today + 86_400_000
-  const display = (account: Account) => {
-    const holder = ledger.cards.find(
-      (card) => card.accountId === account.id && card.kind === "creditHolder"
-    )
-    return holder ? cardShortName(t, holder) : accountName(account)
-  }
-  const reminders: Reminder[] = []
-  const cardsByID = new Map(ledger.cards.map((card) => [card.id, card]))
-  const accountsByID = new Map(
-    ledger.accounts.map((account) => [account.id, account])
-  )
-  for (const transaction of overview.planned) {
-    if (new Date(transaction.date).getTime() >= endOfToday) continue
-    const card = transaction.cardId
-      ? cardsByID.get(transaction.cardId)
-      : undefined
-    const account = accountsByID.get(transaction.accountId)
-    const method = card
-      ? cardShortName(t, card)
-      : account
-        ? accountName(account)
-        : ""
-    reminders.push({
-      id: `planned-${transaction.id}`,
-      icon: "clock",
-      tone: "pending",
-      title: t.in("home", "Draft for today"),
-      body: t.in(
-        "home",
-        "%@ · %@ from %@. Has it been paid?",
-        transaction.description,
-        formatAmount(transaction.amount, transaction.currency),
-        method
-      ),
-      action: {
-        label: t.in("home", "Confirm"),
-        run: () => void confirmPlannedTransaction(ledgerStore, transaction.id),
-      },
-    })
-  }
-  for (const account of ledger.accounts) {
-    if (account.kind !== "credit") continue
-    const dueDay = account.creditTerms?.dueDay
-    if (dueDay) {
-      const due = nextOccurrence(dueDay, now)
-      const days = Math.round((due.getTime() - today) / 86_400_000)
-      if (days <= overview.paymentReminderDaysBefore) {
-        reminders.push({
-          id: `payment-${account.id}`,
-          icon: "creditCard",
-          tone: "negative",
-          title: t.in(
-            "home",
-            "%@: payment in %lld days",
-            display(account),
-            days
-          ),
-          body: t.in(
-            "home",
-            "Pay before day %lld so it doesn't generate interest.",
-            dueDay
-          ),
-        })
-      }
-    }
-    const cutoffDay = account.creditTerms?.cutoffDay
-    if (cutoffDay && nextOccurrence(cutoffDay, now).getTime() === today) {
-      reminders.push({
-        id: `cutoff-${account.id}`,
-        icon: "clock",
-        tone: "accent",
-        title: t.in("home", "%@: statement closes today", display(account)),
-        body: t.in(
-          "home",
-          "From tomorrow, purchases go to next month's statement."
-        ),
-      })
-    }
-  }
-  const thisMonth = yearMonthContaining(now)
-  for (const card of ledger.cards) {
-    if (!card.expiry || compareMonths(card.expiry, thisMonth) !== 0) continue
-    const services = overview.cardSubscriptions.get(card.id) ?? []
-    reminders.push({
-      id: `expiry-${card.id}`,
-      icon: "creditCard",
-      tone: "pending",
-      title: t.in("home", "%@ expires this month", cardShortName(t, card)),
-      body:
-        services.length === 0
-          ? t.in(
-              "home",
-              "Update it wherever it's saved before it stops working."
-            )
-          : t.in(
-              "home",
-              "Update it in %@ before it stops working.",
-              new Intl.ListFormat(t.locale, { type: "conjunction" }).format(
-                services
-              )
-            ),
-    })
-  }
-  return reminders
 }

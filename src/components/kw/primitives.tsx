@@ -2,7 +2,12 @@
 
 import { ChevronRightIcon, type LucideIcon } from "lucide-react"
 import Link from "next/link"
-import { createElement, type ComponentProps, type ReactNode } from "react"
+import {
+  createElement,
+  type ComponentProps,
+  type CSSProperties,
+  type ReactNode,
+} from "react"
 
 import { AnimatedNumber } from "@/components/kw/animated-number"
 import {
@@ -305,8 +310,46 @@ export function CardArt({
   size?: "sm" | "md"
 }) {
   const art = color ?? "azul"
-  const light = cardArtIsLight(art)
   const look = CARD_ART_STYLE[art] ?? CARD_ART_STYLE.azul
+  const small = size === "sm"
+  return (
+    <div
+      className={cn(
+        "relative flex aspect-[1.586] w-full flex-col justify-between overflow-hidden rounded-[var(--radius-card)] p-4 select-none",
+        small && "rounded-xl p-3",
+        className
+      )}
+      style={cardArtSurface(art, look, size)}
+      data-kind={kind}
+    >
+      <CardOrbs orb={look.orb} />
+      <CardArtHeader
+        bank={bank}
+        caption={caption}
+        badge={badge}
+        small={small}
+      />
+      {!small && showsChip ? <CardChip /> : null}
+      <CardArtFooter
+        holder={holder}
+        lastFour={lastFour}
+        showsChip={showsChip}
+        network={network}
+        kindLabel={kindLabel}
+        small={small}
+      />
+    </div>
+  )
+}
+
+type CardArtLook = (typeof CARD_ART_STYLE)[CardColor]
+
+/** The face's gradient, edge highlight and shadow, and the ink printed on it. */
+function cardArtSurface(
+  art: CardColor,
+  look: CardArtLook,
+  size: "sm" | "md"
+): CSSProperties {
   const stops = [
     `var(--card-art-${art}-from) 0%`,
     look.inner,
@@ -315,101 +358,151 @@ export function CardArt({
     .filter(Boolean)
     .join(", ")
   // TopHighlight: the 1 px light edge along the top; then the palette's glow (large) or a soft drop (thumbnails).
-  const highlight = `inset 0 1px 0 rgb(255 255 255 / ${light ? 0.5 : 0.3})`
+  const highlight = `inset 0 1px 0 rgb(255 255 255 / ${cardArtIsLight(art) ? 0.5 : 0.3})`
   const shadow =
     size === "md"
       ? `${highlight}, ${look.glow}`
       : `${highlight}, 0 8px 20px -8px rgb(0 0 0 / 0.7)`
+  return {
+    backgroundImage: `linear-gradient(135deg, ${stops})`,
+    boxShadow: shadow,
+    color: look.ink ?? "#FFFFFF",
+  }
+}
+
+/** CardOrbs: a soft disc and a thin ring bleeding off the left edge, and a sheen from the top-right corner. */
+function CardOrbs({ orb }: { orb: number }) {
   return (
-    <div
-      className={cn(
-        "relative flex aspect-[1.586] w-full flex-col justify-between overflow-hidden rounded-[var(--radius-card)] p-4 select-none",
-        size === "sm" && "rounded-xl p-3",
-        className
-      )}
-      style={{
-        backgroundImage: `linear-gradient(135deg, ${stops})`,
-        boxShadow: shadow,
-        color: look.ink ?? "#FFFFFF",
-      }}
-      data-kind={kind}
-    >
-      {/* CardOrbs: a soft disc and a thin ring bleeding off the left edge, and a sheen from the top-right corner. */}
+    <>
       <span
         className="pointer-events-none absolute top-[-27.5%] left-[-43.6%] aspect-square w-[92%] rounded-full"
-        style={{ backgroundColor: `rgb(255 255 255 / ${look.orb})` }}
+        style={{ backgroundColor: `rgb(255 255 255 / ${orb})` }}
         aria-hidden
       />
       <span
         className="pointer-events-none absolute top-[-45%] left-[-63%] aspect-square w-[120%] rounded-full border"
-        style={{ borderColor: `rgb(255 255 255 / ${look.orb * 0.9})` }}
+        style={{ borderColor: `rgb(255 255 255 / ${orb * 0.9})` }}
         aria-hidden
       />
       <span
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: `linear-gradient(to bottom left, rgb(255 255 255 / ${look.orb * 1.6}), transparent 45%)`,
+          backgroundImage: `linear-gradient(to bottom left, rgb(255 255 255 / ${orb * 1.6}), transparent 45%)`,
         }}
         aria-hidden
       />
-      <div className="relative flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-col">
-          <span
-            className={cn(
-              "truncate font-bold",
-              size === "sm" ? "type-caption" : "type-heading"
-            )}
-          >
-            {bank}
-          </span>
-          {caption && badge !== undefined ? (
-            <span className="truncate type-micro opacity-80">{caption}</span>
-          ) : null}
-        </div>
-        {badge !== undefined ? (
-          <span className="shrink-0 rounded-full bg-black/22 px-2.5 py-1 type-label font-bold whitespace-nowrap text-white backdrop-blur-md">
-            {badge}
-          </span>
-        ) : caption ? (
-          <span className="type-micro opacity-80">{caption}</span>
+    </>
+  )
+}
+
+/** The bank on top; the caption under it when a badge takes the corner, or in the corner otherwise. */
+function CardArtHeader({
+  bank,
+  caption,
+  badge,
+  small,
+}: {
+  bank: string
+  caption: ReactNode
+  badge: ReactNode
+  small: boolean
+}) {
+  const hasBadge = badge !== undefined
+  return (
+    <div className="relative flex items-start justify-between gap-2">
+      <div className="flex min-w-0 flex-col">
+        <span
+          className={cn(
+            "truncate font-bold",
+            small ? "type-caption" : "type-heading"
+          )}
+        >
+          {bank}
+        </span>
+        {caption && hasBadge ? (
+          <span className="truncate type-micro opacity-80">{caption}</span>
         ) : null}
       </div>
-      {size === "md" && showsChip ? (
-        <span
-          className="relative h-7 w-10 rounded-md shadow-[inset_0_0_0_1px_rgb(0_0_0/0.15)]"
-          style={{
-            backgroundImage:
-              "linear-gradient(135deg, var(--card-art-chip-from), var(--card-art-chip-to))",
-          }}
-          aria-hidden
-        />
-      ) : null}
-      <div className="relative flex items-end justify-between gap-2">
-        <div className="flex min-w-0 flex-col">
-          {holder ? (
-            <span className="truncate type-micro tracking-wider opacity-80">
-              {holder}
-            </span>
-          ) : null}
-          {lastFour || showsChip ? (
-            <span
-              className={cn(
-                "font-mono tracking-widest tabular-nums",
-                size === "sm" ? "type-caption-sm" : "type-label"
-              )}
-            >
-              {lastFour ? `•••• ${lastFour}` : "•••• ••••"}
-            </span>
-          ) : null}
-        </div>
-        <div className="flex flex-col items-end">
-          {network && network !== "other" ? (
-            <NetworkMark network={network} small={size === "sm"} />
-          ) : null}
-          {kindLabel ? (
-            <span className="type-micro opacity-80">{kindLabel}</span>
-          ) : null}
-        </div>
+      <CardArtCorner caption={caption} badge={badge} hasBadge={hasBadge} />
+    </div>
+  )
+}
+
+function CardArtCorner({
+  caption,
+  badge,
+  hasBadge,
+}: {
+  caption: ReactNode
+  badge: ReactNode
+  hasBadge: boolean
+}) {
+  if (hasBadge)
+    return (
+      <span className="shrink-0 rounded-full bg-black/22 px-2.5 py-1 type-label font-bold whitespace-nowrap text-white backdrop-blur-md">
+        {badge}
+      </span>
+    )
+  return caption ? (
+    <span className="type-micro opacity-80">{caption}</span>
+  ) : null
+}
+
+function CardChip() {
+  return (
+    <span
+      className="relative h-7 w-10 rounded-md shadow-[inset_0_0_0_1px_rgb(0_0_0/0.15)]"
+      style={{
+        backgroundImage:
+          "linear-gradient(135deg, var(--card-art-chip-from), var(--card-art-chip-to))",
+      }}
+      aria-hidden
+    />
+  )
+}
+
+/** Holder and number on the left, the network's mark and the kind on the right. */
+function CardArtFooter({
+  holder,
+  lastFour,
+  showsChip,
+  network,
+  kindLabel,
+  small,
+}: {
+  holder: string | undefined
+  lastFour: string | undefined
+  showsChip: boolean
+  network: CardNetwork | undefined
+  kindLabel: string | undefined
+  small: boolean
+}) {
+  return (
+    <div className="relative flex items-end justify-between gap-2">
+      <div className="flex min-w-0 flex-col">
+        {holder ? (
+          <span className="truncate type-micro tracking-wider opacity-80">
+            {holder}
+          </span>
+        ) : null}
+        {lastFour || showsChip ? (
+          <span
+            className={cn(
+              "font-mono tracking-widest tabular-nums",
+              small ? "type-caption-sm" : "type-label"
+            )}
+          >
+            {lastFour ? `•••• ${lastFour}` : "•••• ••••"}
+          </span>
+        ) : null}
+      </div>
+      <div className="flex flex-col items-end">
+        {network && network !== "other" ? (
+          <NetworkMark network={network} small={small} />
+        ) : null}
+        {kindLabel ? (
+          <span className="type-micro opacity-80">{kindLabel}</span>
+        ) : null}
       </div>
     </div>
   )
