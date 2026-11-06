@@ -2,6 +2,8 @@ import { newID } from "@/lib/platform/uuid"
 import {
   accountToRow,
   cardToRow,
+  categorizationRuleToRow,
+  rowToCategorizationRule,
   categoryToRow,
   db,
   loanToRow,
@@ -79,6 +81,7 @@ const allTables = () => [
   db.savings_goals,
   db.loans,
   db.personal_debts,
+  db.categorization_rules,
   db.settings,
   db.sync_outbox,
 ]
@@ -92,7 +95,7 @@ export const backupRepository = {
       async (): Promise<BackupFile> => {
         const settings = await db.settings.get(SETTINGS_ID)
         if (!settings) throw new NothingToBackUpError()
-        const [accounts, cards, categories, transactions, recurringRules, savingsGoals, loans, personalDebts] = await Promise.all([
+        const [accounts, cards, categories, transactions, recurringRules, savingsGoals, loans, personalDebts, categorizationRules] = await Promise.all([
           db.accounts.orderBy("created_at").toArray(),
           db.cards.orderBy("created_at").toArray(),
           db.categories.orderBy("sort_index").toArray(),
@@ -102,6 +105,7 @@ export const backupRepository = {
           db.savings_goals.toArray(),
           db.loans.toArray(),
           db.personal_debts.toArray(),
+          db.categorization_rules.orderBy("sort_index").toArray(),
         ])
         return {
           schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -138,6 +142,11 @@ export const backupRepository = {
           personalDebts: personalDebts
             .sort(byCreation)
             .map((row) => ({ ...rowToPersonalDebt(row), ...audit(row) })),
+          categorizationRules: categorizationRules.map((row, index) => ({
+            ...rowToCategorizationRule(row),
+            sortIndex: index,
+            ...audit(row),
+          })),
         }
       }
     )
@@ -196,6 +205,13 @@ export const backupRepository = {
       ...columns(record),
     }))
 
+    const categorizationRules = [...file.categorizationRules]
+      .sort((a, b) => a.sortIndex - b.sortIndex)
+      .map((record, index) => ({
+        ...categorizationRuleToRow(record, index),
+        ...columns(record),
+      }))
+
     const events: SyncOutboxRow[] = []
     const record = (
       entity: SyncEntity,
@@ -220,6 +236,7 @@ export const backupRepository = {
     record("savingsGoal", savingsGoals)
     record("loan", loans)
     record("personalDebt", personalDebts)
+    record("categorizationRule", categorizationRules)
     events.push({
       id: newID(),
       entity: "settings",
@@ -240,6 +257,7 @@ export const backupRepository = {
       await db.savings_goals.bulkPut(savingsGoals)
       await db.loans.bulkPut(loans)
       await db.personal_debts.bulkPut(personalDebts)
+      await db.categorization_rules.bulkPut(categorizationRules)
       await db.sync_outbox.bulkAdd(events)
     })
 

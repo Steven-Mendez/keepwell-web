@@ -1,6 +1,8 @@
+import { normalizedTags } from "@/lib/domain/tags"
 import type {
   Account,
   Card,
+  CategorizationRule,
   Loan,
   PersonalDebt,
   RecurringRule,
@@ -13,6 +15,7 @@ import type {
 import type {
   AccountRow,
   CardRow,
+  CategorizationRuleRow,
   CategoryRow,
   LoanRow,
   PersonalDebtRow,
@@ -157,7 +160,13 @@ export function transactionToRow(transaction: Transaction): Columns<TransactionR
     is_shared: transaction.isShared,
     note: orNull(transaction.note),
     recurring_id: orNull(transaction.recurringId),
+    tags: normalizedTags(transaction.tags ?? []),
   }
+}
+
+/** `{ tags }` from a row's column, left out when empty (or missing on a row from before version 5). */
+function tagsOf(tags: string[] | undefined): { tags?: string[] } {
+  return tags && tags.length > 0 ? { tags } : {}
 }
 
 export function rowToTransaction(row: TransactionRow): Transaction {
@@ -178,6 +187,7 @@ export function rowToTransaction(row: TransactionRow): Transaction {
     isShared: row.is_shared,
     ...present("note", row.note),
     ...present("recurringId", row.recurring_id ?? null),
+    ...tagsOf(row.tags),
   }
 }
 
@@ -201,6 +211,7 @@ export function recurringRuleToRow(rule: RecurringRule): Columns<RecurringRuleRo
     auto_confirm: rule.autoConfirm,
     is_paused: rule.isPaused,
     note: orNull(rule.note),
+    tags: normalizedTags(rule.tags ?? []),
   }
 }
 
@@ -224,6 +235,28 @@ export function rowToRecurringRule(row: RecurringRuleRow): RecurringRule {
     autoConfirm: row.auto_confirm,
     isPaused: row.is_paused,
     ...present("note", row.note),
+    ...tagsOf(row.tags),
+  }
+}
+
+export function categorizationRuleToRow(rule: CategorizationRule, sortIndex: number): Columns<CategorizationRuleRow> {
+  return {
+    id: rule.id,
+    match: rule.match,
+    category_id: rule.categoryId,
+    kind: rule.kind,
+    tags: normalizedTags(rule.tags ?? []),
+    sort_index: sortIndex,
+  }
+}
+
+export function rowToCategorizationRule(row: CategorizationRuleRow): CategorizationRule {
+  return {
+    id: row.id,
+    match: row.match,
+    categoryId: row.category_id,
+    kind: row.kind,
+    ...tagsOf(row.tags),
   }
 }
 

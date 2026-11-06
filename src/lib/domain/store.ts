@@ -1,4 +1,4 @@
-import type { Account, Card, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
+import type { Account, Card, CategorizationRule, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
 import { DEFAULT_CATEGORIES, isFallbackCategory, orderedCategories, shippedCategory } from "@/lib/schema"
 
 import { DomainError } from "./errors"
@@ -51,6 +51,15 @@ export interface LedgerStore {
   /** Soft-deletes; throws `notFound` for a missing or deleted debt. */
   deletePersonalDebt(id: string): Promise<void>
 
+  /** Alive categorization rules in the person's order, which decides the one that wins. */
+  fetchCategorizationRules(): Promise<CategorizationRule[]>
+  /** A new id goes after the existing ones; an existing one keeps its place. */
+  saveCategorizationRule(rule: CategorizationRule): Promise<void>
+  /** Soft-deletes; throws `notFound` for a missing or deleted rule. */
+  deleteCategorizationRule(id: string): Promise<void>
+  /** Ids left out keep their relative order after the listed ones. */
+  reorderCategorizationRules(ids: readonly string[]): Promise<void>
+
   /** In the person's order, defaults included except the ones deleted. */
   fetchCategories(): Promise<TransactionCategory[]>
   /** A new id goes after the existing ones; an existing one keeps its place. */
@@ -87,13 +96,14 @@ export class InMemoryStore implements LedgerStore, ProfileStore {
   savingsGoals: SavingsGoal[]
   loans: Loan[]
   personalDebts: PersonalDebt[]
+  categorizationRules: CategorizationRule[]
   /** In stored order; ids in `deletedCategoryIds` are tombstones. */
   categories: TransactionCategory[]
   deletedCategoryIds = new Set<string>()
   settings: Settings | undefined
   name: string | undefined
 
-  constructor(seed: Partial<{ accounts: Account[]; cards: Card[]; transactions: Transaction[]; recurringRules: RecurringRule[]; savingsGoals: SavingsGoal[]; loans: Loan[]; personalDebts: PersonalDebt[]; categories: TransactionCategory[]; settings: Settings }> = {}) {
+  constructor(seed: Partial<{ accounts: Account[]; cards: Card[]; transactions: Transaction[]; recurringRules: RecurringRule[]; savingsGoals: SavingsGoal[]; loans: Loan[]; personalDebts: PersonalDebt[]; categorizationRules: CategorizationRule[]; categories: TransactionCategory[]; settings: Settings }> = {}) {
     this.accounts = [...(seed.accounts ?? [])]
     this.cards = [...(seed.cards ?? [])]
     this.transactions = [...(seed.transactions ?? [])]
@@ -101,6 +111,7 @@ export class InMemoryStore implements LedgerStore, ProfileStore {
     this.savingsGoals = [...(seed.savingsGoals ?? [])]
     this.loans = [...(seed.loans ?? [])]
     this.personalDebts = [...(seed.personalDebts ?? [])]
+    this.categorizationRules = [...(seed.categorizationRules ?? [])]
     this.categories = [...(seed.categories ?? DEFAULT_CATEGORIES)]
     this.settings = seed.settings
   }
@@ -182,6 +193,25 @@ export class InMemoryStore implements LedgerStore, ProfileStore {
     this.personalDebts = this.personalDebts.filter((debt) => debt.id !== id)
   }
 
+  async fetchCategorizationRules() {
+    return [...this.categorizationRules]
+  }
+  async saveCategorizationRule(rule: CategorizationRule) {
+    this.categorizationRules = upsert(this.categorizationRules, rule)
+  }
+  async deleteCategorizationRule(id: string) {
+    if (!this.categorizationRules.some((rule) => rule.id === id)) throw DomainError.notFound(id)
+    this.categorizationRules = this.categorizationRules.filter((rule) => rule.id !== id)
+  }
+  async reorderCategorizationRules(ids: readonly string[]) {
+    const rank = new Map<string, number>()
+    ids.forEach((id, index) => {
+      if (!rank.has(id)) rank.set(id, index)
+    })
+    const listed = this.categorizationRules.filter((r) => rank.has(r.id)).sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0))
+    this.categorizationRules = [...listed, ...this.categorizationRules.filter((r) => !rank.has(r.id))]
+  }
+
   async fetchCategories() {
     const present = new Set(this.categories.map((category) => category.id))
     const missing = DEFAULT_CATEGORIES.filter((category) => !present.has(category.id) && !this.deletedCategoryIds.has(category.id))
@@ -218,7 +248,7 @@ export class InMemoryStore implements LedgerStore, ProfileStore {
   }
 
   async atomically<T>(work: () => Promise<T>): Promise<T> {
-    const snapshot = { accounts: this.accounts, cards: this.cards, transactions: this.transactions, recurringRules: this.recurringRules, savingsGoals: this.savingsGoals, loans: this.loans, personalDebts: this.personalDebts, categories: this.categories, settings: this.settings }
+    const snapshot = { accounts: this.accounts, cards: this.cards, transactions: this.transactions, recurringRules: this.recurringRules, savingsGoals: this.savingsGoals, loans: this.loans, personalDebts: this.personalDebts, categorizationRules: this.categorizationRules, categories: this.categories, settings: this.settings }
     try {
       return await work()
     } catch (error) {

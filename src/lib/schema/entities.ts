@@ -133,6 +133,8 @@ export const Transaction = z.object({
   note: z.string().optional(),
   /** The recurring rule that produced it; may point at a deleted rule. */
   recurringId: Id.optional(),
+  /** Normalized tags (`normalizedTag`), each once; left out when there are none. */
+  tags: z.array(z.string()).optional(),
 })
 export type Transaction = z.infer<typeof Transaction>
 
@@ -174,8 +176,28 @@ export const RecurringRule = z.object({
   /** Paused rules produce nothing and keep `nextDate` frozen. */
   isPaused: z.boolean(),
   note: z.string().optional(),
+  /** Copied to each movement it records; left out when there are none. */
+  tags: z.array(z.string()).optional(),
 })
 export type RecurringRule = z.infer<typeof RecurringRule>
+
+export const MAX_RULE_MATCH_LENGTH = 60
+
+/**
+ * "If it says Uber → Transport" (iOS `CategorizationRule`): a new movement whose description or note
+ * contains `match` gets `categoryId` (and `tags`) when the person hasn't picked a category. Rules are
+ * ordered by the repository; the first that matches wins.
+ */
+export const CategorizationRule = z.object({
+  id: Id,
+  /** Compared without case or accents, anywhere in the description or note. */
+  match: z.string().refine((text) => text.trim() !== "", "Can't be empty"),
+  categoryId: z.string(),
+  kind: z.enum(["expense", "income"]),
+  /** Added to the movement; left out when there are none. */
+  tags: z.array(z.string()).optional(),
+})
+export type CategorizationRule = z.infer<typeof CategorizationRule>
 
 /** A goal's deadline: a month, not a day, so it reads the same in every time zone. */
 export const TargetMonth = z.object({

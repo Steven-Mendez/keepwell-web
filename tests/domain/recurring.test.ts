@@ -358,6 +358,7 @@ describe("Backup file version 2", () => {
       savingsGoals: [],
       loans: [],
       personalDebts: [],
+      categorizationRules: [],
     }
     const text = serializeBackupFile(file)
     const parsed = parseBackupFile(text)
