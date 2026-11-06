@@ -30,7 +30,7 @@ import {
   ONBOARDING_PATH,
   RECURRING_NAV,
   SETTINGS_NAV,
-  STANDALONE_PATHS,
+  isStandalonePath,
   type NavItem,
 } from "./navigation"
 
@@ -40,23 +40,25 @@ import {
  * onboarding is finished every route leads to it, as iOS shows onboarding before the tabs.
  */
 export function AppShell({ children }: { children: ReactNode }) {
+  // Full pages of their own (the design system) open for anyone: no chrome, no onboarding gate and
+  // no read of the device's ledger, so a visitor who never set the app up isn't sent to /welcome.
+  if (isStandalonePath(usePathname())) return <>{children}</>
+  return <AppShellGate>{children}</AppShellGate>
+}
+
+function AppShellGate({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const ledger = useLedger()
   const isOnboarding = pathname === ONBOARDING_PATH
-  // Full pages of their own, outside the app's chrome and its onboarding gate.
-  const isStandalone = STANDALONE_PATHS.some((path) =>
-    pathname.startsWith(path)
-  )
   const onboarded = ledger?.settings.hasCompletedOnboarding
 
   useEffect(() => {
-    if (isStandalone) return
     if (onboarded === false && !isOnboarding) router.replace(ONBOARDING_PATH)
     if (onboarded === true && isOnboarding) router.replace("/")
-  }, [onboarded, isOnboarding, isStandalone, router])
+  }, [onboarded, isOnboarding, router])
 
-  if (isOnboarding || isStandalone) return <>{children}</>
+  if (isOnboarding) return <>{children}</>
   // While the first IndexedDB read is in flight (and in the server HTML) the shell is drawn already,
   // each screen showing its own skeleton, so a reload never blanks the window. Only a store known
   // not to be set up yet waits here for the redirect to onboarding.

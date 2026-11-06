@@ -1,6 +1,9 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { useEffect } from "react"
+
+import { isStandalonePath } from "@/components/app/navigation"
 
 import { materializeRecurring, normalizeBankCards } from "@/lib/domain"
 import { requestPersistentStorage } from "@/lib/platform/persistent-storage"
@@ -20,7 +23,10 @@ function materialize() {
  * that came due. Those are produced again whenever the tab comes back to the front (iOS foreground).
  */
 export function AppBootstrap() {
+  // Standalone pages (the design system) don't touch the device's ledger.
+  const standalone = isStandalonePath(usePathname())
   useEffect(() => {
+    if (standalone) return
     void requestPersistentStorage()
     // Logged instead of swallowed: a failed seed leaves Categories empty with no other trace.
     categoryRepository
@@ -37,6 +43,6 @@ export function AppBootstrap() {
       window.removeEventListener("focus", materialize)
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [])
+  }, [standalone])
   return null
 }
