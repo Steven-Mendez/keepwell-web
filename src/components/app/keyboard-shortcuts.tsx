@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 
 import {
   Dialog,
@@ -41,9 +41,12 @@ export function KeyboardShortcuts() {
   const router = useRouter()
   const { openEditor, setPaletteOpen, shortcutsOpen, setShortcutsOpen } =
     useAppActions()
-  const pendingG = useRef<number | undefined>(undefined)
 
+  // The cleanup clears the "g" timer, which the rule can't see because it's set inside the handler.
+  // react-doctor-disable-next-line react-doctor/effect-needs-cleanup
   useEffect(() => {
+    /** The timer of a "g" waiting for its section letter. */
+    let pendingG: number | undefined
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault()
@@ -59,9 +62,9 @@ export function KeyboardShortcuts() {
       )
         return
       const key = event.key.toLowerCase()
-      if (pendingG.current !== undefined) {
-        window.clearTimeout(pendingG.current)
-        pendingG.current = undefined
+      if (pendingG !== undefined) {
+        window.clearTimeout(pendingG)
+        pendingG = undefined
         const target = [...MAIN_NAV, SETTINGS_NAV].find(
           (item) => item.key === key
         )
@@ -77,10 +80,7 @@ export function KeyboardShortcuts() {
       }
       switch (key) {
         case "g":
-          pendingG.current = window.setTimeout(
-            () => (pendingG.current = undefined),
-            1200
-          )
+          pendingG = window.setTimeout(() => (pendingG = undefined), 1200)
           return
         case "n":
           event.preventDefault()
@@ -120,7 +120,10 @@ export function KeyboardShortcuts() {
       }
     }
     window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
+    return () => {
+      window.removeEventListener("keydown", onKeyDown)
+      window.clearTimeout(pendingG)
+    }
   }, [openEditor, router, setPaletteOpen, setShortcutsOpen])
 
   const rows: [string[], string][] = [
