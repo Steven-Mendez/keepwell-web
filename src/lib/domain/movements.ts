@@ -6,6 +6,7 @@ import { DomainError } from "./errors"
 import { INITIAL_CURRENCIES, settingsRate, type Money } from "./money"
 import { balanceOf, checkAmounts, isConfirmed, monthlySummary } from "./rules"
 import type { LedgerStore } from "./store"
+import { tagsField } from "./tags"
 
 // Ports of the CreateTransaction feature domain (MovementType, TransactionDraft, MovementPreview,
 // CreateTransactionUseCases) and TransactionActions.swift.
@@ -88,6 +89,8 @@ export interface TransactionDraft {
   isDraft: boolean
   /** The recurring rule it belongs to; an edit keeps the one it had. */
   recurringId?: string
+  /** Normalized when saved; absent or empty means none. */
+  tags?: string[]
 }
 
 export interface TransactionContext {
@@ -171,6 +174,7 @@ export function validatedTransaction(draft: TransactionDraft, context: Transacti
     isShared: existing?.isShared ?? false,
     ...(note === "" ? {} : { note }),
     ...(recurringId === undefined ? {} : { recurringId }),
+    ...tagsField(draft.tags),
   }
 }
 
@@ -313,5 +317,6 @@ export function draftFrom(transaction: Transaction): TransactionDraft {
     ...(transaction.actualDebitedPrincipal ? { actualDebitedPrincipal: new Decimal(transaction.actualDebitedPrincipal) } : {}),
     note: transaction.note ?? "",
     isDraft: transaction.status === "planned",
+    ...(transaction.tags ? { tags: [...transaction.tags] } : {}),
   }
 }

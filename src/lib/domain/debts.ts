@@ -325,41 +325,83 @@ export interface InstallmentPayment {
 
 /**
  * "Pay installment": records the installment as a confirmed expense through the same use case as a
- * typed movement, then marks it paid. The movement is saved first, so a failure never marks an
- * installment paid without its expense.
+ * typed movement and marks it paid, in one atomic write: a failure records neither, so an
+ * installment is never paid without its expense.
  */
 export async function payLoanInstallment(
   store: LedgerStore,
   payment: InstallmentPayment
 ): Promise<Loan> {
-  const loan = await existingLoan(store, payment.loanId)
-  const number = loanNextNumber(loan)
-  if (number === undefined) throw DomainError.invalidAmount()
-  const saved = await saveTransaction(store, {
-    id: newID(),
-    kind: "expense",
-    amount: dec(loan.installmentAmount),
-    currency: loan.borrowed.currency,
-    categoryId: payment.categoryId,
-    source: payment.source,
-    description: installmentDescription(loan, number),
-    date: payment.date,
-    note: "",
-    isDraft: false,
+  return store.atomically(async () => {
+    const loan = await existingLoan(store, payment.loanId)
+    const number = loanNextNumber(loan)
+    if (number === undefined) throw DomainError.invalidAmount()
+    const saved = await saveTransaction(store, {
+      id: newID(),
+      kind: "expense",
+      amount: dec(loan.installmentAmount),
+      currency: loan.borrowed.currency,
+      categoryId: payment.categoryId,
+      source: payment.source,
+      description: installmentDescription(loan, number),
+      date: payment.date,
+      note: "",
+      isDraft: false,
+    })
+    const paid: Loan = {
+      ...loan,
+      payments: [
+        ...loan.payments,
+        {
+          number,
+          paidAt: payment.date.toISOString(),
+          transactionId: saved.transaction.id,
+        },
+      ].sort((a, b) => a.number - b.number),
+    }
+    await store.saveLoan(paid)
+    return paid
   })
-  const paid: Loan = {
-    ...loan,
-    payments: [
-      ...loan.payments,
-      {
-        number,
-        paidAt: payment.date.toISOString(),
-        transactionId: saved.transaction.id,
-      },
-    ].sort((a, b) => a.number - b.number),
+}
+
+/** iOS `Loan.unpaying(number:)`: the installment back to due, and the payment it had. Throws when it isn't paid. */
+export function loanUnpaying(
+  loan: Loan,
+  number: number
+): { loan: Loan; payment: LoanPayment } {
+  const payment = loan.payments.find((candidate) => candidate.number === number)
+  if (!payment) throw DomainError.invalidAmount()
+  return {
+    loan: {
+      ...loan,
+      payments: loan.payments.filter((candidate) => candidate.number !== number),
+    },
+    payment,
   }
-  await store.saveLoan(paid)
-  return paid
+}
+
+/**
+ * "Mark unpaid": the installment back to due and the expense that paid it deleted, in one atomic
+ * write, so paying it again doesn't count the installment twice. A movement already deleted leaves
+ * only the loan to save.
+ */
+export async function unpayLoanInstallment(
+  store: LedgerStore,
+  loanId: string,
+  number: number
+): Promise<Loan> {
+  return store.atomically(async () => {
+    const { loan, payment } = loanUnpaying(await existingLoan(store, loanId), number)
+    const movementId = payment.transactionId
+    if (
+      movementId !== undefined &&
+      (await store.fetchTransactions()).some((transaction) => transaction.id === movementId)
+    ) {
+      await store.deleteTransaction(movementId)
+    }
+    await store.saveLoan(loan)
+    return loan
+  })
 }
 
 export async function deleteLoan(

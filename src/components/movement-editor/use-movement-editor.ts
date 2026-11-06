@@ -2,23 +2,30 @@
 
 import { newID } from "@/lib/platform/uuid"
 
+import { useLiveQuery } from "dexie-react-hooks"
 import { useMemo, useState, type KeyboardEvent } from "react"
 
 import type { EditorRequest } from "@/components/app/app-actions"
-import type { RecurringFrequency } from "@/lib/schema"
+import { isFallbackCategory, type CategorizationRule, type RecurringFrequency } from "@/lib/schema"
 import { toast } from "@/components/ui/toast"
 import {
+  fetchCategorizationRules,
+  firstMatchingRule,
   formatAmountInput,
   formatMoney,
   isDomainError,
+  movementKind,
   previewMovement,
+  saveCategorizationRule,
   saveRepeatingTransaction,
   saveTransaction,
+  tagUsage,
   type MovementType,
   type SavedTransaction,
   type TransactionContext,
 } from "@/lib/domain"
-import { useT } from "@/lib/i18n"
+import { useT, type Translator } from "@/lib/i18n"
+import { categoryName } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
 
 import { errorMessage, sourceTitle } from "./editor-model"
@@ -45,15 +52,28 @@ export function useCreateTransactionT() {
 /** "Repeat" on a new movement: none, or the rule it starts. */
 export type RepeatChoice = "none" | RecurringFrequency
 
+/** What a categorization rule did to the movement being typed, so it can be undone (iOS `appliedRule`). */
+interface RuleState {
+  applied: CategorizationRule | undefined
+  /** The category before the rule changed it, to put back when the text stops matching. */
+  before: string | undefined
+  /** The tags the rule added, so another rule (or none) can take them back. */
+  added: string[]
+}
+
+const NO_RULE: RuleState = { applied: undefined, before: undefined, added: [] }
+
 /**
  * The CreateTransaction view model: the fields, what follows from them, and saving. `seed` opens it
- * on other fields (the recurring rule editor reuses the same form).
+ * on other fields (the recurring rule editor reuses the same form, with `usesRules` off: rules and
+ * tags belong to movements the person logs).
  */
 export function useMovementEditor(
   request: EditorRequest,
   context: TransactionContext,
   onClose: () => void,
-  seed?: { fields: EditorFields; date: Date }
+  seed?: { fields: EditorFields; date: Date },
+  usesRules = true
 ) {
   const { t, ct } = useCreateTransactionT()
   const existing = request.mode === "edit" ? request.transaction : undefined
@@ -71,9 +91,58 @@ export function useMovementEditor(
   const [repeat, setRepeat] = useState<RepeatChoice>("none")
   // A new movement ends on its receipt (iOS SavedView); an edit just closes.
   const [saved, setSaved] = useState<SavedTransaction>()
+  const [tags, setTags] = useState<string[]>(() => existing?.tags ?? [])
+  const [rule, setRule] = useState<RuleState>(NO_RULE)
+  // An edited movement already has its category; a widget's preset doesn't count as picked.
+  const [categoryPicked, setCategoryPicked] = useState(existing !== undefined)
+  const storedRules = useLiveQuery(() => fetchCategorizationRules(ledgerStore), [])
+  // Rules apply while logging a new movement, never to an edit; one whose category is gone does nothing.
+  const rules = useMemo(
+    () =>
+      usesRules && !existing
+        ? (storedRules ?? []).filter((candidate) =>
+            context.categories.some((category) => category.id === candidate.categoryId && category.kind === candidate.kind)
+          )
+        : [],
+    [usesRules, existing, storedRules, context.categories]
+  )
+  const usage = useMemo(() => tagUsage(context.transactions), [context.transactions])
 
-  const update = (patch: Partial<EditorFields>) =>
-    setFields((current) => ({ ...current, ...patch }))
+  /**
+   * iOS `applyRules`: the description or note changed, so the first rule of this kind they match
+   * chooses the category and adds its tags, unless the person picked a category themselves (the
+   * catch-all "Other" still lets a rule decide). When the text stops matching, the earlier category
+   * and the rule's tags go back.
+   */
+  function applyingRules(next: EditorFields): EditorFields {
+    const kind = movementKind(next.type)
+    if (kind === "transfer" || rules.length === 0) return next
+    const mayChoose =
+      !categoryPicked ||
+      rule.applied !== undefined ||
+      (next.categoryId !== undefined && isFallbackCategory(next.categoryId))
+    if (!mayChoose) return next
+    const match = firstMatchingRule(rules, kind, next.description, next.note)
+    if (match?.id === rule.applied?.id) return next
+    const before = rule.applied ? rule.before : next.categoryId
+    const kept = tags.filter((tag) => !rule.added.includes(tag))
+    const added = match ? (match.tags ?? []).filter((tag) => !kept.includes(tag)) : []
+    setTags([...kept, ...added])
+    setRule({ applied: match, before, added })
+    return { ...next, categoryId: match ? match.categoryId : before }
+  }
+
+  const update = (patch: Partial<EditorFields>) => {
+    const next = { ...fields, ...patch }
+    setFields("description" in patch || "note" in patch ? applyingRules(next) : next)
+  }
+
+  /** The person chose a category: no rule replaces it from now on. */
+  function pickCategory(categoryId: string) {
+    setCategoryPicked(true)
+    setRule(NO_RULE)
+    update({ categoryId })
+  }
 
   const form = deriveForm(t, context, request, fields, initial.date)
   const preview = useMemo(
@@ -96,7 +165,12 @@ export function useMovementEditor(
   function changeType(next: MovementType) {
     if (next === fields.type) return
     setError(undefined)
-    update(typeChange(next, fields, context, existing))
+    const patch = typeChange(next, fields, context, existing)
+    if ("categoryId" in patch) {
+      setRule(NO_RULE)
+      setCategoryPicked(false)
+    }
+    update(patch)
   }
 
   function chooseSourceAccount(id: string) {
@@ -120,7 +194,7 @@ export function useMovementEditor(
     setSaving(true)
     setError(undefined)
     try {
-      const draft = { ...form.draft, id: existing?.id ?? newID() }
+      const draft = { ...form.draft, id: existing?.id ?? newID(), tags }
       const result =
         !existing && repeat !== "none"
           ? await saveRepeatingTransaction(ledgerStore, draft, repeat)
@@ -134,6 +208,7 @@ export function useMovementEditor(
         description: `${form.draft.description} · ${formatMoney({ amount: form.draft.amount, currency: fields.currency })}`,
         type: "success",
       })
+      if (existing) offerRule(t, existing.categoryId, form)
       onClose()
     } catch (thrown) {
       setError(errorMessage(t, isDomainError(thrown) ? thrown.code : undefined))
@@ -167,6 +242,13 @@ export function useMovementEditor(
   return {
     context,
     existing,
+    tags,
+    setTags,
+    tagUsage: usage,
+    ruleHint: rule.applied
+      ? ct("Category from rule: %@", rule.applied.match)
+      : undefined,
+    pickCategory,
     types,
     initialType: initial.fields.type,
     fields,
@@ -191,3 +273,30 @@ export function useMovementEditor(
 }
 
 export type MovementEditorModel = ReturnType<typeof useMovementEditor>
+
+/**
+ * After the person moves an edited expense or income to another category: "Always use Transport
+ * for 'Uber'?", which saves a rule matching the description. Offered once, on the saved toast.
+ */
+function offerRule(
+  t: Translator,
+  previousCategoryId: string | undefined,
+  form: ReturnType<typeof deriveForm>
+) {
+  const { category, draft } = form
+  const match = draft.description.trim()
+  if (!category || draft.kind === "transfer" || category.id === previousCategoryId || match === "") return
+  const name = categoryName(t, category)
+  toast.add({
+    title: t.in("web", "Always use %@ for “%@”?", name, match),
+    timeout: 8000,
+    actionProps: {
+      children: t.in("settings", "Create rule"),
+      onClick: () => {
+        saveCategorizationRule(ledgerStore, { match, categoryId: category.id, kind: draft.kind })
+          .then(() => toast.add({ title: t.in("web", "Rule saved"), type: "success" }))
+          .catch(() => toast.add({ title: t.in("settings", "We couldn't save the rule. Try again."), type: "error" }))
+      },
+    },
+  })
+}

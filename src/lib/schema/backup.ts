@@ -4,6 +4,7 @@ import { TransactionCategory } from "./category"
 import {
   Account,
   Card,
+  CategorizationRule,
   LoanShape,
   PersonalDebtShape,
   RecurringRule,
@@ -25,7 +26,8 @@ import { IsoDateTime } from "./primitives"
  * - Version 2 added `recurringRules` and a movement's `recurringId`; a version 1 file has neither and
  *   still restores (no rules).
  * - Version 3 added `savingsGoals`; older files restore with none.
- * - Version 4 added `loans` and `personalDebts`; versions 1 to 3 restore with neither.
+ * - Version 4 added `loans` and `personalDebts`, `categorizationRules`, and the optional `tags` of a
+ *   movement and of a recurring rule; versions 1 to 3 still restore, with none of them.
  */
 export const CURRENT_SCHEMA_VERSION = 4
 
@@ -48,6 +50,11 @@ export const BackupPersonalDebt = PersonalDebtShape.extend(Audited).refine(
   debtRepaymentsFit,
   "Repayments can't add up past the amount"
 )
+export const BackupCategorizationRule = CategorizationRule.extend({
+  ...Audited,
+  /** The person's order, which decides the rule that wins. */
+  sortIndex: z.number().int(),
+})
 export const BackupCategory = TransactionCategory.extend({
   ...Audited,
   sortIndex: z.number().int(),
@@ -76,6 +83,7 @@ const BackupFileShape = z.object({
   /** Missing before version 4. */
   loans: z.array(BackupLoan).default([]),
   personalDebts: z.array(BackupPersonalDebt).default([]),
+  categorizationRules: z.array(BackupCategorizationRule).default([]),
 })
 
 /** Swift's decoder reads `null` as absent; dropping nulls first lets one schema serve both. */
@@ -101,6 +109,7 @@ export type BackupRecurringRule = z.infer<typeof BackupRecurringRule>
 export type BackupSavingsGoal = z.infer<typeof BackupSavingsGoal>
 export type BackupLoan = z.infer<typeof BackupLoan>
 export type BackupPersonalDebt = z.infer<typeof BackupPersonalDebt>
+export type BackupCategorizationRule = z.infer<typeof BackupCategorizationRule>
 export type BackupSettings = z.infer<typeof BackupSettings>
 
 export class BackupFormatError extends Error {

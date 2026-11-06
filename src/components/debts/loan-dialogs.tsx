@@ -20,6 +20,7 @@ import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import {
   decimalText,
   deleteLoan,
+  unpayLoanInstallment,
   formatAmount,
   formatNumber,
   isDomainError,
@@ -378,6 +379,9 @@ export function LoanDialog({
   const [paidOn, setPaidOn] = useState(() => new Date())
   const [isPaying, setPaying] = useState(false)
   const [failed, setFailed] = useState(false)
+  /** The paid installment waiting for "Mark unpaid" to be confirmed. */
+  const [unpaying, setUnpaying] = useState<number>()
+  const [unpayFailed, setUnpayFailed] = useState(false)
   const method = methods.find((option) => option.key === methodKey)
   const money = (amount: Parameters<typeof formatAmount>[0]) =>
     hidden ? BALANCE_MASK : formatAmount(amount, loan.borrowed.currency)
@@ -398,6 +402,16 @@ export function LoanDialog({
       setFailed(true)
     } finally {
       setPaying(false)
+    }
+  }
+
+  /** The installment is due again and the expense it recorded is deleted, in one write. */
+  async function markUnpaid(number: number) {
+    try {
+      await unpayLoanInstallment(ledgerStore, loan.id, number)
+      setUnpayFailed(false)
+    } catch {
+      setUnpayFailed(true)
     }
   }
 
@@ -554,10 +568,38 @@ export function LoanDialog({
                     ? t.in("debts", "Paid")
                     : t.in("debts", "Due")}
                 </span>
+                {installment.payment ? (
+                  <KWButton
+                    variant="plain"
+                    size="small"
+                    onClick={() => setUnpaying(installment.number)}
+                  >
+                    {t.in("debts", "Mark unpaid")}
+                  </KWButton>
+                ) : null}
               </div>
             ))}
           </KWGroupedCard>
+          {unpayFailed ? (
+            <p className="type-caption text-negative">
+              {t.in("debts", "We couldn't mark it unpaid. Try again.")}
+            </p>
+          ) : null}
         </div>
+        <ConfirmDialog
+          open={unpaying !== undefined}
+          onOpenChange={(open) => !open && setUnpaying(undefined)}
+          title={t.in("debts", "Mark %lld/%lld unpaid?", unpaying ?? 0, loan.installmentCount)}
+          description={t.in(
+            "debts",
+            "The expense it recorded is deleted, so balances go back to before you paid it."
+          )}
+          action={t.in("debts", "Mark unpaid")}
+          destructive
+          onConfirm={() => {
+            if (unpaying !== undefined) void markUnpaid(unpaying)
+          }}
+        />
         <DialogFooter className={FOOTER}>
           <span />
           <KWButton variant="surface" onClick={onClose}>

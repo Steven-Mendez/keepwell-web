@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowDownLeftIcon, ArrowLeftRightIcon, ArrowUpRightIcon, CreditCardIcon, KeyboardIcon, RepeatIcon, TagsIcon } from "lucide-react"
+import { ArrowDownLeftIcon, ArrowLeftRightIcon, ArrowUpRightIcon, CreditCardIcon, KeyboardIcon, RepeatIcon, TagsIcon, WandSparklesIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command"
@@ -56,6 +56,10 @@ export function CommandPalette() {
           <CommandItem onSelect={() => run(() => router.push("/settings/categories"))}>
             <TagsIcon />
             {t.in("settings", "Categories")}
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => router.push("/settings/rules"))}>
+            <WandSparklesIcon />
+            {t.in("settings", "Rules")}
           </CommandItem>
           <CommandItem onSelect={() => run(() => setShortcutsOpen(true))}>
             <KeyboardIcon />

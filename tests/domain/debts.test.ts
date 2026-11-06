@@ -16,6 +16,7 @@ import {
   orderedPersonalDebts,
   payLoanInstallment,
   repayPersonalDebt,
+  unpayLoanInstallment,
   reopenPersonalDebt,
   saveLoan,
   savePersonalDebt,
@@ -276,6 +277,52 @@ describe("Debts use cases", () => {
     expect(store.transactions).toHaveLength(before)
   })
 
+  it("records neither the expense nor the payment when saving the loan fails", async () => {
+    const store = sampleStore()
+    store.loans = [loan({ payments: paid(1) })]
+    const before = store.transactions.length
+    store.saveLoan = async () => {
+      throw new Error("disk full")
+    }
+    await expect(
+      payLoanInstallment(store, {
+        loanId: loan().id,
+        source: { type: "card", id: IDs.savingsTransfer },
+        categoryId: "other-expense",
+        date: referenceDate,
+      })
+    ).rejects.toThrow("disk full")
+    expect(store.transactions).toHaveLength(before)
+    expect(store.loans[0]!.payments).toHaveLength(1)
+  })
+
+  it("marks a paid installment unpaid and deletes the expense that paid it", async () => {
+    const store = sampleStore()
+    store.loans = [loan({ payments: paid(1) })]
+    const before = store.transactions.length
+    const updated = await payLoanInstallment(store, {
+      loanId: loan().id,
+      source: { type: "card", id: IDs.savingsTransfer },
+      categoryId: "other-expense",
+      date: referenceDate,
+    })
+    expect(store.transactions).toHaveLength(before + 1)
+    const unpaid = await unpayLoanInstallment(store, loan().id, 2)
+    expect(unpaid.payments.map((payment) => payment.number)).toEqual([1])
+    expect(store.transactions).toHaveLength(before)
+    expect(
+      store.transactions.some(
+        (transaction) => transaction.id === updated.payments.at(-1)!.transactionId
+      )
+    ).toBe(false)
+    // Without a movement (or one already gone), only the loan changes.
+    expect((await unpayLoanInstallment(store, loan().id, 1)).payments).toEqual([])
+    await expectDomainError(
+      () => unpayLoanInstallment(store, loan().id, 1),
+      "invalidAmount"
+    )
+  })
+
   it("saves loans in the person's currencies and keeps paid installments on edit", async () => {
     const store = sampleStore()
     const created = await saveLoan(store, {
@@ -525,6 +572,7 @@ describe("Backup file version 4", () => {
           ...audit,
         },
       ],
+      categorizationRules: [],
     }
   }
 
