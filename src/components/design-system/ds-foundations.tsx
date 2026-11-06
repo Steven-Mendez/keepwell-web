@@ -13,13 +13,10 @@ import { Block, copyText, DocSection, Frame, Panel, useToken } from "./ds-parts"
 
 const PALETTE: {
   name: string
-  description: string
   tokens: { token: string; name: string }[]
 }[] = [
   {
     name: "Fondos y superficies",
-    description:
-      "La app es solo modo oscuro. Pantallas en negro, tarjetas un poco más claras y controles encima.",
     tokens: [
       { token: "--kw-surface-bg", name: "Fondo" },
       { token: "--kw-surface-nav", name: "Barra lateral" },
@@ -31,7 +28,6 @@ const PALETTE: {
   },
   {
     name: "Texto",
-    description: "Blanco para lo importante y grises para lo secundario.",
     tokens: [
       { token: "--kw-text-primary", name: "Principal" },
       { token: "--kw-text-secondary", name: "Secundario" },
@@ -41,8 +37,6 @@ const PALETTE: {
   },
   {
     name: "Marca",
-    description:
-      "El azul de Keepwell. Para el logo, los enlaces, el foco y los gráficos.",
     tokens: [
       { token: "--kw-brand-b900", name: "Azul 900" },
       { token: "--kw-brand-b700", name: "Azul 700" },
@@ -54,8 +48,6 @@ const PALETTE: {
   },
   {
     name: "Dinero",
-    description:
-      "El color dice qué pasó con el dinero. El gasto es un coral suave, nunca un rojo de alarma.",
     tokens: [
       { token: "--kw-state-negative", name: "Gasto" },
       { token: "--kw-state-positive", name: "Ingreso" },
@@ -65,8 +57,6 @@ const PALETTE: {
   },
   {
     name: "Categorías",
-    description:
-      "La paleta que cada persona elige para sus categorías. También colorea los gráficos.",
     tokens: [
       ["blue", "Azul"],
       ["purple", "Morado"],
@@ -96,23 +86,14 @@ const CARD_ARTS = [
 
 export function ColorSection() {
   return (
-    <DocSection
-      id="color"
-      title="Color"
-      description="Haz clic en un color para copiar su código hex."
-    >
+    <DocSection id="color" title="Color">
       <div className="grid gap-4 md:grid-cols-2">
         {PALETTE.map((group) => (
           <Panel
             key={group.name}
             className={cn(group.tokens.length > 6 && "md:col-span-2")}
           >
-            <div className="flex flex-col gap-0.5">
-              <span className="type-heading text-foreground">{group.name}</span>
-              <span className="type-caption text-muted-foreground">
-                {group.description}
-              </span>
-            </div>
+            <span className="type-heading text-foreground">{group.name}</span>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(104px,1fr))] gap-3">
               {group.tokens.map((item) => (
                 <ColorChip key={item.token} {...item} />
@@ -121,10 +102,7 @@ export function ColorSection() {
           </Panel>
         ))}
       </div>
-      <Block
-        title="Tarjetas de pago"
-        description="Cada tarjeta lleva un degradado diagonal entre dos colores."
-      >
+      <Block title="Tarjetas de pago">
         <Frame className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-3 lg:grid-cols-5">
           {CARD_ARTS.map((art) => (
             <CardArtChip key={art} art={art} />
@@ -209,11 +187,7 @@ const WEIGHTS = [
 export function TypographySection() {
   const [text, setText] = useState("")
   return (
-    <DocSection
-      id="tipografia"
-      title="Tipografía"
-      description="Una sola familia en toda la app, web e iPhone."
-    >
+    <DocSection id="tipografia" title="Tipografía">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <Panel className="gap-5 p-8">
           <span className="type-caption text-text-faint">
@@ -264,10 +238,7 @@ export function TypographySection() {
         </Panel>
       </div>
 
-      <Block
-        title="Tamaños"
-        description="Los once estilos de texto de la app. Escribe abajo para probar tu propio texto."
-      >
+      <Block title="Tamaños">
         <input
           value={text}
           onChange={(event) => setText(event.target.value)}
@@ -337,11 +308,7 @@ const SHADOWS = [
 
 export function ShapeSection() {
   return (
-    <DocSection
-      id="formas"
-      title="Formas y espaciado"
-      description="Todo es redondeado. Los espacios siguen múltiplos de 4 px y los controles solo tienen tres alturas."
-    >
+    <DocSection id="formas" title="Formas y espaciado">
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel>
           <span className="type-heading text-foreground">Esquinas</span>
