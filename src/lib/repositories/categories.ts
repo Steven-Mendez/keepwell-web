@@ -34,17 +34,23 @@ export const categoryRepository = {
 
   /**
    * Adds the shipped defaults that are missing: on first launch and when a newer version ships more.
-   * A tombstone counts as present, so a deleted default stays deleted. Kept apart from `list` so
-   * reads stay read-only (and usable in `useLiveQuery`).
+   * A tombstone counts as present, so a deleted default stays deleted, except "Other" and "Other
+   * income": deleted movements land there, so a tombstoned one (from a sync or a bad write) comes back
+   * as it was. Kept apart from `list` so reads stay read-only (and usable in `useLiveQuery`).
    */
   async ensureDefaults(): Promise<void> {
     await db.transaction("rw", db.categories, db.sync_outbox, async () => {
-      const present = new Set(await db.categories.toCollection().primaryKeys())
-      const missing = DEFAULT_CATEGORIES.filter((category) => !present.has(category.id))
+      const rows = new Map((await db.categories.toArray()).map((row) => [row.id, row]))
+      const missing = DEFAULT_CATEGORIES.filter((category) => !rows.has(category.id))
       let next = await nextSortIndex()
       const now = nowIso()
       for (const category of missing) {
         await write({ ...categoryToRow(category, next++), created_at: now, updated_at: now, deleted_at: null }, "create")
+      }
+      for (const row of rows.values()) {
+        if (isFallbackCategory(row.id) && !isAlive(row)) {
+          await write({ ...row, updated_at: now, deleted_at: null }, "update")
+        }
       }
     })
   },
