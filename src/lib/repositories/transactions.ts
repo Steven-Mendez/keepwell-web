@@ -1,3 +1,4 @@
+import { newID } from "@/lib/platform/uuid"
 import { db, rowToTransaction, transactionToRow } from "@/lib/db"
 import { Transaction } from "@/lib/schema"
 
@@ -14,7 +15,14 @@ export const transactionRepository = {
   /** Alive movements, newest first; `period` limits them by date (start included, end excluded). */
   async list(period?: Period): Promise<Transaction[]> {
     const byDate = period
-      ? db.transactions.where("date").between(new Date(period.start).toISOString(), new Date(period.end).toISOString(), true, false)
+      ? db.transactions
+          .where("date")
+          .between(
+            new Date(period.start).toISOString(),
+            new Date(period.end).toISOString(),
+            true,
+            false
+          )
       : db.transactions.orderBy("date")
     const rows = await byDate.reverse().filter(isAlive).toArray()
     return rows.map(rowToTransaction)
@@ -22,7 +30,7 @@ export const transactionRepository = {
 
   /** Validates the iOS rules (positive amount and bank charge, known currencies) before writing. */
   async save(draft: Draft<Transaction>): Promise<Transaction> {
-    const transaction = Transaction.parse({ ...draft, id: draft.id ?? crypto.randomUUID() })
+    const transaction = Transaction.parse({ ...draft, id: draft.id ?? newID() })
     await upsert(db.transactions, "transaction", transactionToRow(transaction))
     return transaction
   },

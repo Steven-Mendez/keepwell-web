@@ -1,0 +1,2385 @@
+{
+ "app": {
+  "Account": {
+   "es": "Cuenta"
+  },
+  "Accounts": {
+   "es": "Cuentas"
+  },
+  "Add an account in Keepwell first.": {
+   "es": "Primero agrega una cuenta en Keepwell."
+  },
+  "Amount": {
+   "es": "Monto"
+  },
+  "Category": {
+   "es": "Categoría"
+  },
+  "Confirm": {
+   "es": "Confirmar"
+  },
+  "Description": {
+   "es": "Descripción"
+  },
+  "Expense saved · %@ %@": {
+   "es": "Gasto guardado · %@ %@"
+  },
+  "Home": {
+   "es": "Inicio"
+  },
+  "How much did you spend?": {
+   "es": "¿Cuánto gastaste?"
+  },
+  "Keepwell couldn't save the expense. Try again in the app.": {
+   "es": "Keepwell no pudo guardar el gasto. Inténtalo en la app."
+  },
+  "Keepwell only uses your two currencies, not %@.": {
+   "es": "Keepwell solo usa tus dos monedas, no %@."
+  },
+  "Log ${amount} in ${category} from ${account}": {
+   "es": "Anotar ${amount} en ${category} desde ${account}"
+  },
+  "Log an expense": {
+   "es": "Anotar un gasto"
+  },
+  "Log expense": {
+   "es": "Anotar gasto"
+  },
+  "Log transaction": {
+   "es": "Anotar movimiento"
+  },
+  "Log your first expense, income or transfer and it shows up here.": {
+   "es": "Anota tu primer gasto, ingreso o transferencia y aparece aquí."
+  },
+  "Log your first expense, income or transfer and you will see your month here.": {
+   "es": "Anota tu primer gasto, ingreso o transferencia y aquí verás tu mes."
+  },
+  "New transaction": {
+   "es": "Nuevo movimiento"
+  },
+  "No transactions yet": {
+   "es": "Aún no tienes movimientos"
+  },
+  "Once you log expenses and income, you will see what came in, what went out and what you spent it on.": {
+   "es": "Cuando anotes gastos e ingresos verás cuánto entró, cuánto salió y en qué gastaste."
+  },
+  "Paid from": {
+   "es": "Pagado desde"
+  },
+  "Postpone": {
+   "es": "Posponer"
+  },
+  "Restored %lld accounts and %lld movements": {
+   "es": "Se restauraron %1$lld cuentas y %2$lld movimientos"
+  },
+  "Saves an expense in Keepwell with its amount, category and how you paid.": {
+   "es": "Guarda un gasto en Keepwell con su monto, categoría y cómo pagaste."
+  },
+  "Screen on its way": {
+   "es": "Pantalla en camino"
+  },
+  "Summary": {
+   "es": "Resumen"
+  },
+  "That file isn't a Keepwell backup.": {
+   "es": "Ese archivo no es un respaldo de Keepwell."
+  },
+  "This section is still being built. Your transactions are already saved.": {
+   "es": "Esta sección todavía se está construyendo. Tus movimientos ya están guardados."
+  },
+  "Transactions": {
+   "es": "Movimientos"
+  },
+  "Use iPhone passcode": {
+   "es": "Usar código del iPhone"
+  },
+  "Your summary starts with one transaction": {
+   "es": "Tu resumen empieza con un movimiento"
+  }
+ },
+ "designsystem": {
+  "%lld of %lld digits": {
+   "es": "%1$lld de %2$lld dígitos"
+  },
+  "Back": {
+   "es": "Atrás"
+  },
+  "Black": {
+   "es": "Negro"
+  },
+  "Blue": {
+   "es": "Azul"
+  },
+  "Chip": {
+   "es": "Chip"
+  },
+  "Close": {
+   "es": "Cerrar"
+  },
+  "Coral": {
+   "es": "Coral"
+  },
+  "Delete": {
+   "es": "Borrar"
+  },
+  "Done": {
+   "es": "Listo"
+  },
+  "Double tap to confirm.": {
+   "es": "Toca dos veces para confirmar."
+  },
+  "Gold": {
+   "es": "Oro"
+  },
+  "Green": {
+   "es": "Verde"
+  },
+  "Lime": {
+   "es": "Lima"
+  },
+  "Next field": {
+   "es": "Campo siguiente"
+  },
+  "Off": {
+   "es": "Desactivado"
+  },
+  "On": {
+   "es": "Activado"
+  },
+  "Platinum": {
+   "es": "Platino"
+  },
+  "Previous field": {
+   "es": "Campo anterior"
+  },
+  "Red": {
+   "es": "Rojo"
+  },
+  "Step %lld of %lld": {
+   "es": "Paso %1$lld de %2$lld"
+  },
+  "Violet": {
+   "es": "Violeta"
+  }
+ },
+ "accounts": {
+  "%@ cash, %@": {
+   "es": "%1$@ en efectivo, %2$@"
+  },
+  "%@ credit card, %@": {
+   "es": "Tarjeta de crédito %1$@, %2$@"
+  },
+  "%@ debit card •••• %@, %@": {
+   "en": "%1$@ debit card •••• %2$@, %3$@",
+   "es": "Tarjeta de débito %1$@ •••• %2$@, %3$@"
+  },
+  "%@ debit card, %@": {
+   "en": "%1$@ debit card, %2$@",
+   "es": "Tarjeta de débito %1$@, %2$@"
+  },
+  "Accounts": {
+   "es": "Cuentas"
+  },
+  "Add account or card": {
+   "es": "Agregar cuenta o tarjeta"
+  },
+  "All": {
+   "es": "Todas"
+  },
+  "Available balance": {
+   "es": "Saldo disponible"
+  },
+  "Bank account": {
+   "es": "Cuenta de banco"
+  },
+  "Bank account · %@": {
+   "es": "Cuenta de banco · %@"
+  },
+  "Card color": {
+   "es": "Color de la tarjeta"
+  },
+  "Cash": {
+   "es": "Efectivo"
+  },
+  "Color": {
+   "es": "Color"
+  },
+  "Credit": {
+   "es": "Crédito"
+  },
+  "Debit": {
+   "es": "Débito"
+  },
+  "Delete %@?": {
+   "es": "¿Eliminar %@?"
+  },
+  "Delete account": {
+   "es": "Eliminar cuenta"
+  },
+  "Edit name": {
+   "es": "Editar nombre"
+  },
+  "Latest movements": {
+   "es": "Últimos movimientos"
+  },
+  "Manage account": {
+   "es": "Administrar cuenta"
+  },
+  "Net worth %@": {
+   "es": "Patrimonio neto %@"
+  },
+  "No movements on this account yet.": {
+   "es": "Aún no hay movimientos en esta cuenta."
+  },
+  "Product and expiry": {
+   "es": "Producto y vencimiento"
+  },
+  "The account and its card are deleted. This can't be undone.": {
+   "es": "Se eliminan la cuenta y su tarjeta. No se puede deshacer."
+  },
+  "The account, its card and its %lld movements are deleted, including transfers with your other accounts, so their balances change too. This can't be undone.": {
+   "en": {
+    "one": "The account, its card and its %lld movement are deleted, including any transfer with your other accounts, so their balances change too. This can't be undone.",
+    "other": "The account, its card and its %lld movements are deleted, including transfers with your other accounts, so their balances change too. This can't be undone."
+   },
+   "es": {
+    "one": "Se eliminan la cuenta, su tarjeta y su %lld movimiento, incluida cualquier transferencia con tus otras cuentas, así que sus saldos también cambian. No se puede deshacer.",
+    "other": "Se eliminan la cuenta, su tarjeta y sus %lld movimientos, incluidas las transferencias con tus otras cuentas, así que sus saldos también cambian. No se puede deshacer."
+   }
+  },
+  "We couldn't load this account.": {
+   "es": "No pudimos cargar esta cuenta."
+  },
+  "We couldn't save the change. Try again.": {
+   "es": "No pudimos guardar el cambio. Inténtalo de nuevo."
+  },
+  "Write a name for the account.": {
+   "es": "Escribe un nombre para la cuenta."
+  }
+ },
+ "addcard": {
+  "%@ and %@, paid separately": {
+   "es": "%1$@ y %2$@ por separado, se pagan aparte"
+  },
+  "%@ is ready: this card is the account, with its balance and movements.": {
+   "es": "%@ está lista: esta tarjeta es la cuenta, con su saldo y sus movimientos."
+  },
+  "%@ · cutoff day %lld · due day %lld.": {
+   "es": "%1$@ · corte día %2$lld · pago día %3$lld."
+  },
+  "Account": {
+   "es": "Cuenta"
+  },
+  "Add": {
+   "es": "Agregar"
+  },
+  "Add another": {
+   "es": "Agregar otra"
+  },
+  "Add card": {
+   "es": "Agregar tarjeta"
+  },
+  "Bank": {
+   "es": "Banco"
+  },
+  "Bank name": {
+   "es": "Nombre del banco"
+  },
+  "Card added": {
+   "es": "Tarjeta agregada"
+  },
+  "Check the balance.": {
+   "es": "Revisa el saldo."
+  },
+  "Continue": {
+   "es": "Continuar"
+  },
+  "Credit": {
+   "es": "Crédito"
+  },
+  "Credit card": {
+   "es": "Tarjeta de crédito"
+  },
+  "Currency": {
+   "es": "Moneda"
+  },
+  "Cutoff day": {
+   "es": "Día de corte"
+  },
+  "Cycle (optional)": {
+   "es": "Ciclo (opcional)"
+  },
+  "Debit": {
+   "es": "Débito"
+  },
+  "Debit card": {
+   "es": "Tarjeta de débito"
+  },
+  "Debt in %@": {
+   "es": "Deuda en %@"
+  },
+  "Debt in %@ and %@": {
+   "es": "Deuda en %1$@ y %2$@"
+  },
+  "Decrease": {
+   "es": "Menos"
+  },
+  "Due day": {
+   "es": "Día de pago"
+  },
+  "Envelope": {
+   "es": "Sobre"
+  },
+  "Everything in local currency": {
+   "es": "Todo en moneda local"
+  },
+  "Everything is converted to %@": {
+   "es": "Todo se convierte a %@"
+  },
+  "Everything is converted to dollars": {
+   "es": "Todo se convierte a dólares"
+  },
+  "How the debt works": {
+   "es": "Cómo funciona la deuda"
+  },
+  "Increase": {
+   "es": "Más"
+  },
+  "It's its own account: debt in one or two currencies, cutoff and due dates": {
+   "es": "Es su propia cuenta: deuda en una o dos monedas, corte y pago"
+  },
+  "Last 4 digits": {
+   "es": "Últimos 4 dígitos"
+  },
+  "Limit": {
+   "es": "Límite"
+  },
+  "Name": {
+   "es": "Nombre"
+  },
+  "Network": {
+   "es": "Red"
+  },
+  "Not set": {
+   "es": "Sin definir"
+  },
+  "Only %@": {
+   "es": "Solo %@"
+  },
+  "Other wallet": {
+   "es": "Otra billetera"
+  },
+  "Savings": {
+   "es": "Ahorro"
+  },
+  "Today's balance": {
+   "es": "Saldo de hoy"
+  },
+  "Two currencies": {
+   "es": "Dos monedas"
+  },
+  "View card": {
+   "es": "Ver tarjeta"
+  },
+  "We couldn't add the card. Try again.": {
+   "es": "No pudimos agregar la tarjeta. Intenta de nuevo."
+  },
+  "We couldn't save the account.": {
+   "es": "No pudimos guardar la cuenta."
+  },
+  "We never ask for the full number or the CVV.": {
+   "es": "Nunca pedimos el número completo ni el CVV."
+  },
+  "We'll remind you %lld days before the due date.": {
+   "en": {
+    "one": "We'll remind you %lld day before the due date.",
+    "other": "We'll remind you %lld days before the due date."
+   },
+   "es": {
+    "one": "Te avisamos %lld día antes del pago.",
+    "other": "Te avisamos %lld días antes del pago."
+   }
+  },
+  "What do you want to add?": {
+   "es": "¿Qué quieres agregar?"
+  },
+  "What you owe today": {
+   "es": "Lo que debes hoy"
+  },
+  "Which currencies does it charge you in?": {
+   "es": "¿En qué monedas te cobra?"
+  },
+  "Without a card": {
+   "es": "Sin tarjeta"
+  },
+  "Your bank account, shown as its card: balance, bank and last 4": {
+   "es": "Tu cuenta de banco, vista como su tarjeta: saldo, banco y últimos 4"
+  },
+  "Your credit card": {
+   "es": "Tu tarjeta de crédito"
+  },
+  "Your debit card": {
+   "es": "Tu tarjeta de débito"
+  }
+ },
+ "createtransaction": {
+  "%@ available": {
+   "es": "%@ disponible"
+  },
+  "%@ charged by the bank": {
+   "es": "%@ que te cobró el banco"
+  },
+  "%@ in %@": {
+   "es": "%1$@ en %2$@"
+  },
+  "%@ · more than what's there": {
+   "es": "%@ · más de lo que hay"
+  },
+  "%@ •••• %@ · credit": {
+   "es": "%@ •••• %@ · crédito"
+  },
+  "A purchase, a bill, a subscription": {
+   "es": "Una compra, una factura, una suscripción"
+  },
+  "ATM withdrawal": {
+   "es": "Retiro en cajero"
+  },
+  "Add a note": {
+   "es": "Agregar una nota"
+  },
+  "Add ›": {
+   "es": "Agregar ›"
+  },
+  "Allow access to Photos": {
+   "es": "Permite el acceso a Fotos"
+  },
+  "Amount %@": {
+   "es": "Monto %@"
+  },
+  "Arrived in %@": {
+   "es": "Llegó a %@"
+  },
+  "Arrives as %@": {
+   "es": "Llega como %@"
+  },
+  "Available %@": {
+   "es": "Disponible %@"
+  },
+  "Balance after %@": {
+   "es": "Saldo después %@"
+  },
+  "Bank accounts": {
+   "es": "Cuentas bancarias"
+  },
+  "Bank rate": {
+   "es": "Tasa del banco"
+  },
+  "Bank transfer": {
+   "es": "Transferencia bancaria"
+  },
+  "Between my accounts": {
+   "es": "Entre mis cuentas"
+  },
+  "Card": {
+   "es": "Tarjeta"
+  },
+  "Card balance %@": {
+   "es": "Saldo de la tarjeta %@"
+  },
+  "Card payment": {
+   "es": "Pago de tarjeta"
+  },
+  "Cash": {
+   "es": "Efectivo"
+  },
+  "Category": {
+   "es": "Categoría"
+  },
+  "Check the amount.": {
+   "es": "Revisa el monto."
+  },
+  "Choose a different destination account.": {
+   "es": "Elige una cuenta de destino distinta."
+  },
+  "Choose another account": {
+   "es": "Elegir otra cuenta"
+  },
+  "Close": {
+   "es": "Cerrar"
+  },
+  "Confirmed": {
+   "es": "Confirmado"
+  },
+  "Continue": {
+   "es": "Continuar"
+  },
+  "Credit cards": {
+   "es": "Tarjetas de crédito"
+  },
+  "Credited to %@": {
+   "es": "Acreditado a %@"
+  },
+  "Date": {
+   "es": "Fecha"
+  },
+  "Debited from %@": {
+   "es": "Debitado de %@"
+  },
+  "Delete": {
+   "es": "Borrar"
+  },
+  "Description": {
+   "es": "Descripción"
+  },
+  "Done": {
+   "es": "Listo"
+  },
+  "Draft": {
+   "es": "Borrador"
+  },
+  "Edit amount": {
+   "es": "Editar monto"
+  },
+  "Expense": {
+   "es": "Gasto"
+  },
+  "From": {
+   "es": "Desde"
+  },
+  "How did you pay?": {
+   "es": "¿Con qué pagaste?"
+  },
+  "How much are you moving?": {
+   "es": "¿Cuánto vas a mover?"
+  },
+  "How much are you paying?": {
+   "es": "¿Cuánto vas a pagar?"
+  },
+  "How much did you receive?": {
+   "es": "¿Cuánto recibiste?"
+  },
+  "How much did you spend?": {
+   "es": "¿Cuánto gastaste?"
+  },
+  "How much did you withdraw?": {
+   "es": "¿Cuánto retiraste?"
+  },
+  "Income": {
+   "es": "Ingreso"
+  },
+  "Into": {
+   "es": "Hacia"
+  },
+  "Keepwell needs permission to add photos to save your receipt. You can turn it on in Settings.": {
+   "es": "Keepwell necesita permiso para agregar fotos y guardar tu comprobante. Puedes activarlo en Ajustes."
+  },
+  "Leaves as %@": {
+   "es": "Sale como %@"
+  },
+  "Log another": {
+   "es": "Anotar otro"
+  },
+  "Method": {
+   "es": "Medio"
+  },
+  "Move money between your accounts and cash": {
+   "es": "Mueve dinero entre tus cuentas y el efectivo"
+  },
+  "Moving from": {
+   "es": "Sale de"
+  },
+  "New balance": {
+   "es": "Nuevo saldo"
+  },
+  "New category": {
+   "es": "Nueva categoría"
+  },
+  "Next": {
+   "es": "Siguiente"
+  },
+  "No account can receive it from this one.": {
+   "es": "Ninguna cuenta puede recibirlo desde esta."
+  },
+  "Not now": {
+   "es": "Ahora no"
+  },
+  "Note": {
+   "es": "Nota"
+  },
+  "OK": {
+   "es": "Aceptar"
+  },
+  "Open Settings": {
+   "es": "Abrir Ajustes"
+  },
+  "Optional · if a different rate was used": {
+   "es": "Opcional · si usó otra tasa"
+  },
+  "Paid with": {
+   "es": "Pagado con"
+  },
+  "Pay what you owe on a credit card": {
+   "es": "Paga lo que debes en una tarjeta de crédito"
+  },
+  "Paying from": {
+   "es": "Pagas desde"
+  },
+  "Purchase in %@ → debt in %@": {
+   "es": "Compra en %1$@ → deuda %2$@"
+  },
+  "Rate used": {
+   "es": "Tasa usada"
+  },
+  "Reference": {
+   "es": "Referencia"
+  },
+  "Review": {
+   "es": "Revisar"
+  },
+  "Salary, a refund, money you received": {
+   "es": "Salario, un reembolso, dinero que recibiste"
+  },
+  "Save as draft": {
+   "es": "Guardar como borrador"
+  },
+  "Save card payment": {
+   "es": "Guardar pago de tarjeta"
+  },
+  "Save expense": {
+   "es": "Guardar gasto"
+  },
+  "Save image": {
+   "es": "Guardar imagen"
+  },
+  "Save income": {
+   "es": "Guardar ingreso"
+  },
+  "Save transfer": {
+   "es": "Guardar transferencia"
+  },
+  "Save withdrawal": {
+   "es": "Guardar retiro"
+  },
+  "Saved": {
+   "es": "Guardado"
+  },
+  "Saved to Photos": {
+   "es": "Guardado en Fotos"
+  },
+  "Search category": {
+   "es": "Buscar categoría"
+  },
+  "See all %lld": {
+   "es": "Ver las %lld"
+  },
+  "Selected": {
+   "es": "Seleccionado"
+  },
+  "Share": {
+   "es": "Compartir"
+  },
+  "Share receipt": {
+   "es": "Compartir comprobante"
+  },
+  "Slide to move": {
+   "es": "Desliza para mover"
+  },
+  "Slide to pay": {
+   "es": "Desliza para pagar"
+  },
+  "Slide to save expense": {
+   "es": "Desliza para guardar el gasto"
+  },
+  "Slide to save income": {
+   "es": "Desliza para guardar el ingreso"
+  },
+  "Slide to withdraw": {
+   "es": "Desliza para retirar"
+  },
+  "Straight from %@": {
+   "es": "Directo desde %@"
+  },
+  "Straight from the account": {
+   "es": "Directo desde la cuenta"
+  },
+  "Straight into %@": {
+   "es": "Directo a %@"
+  },
+  "Straight into the account": {
+   "es": "Directo a la cuenta"
+  },
+  "Take cash out of a bank account": {
+   "es": "Saca efectivo de una cuenta bancaria"
+  },
+  "The method decides which account increases.": {
+   "es": "El medio decide qué cuenta suma."
+  },
+  "The method decides which account is charged.": {
+   "es": "El medio decide qué cuenta se descuenta."
+  },
+  "To": {
+   "es": "Hacia"
+  },
+  "To %@": {
+   "es": "A %@"
+  },
+  "Today, %@": {
+   "es": "Hoy, %@"
+  },
+  "Transfer": {
+   "es": "Transferir"
+  },
+  "Transfer or deposit": {
+   "es": "Transferencia o depósito"
+  },
+  "Transfer or direct debit": {
+   "es": "Transferencia o débito automático"
+  },
+  "Try again, or share the receipt instead.": {
+   "es": "Inténtalo de nuevo o comparte el comprobante."
+  },
+  "Used %lld days ago": {
+   "en": {
+    "one": "Used %lld day ago",
+    "other": "Used %lld days ago"
+   },
+   "es": {
+    "one": "Usado hace %lld día",
+    "other": "Usado hace %lld días"
+   }
+  },
+  "Used today": {
+   "es": "Usado hoy"
+  },
+  "Used yesterday": {
+   "es": "Usado ayer"
+  },
+  "We couldn't load your accounts.": {
+   "es": "No pudimos cargar tus cuentas."
+  },
+  "We couldn't save the image": {
+   "es": "No pudimos guardar la imagen"
+  },
+  "We couldn't save the movement. Try again.": {
+   "es": "No pudimos guardar el movimiento. Intenta de nuevo."
+  },
+  "What are you recording?": {
+   "es": "¿Qué vas a registrar?"
+  },
+  "What was it about?": {
+   "es": "¿De qué se trató?"
+  },
+  "What was it for?": {
+   "es": "¿En qué fue?"
+  },
+  "Where did it come from?": {
+   "es": "¿De dónde vino?"
+  },
+  "Where did you receive it?": {
+   "es": "¿Dónde lo recibiste?"
+  },
+  "Where is it leaving from?": {
+   "es": "¿Desde dónde sale?"
+  },
+  "Which account is it going to?": {
+   "es": "¿A qué cuenta va?"
+  },
+  "Which card are you paying?": {
+   "es": "¿Qué tarjeta vas a pagar?"
+  },
+  "Which cash is it going into?": {
+   "es": "¿A qué efectivo va?"
+  },
+  "Withdrawing from": {
+   "es": "Retiras de"
+  },
+  "Without the card, from %@": {
+   "es": "Sin tarjeta, desde %@"
+  },
+  "Without the card, straight from the account": {
+   "es": "Sin tarjeta, directo de la cuenta"
+  },
+  "Yesterday, %@": {
+   "es": "Ayer, %@"
+  },
+  "You moved": {
+   "es": "Moviste"
+  },
+  "You paid": {
+   "es": "Pagaste"
+  },
+  "You received": {
+   "es": "Recibiste"
+  },
+  "You spent": {
+   "es": "Gastaste"
+  },
+  "You withdrew": {
+   "es": "Retiraste"
+  },
+  "You're about to log": {
+   "es": "Estás a punto de registrar"
+  },
+  "You're about to move": {
+   "es": "Estás a punto de mover"
+  },
+  "You're about to pay": {
+   "es": "Estás a punto de pagar"
+  },
+  "You're about to withdraw": {
+   "es": "Estás a punto de retirar"
+  },
+  "transfer.noun": {
+   "en": "Transfer",
+   "es": "Transferencia"
+  }
+ },
+ "creditcard": {
+  "Available": {
+   "es": "Disponible"
+  },
+  "Billing details": {
+   "es": "Datos de facturación"
+  },
+  "Card color": {
+   "es": "Color de la tarjeta"
+  },
+  "Check the credit limit.": {
+   "es": "Revisa el límite de crédito."
+  },
+  "Complete card details": {
+   "es": "Completar datos de la tarjeta"
+  },
+  "Credit card": {
+   "es": "Tarjeta de crédito"
+  },
+  "Credit limit": {
+   "es": "Límite de crédito"
+  },
+  "Credit limit (%@)": {
+   "es": "Límite de crédito (%@)"
+  },
+  "Current debt": {
+   "es": "Deuda actual"
+  },
+  "Cutoff date": {
+   "es": "Fecha de corte"
+  },
+  "Cutoff day": {
+   "es": "Día de corte"
+  },
+  "Day %lld": {
+   "es": "Día %lld"
+  },
+  "Day %lld · next %@": {
+   "es": "Día %lld · próximo %@"
+  },
+  "Edit name": {
+   "es": "Editar nombre"
+  },
+  "Manage card": {
+   "es": "Gestionar tarjeta"
+  },
+  "Not set": {
+   "es": "Sin definir"
+  },
+  "Nothing charged this cycle yet.": {
+   "es": "Aún no hay cargos en este ciclo."
+  },
+  "Optional": {
+   "es": "Opcional"
+  },
+  "Pay": {
+   "es": "Pagar"
+  },
+  "Payment date": {
+   "es": "Fecha de pago"
+  },
+  "Payment day": {
+   "es": "Día de pago"
+  },
+  "Product and expiry": {
+   "es": "Producto y vencimiento"
+  },
+  "Save": {
+   "es": "Guardar"
+  },
+  "The cutoff day closes each cycle, and with the payment day we remind you before it's due.": {
+   "es": "El día de corte cierra cada ciclo y, con el día de pago, te avisamos antes de que venza."
+  },
+  "This cycle": {
+   "es": "Este ciclo"
+  },
+  "We couldn't load this card.": {
+   "es": "No pudimos cargar esta tarjeta."
+  },
+  "We couldn't save the change. Try again.": {
+   "es": "No pudimos guardar el cambio. Inténtalo de nuevo."
+  },
+  "Write a name for the card.": {
+   "es": "Escribe un nombre para la tarjeta."
+  },
+  "sheet.cardDetails": {
+   "en": "Card details",
+   "es": "Datos de la tarjeta"
+  }
+ },
+ "home": {
+  "%@ expires this month": {
+   "es": "%@ vence este mes"
+  },
+  "%@ · %@ from %@. Has it been paid?": {
+   "es": "%@ · %@ desde %@. ¿Ya se pagó?"
+  },
+  "%@%% saved": {
+   "es": "%@%% ahorrado"
+  },
+  "%@: payment in %lld days": {
+   "en": {
+    "one": "%@: payment in %lld day",
+    "other": "%@: payment in %lld days"
+   },
+   "es": {
+    "one": "%@: pago en %lld día",
+    "other": "%@: pago en %lld días"
+   }
+  },
+  "%@: statement closes today": {
+   "es": "%@: hoy cierra el estado de cuenta"
+  },
+  "%lld accounts": {
+   "en": {
+    "one": "%lld account",
+    "other": "%lld accounts"
+   },
+   "es": {
+    "one": "%lld cuenta",
+    "other": "%lld cuentas"
+   }
+  },
+  "%lld cards": {
+   "en": {
+    "one": "%lld card",
+    "other": "%lld cards"
+   },
+   "es": {
+    "one": "%lld tarjeta",
+    "other": "%lld tarjetas"
+   }
+  },
+  "Cards (debt)": {
+   "es": "Tarjetas (deuda)"
+  },
+  "Confirm": {
+   "es": "Confirmar"
+  },
+  "Draft for today": {
+   "es": "Borrador para hoy"
+  },
+  "Drafts · %lld": {
+   "es": "Borradores · %lld"
+  },
+  "Expense": {
+   "es": "Gasto"
+  },
+  "Expenses": {
+   "es": "Gastos"
+  },
+  "From tomorrow, purchases go to next month's statement.": {
+   "es": "Desde mañana, las compras pasan al estado del próximo mes."
+  },
+  "Good afternoon": {
+   "es": "Buenas tardes"
+  },
+  "Good afternoon, %@": {
+   "es": "Buenas tardes, %@"
+  },
+  "Good evening": {
+   "es": "Buenas noches"
+  },
+  "Good evening, %@": {
+   "es": "Buenas noches, %@"
+  },
+  "Good morning": {
+   "es": "Buenos días"
+  },
+  "Good morning, %@": {
+   "es": "Buenos días, %@"
+  },
+  "Hidden": {
+   "es": "Oculto"
+  },
+  "Hides balances": {
+   "es": "Oculta los saldos"
+  },
+  "Income": {
+   "es": "Ingresos"
+  },
+  "Log quickly": {
+   "es": "Anotar rápido"
+  },
+  "Log transaction": {
+   "es": "Anotar movimiento"
+  },
+  "Log your first expense, income or transfer and you will see your month here.": {
+   "es": "Anota tu primer gasto, ingreso o transferencia y aquí verás tu mes."
+  },
+  "Move": {
+   "es": "Mover"
+  },
+  "Net worth": {
+   "es": "Patrimonio neto"
+  },
+  "Net worth · %@": {
+   "es": "Patrimonio neto · %@"
+  },
+  "No transactions yet": {
+   "es": "Todavía no hay movimientos"
+  },
+  "Pay before day %lld so it doesn't generate interest.": {
+   "es": "Paga antes del día %lld para que no genere intereses."
+  },
+  "Pay card": {
+   "es": "Pagar tarjeta"
+  },
+  "Recent": {
+   "es": "Recientes"
+  },
+  "Search transactions": {
+   "es": "Buscar movimientos"
+  },
+  "See all": {
+   "es": "Ver todos"
+  },
+  "Settings": {
+   "es": "Ajustes"
+  },
+  "Shows balances": {
+   "es": "Muestra los saldos"
+  },
+  "Spent in %@": {
+   "es": "Gastado en %@"
+  },
+  "Summary": {
+   "es": "Resumen"
+  },
+  "They don't count toward balances until you confirm them · %@": {
+   "es": "No cuentan en saldos hasta que los confirmes · %@"
+  },
+  "Update it in %@ before it stops working.": {
+   "es": "Actualízala en %@ antes de que deje de funcionar."
+  },
+  "Update it wherever it's saved before it stops working.": {
+   "es": "Actualízala donde la tengas guardada antes de que deje de funcionar."
+  },
+  "We couldn't confirm it. Try again.": {
+   "es": "No pudimos confirmarlo. Inténtalo de nuevo."
+  },
+  "action.income": {
+   "en": "Income",
+   "es": "Ingreso"
+  },
+  "spent": {
+   "es": "gastado"
+  },
+  "spent · %lld drafts": {
+   "en": {
+    "one": "spent · %lld draft",
+    "other": "spent · %lld drafts"
+   },
+   "es": {
+    "one": "gastado · %lld borrador",
+    "other": "gastado · %lld borradores"
+   }
+  },
+  "≈ %@ · rate %@": {
+   "es": "≈ %@ · tasa %@"
+  }
+ },
+ "lock": {
+  "Amounts hidden in the app switcher and screenshots": {
+   "es": "Montos ocultos en el selector de apps y capturas"
+  },
+  "Choose a new passcode": {
+   "es": "Elige un código nuevo"
+  },
+  "Close": {
+   "es": "Cerrar"
+  },
+  "Confirm your passcode": {
+   "es": "Confirma tu código"
+  },
+  "Create a passcode": {
+   "es": "Crea un código"
+  },
+  "Enter passcode": {
+   "es": "Ingresar código"
+  },
+  "Enter your Keepwell passcode": {
+   "es": "Ingresa tu código de Keepwell"
+  },
+  "Forgot your passcode?": {
+   "es": "¿Olvidaste tu código?"
+  },
+  "Good afternoon": {
+   "es": "Buenas tardes"
+  },
+  "Good afternoon, %@": {
+   "es": "Buenas tardes, %@"
+  },
+  "Good evening": {
+   "es": "Buenas noches"
+  },
+  "Good evening, %@": {
+   "es": "Buenas noches, %@"
+  },
+  "Good morning": {
+   "es": "Buenos días"
+  },
+  "Good morning, %@": {
+   "es": "Buenos días, %@"
+  },
+  "Rest your finger on the Home button": {
+   "es": "Apoya tu dedo en el botón de inicio"
+  },
+  "Six digits to open Keepwell when Face ID can't. It's kept only on this iPhone.": {
+   "es": "Seis dígitos para abrir Keepwell cuando Face ID no pueda. Solo se guarda en este iPhone."
+  },
+  "Tap to use Face ID": {
+   "es": "Toca para usar Face ID"
+  },
+  "Tap to use Optic ID": {
+   "es": "Toca para usar Optic ID"
+  },
+  "That passcode is easy to guess. Try one without repeated or consecutive digits.": {
+   "es": "Ese código es fácil de adivinar. Prueba uno sin dígitos repetidos ni consecutivos."
+  },
+  "The passcodes didn't match. Start again.": {
+   "es": "Los códigos no coinciden. Empieza de nuevo."
+  },
+  "Too many tries. Try again in %@.": {
+   "es": "Demasiados intentos. Vuelve a intentarlo en %@."
+  },
+  "Type it once more.": {
+   "es": "Escríbelo una vez más."
+  },
+  "Unlock Keepwell to see your finances.": {
+   "es": "Desbloquea Keepwell para ver tus finanzas."
+  },
+  "Unlock with Face ID": {
+   "es": "Desbloquear con Face ID"
+  },
+  "Unlock with Optic ID": {
+   "es": "Desbloquear con Optic ID"
+  },
+  "Unlock with Touch ID": {
+   "es": "Desbloquear con Touch ID"
+  },
+  "Use iPhone passcode": {
+   "es": "Usar código del iPhone"
+  },
+  "Use your iPhone passcode to get back into Keepwell. Your Keepwell passcode will be turned off.": {
+   "es": "Usa el código de tu iPhone para volver a entrar a Keepwell. Tu código de Keepwell se desactivará."
+  },
+  "We couldn't save the passcode. Try again.": {
+   "es": "No pudimos guardar el código. Inténtalo de nuevo."
+  },
+  "Wrong passcode. %lld tries left.": {
+   "en": {
+    "one": "Wrong passcode. %lld try left.",
+    "other": "Wrong passcode. %lld tries left."
+   },
+   "es": {
+    "one": "Código incorrecto. Te queda %lld intento.",
+    "other": "Código incorrecto. Te quedan %lld intentos."
+   }
+  },
+  "Your finances are encrypted on this iPhone": {
+   "es": "Tus finanzas están cifradas en este iPhone"
+  }
+ },
+ "onboarding": {
+  "%@ · already included": {
+   "es": "%@ · ya incluida"
+  },
+  "A file saved with “Back up now” in Settings": {
+   "es": "Un archivo guardado con “Respaldar ahora” en Ajustes"
+  },
+  "Account": {
+   "es": "Cuenta"
+  },
+  "Accounts": {
+   "es": "Cuentas"
+  },
+  "Add": {
+   "es": "Agregar"
+  },
+  "Add your accounts": {
+   "es": "Agrega tus cuentas"
+  },
+  "All currencies": {
+   "es": "Todas las monedas"
+  },
+  "All set": {
+   "es": "Todo listo"
+  },
+  "All set, %@": {
+   "es": "Todo listo, %@"
+  },
+  "Allow notifications": {
+   "es": "Permitir avisos"
+  },
+  "Any currency, with your own rate": {
+   "es": "Cualquier moneda, con tu propia tasa"
+  },
+  "Bank": {
+   "es": "Banco"
+  },
+  "Bank account": {
+   "es": "Cuenta de banco"
+  },
+  "Bank name": {
+   "es": "Nombre del banco"
+  },
+  "Bank · %@": {
+   "es": "Banco · %@"
+  },
+  "Bank · %@ · Debit ··%@": {
+   "es": "Banco · %@ · Débito ··%@"
+  },
+  "Bring your accounts, cards and movements from a backup, or set everything up from scratch.": {
+   "es": "Trae tus cuentas, tarjetas y movimientos desde un respaldo, o configura todo desde cero."
+  },
+  "Cash": {
+   "es": "Efectivo"
+  },
+  "Cash %@": {
+   "es": "Efectivo %@"
+  },
+  "Choose your main currency": {
+   "es": "Elige tu moneda principal"
+  },
+  "Common": {
+   "es": "Más usadas"
+  },
+  "Continue": {
+   "es": "Continuar"
+  },
+  "Create passcode": {
+   "es": "Crear código"
+  },
+  "Credit card": {
+   "es": "Tarjeta de crédito"
+  },
+  "Credit · %@": {
+   "es": "Crédito · %@"
+  },
+  "Credit · %@ and %@": {
+   "es": "Crédito · %@ y %@"
+  },
+  "Currencies": {
+   "es": "Monedas"
+  },
+  "Currency": {
+   "es": "Moneda"
+  },
+  "Debit, last 4": {
+   "es": "Débito, últimos 4"
+  },
+  "Debt in %@": {
+   "es": "Deuda en %@"
+  },
+  "Drafts due today": {
+   "es": "Borradores que vencen hoy"
+  },
+  "Enter all 4 digits or leave it empty.": {
+   "es": "Escribe los 4 dígitos o déjalo vacío."
+  },
+  "Enter an amount like 1,250.50.": {
+   "es": "Escribe un monto como 1,250.50."
+  },
+  "Exchange rate": {
+   "es": "Tasa de cambio"
+  },
+  "Exchange rate (you set it)": {
+   "es": "Tasa de cambio (la pones tú)"
+  },
+  "Face ID or Touch ID": {
+   "es": "Face ID o Touch ID"
+  },
+  "Go to home": {
+   "es": "Ir al inicio"
+  },
+  "Have you used Keepwell before?": {
+   "es": "¿Ya usaste Keepwell?"
+  },
+  "Hide amounts when leaving": {
+   "es": "Ocultar montos al salir"
+  },
+  "If iCloud backup was on in Keepwell": {
+   "es": "Si tenías activado el respaldo en iCloud en Keepwell"
+  },
+  "Import movements only (.csv)": {
+   "es": "Importar solo movimientos (.csv)"
+  },
+  "In the app switcher": {
+   "es": "En el selector de apps"
+  },
+  "It defaults to 1. Change it whenever you want; each transaction keeps the rate from when you logged it.": {
+   "es": "Por defecto es 1. Cámbiala cuando quieras; cada movimiento guarda la tasa del momento en que lo anotaste."
+  },
+  "Keepwell passcode": {
+   "es": "Código de Keepwell"
+  },
+  "Last 4 digits": {
+   "es": "Últimos 4 dígitos"
+  },
+  "Log expenses, income and transfers. Cards, cash and drafts to confirm later.": {
+   "es": "Anota gastos, ingresos y transferencias. Tarjetas, efectivo y borradores para confirmar después."
+  },
+  "Log first expense": {
+   "es": "Anotar primer gasto"
+  },
+  "Looking for your backup…": {
+   "es": "Buscando tu respaldo…"
+  },
+  "Main currency": {
+   "es": "Moneda principal"
+  },
+  "Name": {
+   "es": "Nombre"
+  },
+  "No account and no servers of ours. Your data lives on your iPhone and, if you want, in your iCloud.": {
+   "es": "Sin cuenta y sin nuestros servidores. Tus datos viven en tu iPhone y, si quieres, en tu iCloud."
+  },
+  "No account or sign-up": {
+   "es": "Sin cuenta ni registro"
+  },
+  "Not now": {
+   "es": "Ahora no"
+  },
+  "Now log your first transaction. The more you record, the better your monthly summary.": {
+   "es": "Ahora anota tu primer movimiento. Mientras más registres, mejor tu resumen del mes."
+  },
+  "On": {
+   "es": "Activado"
+  },
+  "On your iPhone, backed up to your iCloud": {
+   "es": "En tu iPhone, con respaldo en tu iCloud"
+  },
+  "On · tap to choose another": {
+   "es": "Activado · toca para elegir otro"
+  },
+  "One currency": {
+   "es": "Una moneda"
+  },
+  "Only %@": {
+   "es": "Solo %@"
+  },
+  "Optional": {
+   "es": "Opcional"
+  },
+  "Other": {
+   "es": "Otra"
+  },
+  "Protect Keepwell": {
+   "es": "Protege Keepwell"
+  },
+  "Rate": {
+   "es": "Tasa"
+  },
+  "Recover everything if you change iPhone": {
+   "es": "Recupera todo si cambias de iPhone"
+  },
+  "Remove account": {
+   "es": "Quitar cuenta"
+  },
+  "Reports and net worth are calculated in the main currency.": {
+   "es": "Los reportes y el patrimonio se calculan en la moneda principal."
+  },
+  "Restore from a backup file (.json)": {
+   "es": "Restaurar desde un archivo de respaldo (.json)"
+  },
+  "Restore from iCloud": {
+   "es": "Restaurar desde iCloud"
+  },
+  "Save": {
+   "es": "Guardar"
+  },
+  "Savings": {
+   "es": "Ahorro"
+  },
+  "Search currency": {
+   "es": "Buscar moneda"
+  },
+  "Search…": {
+   "es": "Buscar…"
+  },
+  "Second currency": {
+   "es": "Segunda moneda"
+  },
+  "Six digits, kept only on this iPhone": {
+   "es": "Seis dígitos, guardados solo en este iPhone"
+  },
+  "Skip": {
+   "es": "Omitir"
+  },
+  "Start": {
+   "es": "Empezar"
+  },
+  "Start from scratch": {
+   "es": "Empezar de cero"
+  },
+  "Statement and payment dates for your cards": {
+   "es": "Corte y pago de tus tarjetas"
+  },
+  "Swap": {
+   "es": "Intercambiar"
+  },
+  "Swap main and second currency": {
+   "es": "Intercambiar moneda principal y segunda"
+  },
+  "Swipe an account left to remove it.": {
+   "es": "Desliza una cuenta a la izquierda para quitarla."
+  },
+  "Today's balance": {
+   "es": "Saldo de hoy"
+  },
+  "Two currencies": {
+   "es": "Dos monedas"
+  },
+  "Useful notifications, no spam": {
+   "es": "Avisos útiles, sin spam"
+  },
+  "We couldn't find a backup in your iCloud.": {
+   "es": "No encontramos un respaldo en tu iCloud."
+  },
+  "We couldn't save your data. Try again.": {
+   "es": "No pudimos guardar tus datos. Intenta de nuevo."
+  },
+  "We'll use it to greet you and show it on your cards. It's only stored on this iPhone.": {
+   "es": "Lo usaremos para saludarte y mostrarlo en tus tarjetas. Solo se guarda en este iPhone."
+  },
+  "What's your name?": {
+   "es": "¿Cómo te llamas?"
+  },
+  "Which currencies do you use?": {
+   "es": "¿Con qué monedas trabajas?"
+  },
+  "Which currencies does it charge you in?": {
+   "es": "¿En qué monedas te cobra?"
+  },
+  "Whichever your iPhone has": {
+   "es": "El que tenga tu iPhone"
+  },
+  "With today's balance. Credit cards start with what you owe.": {
+   "es": "Con su saldo de hoy. Las tarjetas de crédito empiezan con lo que debes."
+  },
+  "Your balances are yours alone. Lock the app so only you can open it.": {
+   "es": "Tus saldos son solo tuyos. Bloquea la app para que solo tú puedas abrirla."
+  },
+  "Your data stays yours": {
+   "es": "Tus datos son tuyos"
+  },
+  "Your first name": {
+   "es": "Tu nombre"
+  },
+  "Your money, clear, in one or two currencies": {
+   "es": "Tu dinero claro, en una o dos monedas"
+  },
+  "Your name": {
+   "es": "Tu nombre"
+  },
+  "iCloud backup": {
+   "es": "Respaldo en iCloud"
+  }
+ },
+ "settings": {
+  "%@ · expired %@": {
+   "es": "%1$@ · venció %2$@"
+  },
+  "%@ · expires this month": {
+   "es": "%@ · vence este mes"
+  },
+  "%@ · valid thru %@": {
+   "es": "%1$@ · vence %2$@"
+  },
+  "%lld days": {
+   "en": {
+    "one": "%lld day",
+    "other": "%lld days"
+   },
+   "es": {
+    "one": "%lld día",
+    "other": "%lld días"
+   }
+  },
+  "%lld rows skipped": {
+   "en": {
+    "one": "%lld row skipped",
+    "other": "%lld rows skipped"
+   },
+   "es": {
+    "one": "%lld fila omitida",
+    "other": "%lld filas omitidas"
+   }
+  },
+  "%lld transactions imported": {
+   "en": {
+    "one": "%lld transaction imported",
+    "other": "%lld transactions imported"
+   },
+   "es": {
+    "one": "%lld movimiento importado",
+    "other": "%lld movimientos importados"
+   }
+  },
+  "Add a bank account or a card from Accounts to see it here.": {
+   "es": "Agrega una cuenta de banco o una tarjeta desde Cuentas para verla aquí."
+  },
+  "App language": {
+   "es": "Idioma de la app"
+  },
+  "Ask again after": {
+   "es": "Pedirlo al volver después de"
+  },
+  "Back up now": {
+   "es": "Respaldar ahora"
+  },
+  "Backup ready · %@. Save it in iCloud Drive or Files.": {
+   "es": "Respaldo listo · %@. Guárdalo en iCloud Drive o en Archivos."
+  },
+  "Bank transfer": {
+   "es": "Transferencia bancaria"
+  },
+  "Categories": {
+   "es": "Categorías"
+  },
+  "Change passcode": {
+   "es": "Cambiar código"
+  },
+  "Charged straight to the account": {
+   "es": "Se cobra directo de la cuenta"
+  },
+  "Credit": {
+   "es": "Crédito"
+  },
+  "Credit cards": {
+   "es": "Tarjetas de crédito"
+  },
+  "Currency": {
+   "es": "Moneda"
+  },
+  "Data": {
+   "es": "Datos"
+  },
+  "Debit": {
+   "es": "Débito"
+  },
+  "Delete all my data": {
+   "es": "Eliminar todos mis datos"
+  },
+  "Delete all your data?": {
+   "es": "¿Eliminar todos tus datos?"
+  },
+  "Delete everything": {
+   "es": "Eliminar todo"
+  },
+  "Deleted defaults come back and edits to them are undone. Your own categories and movements stay.": {
+   "es": "Vuelven las predeterminadas que eliminaste y se deshacen sus cambios. Tus categorías y movimientos se quedan como están."
+  },
+  "Deletes the data on this iPhone and the iCloud backup.": {
+   "es": "Borra los datos de este iPhone y el respaldo de iCloud."
+  },
+  "Deleting a category moves its movements to “%@”, which stays so they always have a place.": {
+   "es": "Al eliminar una categoría, sus movimientos pasan a “%@”, que no se puede eliminar para que siempre tengan un lugar."
+  },
+  "Done": {
+   "es": "Listo"
+  },
+  "Expense categories": {
+   "es": "Categorías de gasto"
+  },
+  "Expenses": {
+   "es": "Gastos"
+  },
+  "Export CSV": {
+   "es": "Exportar CSV"
+  },
+  "Face ID /\nTouch ID": {
+   "es": "Face ID /\nTouch ID"
+  },
+  "For the greeting": {
+   "es": "Para el saludo"
+  },
+  "Hide amounts when leaving": {
+   "es": "Ocultar montos al salir"
+  },
+  "Immediately": {
+   "es": "De inmediato"
+  },
+  "Import CSV": {
+   "es": "Importar CSV"
+  },
+  "In your own iCloud, encrypted. We don't see anything.": {
+   "es": "En tu propio iCloud, cifrado. Nosotros no vemos nada."
+  },
+  "Income": {
+   "es": "Ingresos"
+  },
+  "Income categories": {
+   "es": "Categorías de ingreso"
+  },
+  "Keepwell passcode": {
+   "es": "Código de Keepwell"
+  },
+  "Keepwell uses your iPhone's language. To use another one only here, choose it in iPhone Settings.": {
+   "es": "Keepwell usa el idioma de tu iPhone. Para usar otro solo aquí, elígelo en Ajustes del iPhone."
+  },
+  "Keepwell will ask for your iPhone passcode instead.": {
+   "es": "Keepwell te pedirá el código de tu iPhone en su lugar."
+  },
+  "Language": {
+   "es": "Idioma"
+  },
+  "Last backup: %@": {
+   "es": "Último respaldo: %@"
+  },
+  "Main currency": {
+   "es": "Moneda principal"
+  },
+  "Make %@ the main currency": {
+   "es": "Usar %@ como moneda principal"
+  },
+  "Make %@ the main currency?": {
+   "es": "¿Usar %@ como moneda principal?"
+  },
+  "Manual · default 1": {
+   "es": "Manual · por defecto 1"
+  },
+  "Move down": {
+   "es": "Bajar"
+  },
+  "Move up": {
+   "es": "Subir"
+  },
+  "Net worth, summaries and new movements will be in %@, and the rate is turned around. Past movements keep the rate they were logged with.": {
+   "es": "El patrimonio, los resúmenes y los movimientos nuevos estarán en %@, y la tasa se invierte. Los movimientos anteriores conservan la tasa con la que se anotaron."
+  },
+  "New category": {
+   "es": "Nueva categoría"
+  },
+  "No lock": {
+   "es": "Sin bloqueo"
+  },
+  "Off: your data stays only on this iPhone.": {
+   "es": "Apagado: tus datos quedan solo en este iPhone."
+  },
+  "On ›": {
+   "es": "Activado ›"
+  },
+  "Organization": {
+   "es": "Organización"
+  },
+  "Passcode\nonly": {
+   "es": "Solo\ncódigo"
+  },
+  "Payment methods": {
+   "es": "Medios de pago"
+  },
+  "Rate": {
+   "es": "Tasa"
+  },
+  "Remind me to pay": {
+   "es": "Recordar pago antes de"
+  },
+  "Reorder": {
+   "es": "Reordenar"
+  },
+  "Replace your data with this backup?": {
+   "es": "¿Reemplazar tus datos con este respaldo?"
+  },
+  "Restore": {
+   "es": "Restaurar"
+  },
+  "Restore default categories": {
+   "es": "Restaurar categorías predeterminadas"
+  },
+  "Restore default categories?": {
+   "es": "¿Restaurar las categorías predeterminadas?"
+  },
+  "Restored the backup from %@ · %lld transactions": {
+   "en": {
+    "one": "Restored the backup from %@ · %lld transaction",
+    "other": "Restored the backup from %@ · %lld transactions"
+   },
+   "es": {
+    "one": "Respaldo del %@ restaurado · %lld movimiento",
+    "other": "Respaldo del %@ restaurado · %lld movimientos"
+   }
+  },
+  "Second currency": {
+   "es": "Segunda moneda"
+  },
+  "Security and privacy": {
+   "es": "Seguridad y privacidad"
+  },
+  "Set up ›": {
+   "es": "Configurar ›"
+  },
+  "Settings": {
+   "es": "Ajustes"
+  },
+  "Six digits, kept only on this iPhone. Without one, the lock uses your iPhone passcode.": {
+   "es": "Seis dígitos, guardados solo en este iPhone. Sin él, el bloqueo usa el código de tu iPhone."
+  },
+  "Swap currencies": {
+   "es": "Intercambiar monedas"
+  },
+  "Syncs on its own while you have iCloud on this iPhone.": {
+   "es": "Se sincroniza solo mientras tengas iCloud en este iPhone."
+  },
+  "That file isn't a Keepwell backup, so nothing was changed.": {
+   "es": "Ese archivo no es un respaldo de Keepwell, así que no cambió nada."
+  },
+  "The change applies the next time you open Keepwell.": {
+   "es": "El cambio se aplica la próxima vez que abras Keepwell."
+  },
+  "The rate has to be a number greater than zero.": {
+   "es": "La tasa tiene que ser un número mayor que cero."
+  },
+  "Turn off passcode": {
+   "es": "Desactivar código"
+  },
+  "Turn off the Keepwell passcode?": {
+   "es": "¿Desactivar el código de Keepwell?"
+  },
+  "Unlock the app with": {
+   "es": "Desbloquear la app con"
+  },
+  "Update it whenever you like by replacing the value. Each transaction keeps the rate it was logged with, so your history doesn't change.": {
+   "es": "Actualízala cuando quieras reemplazando el valor. Cada movimiento guarda la tasa con la que se anotó, así tu historial no cambia."
+  },
+  "We couldn't create the backup. Try again.": {
+   "es": "No pudimos crear el respaldo. Inténtalo de nuevo."
+  },
+  "We couldn't create the file. Try again.": {
+   "es": "No pudimos crear el archivo. Inténtalo de nuevo."
+  },
+  "We couldn't delete your data. Try again.": {
+   "es": "No pudimos eliminar tus datos. Inténtalo de nuevo."
+  },
+  "We couldn't import the file. Try again.": {
+   "es": "No pudimos importar el archivo. Inténtalo de nuevo."
+  },
+  "We couldn't load your categories.": {
+   "es": "No pudimos cargar tus categorías."
+  },
+  "We couldn't load your payment methods.": {
+   "es": "No pudimos cargar tus medios de pago."
+  },
+  "We couldn't read that file.": {
+   "es": "No pudimos leer ese archivo."
+  },
+  "We couldn't read that file. Export it again as CSV (UTF-8).": {
+   "es": "No pudimos leer ese archivo. Expórtalo de nuevo como CSV (UTF-8)."
+  },
+  "We couldn't restore the backup. Try again.": {
+   "es": "No pudimos restaurar el respaldo. Inténtalo de nuevo."
+  },
+  "We couldn't restore the default categories. Try again.": {
+   "es": "No pudimos restaurar las categorías predeterminadas. Inténtalo de nuevo."
+  },
+  "We couldn't save the change. Try again.": {
+   "es": "No pudimos guardar el cambio. Inténtalo de nuevo."
+  },
+  "We couldn't save the new order. Try again.": {
+   "es": "No pudimos guardar el nuevo orden. Inténtalo de nuevo."
+  },
+  "We use Face ID or Touch ID, whichever your iPhone has": {
+   "es": "Usamos Face ID o Touch ID según tu iPhone"
+  },
+  "What's on this iPhone now is replaced by the backup.": {
+   "es": "Lo que hay ahora en este iPhone se reemplaza por el respaldo."
+  },
+  "Your accounts, cards and transactions are deleted from this iPhone and from iCloud. This can't be undone.": {
+   "es": "Tus cuentas, tarjetas y movimientos se borran de este iPhone y de iCloud. No se puede deshacer."
+  },
+  "Your name": {
+   "es": "Tu nombre"
+  },
+  "iCloud backup": {
+   "es": "Respaldo en iCloud"
+  }
+ },
+ "sharedpresentation": {
+  "%@ debited": {
+   "es": "%@ debitado"
+  },
+  "Account name": {
+   "es": "Nombre de la cuenta"
+  },
+  "Amber": {
+   "es": "Ámbar"
+  },
+  "As printed on the card. We remind you a month before it expires, with what's charged to it.": {
+   "es": "Como viene impreso en la tarjeta. Te avisamos un mes antes de que venza, con lo que tiene cargado."
+  },
+  "Bank transfer": {
+   "es": "Transferencia bancaria"
+  },
+  "Blue": {
+   "es": "Azul"
+  },
+  "Card color": {
+   "es": "Color de la tarjeta"
+  },
+  "Category name": {
+   "es": "Nombre de la categoría"
+  },
+  "Choose both the month and the year.": {
+   "es": "Elige el mes y el año."
+  },
+  "Color": {
+   "es": "Color"
+  },
+  "Create category": {
+   "es": "Crear categoría"
+  },
+  "Credit": {
+   "es": "Crédito"
+  },
+  "Cyan": {
+   "es": "Cian"
+  },
+  "Debit": {
+   "es": "Débito"
+  },
+  "Debit card": {
+   "es": "Tarjeta de débito"
+  },
+  "Debit •••• %@": {
+   "es": "Débito •••• %@"
+  },
+  "Delete": {
+   "es": "Eliminar"
+  },
+  "Delete category": {
+   "es": "Eliminar categoría"
+  },
+  "Delete this category?": {
+   "es": "¿Eliminar esta categoría?"
+  },
+  "Donations": {
+   "es": "Donaciones"
+  },
+  "Edit category": {
+   "es": "Editar categoría"
+  },
+  "Edit name": {
+   "es": "Editar nombre"
+  },
+  "Education": {
+   "es": "Educación"
+  },
+  "Every card on this account shows this name.": {
+   "es": "Todas las tarjetas de esta cuenta muestran este nombre."
+  },
+  "Expiry month": {
+   "es": "Mes de vencimiento"
+  },
+  "Expiry year": {
+   "es": "Año de vencimiento"
+  },
+  "Extra": {
+   "es": "Extra"
+  },
+  "Family": {
+   "es": "Familia"
+  },
+  "Fees": {
+   "es": "Comisiones"
+  },
+  "Freelance": {
+   "es": "Trabajo independiente"
+  },
+  "Gifts": {
+   "es": "Regalos"
+  },
+  "Gifts received": {
+   "es": "Regalos recibidos"
+  },
+  "Give the category a name.": {
+   "es": "Ponle un nombre a la categoría."
+  },
+  "Gray": {
+   "es": "Gris"
+  },
+  "Green": {
+   "es": "Verde"
+  },
+  "Groceries": {
+   "es": "Supermercado"
+  },
+  "Health": {
+   "es": "Salud"
+  },
+  "Hidden balance": {
+   "es": "Saldo oculto"
+  },
+  "Hide balance": {
+   "es": "Ocultar saldo"
+  },
+  "Housing": {
+   "es": "Vivienda"
+  },
+  "Icon": {
+   "es": "Ícono"
+  },
+  "Insurance": {
+   "es": "Seguros"
+  },
+  "Interest": {
+   "es": "Intereses"
+  },
+  "Investments": {
+   "es": "Inversiones"
+  },
+  "Its movements move to “%@”.": {
+   "es": "Sus movimientos pasan a “%@”."
+  },
+  "Leisure": {
+   "es": "Ocio"
+  },
+  "Lime": {
+   "es": "Lima"
+  },
+  "Movements from deleted categories land here, so this one can be renamed but not deleted.": {
+   "es": "Aquí llegan los movimientos de las categorías eliminadas, así que puedes renombrarla pero no eliminarla."
+  },
+  "Name": {
+   "es": "Nombre"
+  },
+  "New category": {
+   "es": "Nueva categoría"
+  },
+  "Not set": {
+   "es": "Sin definir"
+  },
+  "Orange": {
+   "es": "Naranja"
+  },
+  "Other": {
+   "es": "Otros"
+  },
+  "Other income": {
+   "es": "Otros ingresos"
+  },
+  "Personal care": {
+   "es": "Cuidado personal"
+  },
+  "Pets": {
+   "es": "Mascotas"
+  },
+  "Pink": {
+   "es": "Rosa"
+  },
+  "Product and expiry": {
+   "es": "Producto y vencimiento"
+  },
+  "Product name (e.g. Platinum)": {
+   "es": "Nombre del producto (ej. Platinum)"
+  },
+  "Purple": {
+   "es": "Morado"
+  },
+  "Refunds": {
+   "es": "Reembolsos"
+  },
+  "Rental": {
+   "es": "Alquiler"
+  },
+  "Restaurants": {
+   "es": "Restaurantes"
+  },
+  "Salary": {
+   "es": "Salario"
+  },
+  "Save": {
+   "es": "Guardar"
+  },
+  "Savings": {
+   "es": "Ahorro"
+  },
+  "See all": {
+   "es": "Ver todos"
+  },
+  "Shopping": {
+   "es": "Compras"
+  },
+  "Show balance": {
+   "es": "Mostrar saldo"
+  },
+  "Subscriptions": {
+   "es": "Suscripciones"
+  },
+  "Taxes": {
+   "es": "Impuestos"
+  },
+  "Tools": {
+   "es": "Herramientas"
+  },
+  "Transport": {
+   "es": "Transporte"
+  },
+  "Travel": {
+   "es": "Viajes"
+  },
+  "Utilities": {
+   "es": "Servicios"
+  },
+  "We couldn't delete the category. Try again.": {
+   "es": "No pudimos eliminar la categoría. Inténtalo de nuevo."
+  },
+  "We couldn't save the category. Try again.": {
+   "es": "No pudimos guardar la categoría. Inténtalo de nuevo."
+  },
+  "Yellow": {
+   "es": "Amarillo"
+  },
+  "You already have a category with that name.": {
+   "es": "Ya tienes una categoría con ese nombre."
+  },
+  "network.other": {
+   "en": "Other",
+   "es": "Otra"
+  }
+ },
+ "summary": {
+  "%@ less than %@ by the same day": {
+   "es": "%1$@ menos que en %2$@ al mismo día"
+  },
+  "%@ more than %@ by the same day": {
+   "es": "%1$@ más que en %2$@ al mismo día"
+  },
+  "%@ total: %@": {
+   "es": "Total de %1$@: %2$@"
+  },
+  "%@, came in": {
+   "es": "%@, entró"
+  },
+  "%@, went out": {
+   "es": "%@, salió"
+  },
+  "%lld categories": {
+   "en": {
+    "one": "%lld category",
+    "other": "%lld categories"
+   },
+   "es": {
+    "one": "%lld categoría",
+    "other": "%lld categorías"
+   }
+  },
+  "%lld more categories": {
+   "en": {
+    "one": "%lld more category",
+    "other": "%lld more categories"
+   },
+   "es": {
+    "one": "%lld categoría más",
+    "other": "%lld categorías más"
+   }
+  },
+  "Amount": {
+   "es": "Monto"
+  },
+  "Average %@ / month": {
+   "es": "Promedio %@ / mes"
+  },
+  "By category": {
+   "es": "Por categoría"
+  },
+  "By day %lld, %@ spent in %@ against %@ in %@.": {
+   "es": "Al día %1$lld, gastaste %2$@ en %3$@ frente a %4$@ en %5$@."
+  },
+  "Came in": {
+   "es": "Entró"
+  },
+  "Cash flow": {
+   "es": "Flujo"
+  },
+  "Categories": {
+   "es": "Categorías"
+  },
+  "Day": {
+   "es": "Día"
+  },
+  "Direction": {
+   "es": "Dirección"
+  },
+  "Expenses": {
+   "es": "Gastos"
+  },
+  "Income": {
+   "es": "Ingresos"
+  },
+  "Last %lld months": {
+   "en": {
+    "one": "Last month",
+    "other": "Last %lld months"
+   },
+   "es": {
+    "one": "Último mes",
+    "other": "Últimos %lld meses"
+   }
+  },
+  "Log transaction": {
+   "es": "Anotar movimiento"
+  },
+  "Month": {
+   "es": "Mes"
+  },
+  "Next month": {
+   "es": "Mes siguiente"
+  },
+  "No income": {
+   "es": "Sin ingresos"
+  },
+  "No spending": {
+   "es": "Sin gastos"
+  },
+  "Nothing came in during %@.": {
+   "es": "No entró nada en %@."
+  },
+  "Nothing came in, so all of it came from your savings.": {
+   "es": "No entró nada, así que todo salió de tus ahorros."
+  },
+  "Nothing moved in %@": {
+   "es": "Sin movimientos en %@"
+  },
+  "Nothing spent in %@.": {
+   "es": "No gastaste nada en %@."
+  },
+  "Nothing was spent in %@ to compare with.": {
+   "es": "No hubo gastos en %@ para comparar."
+  },
+  "Once you log expenses and income, you will see what came in, what went out and what you spent it on.": {
+   "es": "Cuando anotes gastos e ingresos, verás lo que entró, lo que salió y en qué lo gastaste."
+  },
+  "Pace": {
+   "es": "Ritmo"
+  },
+  "Previous month": {
+   "es": "Mes anterior"
+  },
+  "Result": {
+   "es": "Resultado"
+  },
+  "Result per month": {
+   "es": "Resultado por mes"
+  },
+  "Same as %@ by the same day": {
+   "es": "Igual que en %@ al mismo día"
+  },
+  "Spent in %@": {
+   "es": "Gastado en %@"
+  },
+  "Spent so far in %@": {
+   "es": "Gastado hasta hoy en %@"
+  },
+  "Summary": {
+   "es": "Resumen"
+  },
+  "Went out": {
+   "es": "Salió"
+  },
+  "You broke even in %@": {
+   "es": "Quedaste a mano en %@"
+  },
+  "You kept %@ of what came in.": {
+   "es": "Guardaste el %@ de lo que entró."
+  },
+  "You overspent in %@": {
+   "es": "Gastaste de más en %@"
+  },
+  "You saved in %@": {
+   "es": "Ahorraste en %@"
+  },
+  "You saved in %lld of %lld months": {
+   "es": "Ahorraste en %1$lld de %2$lld meses"
+  },
+  "You spent %@ more than came in.": {
+   "es": "Gastaste %@ más de lo que entró."
+  },
+  "You spent exactly what came in.": {
+   "es": "Gastaste exactamente lo que entró."
+  },
+  "Your summary starts with one transaction": {
+   "es": "Tu resumen empieza con un movimiento"
+  },
+  "broke even": {
+   "es": "quedó a mano"
+  },
+  "no movements": {
+   "es": "sin movimientos"
+  },
+  "overspent %@": {
+   "es": "gastó %@ de más"
+  },
+  "received": {
+   "es": "recibido"
+  },
+  "saved %@": {
+   "es": "ahorró %@"
+  },
+  "spent": {
+   "es": "gastado"
+  }
+ },
+ "transactions": {
+  "Accounts: %@": {
+   "es": "Cuentas: %@"
+  },
+  "All": {
+   "es": "Todos"
+  },
+  "All accounts": {
+   "es": "Todas las cuentas"
+  },
+  "Available balance": {
+   "es": "Saldo disponible"
+  },
+  "Balances update as if it never happened.": {
+   "es": "Los saldos se actualizan como si nunca hubiera pasado."
+  },
+  "Bank account": {
+   "es": "Cuenta bancaria"
+  },
+  "Cash": {
+   "es": "Efectivo"
+  },
+  "Choose which account to show": {
+   "es": "Elige qué cuenta mostrar"
+  },
+  "Clear search": {
+   "es": "Borrar búsqueda"
+  },
+  "Confirm": {
+   "es": "Confirmar"
+  },
+  "Credit card": {
+   "es": "Tarjeta de crédito"
+  },
+  "Current debt": {
+   "es": "Deuda actual"
+  },
+  "Delete": {
+   "es": "Eliminar"
+  },
+  "Delete this transaction?": {
+   "es": "¿Eliminar este movimiento?"
+  },
+  "Drafts": {
+   "es": "Borradores"
+  },
+  "Drafts · they don't affect balances": {
+   "es": "Borradores · no afectan saldos"
+  },
+  "Expenses": {
+   "es": "Gastos"
+  },
+  "Income": {
+   "es": "Ingresos"
+  },
+  "Log transaction": {
+   "es": "Anotar movimiento"
+  },
+  "Log your first expense, income or transfer and it shows up here.": {
+   "es": "Anota tu primer gasto, ingreso o transferencia y aparecerá aquí."
+  },
+  "New transaction": {
+   "es": "Nuevo movimiento"
+  },
+  "No movements here yet.": {
+   "es": "Aún no hay movimientos aquí."
+  },
+  "No transactions yet": {
+   "es": "Todavía no hay movimientos"
+  },
+  "Nothing matches. Try another word or filter.": {
+   "es": "Nada coincide. Prueba otra palabra u otro filtro."
+  },
+  "Search": {
+   "es": "Buscar"
+  },
+  "Search merchant, note or category": {
+   "es": "Buscar comercio, nota o categoría"
+  },
+  "Show all accounts": {
+   "es": "Mostrar todas las cuentas"
+  },
+  "Show movements from": {
+   "es": "Ver movimientos de"
+  },
+  "Transactions": {
+   "es": "Movimientos"
+  },
+  "Transfers": {
+   "es": "Transferencias"
+  },
+  "We couldn't save the change. Try again.": {
+   "es": "No pudimos guardar el cambio. Inténtalo de nuevo."
+  }
+ },
+ "widgets": {
+  "%@: you saved 71%%": {
+   "es": "%@: ahorraste 71%%"
+  },
+  "Bank": {
+   "es": "Banco"
+  },
+  "Cash": {
+   "es": "Efectivo"
+  },
+  "Everything you have in your main currency, with your largest balances.": {
+   "es": "Todo lo que tienes en tu moneda principal, con tus saldos más grandes."
+  },
+  "Example widget.": {
+   "es": "Widget de ejemplo."
+  },
+  "Groceries": {
+   "es": "Supermercado"
+  },
+  "Log quickly": {
+   "es": "Anotar rápido"
+  },
+  "Net worth": {
+   "es": "Patrimonio neto"
+  },
+  "New expense": {
+   "es": "Nuevo gasto"
+  },
+  "One tap to log an expense in your usual categories.": {
+   "es": "Un toque para anotar un gasto en tus categorías de siempre."
+  },
+  "Open Keepwell to see your month here.": {
+   "es": "Abre Keepwell para ver tu mes aquí."
+  },
+  "Restaurants": {
+   "es": "Restaurantes"
+  },
+  "This month": {
+   "es": "Este mes"
+  },
+  "Transport": {
+   "es": "Transporte"
+  },
+  "What you've spent this month and your drafts.": {
+   "es": "Lo que llevas gastado este mes y tus borradores."
+  },
+  "spent · 4 drafts": {
+   "es": "gastado · 4 borradores"
+  }
+ }
+}

@@ -1,3 +1,4 @@
+import { newID } from "@/lib/platform/uuid"
 import { z } from "zod"
 
 import { TransactionKind } from "./primitives"
@@ -21,14 +22,17 @@ export const TransactionCategory = z.object({
 export type TransactionCategory = z.infer<typeof TransactionCategory>
 
 export function newCustomCategoryId(): string {
-  return `custom-${crypto.randomUUID()}`
+  return `custom-${newID()}`
 }
 
 /** Where reconciliation adjustments and the movements of a deleted category land; never deletable. */
 export const OTHER_EXPENSE_ID = "other-expense"
 export const OTHER_INCOME_ID = "other-income"
 
-function defaults(kind: TransactionKind, entries: ReadonlyArray<readonly [string, string]>): TransactionCategory[] {
+function defaults(
+  kind: TransactionKind,
+  entries: ReadonlyArray<readonly [string, string]>
+): TransactionCategory[] {
   return entries.map(([id, name]) => ({ id, name, kind, isRenamed: false }))
 }
 
@@ -84,9 +88,14 @@ export function isFallbackCategory(id: string): boolean {
 }
 
 /** Per kind, in stored order, with the catch-all "Other" last (iOS `TransactionCategory.ordered`). */
-export function orderedCategories(categories: readonly TransactionCategory[]): TransactionCategory[] {
+export function orderedCategories(
+  categories: readonly TransactionCategory[]
+): TransactionCategory[] {
   return (["expense", "income", "transfer"] as const).flatMap((kind) => {
     const ofKind = categories.filter((category) => category.kind === kind)
-    return [...ofKind.filter((c) => !isFallbackCategory(c.id)), ...ofKind.filter((c) => isFallbackCategory(c.id))]
+    return [
+      ...ofKind.filter((c) => !isFallbackCategory(c.id)),
+      ...ofKind.filter((c) => isFallbackCategory(c.id)),
+    ]
   })
 }
