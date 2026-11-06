@@ -16,7 +16,8 @@
     "test:watch": "TZ=America/Managua vitest",
     "strings:sync": "node scripts/sync-ios-strings.mjs",
     "strings:check": "node scripts/sync-ios-strings.mjs --check",
-    "check": "pnpm typecheck && pnpm lint && pnpm test"
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "doctor": "REACT_DOCTOR_NO_TELEMETRY=1 react-doctor . --no-supply-chain -y"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -57,6 +58,7 @@
     "fake-indexeddb": "^6.2.7",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "react-doctor": "0.9.22",
     "serwist": "^9.5.13",
     "tailwindcss": "^4",
     "typescript": "^5",
