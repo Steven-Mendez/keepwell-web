@@ -18,6 +18,7 @@ import { useT, type Translator } from "@/lib/i18n"
 import type { TransactionCategory } from "@/lib/schema"
 
 import { CashFlowCard } from "./cash-flow-card"
+import { BudgetCard } from "./budget-card"
 import { CategoryCard, type CategoryMode } from "./category-card"
 import { KpiStrip } from "./kpi-strip"
 import { PaceCard } from "./pace-card"
@@ -190,6 +191,12 @@ function MonthSummary({
           className="lg:col-span-2"
         />
       </div>
+      <BudgetCard
+        t={t}
+        f={f}
+        summary={report.months[selectedIndex]}
+        categories={categories}
+      />
     </>
   )
 }

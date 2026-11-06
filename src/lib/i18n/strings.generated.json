@@ -935,11 +935,20 @@
   "%@ expires this month": {
    "es": "%@ vence este mes"
   },
+  "%@ is close to its budget": {
+   "es": "%@ está cerca de su presupuesto"
+  },
   "%@ on %@": {
    "es": "%@ con %@"
   },
   "%@ renews tomorrow": {
    "es": "%@ se renueva mañana"
+  },
+  "%@ spent of %@ this month.": {
+   "es": "Llevas %@ de %@ este mes."
+  },
+  "%@ went over its budget": {
+   "es": "%@ superó su presupuesto"
   },
   "%@ · %@ from %@. Has it been paid?": {
    "es": "%@ · %@ desde %@. ¿Ya se pagó?"
@@ -2176,6 +2185,9 @@
   "Lime": {
    "es": "Lima"
   },
+  "Monthly budget": {
+   "es": "Presupuesto mensual"
+  },
   "Movements from deleted categories land here, so this one can be renamed but not deleted.": {
    "es": "Aquí llegan los movimientos de las categorías eliminadas, así que puedes renombrarla pero no eliminarla."
   },
@@ -2184,6 +2196,9 @@
   },
   "New category": {
    "es": "Nueva categoría"
+  },
+  "No limit": {
+   "es": "Sin límite"
   },
   "Not set": {
    "es": "Sin definir"
@@ -2248,6 +2263,9 @@
   "Subscriptions": {
    "es": "Suscripciones"
   },
+  "Summary shows how much is left, and Home warns you at 80% and 100%.": {
+   "es": "Resumen muestra cuánto queda, e Inicio te avisa al llegar al 80 % y al 100 %."
+  },
   "Taxes": {
    "es": "Impuestos"
   },
@@ -2287,11 +2305,20 @@
   }
  },
  "summary": {
+  "%@ left": {
+   "es": "Quedan %@"
+  },
   "%@ less than %@ by the same day": {
    "es": "%1$@ menos que en %2$@ al mismo día"
   },
   "%@ more than %@ by the same day": {
    "es": "%1$@ más que en %2$@ al mismo día"
+  },
+  "%@ of %@": {
+   "es": "%@ de %@"
+  },
+  "%@ over": {
+   "es": "%@ por encima"
   },
   "%@ total: %@": {
    "es": "Total de %1$@: %2$@"
@@ -2327,6 +2354,9 @@
   },
   "Average %@ / month": {
    "es": "Promedio %@ / mes"
+  },
+  "Budgets": {
+   "es": "Presupuestos"
   },
   "By category": {
    "es": "Por categoría"
