@@ -30,6 +30,7 @@ import {
   ONBOARDING_PATH,
   RECURRING_NAV,
   SETTINGS_NAV,
+  STANDALONE_PATHS,
   type NavItem,
 } from "./navigation"
 
@@ -43,14 +44,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter()
   const ledger = useLedger()
   const isOnboarding = pathname === ONBOARDING_PATH
+  // Full pages of their own, outside the app's chrome and its onboarding gate.
+  const isStandalone = STANDALONE_PATHS.some((path) =>
+    pathname.startsWith(path)
+  )
   const onboarded = ledger?.settings.hasCompletedOnboarding
 
   useEffect(() => {
+    if (isStandalone) return
     if (onboarded === false && !isOnboarding) router.replace(ONBOARDING_PATH)
     if (onboarded === true && isOnboarding) router.replace("/")
-  }, [onboarded, isOnboarding, router])
+  }, [onboarded, isOnboarding, isStandalone, router])
 
-  if (isOnboarding) return <>{children}</>
+  if (isOnboarding || isStandalone) return <>{children}</>
   // While the first IndexedDB read is in flight (and in the server HTML) the shell is drawn already,
   // each screen showing its own skeleton, so a reload never blanks the window. Only a store known
   // not to be set up yet waits here for the redirect to onboarding.
@@ -104,11 +110,9 @@ function TopBar() {
   const [isScrolled, setScrolled] = useState(false)
   const section = pathname.startsWith("/settings/categories")
     ? { ns: "settings" as const, title: "Categories" }
-    : pathname.startsWith("/design-system")
-      ? { ns: "web" as const, title: "Design system" }
-      : ([...MAIN_NAV, RECURRING_NAV, SETTINGS_NAV]
-          .filter((item) => item.href !== "/")
-          .find((item) => pathname.startsWith(item.href)) ?? MAIN_NAV[0]!)
+    : ([...MAIN_NAV, RECURRING_NAV, SETTINGS_NAV]
+        .filter((item) => item.href !== "/")
+        .find((item) => pathname.startsWith(item.href)) ?? MAIN_NAV[0]!)
 
   useEffect(() => {
     const update = () => setScrolled(window.scrollY > 56)
