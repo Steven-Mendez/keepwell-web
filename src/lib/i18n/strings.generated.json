@@ -633,6 +633,9 @@
   "Reference": {
    "es": "Referencia"
   },
+  "Repeat": {
+   "es": "Repetir"
+  },
   "Review": {
    "es": "Revisar"
   },
@@ -829,6 +832,10 @@
   "You're about to withdraw": {
    "es": "Estás a punto de retirar"
   },
+  "repeat.none": {
+   "en": "None",
+   "es": "No se repite"
+  },
   "transfer.noun": {
    "en": "Transfer",
    "es": "Transferencia"
@@ -927,6 +934,12 @@
  "home": {
   "%@ expires this month": {
    "es": "%@ vence este mes"
+  },
+  "%@ on %@": {
+   "es": "%@ con %@"
+  },
+  "%@ renews tomorrow": {
+   "es": "%@ se renueva mañana"
   },
   "%@ · %@ from %@. Has it been paid?": {
    "es": "%@ · %@ desde %@. ¿Ya se pagó?"
@@ -1065,6 +1078,9 @@
   },
   "They don't count toward balances until you confirm them · %@": {
    "es": "No cuentan en saldos hasta que los confirmes · %@"
+  },
+  "Upcoming": {
+   "es": "Próximos"
   },
   "Update it in %@ before it stops working.": {
    "es": "Actualízala en %@ antes de que deje de funcionar."
@@ -1494,6 +1510,179 @@
    "es": "Respaldo en iCloud"
   }
  },
+ "recurring": {
+  "Add recurring": {
+   "es": "Agregar recurrente"
+  },
+  "Add rent, a salary or a subscription once. Each time it's due, a draft waits on that day for you to confirm.": {
+   "es": "Agrega el alquiler, un salario o una suscripción una sola vez. Cada vez que toque, un borrador te espera ese día para que lo confirmes."
+  },
+  "Amount": {
+   "es": "Monto"
+  },
+  "Bills and other expenses": {
+   "es": "Facturas y otros gastos"
+  },
+  "Category": {
+   "es": "Categoría"
+  },
+  "Check the amount.": {
+   "es": "Revisa el monto."
+  },
+  "Choose": {
+   "es": "Elegir"
+  },
+  "Choose a different destination account.": {
+   "es": "Elige otra cuenta de destino."
+  },
+  "Currency": {
+   "es": "Moneda"
+  },
+  "Delete": {
+   "es": "Eliminar"
+  },
+  "Delete this recurring movement?": {
+   "es": "¿Eliminar este movimiento recurrente?"
+  },
+  "Draft": {
+   "es": "Borrador"
+  },
+  "Edit recurring": {
+   "es": "Editar recurrente"
+  },
+  "Ended": {
+   "es": "Terminado"
+  },
+  "Ends": {
+   "es": "Termina"
+  },
+  "Every": {
+   "es": "Cada"
+  },
+  "Expense": {
+   "es": "Gasto"
+  },
+  "From": {
+   "es": "Desde"
+  },
+  "Give it a name.": {
+   "es": "Ponle un nombre."
+  },
+  "Hide amounts": {
+   "es": "Ocultar montos"
+  },
+  "Income": {
+   "es": "Ingresos"
+  },
+  "It can repeat every 1 to 99.": {
+   "es": "Puede repetirse cada 1 a 99."
+  },
+  "It can't end before it starts.": {
+   "es": "No puede terminar antes de empezar."
+  },
+  "Its drafts waiting for confirmation are deleted too. Movements already confirmed stay.": {
+   "es": "También se eliminan sus borradores pendientes de confirmar. Los movimientos ya confirmados se quedan."
+  },
+  "Last day": {
+   "es": "Último día"
+  },
+  "Monthly": {
+   "es": "Mensual"
+  },
+  "Name": {
+   "es": "Nombre"
+  },
+  "New recurring": {
+   "es": "Nuevo recurrente"
+  },
+  "Next dates": {
+   "es": "Próximas fechas"
+  },
+  "Note": {
+   "es": "Nota"
+  },
+  "Nothing recurring yet": {
+   "es": "Aún no hay recurrentes"
+  },
+  "Off: it waits as a draft for you to confirm.": {
+   "es": "Apagado: espera como borrador hasta que lo confirmes."
+  },
+  "Optional": {
+   "es": "Opcional"
+  },
+  "Pause": {
+   "es": "Pausar"
+  },
+  "Paused": {
+   "es": "En pausa"
+  },
+  "Payment method": {
+   "es": "Método de pago"
+  },
+  "Record automatically": {
+   "es": "Registrar automáticamente"
+  },
+  "Recorded": {
+   "es": "Registrados"
+  },
+  "Recurring": {
+   "es": "Recurrentes"
+  },
+  "Rent, Netflix…": {
+   "es": "Alquiler, Netflix…"
+  },
+  "Repeats": {
+   "es": "Se repite"
+  },
+  "Resume": {
+   "es": "Reanudar"
+  },
+  "Save": {
+   "es": "Guardar"
+  },
+  "Show amounts": {
+   "es": "Mostrar montos"
+  },
+  "Starts": {
+   "es": "Empieza"
+  },
+  "Subscription": {
+   "es": "Suscripción"
+  },
+  "Subscriptions": {
+   "es": "Suscripciones"
+  },
+  "Subscriptions per month": {
+   "es": "Suscripciones al mes"
+  },
+  "To": {
+   "es": "Hacia"
+  },
+  "Transfer": {
+   "es": "Transferencia"
+  },
+  "Transfers": {
+   "es": "Transferencias"
+  },
+  "We couldn't delete it. Try again.": {
+   "es": "No pudimos eliminarlo. Inténtalo de nuevo."
+  },
+  "We couldn't load your recurring movements.": {
+   "es": "No pudimos cargar tus movimientos recurrentes."
+  },
+  "We couldn't save it. Try again.": {
+   "es": "No pudimos guardarlo. Inténtalo de nuevo."
+  },
+  "Weekly": {
+   "es": "Semanal"
+  },
+  "Yearly": {
+   "es": "Anual"
+  },
+  "≈ %@ per year": {
+   "es": "≈ %@ al año"
+  }
+ },
  "settings": {
   "%@ · expired %@": {
    "es": "%1$@ · venció %2$@"
@@ -1690,6 +1879,9 @@
   "Rate": {
    "es": "Tasa"
   },
+  "Recurring": {
+   "es": "Recurrentes"
+  },
   "Remind me to pay": {
    "es": "Recordar pago antes de"
   },
@@ -1882,6 +2074,36 @@
   "Education": {
    "es": "Educación"
   },
+  "Every %lld months": {
+   "en": {
+    "one": "Every month",
+    "other": "Every %lld months"
+   },
+   "es": {
+    "one": "Cada mes",
+    "other": "Cada %lld meses"
+   }
+  },
+  "Every %lld weeks": {
+   "en": {
+    "one": "Every week",
+    "other": "Every %lld weeks"
+   },
+   "es": {
+    "one": "Cada semana",
+    "other": "Cada %lld semanas"
+   }
+  },
+  "Every %lld years": {
+   "en": {
+    "one": "Every year",
+    "other": "Every %lld years"
+   },
+   "es": {
+    "one": "Cada año",
+    "other": "Cada %lld años"
+   }
+  },
   "Every card on this account shows this name.": {
    "es": "Todas las tarjetas de esta cuenta muestran este nombre."
   },
@@ -1993,6 +2215,9 @@
   "Purple": {
    "es": "Morado"
   },
+  "Recurring · %@": {
+   "es": "Recurrente · %@"
+  },
   "Refunds": {
    "es": "Reembolsos"
   },
@@ -2025,6 +2250,12 @@
   },
   "Taxes": {
    "es": "Impuestos"
+  },
+  "Today": {
+   "es": "Hoy"
+  },
+  "Tomorrow": {
+   "es": "Mañana"
   },
   "Tools": {
    "es": "Herramientas"

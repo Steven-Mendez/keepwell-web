@@ -9,8 +9,8 @@ export const WEB_STRINGS_RECURRING: WebStrings = {
   "Add recurring": { es: "Agregar recurrente" },
   "New recurring": { es: "Nuevo recurrente" },
   "Edit recurring": { es: "Editar recurrente" },
-  "Subscriptions per month": { es: "Suscripciones por mes" },
-  "≈ %@ per year": { es: "≈ %@ por año" },
+  "Subscriptions per month": { es: "Suscripciones al mes" },
+  "≈ %@ per year": { es: "≈ %@ al año" },
   "Bills and other expenses": { es: "Facturas y otros gastos" },
   "Every %lld weeks": {
     en: { one: "Every week", other: "Every %lld weeks" },
@@ -32,7 +32,7 @@ export const WEB_STRINGS_RECURRING: WebStrings = {
   Tomorrow: { es: "Mañana" },
   Paused: { es: "En pausa" },
   Ended: { es: "Terminado" },
-  "No recurring movements yet": { es: "Aún no tienes recurrentes" },
+  "No recurring movements yet": { es: "Aún no hay recurrentes" },
   "Add rent, your salary or a subscription once. On each date it appears as a draft for you to confirm.": {
     es: "Agrega una vez el alquiler, tu salario o una suscripción. En cada fecha aparece como borrador para que lo confirmes.",
   },
@@ -54,7 +54,7 @@ export const WEB_STRINGS_RECURRING: WebStrings = {
   "None yet.": { es: "Ninguno todavía." },
   Pause: { es: "Pausar" },
   Resume: { es: "Reanudar" },
-  "Delete this recurring movement?": { es: "¿Eliminar este recurrente?" },
+  "Delete this recurring movement?": { es: "¿Eliminar este movimiento recurrente?" },
   "Its pending drafts are deleted too. Movements already confirmed stay.": {
     es: "También se eliminan sus borradores pendientes. Los movimientos ya confirmados se quedan.",
   },
@@ -68,5 +68,5 @@ export const WEB_STRINGS_RECURRING: WebStrings = {
   },
   Upcoming: { es: "Próximos" },
   "%@ renews tomorrow": { es: "%@ se renueva mañana" },
-  "%@ on %@": { es: "%1$@ en %2$@" },
+  "%@ on %@": { es: "%1$@ con %2$@" },
 }
