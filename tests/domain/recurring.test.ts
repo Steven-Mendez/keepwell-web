@@ -338,7 +338,7 @@ describe("Backup file version 2", () => {
   const settings = { ...DEFAULT_SETTINGS, currencies: { principal: "USD", rate: "1" }, hasCompletedOnboarding: true, updatedAt: audit.updatedAt }
 
   it("writes the current schema version", () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe(2)
+    expect(CURRENT_SCHEMA_VERSION).toBe(3)
   })
 
   it("round-trips recurring rules and a movement's recurringId", () => {
@@ -355,6 +355,7 @@ describe("Backup file version 2", () => {
         { ...rule({ endDate: date(2027, 1, 31).toISOString(), note: "Family plan" }), ...audit },
         { ...rule({ id: "00000000-0000-0000-0000-00000000e002", name: "Old", isPaused: true }), ...audit, deletedAt: audit.updatedAt },
       ],
+      savingsGoals: [],
     }
     const text = serializeBackupFile(file)
     const parsed = parseBackupFile(text)
@@ -374,7 +375,7 @@ describe("Backup file version 2", () => {
   })
 
   it("rejects a file from a newer version", () => {
-    expect(() => parseBackupFile(JSON.stringify({ schemaVersion: 3, exportedAt: audit.updatedAt, settings, accounts: [], cards: [], categories: [], transactions: [], recurringRules: [] }))).toThrow("Not a valid Keepwell backup")
+    expect(() => parseBackupFile(JSON.stringify({ schemaVersion: 4, exportedAt: audit.updatedAt, settings, accounts: [], cards: [], categories: [], transactions: [], recurringRules: [] }))).toThrow("Not a valid Keepwell backup")
   })
 
   it("an InMemoryStore starts with no rules", async () => {

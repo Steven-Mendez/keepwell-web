@@ -931,12 +931,128 @@
    "es": "Datos de la tarjeta"
   }
  },
+ "goals": {
+  "%@ of %@": {
+   "es": "%@ de %@"
+  },
+  "%@ to go": {
+   "es": "Faltan %@"
+  },
+  "Add money": {
+   "es": "Agregar dinero"
+  },
+  "Amount": {
+   "es": "Monto"
+  },
+  "Cancel": {
+   "es": "Cancelar"
+  },
+  "Color": {
+   "es": "Color"
+  },
+  "Create goal": {
+   "es": "Crear meta"
+  },
+  "Currency": {
+   "es": "Moneda"
+  },
+  "Delete": {
+   "es": "Eliminar"
+  },
+  "Delete goal": {
+   "es": "Eliminar meta"
+  },
+  "Delete this goal?": {
+   "es": "¿Eliminar esta meta?"
+  },
+  "Edit goal": {
+   "es": "Editar meta"
+  },
+  "Give the goal a name.": {
+   "es": "Ponle un nombre a la meta."
+  },
+  "Goal name": {
+   "es": "Nombre de la meta"
+  },
+  "Goal reached": {
+   "es": "Meta cumplida"
+  },
+  "Goals": {
+   "es": "Metas"
+  },
+  "Hide amounts": {
+   "es": "Ocultar montos"
+  },
+  "Icon": {
+   "es": "Ícono"
+  },
+  "Name": {
+   "es": "Nombre"
+  },
+  "New goal": {
+   "es": "Nueva meta"
+  },
+  "No date": {
+   "es": "Sin fecha"
+  },
+  "No goals yet": {
+   "es": "Aún no tienes metas"
+  },
+  "Save": {
+   "es": "Guardar"
+  },
+  "Save for a trip, an emergency fund or anything else, and see how much to set aside each month.": {
+   "es": "Ahorra para un viaje, un fondo de emergencia o lo que quieras, y mira cuánto apartar cada mes."
+  },
+  "Savings goals": {
+   "es": "Metas de ahorro"
+  },
+  "Set aside %@ a month until %@": {
+   "es": "Aparta %@ al mes hasta %@"
+  },
+  "Set aside %@ this month": {
+   "es": "Aparta %@ este mes"
+  },
+  "Show amounts": {
+   "es": "Mostrar montos"
+  },
+  "Target": {
+   "es": "Objetivo"
+  },
+  "Target date": {
+   "es": "Fecha objetivo"
+  },
+  "The date passed with %@ to go": {
+   "es": "La fecha pasó y faltan %@"
+  },
+  "The target has to be greater than zero.": {
+   "es": "El objetivo tiene que ser mayor que cero."
+  },
+  "We couldn't load your goals.": {
+   "es": "No pudimos cargar tus metas."
+  },
+  "We couldn't save the goal. Try again.": {
+   "es": "No pudimos guardar la meta. Inténtalo de nuevo."
+  },
+  "What you've set aside is only tracked here; your accounts don't change.": {
+   "es": "Lo apartado solo se registra aquí; tus cuentas no cambian."
+  },
+  "Withdraw": {
+   "es": "Retirar"
+  },
+  "You can't withdraw more than you've set aside.": {
+   "es": "No puedes retirar más de lo que has apartado."
+  }
+ },
  "home": {
   "%@ expires this month": {
    "es": "%@ vence este mes"
   },
   "%@ is close to its budget": {
    "es": "%@ está cerca de su presupuesto"
+  },
+  "%@ of %@": {
+   "es": "%@ de %@"
   },
   "%@ on %@": {
    "es": "%@ con %@"
@@ -1055,6 +1171,9 @@
   "Net worth · %@": {
    "es": "Patrimonio neto · %@"
   },
+  "No goals yet": {
+   "es": "Aún no tienes metas"
+  },
   "No transactions yet": {
    "es": "Todavía no hay movimientos"
   },
@@ -1066,6 +1185,9 @@
   },
   "Recent": {
    "es": "Recientes"
+  },
+  "Savings goals": {
+   "es": "Metas de ahorro"
   },
   "Search transactions": {
    "es": "Buscar movimientos"

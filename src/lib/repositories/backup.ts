@@ -5,6 +5,8 @@ import {
   categoryToRow,
   db,
   recurringRuleToRow,
+  rowToSavingsGoal,
+  savingsGoalToRow,
   rowToAccount,
   rowToCard,
   rowToCategory,
@@ -67,12 +69,13 @@ const allTables = () => [
   db.categories,
   db.transactions,
   db.recurring_rules,
+  db.savings_goals,
   db.settings,
   db.sync_outbox,
 ]
 
 export const backupRepository = {
-  /** The whole store, deleted records included, as the JSON file iOS reads (`schemaVersion` 2). */
+  /** The whole store, deleted records included, as the JSON file iOS reads (`schemaVersion` 3). */
   async export(): Promise<string> {
     const file = await db.transaction(
       "r",
@@ -80,13 +83,14 @@ export const backupRepository = {
       async (): Promise<BackupFile> => {
         const settings = await db.settings.get(SETTINGS_ID)
         if (!settings) throw new NothingToBackUpError()
-        const [accounts, cards, categories, transactions, recurringRules] = await Promise.all([
+        const [accounts, cards, categories, transactions, recurringRules, savingsGoals] = await Promise.all([
           db.accounts.orderBy("created_at").toArray(),
           db.cards.orderBy("created_at").toArray(),
           db.categories.orderBy("sort_index").toArray(),
           db.transactions.orderBy("date").reverse().toArray(),
           // No `created_at` index on this table (shared contract): sorted below instead.
           db.recurring_rules.toArray(),
+          db.savings_goals.toArray(),
         ])
         return {
           schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -114,6 +118,11 @@ export const backupRepository = {
               a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0
             )
             .map((row) => ({ ...rowToRecurringRule(row), ...audit(row) })),
+          savingsGoals: savingsGoals
+            .sort((a, b) =>
+              a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0
+            )
+            .map((row) => ({ ...rowToSavingsGoal(row), ...audit(row) })),
         }
       }
     )
@@ -157,6 +166,11 @@ export const backupRepository = {
       ...columns(record),
     }))
 
+    const savingsGoals = file.savingsGoals.map((record) => ({
+      ...savingsGoalToRow(record),
+      ...columns(record),
+    }))
+
     const events: SyncOutboxRow[] = []
     const record = (
       entity: SyncEntity,
@@ -178,6 +192,7 @@ export const backupRepository = {
     record("category", categories)
     record("transaction", transactions)
     record("recurringRule", recurringRules)
+    record("savingsGoal", savingsGoals)
     events.push({
       id: newID(),
       entity: "settings",
@@ -195,6 +210,7 @@ export const backupRepository = {
       await db.categories.bulkPut(categories)
       await db.transactions.bulkPut(transactions)
       await db.recurring_rules.bulkPut(recurringRules)
+      await db.savings_goals.bulkPut(savingsGoals)
       await db.sync_outbox.bulkAdd(events)
     })
 

@@ -113,6 +113,19 @@ export interface RecurringRuleRow extends AuditColumns {
   note: string | null
 }
 
+/** A savings goal (iOS `SavingsGoalRecord`). */
+export interface SavingsGoalRow extends AuditColumns {
+  id: string
+  name: string
+  target_amount: string
+  target_currency: string
+  saved: string
+  target_month: number | null
+  target_year: number | null
+  icon: string | null
+  color: string | null
+}
+
 /** A single row, like iOS `SettingsRecord`. */
 export interface SettingsRow {
   id: typeof SETTINGS_ID
@@ -130,7 +143,7 @@ export interface SettingsRow {
 
 export const SETTINGS_ID = "settings"
 
-export type SyncEntity = "account" | "card" | "category" | "transaction" | "recurringRule" | "settings"
+export type SyncEntity = "account" | "card" | "category" | "transaction" | "recurringRule" | "savingsGoal" | "settings"
 export type SyncOperation = "create" | "update" | "delete"
 
 /**
@@ -152,6 +165,7 @@ export class KeepwellDatabase extends Dexie {
   categories!: EntityTable<CategoryRow, "id">
   transactions!: EntityTable<TransactionRow, "id">
   recurring_rules!: EntityTable<RecurringRuleRow, "id">
+  savings_goals!: EntityTable<SavingsGoalRow, "id">
   settings!: EntityTable<SettingsRow, "id">
   sync_outbox!: EntityTable<SyncOutboxRow, "id">
 
@@ -195,6 +209,8 @@ export class KeepwellDatabase extends Dexie {
             if (row.budget_currency === undefined) row.budget_currency = null
           })
       )
+    // Savings goals.
+    this.version(4).stores({ savings_goals: "id, updated_at, deleted_at" })
   }
 }
 
