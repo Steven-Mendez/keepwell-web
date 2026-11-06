@@ -30,3 +30,6 @@ export const RECURRING_NAV: NavItem = { title: "Recurring", ns: "web", href: "/r
 export const SETTINGS_NAV: NavItem = { title: "Settings", ns: "settings", href: "/settings", icon: SettingsIcon, kwIcon: "settings", key: "," }
 
 export const ONBOARDING_PATH = "/welcome"
+
+/** Routes drawn as full pages of their own, without the sidebar, top bar or tab bar. */
+export const STANDALONE_PATHS: readonly string[] = ["/design-system"]
