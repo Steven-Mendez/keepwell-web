@@ -64,6 +64,9 @@ export interface CategoryRow extends AuditColumns {
   color: string | null
   is_renamed: boolean
   sort_index: number
+  /** Added in version 3; `null` when the category has no monthly budget. */
+  budget_amount: string | null
+  budget_currency: string | null
 }
 
 export interface TransactionRow extends AuditColumns {
@@ -178,6 +181,18 @@ export class KeepwellDatabase extends Dexie {
           .toCollection()
           .modify((row) => {
             if (row.recurring_id === undefined) row.recurring_id = null
+          })
+      )
+    // Monthly budgets per category; existing rows start without one.
+    this.version(3)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table<CategoryRow, string>("categories")
+          .toCollection()
+          .modify((row) => {
+            if (row.budget_amount === undefined) row.budget_amount = null
+            if (row.budget_currency === undefined) row.budget_currency = null
           })
       )
   }

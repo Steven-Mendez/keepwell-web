@@ -2,6 +2,7 @@
 
 import { createElement, useState } from "react"
 
+import { AmountInput } from "@/components/accounts/form-parts"
 import { KWButton } from "@/components/kw/design"
 import { KWIcon } from "@/components/kw/kw-icon"
 import { CategoryBadge } from "@/components/kw/primitives"
@@ -15,8 +16,11 @@ import {
 import { Input } from "@/components/ui/input"
 import {
   MAX_CATEGORY_NAME_LENGTH,
+  decimalText,
   deleteCategory,
+  formatNumber,
   isDomainError,
+  parseAmount,
   saveCategory,
   translatesById,
   type CategoryDraft,
@@ -53,6 +57,8 @@ function saveErrorMessage(t: Translator, thrown: unknown): string {
       "sharedpresentation",
       "You already have a category with that name."
     )
+  if (isDomainError(thrown, "invalidAmount"))
+    return t.in("web", "The budget has to be an amount greater than zero.")
   return t.in("sharedpresentation", "We couldn't save the category. Try again.")
 }
 
@@ -78,9 +84,11 @@ function buildDraft(
     initialName: string
     icon: string
     color: string | undefined
+    budgetText: string
+    principal: string
   }
 ): CategoryDraft {
-  const { name, initialName, icon, color } = values
+  const { name, initialName, icon, color, budgetText, principal } = values
   const keepsName =
     editing !== undefined &&
     translatesById(editing) &&
@@ -95,13 +103,37 @@ function buildDraft(
     kind,
     ...(keepsIcon ? {} : { icon }),
     ...(color === undefined ? {} : { color }),
+    ...budgetDraft(editing, kind, budgetText, principal),
   }
+}
+
+/**
+ * Empty clears the budget. A budget kept in an older principal currency stays as it was unless the
+ * person types a new amount, which then counts in today's principal.
+ */
+function budgetDraft(
+  editing: TransactionCategory | undefined,
+  kind: TransactionKind,
+  text: string,
+  principal: string
+): Pick<CategoryDraft, "monthlyBudget"> {
+  if (kind !== "expense" || text.trim() === "") return {}
+  const current = editing?.monthlyBudget
+  if (current && text === initialBudgetText(editing)) return { monthlyBudget: current }
+  const amount = parseAmount(text)
+  // An unreadable amount is sent as zero so the domain refuses it with its own message.
+  return { monthlyBudget: { amount: amount ? decimalText(amount) : "0", currency: principal } }
+}
+
+function initialBudgetText(editing: TransactionCategory | undefined): string {
+  return editing?.monthlyBudget ? formatNumber(editing.monthlyBudget.amount) : ""
 }
 
 /** Form state of the editor and its save/delete actions, which close the dialog on success. */
 function useCategoryEditor(
   t: Translator,
   target: EditorTarget,
+  principal: string,
   onClose: () => void
 ) {
   const { editing, kind } = editorSubject(target)
@@ -114,6 +146,7 @@ function useCategoryEditor(
   const [color, setColor] = useState<string | undefined>(
     editing ? editing.color : CATEGORY_COLOR_KEYS[0]
   )
+  const [budgetText, setBudgetText] = useState(initialBudgetText(editing))
   const [error, setError] = useState<string>()
   const [isSaving, setSaving] = useState(false)
   const canSave = name.trim() !== "" && !isSaving
@@ -124,7 +157,14 @@ function useCategoryEditor(
     try {
       await saveCategory(
         ledgerStore,
-        buildDraft(editing, kind, { name, initialName, icon, color })
+        buildDraft(editing, kind, {
+          name,
+          initialName,
+          icon,
+          color,
+          budgetText,
+          principal,
+        })
       )
       onClose()
     } catch (thrown) {
@@ -166,6 +206,11 @@ function useCategoryEditor(
     setIcon,
     color,
     setColor,
+    budgetText,
+    setBudgetText: (value: string) => {
+      setBudgetText(value)
+      setError(undefined)
+    },
     error,
     isSaving,
     canSave,
@@ -303,14 +348,17 @@ export function CategoryEditorDialog({
   t,
   target,
   fallbackName,
+  principal,
   onClose,
 }: {
   t: Translator
   target: EditorTarget
   fallbackName: string
+  /** The currency a new budget is typed in. */
+  principal: string
   onClose: () => void
 }) {
-  const editor = useCategoryEditor(t, target, onClose)
+  const editor = useCategoryEditor(t, target, principal, onClose)
   const { editing, name, error, isSaving } = editor
   const [confirmDelete, setConfirmDelete] = useState(false)
   const isFallback = editing ? isFallbackCategory(editing.id) : false
@@ -359,6 +407,29 @@ export function CategoryEditorDialog({
                 <span className="type-caption text-negative">{error}</span>
               ) : null}
             </label>
+            {editor.kind === "expense" ? (
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="category-budget"
+                  className="type-label text-text-secondary"
+                >
+                  {t.in("sharedpresentation", "Monthly budget")}
+                </label>
+                <AmountInput
+                  id="category-budget"
+                  value={editor.budgetText}
+                  onChange={editor.setBudgetText}
+                  currency={editing?.monthlyBudget?.currency ?? principal}
+                  placeholder={t.in("sharedpresentation", "No limit")}
+                />
+                <span className="type-caption text-muted-foreground">
+                  {t.in(
+                    "sharedpresentation",
+                    "Summary shows how much is left, and Home warns you at 80% and 100%."
+                  )}
+                </span>
+              </div>
+            ) : null}
             <ColorChoices
               t={t}
               color={editor.color}

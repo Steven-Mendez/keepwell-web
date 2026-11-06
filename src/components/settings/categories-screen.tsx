@@ -16,7 +16,7 @@ import { CategoryBadge, Page } from "@/components/kw/primitives"
 import { toast } from "@/components/ui/toast"
 import { CategoriesSkeleton } from "@/components/kw/skeletons"
 import { useLedger } from "@/hooks/use-ledger"
-import { reorderCategories, restoreDefaultCategories } from "@/lib/domain"
+import { formatAmount, reorderCategories, restoreDefaultCategories } from "@/lib/domain"
 import { useT } from "@/lib/i18n"
 import { categoryName, fallbackCategoryName } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
@@ -193,8 +193,17 @@ export function CategoriesScreen() {
                     className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50"
                   >
                     <CategoryBadge category={category} />
-                    <span className="min-w-0 flex-1 truncate type-body text-foreground">
-                      {categoryName(t, category)}
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate type-body text-foreground">
+                        {categoryName(t, category)}
+                      </span>
+                      {category.monthlyBudget ? (
+                        <span className="truncate type-caption text-muted-foreground tabular-nums">
+                          {t.in("sharedpresentation", "Monthly budget")}
+                          {" · "}
+                          {formatAmount(category.monthlyBudget.amount, category.monthlyBudget.currency)}
+                        </span>
+                      ) : null}
                     </span>
                     <KWIcon
                       name="chevronRight"
@@ -253,6 +262,7 @@ export function CategoriesScreen() {
           t={t}
           target={editor}
           fallbackName={fallbackName}
+          principal={ledger?.settings.currencies.principal ?? "USD"}
           onClose={() => setEditor(undefined)}
         />
       ) : null}
