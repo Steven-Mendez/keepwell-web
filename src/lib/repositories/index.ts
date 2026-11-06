@@ -1,0 +1,8 @@
+// The data layer components use. Nothing outside this folder imports Dexie or `@/lib/db`.
+export { accountRepository, cardRepository, type Draft } from "./accounts"
+export { backupRepository, NothingToBackUpError, type RestoreSummary } from "./backup"
+export { categoryRepository, FallbackCategoryError } from "./categories"
+export { settingsRepository } from "./settings"
+export { NotFoundError } from "./shared"
+export { transactionRepository, type Period } from "./transactions"
+export { syncOutboxRepository } from "./sync-outbox"
