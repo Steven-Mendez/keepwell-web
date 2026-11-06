@@ -18,6 +18,8 @@ export type DomainErrorCode =
   | "categoryKindMismatch"
   | "unsupportedTransactionKind"
   | "invalidTransferDestination"
+  | "invalidInterval"
+  | "invalidEndDate"
   | "notFound"
   | "corruptedData"
 
@@ -45,6 +47,10 @@ export class DomainError extends Error {
     new DomainError("categoryKindMismatch", `${expected} ${actual}`)
   static unsupportedTransactionKind = (kind: TransactionKind) => new DomainError("unsupportedTransactionKind", kind)
   static invalidTransferDestination = () => new DomainError("invalidTransferDestination")
+  /** A recurring rule repeats every 1…99 units. */
+  static invalidInterval = (interval: number) => new DomainError("invalidInterval", String(interval))
+  /** A recurring rule can't end before the day it starts. */
+  static invalidEndDate = () => new DomainError("invalidEndDate")
   static notFound = (id: string) => new DomainError("notFound", id)
   static corruptedData = (detail: string) => new DomainError("corruptedData", detail)
 }

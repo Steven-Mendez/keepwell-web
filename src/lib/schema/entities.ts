@@ -117,8 +117,51 @@ export const Transaction = z.object({
   exchangeRate: ExchangeRate,
   isShared: z.boolean(),
   note: z.string().optional(),
+  /** The recurring rule that produced it; may point at a deleted rule. */
+  recurringId: Id.optional(),
 })
 export type Transaction = z.infer<typeof Transaction>
+
+/** How often a recurring rule repeats; `interval` says every how many of these. */
+export const RecurringFrequency = z.enum(["weekly", "monthly", "yearly"])
+export type RecurringFrequency = z.infer<typeof RecurringFrequency>
+
+export const MAX_RECURRING_INTERVAL = 99
+
+/**
+ * A template that produces a movement on a schedule (shared contract with iOS `RecurringRule`).
+ * Occurrences are computed from `startDate`, the anchor, never chained from a clamped date.
+ */
+export const RecurringRule = z.object({
+  id: Id,
+  /** Becomes each movement's description. */
+  name: z.string(),
+  kind: TransactionKind,
+  /** Absent for transfers, as on a movement. */
+  categoryId: z.string().optional(),
+  amount: PositiveDecimalString,
+  currency: CurrencyCode,
+  /** Source account, derived from the card when there is one. */
+  accountId: Id,
+  cardId: Id.optional(),
+  /** Transfers only. */
+  destinationAccountId: Id.optional(),
+  frequency: RecurringFrequency,
+  interval: z.number().int().min(1).max(MAX_RECURRING_INTERVAL),
+  /** The first occurrence; its time of day is kept on every occurrence. */
+  startDate: IsoDateTime,
+  /** The next occurrence not yet turned into a movement. */
+  nextDate: IsoDateTime,
+  /** The last day an occurrence may fall on, inclusive by calendar day. */
+  endDate: IsoDateTime.optional(),
+  isSubscription: z.boolean(),
+  /** Occurrences are saved confirmed; otherwise as drafts (`planned`). */
+  autoConfirm: z.boolean(),
+  /** Paused rules produce nothing and keep `nextDate` frozen. */
+  isPaused: z.boolean(),
+  note: z.string().optional(),
+})
+export type RecurringRule = z.infer<typeof RecurringRule>
 
 export const UnlockMethod = z.enum(["biometrics", "passcode", "disabled"])
 export type UnlockMethod = z.infer<typeof UnlockMethod>

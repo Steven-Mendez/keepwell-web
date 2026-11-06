@@ -6,6 +6,7 @@ import type {
   CardKind,
   CardNetwork,
   DebtMode,
+  RecurringFrequency,
   TransactionKind,
   TransactionStatus,
   UnlockMethod,
@@ -83,6 +84,30 @@ export interface TransactionRow extends AuditColumns {
   rate: string
   is_shared: boolean
   note: string | null
+  /** The rule that produced it. Rows written before version 2 lack the column until the upgrade fills it. */
+  recurring_id: string | null
+}
+
+/** A recurring movement or subscription (iOS `RecurringRuleRecord`). */
+export interface RecurringRuleRow extends AuditColumns {
+  id: string
+  name: string
+  kind: TransactionKind
+  category_id: string | null
+  amount: string
+  currency: string
+  account_id: string
+  card_id: string | null
+  destination_account_id: string | null
+  frequency: RecurringFrequency
+  interval: number
+  start_date: string
+  next_date: string
+  end_date: string | null
+  is_subscription: boolean
+  auto_confirm: boolean
+  is_paused: boolean
+  note: string | null
 }
 
 /** A single row, like iOS `SettingsRecord`. */
@@ -102,7 +127,7 @@ export interface SettingsRow {
 
 export const SETTINGS_ID = "settings"
 
-export type SyncEntity = "account" | "card" | "category" | "transaction" | "settings"
+export type SyncEntity = "account" | "card" | "category" | "transaction" | "recurringRule" | "settings"
 export type SyncOperation = "create" | "update" | "delete"
 
 /**
@@ -123,6 +148,7 @@ export class KeepwellDatabase extends Dexie {
   cards!: EntityTable<CardRow, "id">
   categories!: EntityTable<CategoryRow, "id">
   transactions!: EntityTable<TransactionRow, "id">
+  recurring_rules!: EntityTable<RecurringRuleRow, "id">
   settings!: EntityTable<SettingsRow, "id">
   sync_outbox!: EntityTable<SyncOutboxRow, "id">
 
@@ -139,6 +165,21 @@ export class KeepwellDatabase extends Dexie {
       settings: "id",
       sync_outbox: "id, created_at, entity, entity_id",
     })
+    // Recurring movements: their rules, and on each movement the rule that produced it.
+    this.version(2)
+      .stores({
+        transactions:
+          "id, date, account_id, card_id, category_id, recurring_id, [account_id+date], updated_at, deleted_at",
+        recurring_rules: "id, account_id, next_date, updated_at, deleted_at",
+      })
+      .upgrade((tx) =>
+        tx
+          .table<TransactionRow, string>("transactions")
+          .toCollection()
+          .modify((row) => {
+            if (row.recurring_id === undefined) row.recurring_id = null
+          })
+      )
   }
 }
 

@@ -14,7 +14,8 @@ import type { Transaction } from "@/lib/schema"
 
 /**
  * App-wide actions any screen, the command palette or a keyboard shortcut can trigger: log a
- * movement (iOS "+" sheet), edit one, open its detail, or add an account or card. The dialogs that
+ * movement (iOS "+" sheet), edit one, open its detail, add an account or card, or edit a recurring
+ * rule. The dialogs that
  * fulfill them are mounted once in the shell.
  */
 export type EditorRequest =
@@ -29,6 +30,9 @@ export type EditorRequest =
 
 export type AddAccountRequest = { kind?: "debit" | "credit" | "wallet" }
 
+/** The recurring rule editor: a new rule, or an existing one by id (its detail lives in the editor). */
+export type RuleEditorRequest = { mode: "create" } | { mode: "edit"; ruleId: string }
+
 interface AppActions {
   editor: EditorRequest | undefined
   openEditor: (request?: EditorRequest) => void
@@ -36,6 +40,9 @@ interface AppActions {
   /** The movement whose detail panel is open. */
   detailId: string | undefined
   showDetail: (id: string | undefined) => void
+  ruleEditor: RuleEditorRequest | undefined
+  openRuleEditor: (request?: RuleEditorRequest) => void
+  closeRuleEditor: () => void
   addAccount: AddAccountRequest | undefined
   openAddAccount: (request?: AddAccountRequest) => void
   closeAddAccount: () => void
@@ -51,6 +58,7 @@ export function AppActionsProvider({ children }: { children: ReactNode }) {
   const [editor, setEditor] = useState<EditorRequest>()
   const [detailId, setDetailId] = useState<string>()
   const [addAccount, setAddAccount] = useState<AddAccountRequest>()
+  const [ruleEditor, setRuleEditor] = useState<RuleEditorRequest>()
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
 
@@ -62,6 +70,14 @@ export function AppActionsProvider({ children }: { children: ReactNode }) {
     []
   )
   const closeEditor = useCallback(() => setEditor(undefined), [])
+  const openRuleEditor = useCallback(
+    (request: RuleEditorRequest = { mode: "create" }) => {
+      setPaletteOpen(false)
+      setRuleEditor(request)
+    },
+    []
+  )
+  const closeRuleEditor = useCallback(() => setRuleEditor(undefined), [])
   const openAddAccount = useCallback((request: AddAccountRequest = {}) => {
     setPaletteOpen(false)
     setAddAccount(request)
@@ -75,6 +91,9 @@ export function AppActionsProvider({ children }: { children: ReactNode }) {
       closeEditor,
       detailId,
       showDetail: setDetailId,
+      ruleEditor,
+      openRuleEditor,
+      closeRuleEditor,
       addAccount,
       openAddAccount,
       closeAddAccount,
@@ -88,6 +107,9 @@ export function AppActionsProvider({ children }: { children: ReactNode }) {
       openEditor,
       closeEditor,
       detailId,
+      ruleEditor,
+      openRuleEditor,
+      closeRuleEditor,
       addAccount,
       openAddAccount,
       closeAddAccount,
