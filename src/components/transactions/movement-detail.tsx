@@ -13,6 +13,7 @@ import {
   KWValueRow,
 } from "@/components/kw/design"
 import { StatusPill } from "@/components/movement-editor/flow-parts"
+import { ReceiptDialog } from "@/components/receipt/receipt-dialog"
 import {
   AlertDialog,
   AlertDialogContent,
@@ -185,6 +186,7 @@ function DetailBody({
   onConfirm,
   onEdit,
   onDelete,
+  onReceipt,
   rule,
   onOpenRule,
 }: {
@@ -195,6 +197,7 @@ function DetailBody({
   onConfirm: () => void
   onEdit: () => void
   onDelete: () => void
+  onReceipt: () => void
   /** The recurring rule that produced it, while the rule exists. */
   rule: RecurringRule | undefined
   onOpenRule: () => void
@@ -250,6 +253,11 @@ function DetailBody({
           title={t.in("web", "Edit")}
           variant={planned ? "neutral" : "prominent"}
           onClick={onEdit}
+        />
+        <KWActionButton
+          icon="share"
+          title={t.in("web", "Receipt")}
+          onClick={onReceipt}
         />
         <KWActionButton
           icon="trash"
@@ -316,6 +324,7 @@ export function MovementDetail() {
   const display = useTransactionDisplay(ledger)
   const { detailId, showDetail, openEditor, openRuleEditor } = useAppActions()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [showingReceipt, setShowingReceipt] = useState(false)
   const transaction = ledger?.transactions.find(
     (candidate) => candidate.id === detailId
   )
@@ -375,6 +384,7 @@ export function MovementDetail() {
                 openEditor({ mode: "edit", transaction })
               }}
               onDelete={() => setConfirmingDelete(true)}
+              onReceipt={() => setShowingReceipt(true)}
               rule={rule}
               onOpenRule={() => {
                 if (!rule) return
@@ -385,6 +395,13 @@ export function MovementDetail() {
           ) : null}
         </SheetContent>
       </Sheet>
+      {transaction ? (
+        <ReceiptDialog
+          transaction={transaction}
+          open={showingReceipt && open}
+          onOpenChange={setShowingReceipt}
+        />
+      ) : null}
       <DeleteDialog
         t={t}
         open={confirmingDelete}

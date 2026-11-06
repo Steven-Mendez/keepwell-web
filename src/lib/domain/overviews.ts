@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS } from "@/lib/schema"
 import { addMonths, contains, daysInMonth, sameMonth, yearMonthContaining, type DateInterval, type YearMonth } from "./calendar"
 import { Decimal, ZERO, dec, sum } from "./decimal"
 import { DomainError } from "./errors"
+import { balanceForecast, type BalanceForecast } from "./forecast"
 import { convert, settingsRate, zeroMoney, type Money } from "./money"
 import {
   averageMonthlyTotal,
@@ -16,12 +17,14 @@ import {
   netWorth,
   nextOccurrence,
   plannedSummary,
+  priceIncreases,
   principalAmount,
   scopeIncludes,
   subscriptionsCharged,
   type CategoryTotal,
   type MonthlySummary,
   type PlannedSummary,
+  type PriceIncrease,
   type TransactionScope,
 } from "./rules"
 import { orderedCategories, type LedgerStore } from "./store"
@@ -83,6 +86,10 @@ export interface HomeOverview {
   paymentReminderDaysBefore: number
   /** Services charged to each plastic with an expiry, by card id. */
   cardSubscriptions: Map<string, string[]>
+  /** Roughly what bank and cash accounts will hold at month end; `undefined` without any. */
+  forecast?: BalanceForecast
+  /** Subscriptions whose latest charge cost more than the one before, newest first. */
+  priceIncreases: PriceIncrease[]
 }
 
 export function homeOverview(ledger: Ledger, now: Date = new Date(), recentCount = HOME_RECENT_COUNT): HomeOverview {
@@ -128,6 +135,10 @@ export function homeOverview(ledger: Ledger, now: Date = new Date(), recentCount
     frequentExpenseCategoryIds: frequent,
     paymentReminderDaysBefore: ledger.settings.paymentReminderDaysBefore,
     cardSubscriptions: new Map(cards.filter((card) => card.expiry).map((card) => [card.id, subscriptionsCharged(card.id, transactions, ledger.recurringRules)])),
+    ...(accounts.some((account) => account.kind !== "credit")
+      ? { forecast: balanceForecast(accounts, transactions, ledger.recurringRules, currencies, now) }
+      : {}),
+    priceIncreases: priceIncreases(transactions, now),
   }
 }
 

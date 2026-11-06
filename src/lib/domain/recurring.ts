@@ -363,6 +363,22 @@ export function upcoming(rules: readonly RecurringRule[], from: Date, days: numb
   return found.sort((a, b) => a.date.getTime() - b.date.getTime() || (a.rule.name < b.rule.name ? -1 : 1))
 }
 
+/**
+ * Occurrences not recorded yet, from `nextDate` through `lastDay`'s calendar day, none after the end
+ * (iOS `RecurringSchedule.pending`). Paused rules have none. The balance forecast counts these on
+ * top of the drafts already recorded, so nothing is counted twice.
+ */
+export function pendingOccurrences(rule: RecurringRule, lastDay: Date): Date[] {
+  if (rule.isPaused) return []
+  const dates: Date[] = []
+  for (let index = firstIndexOnOrAfter(rule, new Date(rule.nextDate)); ; index++) {
+    const date = occurrence(rule, index)
+    if (isAfterDay(date, lastDay) || isPastEnd(rule, date)) break
+    dates.push(date)
+  }
+  return dates
+}
+
 /** The next occurrence a rule will produce, if it ever will. */
 export function nextOccurrenceOf(rule: RecurringRule): Date | undefined {
   return isFinished(rule) ? undefined : new Date(rule.nextDate)

@@ -3,6 +3,7 @@ import {
   compareMonths,
   confirmPlannedTransaction,
   formatAmount,
+  formatMoney,
   monthlySummary,
   nextOccurrence,
   startOfDay,
@@ -33,7 +34,8 @@ export interface Reminder {
 /**
  * What iOS sends as notifications, shown in place on the web: drafts due today, card payments
  * within the reminder window, statements closing today, subscriptions renewing tomorrow and plastics
- * expiring this month. Budgets warn from 80% of the month's limit and again once it's spent.
+ * expiring this month. Budgets warn from 80% of the month's limit and again once it's spent, and
+ * subscriptions whose latest charge cost more than the one before say so.
  */
 export function homeReminders(
   t: Translator,
@@ -175,6 +177,20 @@ export function homeReminders(
     })
   }
   reminders.push(...budgetReminders(t, ledger, now))
+  for (const increase of overview.priceIncreases) {
+    reminders.push({
+      id: `price-${increase.transactionId}`,
+      icon: "subscription",
+      tone: "pending",
+      title: t.in("home", "%@ went up in price", increase.name.trim()),
+      body: t.in(
+        "home",
+        "Now %@, before %@.",
+        formatMoney(increase.current),
+        formatMoney(increase.previous)
+      ),
+    })
+  }
   return reminders
 }
 

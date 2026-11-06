@@ -1066,6 +1066,9 @@
   "%@ went over its budget": {
    "es": "%@ superó su presupuesto"
   },
+  "%@ went up in price": {
+   "es": "%@ subió de precio"
+  },
   "%@ · %@ from %@. Has it been paid?": {
    "es": "%@ · %@ desde %@. ¿Ya se pagó?"
   },
@@ -1105,6 +1108,12 @@
     "other": "%lld tarjetas"
    }
   },
+  "Available today": {
+   "es": "Disponible hoy"
+  },
+  "Card payments": {
+   "es": "Pagos de tarjetas"
+  },
   "Cards (debt)": {
    "es": "Tarjetas (deuda)"
   },
@@ -1116,6 +1125,9 @@
   },
   "Drafts · %lld": {
    "es": "Borradores · %lld"
+  },
+  "End of month": {
+   "es": "A fin de mes"
   },
   "Expense": {
    "es": "Gasto"
@@ -1177,11 +1189,20 @@
   "No transactions yet": {
    "es": "Todavía no hay movimientos"
   },
+  "Now %@, before %@.": {
+   "es": "Ahora %@, antes %@."
+  },
   "Pay before day %lld so it doesn't generate interest.": {
    "es": "Paga antes del día %lld para que no genere intereses."
   },
   "Pay card": {
    "es": "Pagar tarjeta"
+  },
+  "Planned expenses": {
+   "es": "Gastos previstos"
+  },
+  "Planned income": {
+   "es": "Ingresos previstos"
   },
   "Recent": {
    "es": "Recientes"
@@ -1219,8 +1240,14 @@
   "Update it wherever it's saved before it stops working.": {
    "es": "Actualízala donde la tengas guardada antes de que deje de funcionar."
   },
+  "Usual spending": {
+   "es": "Gasto habitual"
+  },
   "We couldn't confirm it. Try again.": {
    "es": "No pudimos confirmarlo. Inténtalo de nuevo."
+  },
+  "What your bank and cash accounts would hold, counting what's planned and your usual spending.": {
+   "es": "Lo que tendrían tus cuentas y tu efectivo, contando lo previsto y tu gasto habitual."
   },
   "action.income": {
    "en": "Income",
@@ -1238,6 +1265,9 @@
     "one": "gastado · %lld borrador",
     "other": "gastado · %lld borradores"
    }
+  },
+  "≈ %@": {
+   "es": "≈ %@"
   },
   "≈ %@ · rate %@": {
    "es": "≈ %@ · tasa %@"
@@ -2442,6 +2472,9 @@
   "%@ over": {
    "es": "%@ por encima"
   },
+  "%@ since %@": {
+   "es": "%1$@ desde %2$@"
+  },
   "%@ total: %@": {
    "es": "Total de %1$@: %2$@"
   },
@@ -2473,6 +2506,12 @@
   },
   "Amount": {
    "es": "Monto"
+  },
+  "At the end of each month": {
+   "es": "Al cierre de cada mes"
+  },
+  "At the end of each month, at today's rate": {
+   "es": "Al cierre de cada mes, con la tasa de hoy"
   },
   "Average %@ / month": {
    "es": "Promedio %@ / mes"
@@ -2523,8 +2562,14 @@
   "Month": {
    "es": "Mes"
   },
+  "Net worth": {
+   "es": "Patrimonio neto"
+  },
   "Next month": {
    "es": "Mes siguiente"
+  },
+  "No change since %@": {
+   "es": "Sin cambios desde %@"
   },
   "No income": {
    "es": "Sin ingresos"
