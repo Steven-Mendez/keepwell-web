@@ -78,7 +78,7 @@ export function NewCategoryDialog({
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-heading">{sp("New category")}</DialogTitle>
+          <DialogTitle className="type-heading">{sp("New category")}</DialogTitle>
         </DialogHeader>
         <form
           className="flex flex-col gap-4"
@@ -90,7 +90,7 @@ export function NewCategoryDialog({
           <div className="flex items-center gap-3">
             <CategoryBadge category={{ id: "custom-preview", name, kind, icon, color, isRenamed: false }} size="lg" />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <label htmlFor="new-category-name" className="text-caption text-muted-foreground">
+              <label htmlFor="new-category-name" className="type-caption text-muted-foreground">
                 {sp("Category name")}
               </label>
               <Input
@@ -107,9 +107,9 @@ export function NewCategoryDialog({
               />
             </div>
           </div>
-          {error ? <p className="text-caption text-negative">{error}</p> : null}
+          {error ? <p className="type-caption text-negative">{error}</p> : null}
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-caption text-muted-foreground">{sp("Icon")}</legend>
+            <legend className="mb-2 type-caption text-muted-foreground">{sp("Icon")}</legend>
             <div className="grid max-h-44 grid-cols-8 gap-1 overflow-y-auto pr-1" role="radiogroup" aria-label={sp("Icon")}>
               {SYMBOL_CHOICES.map((symbol) => {
                 const Icon = symbolIcon(symbol)
@@ -133,7 +133,7 @@ export function NewCategoryDialog({
             </div>
           </fieldset>
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-caption text-muted-foreground">{sp("Color")}</legend>
+            <legend className="mb-2 type-caption text-muted-foreground">{sp("Color")}</legend>
             <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={sp("Color")}>
               {CATEGORY_COLOR_KEYS.map((key) => (
                 <button

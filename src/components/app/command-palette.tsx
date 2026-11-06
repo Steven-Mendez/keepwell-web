@@ -83,7 +83,7 @@ export function CommandPalette() {
             {ledger.transactions.slice(0, 50).map((transaction) => (
               <CommandItem key={transaction.id} value={`movement ${display.searchableText(transaction)} ${transaction.id}`} onSelect={() => run(() => showDetail(transaction.id))}>
                 <span className="flex-1 truncate">{transaction.description}</span>
-                <span className="text-caption text-muted-foreground tabular-nums">{display.amount(transaction)}</span>
+                <span className="type-caption text-muted-foreground tabular-nums">{display.amount(transaction)}</span>
               </CommandItem>
             ))}
           </CommandGroup>

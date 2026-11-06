@@ -58,7 +58,7 @@ function Section({ title, children, action }: { title: ReactNode; children: Reac
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2 px-1">
-        <h3 className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">{title}</h3>
+        <h3 className="type-caption font-semibold tracking-wide text-muted-foreground uppercase">{title}</h3>
         {action}
       </div>
       {children}
@@ -75,8 +75,8 @@ function ManageRow({ icon: Icon, label, value, onClick, destructive }: { icon: t
       className={cn("flex w-full items-center gap-3 px-4 py-3 text-left transition-colors outline-none hover:bg-accent/60 focus-visible:bg-accent/60", destructive && "text-destructive")}
     >
       <Icon className="size-4 shrink-0" aria-hidden />
-      <span className="flex-1 text-body">{label}</span>
-      {value ? <span className="max-w-[50%] truncate text-caption text-muted-foreground">{value}</span> : null}
+      <span className="flex-1 type-body">{label}</span>
+      {value ? <span className="max-w-[50%] truncate type-caption text-muted-foreground">{value}</span> : null}
       {destructive ? null : <ChevronRightIcon className="size-4 text-muted-foreground" aria-hidden />}
     </button>
   )
@@ -85,7 +85,7 @@ function ManageRow({ icon: Icon, label, value, onClick, destructive }: { icon: t
 function Movements({ transactions, display, empty }: { transactions: readonly Ledger["transactions"][number][]; display: TransactionDisplay; empty: string }) {
   const t = useT()
   const { showDetail } = useAppActions()
-  if (transactions.length === 0) return <p className="rounded-xl bg-secondary/40 px-4 py-6 text-center text-caption text-muted-foreground">{empty}</p>
+  if (transactions.length === 0) return <p className="rounded-xl bg-secondary/40 px-4 py-6 text-center type-caption text-muted-foreground">{empty}</p>
   return (
     <div className="flex flex-col gap-0.5">
       {transactions.map((transaction) => (
@@ -133,9 +133,9 @@ function DebitDetail({ ledger, display, account, onDeleted }: { ledger: Ledger; 
         <CardArt color={card.color} bank={account.bank ?? account.name} network={card.network} lastFour={card.lastFour} kind="debit" kindLabel={cardKindLabel(t, "debit")} holder={holderName(owner, t.locale)} caption={card.expiry ? expiryText(card.expiry) : undefined} />
       </div>
       <div className="flex flex-col items-center gap-1 text-center">
-        <span className="text-caption text-muted-foreground">{t.in("accounts", "Available balance")}</span>
-        <Amount value={balance} className={cn("text-amount-lg", balance.amount.lt(0) && "text-negative")} />
-        <span className="text-caption text-muted-foreground">{t.in("accounts", "Bank account · %@", name)}</span>
+        <span className="type-caption text-muted-foreground">{t.in("accounts", "Available balance")}</span>
+        <Amount value={balance} className={cn("type-amount-lg", balance.amount.lt(0) && "text-negative")} />
+        <span className="type-caption text-muted-foreground">{t.in("accounts", "Bank account · %@", name)}</span>
       </div>
       <Section title={t.in("accounts", "Latest movements")}>
         <Movements transactions={detail.latestTransactions} display={display} empty={t.in("accounts", "No movements on this account yet.")} />
@@ -184,9 +184,9 @@ function CashDetail({ ledger, display, account, onDeleted }: { ledger: Ledger; d
         <span className="inline-flex size-12 items-center justify-center rounded-full bg-positive-tint text-positive" aria-hidden>
           <BanknoteIcon className="size-6" />
         </span>
-        <span className="text-heading">{account.name}</span>
-        {balance.amount ? <Amount value={{ amount: balance.amount, currency: balance.currency }} className="text-amount-lg" /> : null}
-        {equivalent ? <span className="text-caption text-muted-foreground">≈ {equivalent}</span> : null}
+        <span className="type-heading">{account.name}</span>
+        {balance.amount ? <Amount value={{ amount: balance.amount, currency: balance.currency }} className="type-amount-lg" /> : null}
+        {equivalent ? <span className="type-caption text-muted-foreground">≈ {equivalent}</span> : null}
       </div>
       <Section title={t.in("accounts", "Latest movements")}>
         <Movements transactions={latest} display={display} empty={t.in("accounts", "No movements on this account yet.")} />
@@ -230,9 +230,9 @@ function CreditDetail({ ledger, display, account, onDeleted }: { ledger: Ledger;
         <CardArt color={holder?.color} bank={account.bank ?? account.name} network={holder?.network} lastFour={holder?.lastFour} kind="creditHolder" kindLabel={cardKindLabel(t, "creditHolder")} holder={holderName(owner, t.locale)} caption={holder?.expiry ? expiryText(holder.expiry) : undefined} />
       </div>
       <div className="flex flex-col items-center gap-1 text-center">
-        <span className="text-caption text-muted-foreground">{t.in("creditcard", "Current debt")}</span>
-        <span className={cn("text-amount-lg tabular-nums", owes.some((owed) => owed.amount.lt(0)) && "text-negative")}>{joinedMoney(owes)}</span>
-        {balances.length > 1 ? <span className="text-caption text-muted-foreground">{t.in("web", "Total %@", formatMoney(totalDebt))}</span> : null}
+        <span className="type-caption text-muted-foreground">{t.in("creditcard", "Current debt")}</span>
+        <span className={cn("type-amount-lg tabular-nums", owes.some((owed) => owed.amount.lt(0)) && "text-negative")}>{joinedMoney(owes)}</span>
+        {balances.length > 1 ? <span className="type-caption text-muted-foreground">{t.in("web", "Total %@", formatMoney(totalDebt))}</span> : null}
         <Button className="mt-3" onClick={() => openEditor({ mode: "create", type: "cardPayment", accountId: account.id })}>
           {t.in("creditcard", "Pay")}
         </Button>

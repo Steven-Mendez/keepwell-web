@@ -19,7 +19,7 @@ export function LabeledField({ id, label, description, error, children }: { id: 
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       {children}
       {error ? (
-        <p role="alert" className="text-caption text-destructive">
+        <p role="alert" className="type-caption text-destructive">
           {error}
         </p>
       ) : description ? (
@@ -33,7 +33,7 @@ export function LabeledField({ id, label, description, error, children }: { id: 
 export function AmountInput({ id, value, onChange, currency, invalid, autoFocus }: { id: string; value: string; onChange: (value: string) => void; currency: string; invalid?: boolean; autoFocus?: boolean }) {
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-label text-muted-foreground">{currencySymbol(currency).trim()}</span>
+      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 type-label text-muted-foreground">{currencySymbol(currency).trim()}</span>
       <Input
         id={id}
         inputMode="decimal"
@@ -64,7 +64,7 @@ export function Segmented<T extends string>({ value, onChange, options, label }:
           aria-checked={option.value === value}
           onClick={() => onChange(option.value)}
           className={cn(
-            "min-w-0 flex-1 rounded-md px-3 py-1.5 text-label transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+            "min-w-0 flex-1 rounded-md px-3 py-1.5 type-label transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
             option.value === value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
           )}
         >

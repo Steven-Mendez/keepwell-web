@@ -65,10 +65,10 @@ export function ChoiceRow({
     >
       <MethodThumbnail thumbnail={thumbnail} />
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-label">{title}</span>
-        {subtitle ? <span className="truncate text-caption text-muted-foreground">{subtitle}</span> : null}
+        <span className="truncate type-label">{title}</span>
+        {subtitle ? <span className="truncate type-caption text-muted-foreground">{subtitle}</span> : null}
       </span>
-      {trailing ? <span className="shrink-0 text-caption text-muted-foreground tabular-nums">{trailing}</span> : null}
+      {trailing ? <span className="shrink-0 type-caption text-muted-foreground tabular-nums">{trailing}</span> : null}
       <CheckIcon className={cn("size-4 shrink-0 text-link", selected ? "opacity-100" : "opacity-0")} aria-hidden />
     </button>
   )
@@ -80,7 +80,7 @@ export function MethodPicker({ groups, value, onChange }: { groups: MethodGroup[
     <div className="flex flex-col gap-3" role="radiogroup">
       {groups.map((group) => (
         <div key={group.title} className="flex flex-col gap-1">
-          <span className="px-1 text-caption-sm text-muted-foreground">{group.title}</span>
+          <span className="px-1 type-caption-sm text-muted-foreground">{group.title}</span>
           {group.rows.map((row) => (
             <ChoiceRow
               key={sourceKey(row.source)}
@@ -179,7 +179,7 @@ export function CategoryPicker({
               )}
             >
               <CategoryBadge category={category} size="sm" />
-              <span className="line-clamp-2 text-caption-sm leading-tight">{categoryName(t, category)}</span>
+              <span className="line-clamp-2 type-caption-sm leading-tight">{categoryName(t, category)}</span>
             </button>
           )
         })}
@@ -191,11 +191,11 @@ export function CategoryPicker({
           <span className="inline-flex size-8 items-center justify-center rounded-full bg-secondary">
             <PlusIcon className="size-4" aria-hidden />
           </span>
-          <span className="text-caption-sm leading-tight">{t.in("createtransaction", "New category")}</span>
+          <span className="type-caption-sm leading-tight">{t.in("createtransaction", "New category")}</span>
         </button>
       </div>
       {!searching && ordered.length > COLLAPSED_COUNT ? (
-        <button type="button" onClick={() => setExpanded((open) => !open)} className="self-start px-1 text-label text-link hover:text-link-hover">
+        <button type="button" onClick={() => setExpanded((open) => !open)} className="self-start px-1 type-label text-link hover:text-link-hover">
           {expanded ? t.in("web", "Show fewer") : t.in("createtransaction", "See all %lld", ordered.length)}
         </button>
       ) : null}

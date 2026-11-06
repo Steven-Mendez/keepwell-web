@@ -16,6 +16,7 @@ export const WEB_STRINGS_CORE: WebStrings = {
   "New transfer": { es: "Nueva transferencia" },
   "Command palette": { es: "Paleta de comandos" },
   "Show shortcuts": { es: "Ver atajos" },
+  "Toggle sidebar": { es: "Mostrar u ocultar la barra lateral" },
   "Focus search": { es: "Buscar" },
   "Close panel": { es: "Cerrar panel" },
   Navigation: { es: "Navegación" },

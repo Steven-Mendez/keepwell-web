@@ -114,8 +114,8 @@ export function HomeScreen() {
     <Page>
       <header className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-caption text-muted-foreground">{now.toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "long" })}</p>
-          <h1 className="truncate text-title">{greeting(t, name, now)}</h1>
+          <p className="type-caption text-muted-foreground">{now.toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "long" })}</p>
+          <h1 className="truncate type-title">{greeting(t, name, now)}</h1>
         </div>
         <div className="flex items-center gap-1">
           <HeaderLink href="/transactions?search=1" label={t.in("home", "Search transactions")} icon={SearchIcon} />
@@ -130,7 +130,7 @@ export function HomeScreen() {
             <div className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-brand-600/25 blur-3xl" aria-hidden />
             <div className="relative flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <span className="text-label text-text-secondary">{t.in("home", "Net worth · %@", overview.settings.principal)}</span>
+                <span className="type-label text-text-secondary">{t.in("home", "Net worth · %@", overview.settings.principal)}</span>
                 <Tooltip>
                   <TooltipTrigger
                     render={<Button variant="ghost" size="icon-sm" onClick={toggleHidden} aria-label={t.in("home", hidden ? "Shows balances" : "Hides balances")} />}
@@ -140,13 +140,13 @@ export function HomeScreen() {
                   <TooltipContent>{t.in("home", hidden ? "Shows balances" : "Hides balances")}</TooltipContent>
                 </Tooltip>
               </div>
-              <p className="text-display break-all">{hidden ? t.in("home", "Hidden") : formatMoney(overview.netWorth)}</p>
+              <p className="type-display break-all">{hidden ? t.in("home", "Hidden") : formatMoney(overview.netWorth)}</p>
               {overview.netWorthInSecond && !hidden ? (
-                <p className="text-body text-muted-foreground tabular-nums">
+                <p className="type-body text-muted-foreground tabular-nums">
                   {t.in("home", "≈ %@ · rate %@", formatMoney(overview.netWorthInSecond, { fractionDigits: 0 }), formatRate(settingsRate(overview.settings)))}
                 </p>
               ) : null}
-              <p className="text-caption text-muted-foreground">
+              <p className="type-caption text-muted-foreground">
                 {t.in("home", "%lld accounts", overview.accountCount)} · {t.in("home", "%lld cards", overview.cardCount)}
               </p>
             </div>
@@ -164,8 +164,8 @@ export function HomeScreen() {
                 <Surface key={reminder.id} className="flex gap-3 p-4">
                   <IconBadge icon={reminder.icon} tone={reminder.tone} />
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <p className="text-label">{reminder.title}</p>
-                    <p className="text-caption text-muted-foreground">{reminder.body}</p>
+                    <p className="type-label">{reminder.title}</p>
+                    <p className="type-caption text-muted-foreground">{reminder.body}</p>
                     {reminder.action ? (
                       <Button size="sm" variant="secondary" className="mt-1 self-start" onClick={reminder.action.run}>
                         {reminder.action.label}
@@ -198,7 +198,7 @@ export function HomeScreen() {
           {overview.planned.length > 0 ? (
             <Surface>
               <SectionTitle title={t.in("home", "Drafts · %lld", overview.plannedSummary.count)} href="/transactions?filter=planned" action={t.in("home", "See all")} />
-              <p className="px-4 pb-2 text-caption text-muted-foreground">{plannedCaption(t, overview, hidden)}</p>
+              <p className="px-4 pb-2 type-caption text-muted-foreground">{plannedCaption(t, overview, hidden)}</p>
               <div className="flex flex-col px-1 pb-2">
                 {overview.planned.map((transaction) => (
                   <TransactionRow
@@ -229,9 +229,9 @@ export function HomeScreen() {
           <Surface className="p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-label text-text-secondary">{t.in("home", "Spent in %@", month)}</p>
-                <p className="text-amount-lg">{money(overview.month.expense, 0)}</p>
-                <p className="text-caption text-muted-foreground">
+                <p className="type-label text-text-secondary">{t.in("home", "Spent in %@", month)}</p>
+                <p className="type-amount-lg">{money(overview.month.expense, 0)}</p>
+                <p className="type-caption text-muted-foreground">
                   {overview.plannedSummary.count > 0 ? t.in("home", "spent · %lld drafts", overview.plannedSummary.count) : t.in("home", "spent")}
                 </p>
               </div>
@@ -250,16 +250,16 @@ export function HomeScreen() {
               {overview.balances.map(({ account, balance }) => (
                 <li key={account.id}>
                   <Link href={`/accounts?id=${account.id}`} className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 hover:bg-accent/60">
-                    <span className="min-w-0 truncate text-label">{accountName(account)}</span>
-                    <span className="text-label tabular-nums">{hidden ? MASK : formatMoney(balance)}</span>
+                    <span className="min-w-0 truncate type-label">{accountName(account)}</span>
+                    <span className="type-label tabular-nums">{hidden ? MASK : formatMoney(balance)}</span>
                   </Link>
                 </li>
               ))}
               {overview.cardDebt ? (
                 <li>
                   <Link href="/accounts" className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 hover:bg-accent/60">
-                    <span className="text-label text-text-secondary">{t.in("home", "Cards (debt)")}</span>
-                    <span className="text-label text-negative tabular-nums">{hidden ? MASK : formatMoney(overview.cardDebt)}</span>
+                    <span className="type-label text-text-secondary">{t.in("home", "Cards (debt)")}</span>
+                    <span className="type-label text-negative tabular-nums">{hidden ? MASK : formatMoney(overview.cardDebt)}</span>
                   </Link>
                 </li>
               ) : null}
@@ -267,7 +267,7 @@ export function HomeScreen() {
           </Surface>
 
           <Surface className="p-4">
-            <p className="mb-3 text-heading">{t.in("home", "Log quickly")}</p>
+            <p className="mb-3 type-heading">{t.in("home", "Log quickly")}</p>
             <div className="grid grid-cols-3 gap-2">
               {overview.frequentExpenseCategoryIds.map((id) => {
                 const category = ledger.categories.find((candidate) => candidate.id === id)
@@ -280,7 +280,7 @@ export function HomeScreen() {
                     onClick={() => openEditor({ mode: "create", type: "expense" })}
                   >
                     <CategoryBadge category={category} size="sm" />
-                    <span className="w-full truncate text-center text-caption">{categoryName(t, category)}</span>
+                    <span className="w-full truncate text-center type-caption">{categoryName(t, category)}</span>
                   </button>
                 )
               })}
@@ -294,7 +294,7 @@ export function HomeScreen() {
 
 function HeaderLink({ href, label, icon: Icon, className }: { href: string; label: string; icon: typeof SearchIcon; className?: string }) {
   return (
-    <Button variant="ghost" size="icon" className={className} render={<Link href={href} aria-label={label} />}>
+    <Button variant="ghost" size="icon" className={className} nativeButton={false} render={<Link href={href} aria-label={label} />}>
       <Icon />
     </Button>
   )
@@ -312,8 +312,8 @@ function QuickAction({ icon: Icon, label, onClick, primary, disabled }: { icon: 
 function MiniStat({ label, value, tone }: { label: string; value: string; tone?: "positive" }) {
   return (
     <div className="rounded-xl bg-secondary/60 px-3 py-2">
-      <p className="text-caption text-muted-foreground">{label}</p>
-      <p className={cn("text-amount-sm", tone === "positive" && "text-positive")}>{value}</p>
+      <p className="type-caption text-muted-foreground">{label}</p>
+      <p className={cn("type-amount-sm", tone === "positive" && "text-positive")}>{value}</p>
     </div>
   )
 }
@@ -328,7 +328,7 @@ function MonthCategories({ ledger, overview, hidden }: { ledger: Ledger; overvie
         const category = ledger.categories.find((candidate) => candidate.id === entry.categoryId)
         return (
           <li key={entry.categoryId} className="flex flex-col gap-1">
-            <div className="flex items-center justify-between gap-2 text-caption">
+            <div className="flex items-center justify-between gap-2 type-caption">
               <span className="truncate">{category ? categoryName(t, category) : entry.categoryId}</span>
               <span className="text-muted-foreground tabular-nums">{hidden ? MASK : formatAmount(entry.amount, overview.settings.principal, { fractionDigits: 0 })}</span>
             </div>

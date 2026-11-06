@@ -6,7 +6,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { OptionSelect } from "@/components/kw/pickers"
 import { toast } from "@/components/ui/toast"
 import { cardExpiry, deleteAccount, formatNumber, parseAmount, renameAccount, setCardDetails, setCardNumber, updateCreditTerms } from "@/lib/domain"
 import { useT } from "@/lib/i18n"
@@ -134,28 +134,27 @@ export function ProductExpiryDialog({ card, open, onOpenChange }: { card: Card; 
       </LabeledField>
       <div className="grid grid-cols-2 gap-3">
         <LabeledField id="card-month" label={t.in("sharedpresentation", "Expiry month")}>
-          <NativeSelect id="card-month" className="w-full" value={month} onChange={(event) => setMonth(event.target.value)}>
-            <NativeSelectOption value="">{t.in("sharedpresentation", "Not set")}</NativeSelectOption>
-            {MONTHS.map((value) => (
-              <NativeSelectOption key={value} value={String(value)}>
-                {String(value).padStart(2, "0")} · {new Date(2000, value - 1, 1).toLocaleDateString(t.locale, { month: "long" })}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          <OptionSelect
+            id="card-month"
+            value={month}
+            onChange={setMonth}
+            options={[
+              { value: "", label: t.in("sharedpresentation", "Not set") },
+              ...MONTHS.map((value) => ({ value: String(value), label: `${String(value).padStart(2, "0")} · ${new Date(2000, value - 1, 1).toLocaleDateString(t.locale, { month: "long" })}` })),
+            ]}
+          />
         </LabeledField>
         <LabeledField id="card-year" label={t.in("sharedpresentation", "Expiry year")}>
-          <NativeSelect id="card-year" className="w-full" value={year} onChange={(event) => setYear(event.target.value)}>
-            <NativeSelectOption value="">{t.in("sharedpresentation", "Not set")}</NativeSelectOption>
-            {years.map((value) => (
-              <NativeSelectOption key={value} value={String(value)}>
-                {value}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          <OptionSelect
+            id="card-year"
+            value={year}
+            onChange={setYear}
+            options={[{ value: "", label: t.in("sharedpresentation", "Not set") }, ...years.map((value) => ({ value: String(value), label: String(value) }))]}
+          />
         </LabeledField>
       </div>
       {error ? (
-        <p role="alert" className="text-caption text-destructive">
+        <p role="alert" className="type-caption text-destructive">
           {error}
         </p>
       ) : null}
@@ -196,14 +195,12 @@ export function CardNumberDialog({ card, open, onOpenChange }: { card: Card; ope
           <Input id="card-digits" inputMode="numeric" className="tracking-widest tabular-nums" placeholder="0000" value={digits} autoFocus onChange={(event) => setDigits(digitsOnly(event.target.value))} />
         </LabeledField>
         <LabeledField id="card-network" label={t.in("addcard", "Network")}>
-          <NativeSelect id="card-network" className="w-full" value={network} onChange={(event) => setNetwork(event.target.value as CardNetwork | "")}>
-            <NativeSelectOption value="">{t.in("addcard", "Not set")}</NativeSelectOption>
-            {NETWORKS.map((value) => (
-              <NativeSelectOption key={value} value={value}>
-                {networkName(t, value)}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          <OptionSelect<CardNetwork | "">
+            id="card-network"
+            value={network}
+            onChange={setNetwork}
+            options={[{ value: "", label: t.in("addcard", "Not set") }, ...NETWORKS.map((value) => ({ value, label: networkName(t, value) }))]}
+          />
         </LabeledField>
       </div>
     </EditDialog>
@@ -215,14 +212,7 @@ const DAYS = Array.from({ length: 31 }, (_, index) => index + 1)
 export function DaySelect({ id, value, onChange, notSetLabel }: { id: string; value: string; onChange: (value: string) => void; notSetLabel: string }) {
   const t = useT()
   return (
-    <NativeSelect id={id} className="w-full" value={value} onChange={(event) => onChange(event.target.value)}>
-      <NativeSelectOption value="">{notSetLabel}</NativeSelectOption>
-      {DAYS.map((day) => (
-        <NativeSelectOption key={day} value={String(day)}>
-          {t.in("creditcard", "Day %lld", day)}
-        </NativeSelectOption>
-      ))}
-    </NativeSelect>
+    <OptionSelect id={id} value={value} onChange={onChange} options={[{ value: "", label: notSetLabel }, ...DAYS.map((day) => ({ value: String(day), label: t.in("creditcard", "Day %lld", day) }))]} />
   )
 }
 

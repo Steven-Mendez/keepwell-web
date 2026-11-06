@@ -73,9 +73,9 @@ export function MovementDetail() {
                   {transaction.kind === "transfer" ? <IconBadge icon={ArrowLeftRightIcon} tone="accent" /> : <CategoryBadge category={display.category(transaction)} size="lg" />}
                   {transaction.status === "planned" ? <Badge className="bg-pending-tint text-pending">{t.in("createtransaction", "Draft")}</Badge> : null}
                 </div>
-                <SheetTitle className={cn("text-amount-lg", style === "income" && "text-positive", style === "planned" && "text-pending")}>{display.amount(transaction)}</SheetTitle>
-                <SheetDescription className="text-body text-foreground">{transaction.description}</SheetDescription>
-                {display.secondaryAmount(transaction) ? <p className="text-caption text-muted-foreground tabular-nums">{display.secondaryAmount(transaction)}</p> : null}
+                <SheetTitle className={cn("type-amount-lg", style === "income" && "text-positive", style === "planned" && "text-pending")}>{display.amount(transaction)}</SheetTitle>
+                <SheetDescription className="type-body text-foreground">{transaction.description}</SheetDescription>
+                {display.secondaryAmount(transaction) ? <p className="type-caption text-muted-foreground tabular-nums">{display.secondaryAmount(transaction)}</p> : null}
               </SheetHeader>
               <div className="flex flex-col gap-4 p-5">
                 <DetailGroup>
@@ -110,7 +110,7 @@ export function MovementDetail() {
                 ) : null}
                 <DetailGroup>
                   <DetailRow label={t.in("createtransaction", "Reference")}>
-                    <span className="font-mono text-caption text-muted-foreground">{transaction.id.slice(0, 8).toUpperCase()}</span>
+                    <span className="font-mono type-caption text-muted-foreground">{transaction.id.slice(0, 8).toUpperCase()}</span>
                   </DetailRow>
                 </DetailGroup>
                 <div className="flex flex-wrap gap-2">

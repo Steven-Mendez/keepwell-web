@@ -18,12 +18,12 @@ import {
 import { useRouter } from "next/navigation"
 import { useRef, useState, type FormEvent, type ReactNode } from "react"
 
+import { COMMON_CURRENCIES, CurrencyPicker, OptionSelect } from "@/components/kw/pickers"
 import { IconBadge } from "@/components/kw/primitives"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { toast } from "@/components/ui/toast"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
@@ -38,7 +38,7 @@ import {
   parseAmount,
   type OnboardingAccountDraft,
 } from "@/lib/domain"
-import { useT, type Translator } from "@/lib/i18n"
+import { useT } from "@/lib/i18n"
 import { backupRepository, ledgerStore, profileStore } from "@/lib/repositories"
 import type { CardNetwork, DebtMode } from "@/lib/schema"
 import { cn } from "@/lib/utils"
@@ -46,10 +46,6 @@ import { cn } from "@/lib/utils"
 type Step = "welcome" | "returning" | "name" | "currencies" | "accounts" | "done"
 const STEPS: readonly Step[] = ["welcome", "returning", "name", "currencies", "accounts", "done"]
 
-/** The quick picks iOS offers (`OnboardingViewModel.commonCurrencies`). */
-const COMMON_CURRENCIES = ["USD", "EUR", "GBP", "MXN", "CAD", "JPY", "CHF", "BRL"]
-
-const ALL_CURRENCIES: readonly string[] = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("currency") : COMMON_CURRENCIES
 
 /** The region's currency when the browser knows it and it's a common one, else USD (iOS does the same). */
 function regionCurrency(): string {
@@ -59,14 +55,6 @@ function regionCurrency(): string {
     return (region && byRegion[region]) ?? "USD"
   } catch {
     return "USD"
-  }
-}
-
-function currencyName(t: Translator, code: string): string {
-  try {
-    return new Intl.DisplayNames(t.locale, { type: "currency" }).of(code) ?? code
-  } catch {
-    return code
   }
 }
 
@@ -115,7 +103,7 @@ export function OnboardingFlow() {
     <div className="relative flex min-h-svh flex-col overflow-hidden bg-background">
       <div className="pointer-events-none absolute -top-40 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-brand-600/20 blur-3xl" aria-hidden />
       <header className="relative flex items-center justify-between px-(--gutter) py-4 md:px-8">
-        <div className="flex items-center gap-2 text-heading">
+        <div className="flex items-center gap-2 type-heading">
           {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG, nothing to optimize */}
           <img src="/icon.svg" alt="" className="size-7 rounded-mini" />
           Keepwell
@@ -180,8 +168,8 @@ export function OnboardingFlow() {
 function Heading({ title, body }: { title: ReactNode; body?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-col gap-2">
-      <h1 className="text-title">{title}</h1>
-      {body ? <p className="text-body text-muted-foreground">{body}</p> : null}
+      <h1 className="type-title">{title}</h1>
+      {body ? <p className="type-body text-muted-foreground">{body}</p> : null}
     </div>
   )
 }
@@ -190,7 +178,7 @@ function Feature({ icon, title }: { icon: LucideIcon; title: string }) {
   return (
     <li className="flex items-center gap-3">
       <IconBadge icon={icon} tone="accent" />
-      <span className="text-label">{title}</span>
+      <span className="type-label">{title}</span>
     </li>
   )
 }
@@ -200,8 +188,8 @@ function WelcomeStep({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-col gap-8">
       <div className="rounded-2xl bg-card p-6 shadow-glow ring-1 ring-border/60">
-        <p className="text-label text-text-secondary">{t.in("home", "Net worth")}</p>
-        <p className="text-display">$11,157.46</p>
+        <p className="type-label text-text-secondary">{t.in("home", "Net worth")}</p>
+        <p className="type-display">$11,157.46</p>
       </div>
       <Heading title={t.in("onboarding", "Your money, clear, in one or two currencies")} body={t.in("onboarding", "Log expenses, income and transfers. Cards, cash and drafts to confirm later.")} />
       <ul className="flex flex-col gap-3">
@@ -209,7 +197,7 @@ function WelcomeStep({ onStart }: { onStart: () => void }) {
         <Feature icon={ShieldCheckIcon} title={t.in("web", "Stored in this browser")} />
         <Feature icon={GlobeIcon} title={t.in("onboarding", "Any currency, with your own rate")} />
       </ul>
-      <Button size="lg" className="h-12 text-heading" onClick={onStart} autoFocus>
+      <Button size="lg" className="h-12 type-heading" onClick={onStart} autoFocus>
         {t.in("onboarding", "Start")}
       </Button>
     </div>
@@ -263,8 +251,8 @@ function ChoiceButton({ icon, title, body, onClick, disabled }: { icon: LucideIc
     >
       <IconBadge icon={icon} tone="accent" />
       <span className="flex flex-col gap-0.5">
-        <span className="text-label">{title}</span>
-        {body ? <span className="text-caption text-muted-foreground">{body}</span> : null}
+        <span className="type-label">{title}</span>
+        {body ? <span className="type-caption text-muted-foreground">{body}</span> : null}
       </span>
     </button>
   )
@@ -304,28 +292,7 @@ function NameStep({ name, onChange, onNext }: { name: string; onChange: (name: s
 }
 
 function CurrencySelect({ id, value, onChange, exclude }: { id: string; value: string; onChange: (code: string) => void; exclude?: string }) {
-  const t = useT()
-  const others = ALL_CURRENCIES.filter((code) => !COMMON_CURRENCIES.includes(code) && code !== exclude)
-  return (
-    <NativeSelect id={id} value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full">
-      <optgroup label={t.in("onboarding", "Common")}>
-        {[value, ...COMMON_CURRENCIES.filter((code) => code !== value)]
-          .filter((code) => code !== exclude)
-          .map((code) => (
-            <NativeSelectOption key={code} value={code}>
-              {code} · {currencyName(t, code)}
-            </NativeSelectOption>
-          ))}
-      </optgroup>
-      <optgroup label={t.in("onboarding", "All currencies")}>
-        {others.map((code) => (
-          <NativeSelectOption key={code} value={code}>
-            {code} · {currencyName(t, code)}
-          </NativeSelectOption>
-        ))}
-      </optgroup>
-    </NativeSelect>
-  )
+  return <CurrencyPicker id={id} value={value} onChange={onChange} exclude={exclude} className="h-11" />
 }
 
 function CurrenciesStep(props: {
@@ -380,9 +347,9 @@ function CurrenciesStep(props: {
             <Field data-invalid={rateInvalid || undefined}>
               <FieldLabel htmlFor="rate">{t.in("onboarding", "Exchange rate (you set it)")}</FieldLabel>
               <div className="flex items-center gap-2">
-                <span className="shrink-0 text-label text-text-secondary">1 {props.principal} =</span>
+                <span className="shrink-0 type-label text-text-secondary">1 {props.principal} =</span>
                 <Input id="rate" inputMode="decimal" value={props.rateText} onChange={(event) => props.onRate(event.target.value)} placeholder="1.0000" className="h-11 tabular-nums" aria-invalid={rateInvalid} />
-                <span className="shrink-0 text-label text-text-secondary">{props.second}</span>
+                <span className="shrink-0 type-label text-text-secondary">{props.second}</span>
               </div>
               <FieldDescription>{t.in("onboarding", "It defaults to 1. Change it whenever you want; each transaction keeps the rate from when you logged it.")}</FieldDescription>
               {rateInvalid ? <FieldError>{t.in("settings", "The rate has to be a number greater than zero.")}</FieldError> : null}
@@ -445,10 +412,10 @@ function AccountsStep({ principal, second, accounts, onChange, onNext }: { princ
             <li key={account.id} className="flex items-center gap-2 pr-2">
               <button type="button" className="flex min-w-0 flex-1 items-center justify-between gap-3 px-4 py-3 text-left hover:bg-secondary/50" onClick={() => setEditing(account)}>
                 <span className="flex min-w-0 flex-col">
-                  <span className="truncate text-label">{onboardingDisplayName(account) || t.in("onboarding", "Account")}</span>
-                  <span className="text-caption text-muted-foreground">{subtitle(account)}</span>
+                  <span className="truncate type-label">{onboardingDisplayName(account) || t.in("onboarding", "Account")}</span>
+                  <span className="type-caption text-muted-foreground">{subtitle(account)}</span>
                 </span>
-                <span className="text-label tabular-nums">{balance(account)}</span>
+                <span className="type-label tabular-nums">{balance(account)}</span>
               </button>
               <Button variant="ghost" size="icon-sm" aria-label={t.in("onboarding", "Remove account")} onClick={() => onChange(accounts.filter((other) => other.id !== account.id))}>
                 <Trash2Icon />
@@ -486,7 +453,7 @@ function KindButton({ icon: Icon, label, onClick }: { icon: LucideIcon; label: s
   return (
     <button type="button" onClick={onClick} className="flex flex-col items-center gap-2 rounded-2xl bg-card px-3 py-4 ring-1 ring-border/60 transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring">
       <Icon className="size-6 text-link" aria-hidden />
-      <span className="text-label">{label}</span>
+      <span className="type-label">{label}</span>
     </button>
   )
 }
@@ -635,12 +602,17 @@ function AccountForm({
               </Field>
               <Field>
                 <FieldLabel htmlFor="network">{t.in("addcard", "Network")}</FieldLabel>
-                <NativeSelect id="network" value={network} onChange={(event) => setNetwork(event.target.value as CardNetwork)} className="w-full">
-                  <NativeSelectOption value="visa">Visa</NativeSelectOption>
-                  <NativeSelectOption value="mastercard">Mastercard</NativeSelectOption>
-                  <NativeSelectOption value="amex">Amex</NativeSelectOption>
-                  <NativeSelectOption value="other">{t.in("onboarding", "Other")}</NativeSelectOption>
-                </NativeSelect>
+                <OptionSelect<CardNetwork>
+                  id="network"
+                  value={network}
+                  onChange={setNetwork}
+                  options={[
+                    { value: "visa", label: "Visa" },
+                    { value: "mastercard", label: "Mastercard" },
+                    { value: "amex", label: "Amex" },
+                    { value: "other", label: t.in("onboarding", "Other") },
+                  ]}
+                />
               </Field>
             </div>
           ) : null}
@@ -677,8 +649,8 @@ function DoneStep({ name, principal, second, rate, accountCount, saving, onFinis
       <dl className="divide-y divide-divider rounded-2xl bg-card ring-1 ring-border/60">
         {rows.map(([label, value]) => (
           <div key={label} className="flex justify-between gap-4 px-4 py-3">
-            <dt className="text-label text-text-secondary">{label}</dt>
-            <dd className="text-label tabular-nums">{value}</dd>
+            <dt className="type-label text-text-secondary">{label}</dt>
+            <dd className="type-label tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>

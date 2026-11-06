@@ -108,6 +108,7 @@ export function KeyboardShortcuts() {
     [["/"], t.in("web", "Focus search")],
     ...MAIN_NAV.map((item, index): [string[], string] => [[String(index + 1)], t.in(item.ns, item.title)]),
     ...[...MAIN_NAV, SETTINGS_NAV].map((item): [string[], string] => [["G", item.key.toUpperCase()], t.in(item.ns, item.title)]),
+    [["⌘", "B"], t.in("web", "Toggle sidebar")],
     [["?"], t.in("web", "Show shortcuts")],
     [["Esc"], t.in("web", "Close panel")],
   ]
@@ -121,7 +122,7 @@ export function KeyboardShortcuts() {
         <ul className="grid gap-1">
           {rows.map(([keys, label]) => (
             <li key={keys.join("+") + label} className="flex items-center justify-between gap-4 rounded-md px-1 py-1.5">
-              <span className="text-body">{label}</span>
+              <span className="type-body">{label}</span>
               <KbdGroup>
                 {keys.map((key) => (
                   <Kbd key={key}>{key}</Kbd>

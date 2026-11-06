@@ -1,13 +1,13 @@
 "use client"
 
-import { PlusIcon, SearchIcon } from "lucide-react"
+import { PlusIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, type ReactNode } from "react"
 
-import { Button } from "@/components/ui/button"
-import { Kbd } from "@/components/ui/kbd"
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Spinner } from "@/components/ui/spinner"
 import { useLedger } from "@/hooks/use-ledger"
 import { useT } from "@/lib/i18n"
@@ -17,6 +17,7 @@ import { AddAccountDialog } from "../accounts/add-account-dialog"
 import { MovementDetail } from "../transactions/movement-detail"
 import { MovementEditor } from "../movement-editor/movement-editor"
 import { AppActionsProvider, useAppActions } from "./app-actions"
+import { AppSidebar } from "./app-sidebar"
 import { CommandPalette } from "./command-palette"
 import { KeyboardShortcuts } from "./keyboard-shortcuts"
 import { MAIN_NAV, ONBOARDING_PATH, SETTINGS_NAV, type NavItem } from "./navigation"
@@ -51,7 +52,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <AppActionsProvider>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset className="min-w-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</SidebarInset>
+        <SidebarInset className="min-w-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+          <InsetHeader />
+          {children}
+        </SidebarInset>
         <MobileTabBar />
       </SidebarProvider>
       <MovementEditor />
@@ -68,54 +72,40 @@ function useIsCurrent() {
   return (item: NavItem) => (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))
 }
 
-function AppSidebar() {
+/** sidebar-01's inset header: the sidebar toggle and where you are. */
+function InsetHeader() {
   const t = useT()
-  const isCurrent = useIsCurrent()
-  const { openEditor, setPaletteOpen } = useAppActions()
-  const row = (item: NavItem, index?: number) => (
-    <SidebarMenuItem key={item.href}>
-      <SidebarMenuButton isActive={isCurrent(item)} render={<Link href={item.href} />} size="lg" className="gap-3 text-label">
-        <item.icon />
-        <span className="flex-1">{t.in(item.ns, item.title)}</span>
-        <Kbd className="opacity-0 transition-opacity group-hover/menu-item:opacity-100">{index === undefined ? item.key : index + 1}</Kbd>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  )
-
+  const pathname = usePathname()
+  const section = [...MAIN_NAV, SETTINGS_NAV].filter((item) => item.href !== "/").find((item) => pathname.startsWith(item.href)) ?? MAIN_NAV[0]!
+  const isCategories = pathname.startsWith("/settings/categories")
   return (
-    <Sidebar collapsible="none" className="sticky top-0 hidden h-svh w-60 border-r border-sidebar-border md:flex">
-      <SidebarHeader className="gap-4 px-3 pt-5">
-        <Link href="/" className="flex items-center gap-2 px-2 text-heading">
-          {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG, nothing to optimize */}
-          <img src="/icon.svg" alt="" className="size-7 rounded-mini" />
-          Keepwell
-        </Link>
-        <Button className="w-full justify-start gap-2" onClick={() => openEditor()}>
-          <PlusIcon data-icon="inline-start" />
-          <span className="flex-1 text-left">{t.in("home", "Log transaction")}</span>
-          <Kbd className="bg-black/10 text-primary-foreground/70">N</Kbd>
-        </Button>
-        <button
-          type="button"
-          onClick={() => setPaletteOpen(true)}
-          className="flex h-9 items-center gap-2 rounded-lg bg-secondary/70 px-3 text-label text-muted-foreground transition-colors hover:bg-secondary"
-        >
-          <SearchIcon className="size-4" aria-hidden />
-          <span className="flex-1 text-left">{t.in("web", "Search or jump to…")}</span>
-          <Kbd>⌘K</Kbd>
-        </button>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>{MAIN_NAV.map(row)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter className="pb-4">
-        <SidebarMenu>{row(SETTINGS_NAV)}</SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b border-divider bg-background/80 px-4 backdrop-blur md:px-6">
+      <SidebarTrigger className="-ml-1" />
+      <Separator orientation="vertical" className="mr-2 data-vertical:h-4 data-vertical:self-auto" />
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem className="hidden md:block">
+            <BreadcrumbLink render={<Link href="/" />}>Keepwell</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator className="hidden md:block" />
+          {isCategories ? (
+            <>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink render={<Link href="/settings" />}>{t.in("settings", "Settings")}</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{t.in("settings", "Categories")}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          ) : (
+            <BreadcrumbItem>
+              <BreadcrumbPage>{t.in(section.ns, section.title)}</BreadcrumbPage>
+            </BreadcrumbItem>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
+    </header>
   )
 }
 
@@ -136,7 +126,7 @@ function MobileTabBar() {
                 aria-current={isCurrent(item) ? "page" : undefined}
               >
                 <item.icon className="size-6" strokeWidth={2} aria-hidden />
-                <span className="text-micro">{t.in(item.ns, item.title)}</span>
+                <span className="type-micro">{t.in(item.ns, item.title)}</span>
               </Link>
             </li>
           ) : (

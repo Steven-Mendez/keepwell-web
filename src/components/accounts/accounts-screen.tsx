@@ -146,7 +146,7 @@ function Accounts() {
             </Group>
           </div>
           {isWide ? (
-            <Surface className="sticky top-6 max-h-[calc(100svh-3rem)] overflow-y-auto p-5">{detail ?? <p className="py-10 text-center text-body text-muted-foreground">{t.in("web", "Select an account to see its details.")}</p>}</Surface>
+            <Surface className="sticky top-6 max-h-[calc(100svh-3rem)] overflow-y-auto p-5">{detail ?? <p className="py-10 text-center type-body text-muted-foreground">{t.in("web", "Select an account to see its details.")}</p>}</Surface>
           ) : null}
         </div>
       )}
@@ -168,7 +168,7 @@ function Group({ title, hidden, children }: { title: string; hidden: boolean; ch
   if (hidden) return null
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-heading">{title}</h2>
+      <h2 className="type-heading">{title}</h2>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{children}</div>
     </section>
   )
@@ -188,10 +188,10 @@ function AccountTile({ art, title, value, secondary, negative, label, isSelected
     >
       <div className="transition-transform group-hover:-translate-y-0.5">{art}</div>
       <div className="flex items-baseline justify-between gap-2 px-1">
-        <span className="truncate text-label">{title}</span>
+        <span className="truncate type-label">{title}</span>
         <span className="flex flex-col items-end">
-          <span className={cn("text-label tabular-nums", negative && "text-negative")}>{value}</span>
-          {secondary ? <span className="text-caption-sm text-muted-foreground tabular-nums">{secondary}</span> : null}
+          <span className={cn("type-label tabular-nums", negative && "text-negative")}>{value}</span>
+          {secondary ? <span className="type-caption-sm text-muted-foreground tabular-nums">{secondary}</span> : null}
         </span>
       </div>
     </button>
@@ -203,7 +203,7 @@ function CashArt({ name }: { name: string }) {
   return (
     <div className="relative flex aspect-[1.586] w-full flex-col justify-between overflow-hidden rounded-xl bg-positive-tint p-3 text-positive">
       <WalletIcon className="size-6" aria-hidden />
-      <span className="truncate text-caption font-semibold">{name}</span>
+      <span className="truncate type-caption font-semibold">{name}</span>
     </div>
   )
 }

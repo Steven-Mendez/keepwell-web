@@ -5,12 +5,12 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
 import { FOCUS_SEARCH_EVENT } from "@/components/app/keyboard-shortcuts"
+import { OptionSelect } from "@/components/kw/pickers"
 import { EmptyState, Page, PageHeader, Surface } from "@/components/kw/primitives"
 import { TransactionRow } from "@/components/kw/transaction-row"
 import { Button } from "@/components/ui/button"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
 import { Kbd } from "@/components/ui/kbd"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useLedger, useTransactionDisplay } from "@/hooks/use-ledger"
 import {
@@ -135,19 +135,16 @@ export function TransactionsScreen() {
                 )}
               </InputGroupAddon>
             </InputGroup>
-            <NativeSelect
-              className="h-10 lg:w-64"
+            <OptionSelect
+              className="h-10 lg:w-72"
               value={scope.kind === "all" ? "" : scope.id}
-              onChange={(event) => setScope(event.target.value ? { kind: "account", id: event.target.value } : { kind: "all" })}
+              onChange={(value) => setScope(value ? { kind: "account", id: value } : { kind: "all" })}
               aria-label={t.in("transactions", "Show movements from")}
-            >
-              <NativeSelectOption value="">{t.in("transactions", "All accounts")}</NativeSelectOption>
-              {options.map(({ account, card }) => (
-                <NativeSelectOption key={account.id} value={account.id}>
-                  {card && account.kind === "credit" ? `${accountName(account)} · ${cardShortName(t, card)}` : accountName(account)}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+              options={[
+                { value: "", label: t.in("transactions", "All accounts") },
+                ...options.map(({ account, card }) => ({ value: account.id, label: card && account.kind === "credit" ? `${accountName(account)} · ${cardShortName(t, card)}` : accountName(account) })),
+              ]}
+            />
           </div>
           <ToggleGroup
             value={[filter]}
@@ -168,9 +165,9 @@ export function TransactionsScreen() {
           {scopedAccount && scopedBalances ? (
             <Surface className="flex flex-wrap items-end justify-between gap-3 p-4">
               <div>
-                <p className="text-label text-text-secondary">{t.in("transactions", scopedAccount.kind === "credit" ? "Current debt" : "Available balance")}</p>
-                <p className="text-amount-lg">{formatMoney(netWorth(scopedBalances, ledger.settings.currencies))}</p>
-                {scopedBalances.length > 1 ? <p className="text-caption text-muted-foreground tabular-nums">{joinedMoney(scopedBalances)}</p> : null}
+                <p className="type-label text-text-secondary">{t.in("transactions", scopedAccount.kind === "credit" ? "Current debt" : "Available balance")}</p>
+                <p className="type-amount-lg">{formatMoney(netWorth(scopedBalances, ledger.settings.currencies))}</p>
+                {scopedBalances.length > 1 ? <p className="type-caption text-muted-foreground tabular-nums">{joinedMoney(scopedBalances)}</p> : null}
               </div>
               <Button variant="ghost" onClick={() => setScope({ kind: "all" })}>
                 {t.in("transactions", "Show all accounts")}
@@ -178,7 +175,7 @@ export function TransactionsScreen() {
             </Surface>
           ) : null}
 
-          {filter === "planned" ? <p className="text-caption text-muted-foreground">{t.in("transactions", "Drafts · they don't affect balances")}</p> : null}
+          {filter === "planned" ? <p className="type-caption text-muted-foreground">{t.in("transactions", "Drafts · they don't affect balances")}</p> : null}
 
           {groups.length === 0 ? (
             <Surface>
@@ -188,7 +185,7 @@ export function TransactionsScreen() {
             <div className="flex flex-col gap-4">
               {groups.map(([key, transactions]) => (
                 <Surface key={key} className="p-1.5">
-                  <h2 className="px-3 pt-2 pb-1 text-caption font-semibold text-muted-foreground">{dayLabel(t, new Date(transactions[0]!.date))}</h2>
+                  <h2 className="px-3 pt-2 pb-1 type-caption font-semibold text-muted-foreground">{dayLabel(t, new Date(transactions[0]!.date))}</h2>
                   {transactions.map((transaction) => (
                     <TransactionRow key={transaction.id} transaction={transaction} display={display} onSelect={(tx) => showDetail(tx.id)} isSelected={detailId === transaction.id} />
                   ))}

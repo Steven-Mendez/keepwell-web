@@ -9,7 +9,7 @@ import { CardArt } from "@/components/kw/primitives"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { OptionSelect } from "@/components/kw/pickers"
 import { toast } from "@/components/ui/toast"
 import { useLedger, usePreferredName } from "@/hooks/use-ledger"
 import { ZERO, addAccount, addCreditCard, parseAmount } from "@/lib/domain"
@@ -44,7 +44,7 @@ export function AddAccountDialog() {
         {kind === undefined ? (
           <>
             <DialogHeader>
-              <DialogTitle className="text-title-sm">{t.in("addcard", "What do you want to add?")}</DialogTitle>
+              <DialogTitle className="type-title-sm">{t.in("addcard", "What do you want to add?")}</DialogTitle>
               <DialogDescription>{t.in("addcard", "We never ask for the full number or the CVV.")}</DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-2">
@@ -60,7 +60,7 @@ export function AddAccountDialog() {
                 <Button variant="ghost" size="icon-sm" aria-label={t.in("web", "Back")} onClick={() => setChosen(undefined)}>
                   <ArrowLeftIcon />
                 </Button>
-                <DialogTitle className="text-heading">{kind === "debit" ? t.in("addcard", "Your debit card") : kind === "credit" ? t.in("addcard", "Your credit card") : t.in("addcard", "Other wallet")}</DialogTitle>
+                <DialogTitle className="type-heading">{kind === "debit" ? t.in("addcard", "Your debit card") : kind === "credit" ? t.in("addcard", "Your credit card") : t.in("addcard", "Other wallet")}</DialogTitle>
               </div>
             </DialogHeader>
             {kind === "credit" ? <CreditForm t={t} currencies={currencies} onDone={closeAddAccount} /> : <AccountForm t={t} kind={kind} currencies={currencies} onDone={closeAddAccount} />}
@@ -78,8 +78,8 @@ function Choice({ icon: Icon, title, description, onClick }: { icon: LucideIcon;
         <Icon className="size-5" />
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="text-label">{title}</span>
-        <span className="text-caption text-muted-foreground">{description}</span>
+        <span className="type-label">{title}</span>
+        <span className="type-caption text-muted-foreground">{description}</span>
       </span>
       <ChevronRightIcon className="size-4 text-muted-foreground" aria-hidden />
     </button>
@@ -154,13 +154,7 @@ function AccountForm({ t, kind, currencies, onDone }: { t: Translator; kind: "de
           <AmountInput id="add-balance" currency={form.currency} value={form.balance} invalid={errors.balance !== undefined} onChange={(balance) => setForm({ ...form, balance })} />
         </LabeledField>
         <LabeledField id="add-currency" label={t.in("addcard", "Currency")}>
-          <NativeSelect id="add-currency" className="w-full" size="default" value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value })}>
-            {currencyChoices(currencies).map((code) => (
-              <NativeSelectOption key={code} value={code}>
-                {code}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          <OptionSelect id="add-currency" value={form.currency} onChange={(currency) => setForm({ ...form, currency })} options={currencyChoices(currencies).map((code) => ({ value: code, label: code }))} />
         </LabeledField>
       </div>
       {isBank ? (
@@ -170,14 +164,12 @@ function AccountForm({ t, kind, currencies, onDone }: { t: Translator; kind: "de
               <Input id="add-digits" inputMode="numeric" placeholder="0000" className="tracking-widest tabular-nums" value={form.lastFour} aria-invalid={errors.lastFour ? true : undefined} onChange={(event) => setForm({ ...form, lastFour: digitsOnly(event.target.value) })} />
             </LabeledField>
             <LabeledField id="add-network" label={t.in("addcard", "Network")}>
-              <NativeSelect id="add-network" className="w-full" value={form.network} onChange={(event) => setForm({ ...form, network: event.target.value as CardNetwork | "" })}>
-                <NativeSelectOption value="">{t.in("addcard", "Not set")}</NativeSelectOption>
-                {NETWORKS.map((network) => (
-                  <NativeSelectOption key={network} value={network}>
-                    {networkName(t, network)}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
+              <OptionSelect<CardNetwork | "">
+                id="add-network"
+                value={form.network}
+                onChange={(network) => setForm({ ...form, network })}
+                options={[{ value: "", label: t.in("addcard", "Not set") }, ...NETWORKS.map((network) => ({ value: network, label: networkName(t, network) }))]}
+              />
             </LabeledField>
           </div>
           <LabeledField id="add-color" label={t.in("accounts", "Card color")}>
@@ -186,7 +178,7 @@ function AccountForm({ t, kind, currencies, onDone }: { t: Translator; kind: "de
         </>
       ) : null}
       {errors.form ? (
-        <p role="alert" className="text-caption text-destructive">
+        <p role="alert" className="type-caption text-destructive">
           {errors.form}
         </p>
       ) : null}
@@ -277,13 +269,7 @@ function CreditForm({ t, currencies, onDone }: { t: Translator; currencies: Curr
           <Input id="credit-digits" inputMode="numeric" placeholder="0000" className="tracking-widest tabular-nums" value={form.lastFour} aria-invalid={errors.lastFour ? true : undefined} onChange={(event) => setForm({ ...form, lastFour: digitsOnly(event.target.value) })} />
         </LabeledField>
         <LabeledField id="credit-network" label={t.in("addcard", "Network")}>
-          <NativeSelect id="credit-network" className="w-full" value={form.network} onChange={(event) => setForm({ ...form, network: event.target.value as CardNetwork })}>
-            {NETWORKS.map((network) => (
-              <NativeSelectOption key={network} value={network}>
-                {networkName(t, network)}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          <OptionSelect<CardNetwork> id="credit-network" value={form.network} onChange={(network) => setForm({ ...form, network })} options={NETWORKS.map((network) => ({ value: network, label: networkName(t, network) }))} />
         </LabeledField>
       </div>
       <LabeledField id="credit-color" label={t.in("accounts", "Card color")}>
@@ -308,7 +294,7 @@ function CreditForm({ t, currencies, onDone }: { t: Translator; currencies: Curr
         <AmountInput id="credit-limit-new" currency={debtCurrency} value={form.limit} invalid={errors.limit !== undefined} onChange={(limit) => setForm({ ...form, limit })} />
       </LabeledField>
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-label">{t.in("addcard", "Cycle (optional)")}</legend>
+        <legend className="mb-2 type-label">{t.in("addcard", "Cycle (optional)")}</legend>
         <div className="grid grid-cols-2 gap-3">
           <LabeledField id="credit-new-cutoff" label={t.in("addcard", "Cutoff day")}>
             <DaySelect id="credit-new-cutoff" value={form.cutoff} notSetLabel={t.in("addcard", "Not set")} onChange={(cutoff) => setForm({ ...form, cutoff })} />
@@ -319,7 +305,7 @@ function CreditForm({ t, currencies, onDone }: { t: Translator; currencies: Curr
         </div>
       </fieldset>
       {errors.form ? (
-        <p role="alert" className="text-caption text-destructive">
+        <p role="alert" className="type-caption text-destructive">
           {errors.form}
         </p>
       ) : null}

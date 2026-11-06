@@ -40,14 +40,14 @@ export function TransactionRow({
         <CategoryBadge category={display.category(transaction)} />
       )}
       <span className="flex min-w-0 flex-1 flex-col text-left">
-        <span className="truncate text-label text-foreground">{transaction.description}</span>
-        <span className="truncate text-caption text-muted-foreground">
+        <span className="truncate type-label text-foreground">{transaction.description}</span>
+        <span className="truncate type-caption text-muted-foreground">
           {[display.subtitle(transaction), dateLabel].filter(Boolean).join(" · ")}
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end">
-        <span className={cn("text-label tabular-nums", amountClass)}>{display.amount(transaction)}</span>
-        {secondary ? <span className="text-caption-sm text-muted-foreground tabular-nums">{secondary}</span> : null}
+        <span className={cn("type-label tabular-nums", amountClass)}>{display.amount(transaction)}</span>
+        {secondary ? <span className="type-caption-sm text-muted-foreground tabular-nums">{secondary}</span> : null}
       </span>
     </>
   )

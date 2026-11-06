@@ -23,8 +23,8 @@ export function PageHeader({ title, subtitle, actions }: { title: ReactNode; sub
   return (
     <header className="flex flex-wrap items-end justify-between gap-3">
       <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="text-title">{title}</h1>
-        {subtitle ? <p className="text-body text-muted-foreground">{subtitle}</p> : null}
+        <h1 className="type-title">{title}</h1>
+        {subtitle ? <p className="type-body text-muted-foreground">{subtitle}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </header>
@@ -39,9 +39,9 @@ export function Surface({ className, ...props }: ComponentProps<"section">) {
 export function SectionTitle({ title, href, action, className }: { title: ReactNode; href?: string; action?: ReactNode; className?: string }) {
   return (
     <div className={cn("flex items-center justify-between gap-2 px-4 pt-4 pb-2", className)}>
-      <h2 className="text-heading">{title}</h2>
+      <h2 className="type-heading">{title}</h2>
       {href && action ? (
-        <Link href={href} className="inline-flex items-center gap-0.5 text-label text-link hover:text-link-hover">
+        <Link href={href} className="inline-flex items-center gap-0.5 type-label text-link hover:text-link-hover">
           {action}
           <ChevronRightIcon className="size-4" aria-hidden />
         </Link>
@@ -140,20 +140,20 @@ export function CardArt({
     >
       <span className={cn("pointer-events-none absolute -top-1/3 -right-1/4 aspect-square w-3/4 rounded-full", light ? "bg-white/30" : "bg-white/10")} aria-hidden />
       <div className="relative flex items-start justify-between gap-2">
-        <span className={cn("truncate font-bold", size === "sm" ? "text-caption" : "text-heading")}>{bank}</span>
-        {caption ? <span className="text-micro opacity-80">{caption}</span> : null}
+        <span className={cn("truncate font-bold", size === "sm" ? "type-caption" : "type-heading")}>{bank}</span>
+        {caption ? <span className="type-micro opacity-80">{caption}</span> : null}
       </div>
       {size === "md" ? (
         <span className="relative h-7 w-10 rounded-md" style={{ backgroundImage: "linear-gradient(135deg, var(--card-art-chip-from), var(--card-art-chip-to))" }} aria-hidden />
       ) : null}
       <div className="relative flex items-end justify-between gap-2">
         <div className="flex min-w-0 flex-col">
-          {holder ? <span className="truncate text-micro tracking-wider opacity-80">{holder}</span> : null}
-          <span className={cn("font-mono tracking-widest tabular-nums", size === "sm" ? "text-caption-sm" : "text-label")}>{lastFour ? `•••• ${lastFour}` : "•••• ••••"}</span>
+          {holder ? <span className="truncate type-micro tracking-wider opacity-80">{holder}</span> : null}
+          <span className={cn("font-mono tracking-widest tabular-nums", size === "sm" ? "type-caption-sm" : "type-label")}>{lastFour ? `•••• ${lastFour}` : "•••• ••••"}</span>
         </div>
         <div className="flex flex-col items-end">
           {network && network !== "other" ? <NetworkMark network={network} small={size === "sm"} /> : null}
-          {kindLabel ? <span className="text-micro opacity-80">{kindLabel}</span> : null}
+          {kindLabel ? <span className="type-micro opacity-80">{kindLabel}</span> : null}
         </div>
       </div>
     </div>
@@ -169,15 +169,15 @@ function NetworkMark({ network, small }: { network: Exclude<CardNetwork, "other"
       </span>
     )
   }
-  return <span className={cn("font-black italic", small ? "text-caption" : "text-heading")}>{network === "visa" ? "VISA" : "AMEX"}</span>
+  return <span className={cn("font-black italic", small ? "type-caption" : "type-heading")}>{network === "visa" ? "VISA" : "AMEX"}</span>
 }
 
 /** A label/value row of a detail panel (iOS grouped list rows). */
 export function DetailRow({ label, children, className }: { label: ReactNode; children: ReactNode; className?: string }) {
   return (
     <div className={cn("flex items-start justify-between gap-4 px-4 py-3", className)}>
-      <span className="text-label text-text-secondary">{label}</span>
-      <span className="min-w-0 text-right text-body break-words">{children}</span>
+      <span className="type-label text-text-secondary">{label}</span>
+      <span className="min-w-0 text-right type-body break-words">{children}</span>
     </div>
   )
 }
