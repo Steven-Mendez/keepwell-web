@@ -3,7 +3,12 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useRef } from "react"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { useT } from "@/lib/i18n"
 
@@ -15,11 +20,16 @@ export const FOCUS_SEARCH_EVENT = "keepwell:focus-search"
 /** Typing in a field, or a dialog already open, leaves the keys alone. */
 function isTyping(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
-  return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+  return (
+    target.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+  )
 }
 
 function dialogIsOpen(): boolean {
-  return document.querySelector('[role="dialog"], [role="alertdialog"]') !== null
+  return (
+    document.querySelector('[role="dialog"], [role="alertdialog"]') !== null
+  )
 }
 
 /**
@@ -29,7 +39,8 @@ function dialogIsOpen(): boolean {
 export function KeyboardShortcuts() {
   const t = useT()
   const router = useRouter()
-  const { openEditor, setPaletteOpen, shortcutsOpen, setShortcutsOpen } = useAppActions()
+  const { openEditor, setPaletteOpen, shortcutsOpen, setShortcutsOpen } =
+    useAppActions()
   const pendingG = useRef<number | undefined>(undefined)
 
   useEffect(() => {
@@ -39,12 +50,21 @@ export function KeyboardShortcuts() {
         setPaletteOpen(true)
         return
       }
-      if (event.metaKey || event.ctrlKey || event.altKey || isTyping(event.target) || dialogIsOpen()) return
+      if (
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        isTyping(event.target) ||
+        dialogIsOpen()
+      )
+        return
       const key = event.key.toLowerCase()
       if (pendingG.current !== undefined) {
         window.clearTimeout(pendingG.current)
         pendingG.current = undefined
-        const target = [...MAIN_NAV, SETTINGS_NAV].find((item) => item.key === key)
+        const target = [...MAIN_NAV, SETTINGS_NAV].find(
+          (item) => item.key === key
+        )
         if (target) {
           event.preventDefault()
           router.push(target.href)
@@ -57,7 +77,10 @@ export function KeyboardShortcuts() {
       }
       switch (key) {
         case "g":
-          pendingG.current = window.setTimeout(() => (pendingG.current = undefined), 1200)
+          pendingG.current = window.setTimeout(
+            () => (pendingG.current = undefined),
+            1200
+          )
           return
         case "n":
           event.preventDefault()
@@ -86,7 +109,8 @@ export function KeyboardShortcuts() {
           return
         case "/":
           event.preventDefault()
-          if (window.location.pathname !== "/transactions") router.push("/transactions?search=1")
+          if (window.location.pathname !== "/transactions")
+            router.push("/transactions?search=1")
           else window.dispatchEvent(new Event(FOCUS_SEARCH_EVENT))
           return
         case "?":
@@ -106,8 +130,15 @@ export function KeyboardShortcuts() {
     [["I"], t.in("web", "New income")],
     [["T"], t.in("web", "New transfer")],
     [["/"], t.in("web", "Focus search")],
-    ...MAIN_NAV.map((item, index): [string[], string] => [[String(index + 1)], t.in(item.ns, item.title)]),
-    ...[...MAIN_NAV, SETTINGS_NAV].map((item): [string[], string] => [["G", item.key.toUpperCase()], t.in(item.ns, item.title)]),
+    [["J", "K"], t.in("web", "Next or previous movement")],
+    ...MAIN_NAV.map((item, index): [string[], string] => [
+      [String(index + 1)],
+      t.in(item.ns, item.title),
+    ]),
+    ...[...MAIN_NAV, SETTINGS_NAV].map((item): [string[], string] => [
+      ["G", item.key.toUpperCase()],
+      t.in(item.ns, item.title),
+    ]),
     [["⌘", "B"], t.in("web", "Toggle sidebar")],
     [["?"], t.in("web", "Show shortcuts")],
     [["Esc"], t.in("web", "Close panel")],
@@ -121,7 +152,10 @@ export function KeyboardShortcuts() {
         </DialogHeader>
         <ul className="grid gap-1">
           {rows.map(([keys, label]) => (
-            <li key={keys.join("+") + label} className="flex items-center justify-between gap-4 rounded-md px-1 py-1.5">
+            <li
+              key={keys.join("+") + label}
+              className="flex items-center justify-between gap-4 rounded-md px-1 py-1.5"
+            >
               <span className="type-body">{label}</span>
               <KbdGroup>
                 {keys.map((key) => (
