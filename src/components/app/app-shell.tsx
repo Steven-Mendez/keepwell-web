@@ -1,14 +1,14 @@
 "use client"
 
-import { PlusIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useEffect, type ReactNode } from "react"
+import { PanelLeftIcon } from "lucide-react"
+import { useEffect, useState, type ReactNode } from "react"
 
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar"
 import { Spinner } from "@/components/ui/spinner"
+import { KWCircleButton } from "@/components/kw/design"
+import { KWIcon } from "@/components/kw/kw-icon"
 import { useLedger } from "@/hooks/use-ledger"
 import { useT } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
@@ -53,7 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="min-w-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
-          <InsetHeader />
+          <TopBar />
           {children}
         </SidebarInset>
         <MobileTabBar />
@@ -72,39 +72,48 @@ function useIsCurrent() {
   return (item: NavItem) => (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))
 }
 
-/** sidebar-01's inset header: the sidebar toggle and where you are. */
-function InsetHeader() {
+/**
+ * The top bar, as iOS draws a screen's chrome: KWCircleButtons on the black background (sidebar and
+ * search on `surface`, the white "+" of list headers to log), and the screen's title appearing only
+ * once its large title (KWLargeTitleHeader) has scrolled away, the way an iOS large title collapses.
+ */
+function TopBar() {
   const t = useT()
   const pathname = usePathname()
-  const section = [...MAIN_NAV, SETTINGS_NAV].filter((item) => item.href !== "/").find((item) => pathname.startsWith(item.href)) ?? MAIN_NAV[0]!
-  const isCategories = pathname.startsWith("/settings/categories")
+  const { toggleSidebar, state, isMobile } = useSidebar()
+  // On a wide screen the sidebar already holds search and "+"; they come up here only once it's hidden.
+  const sidebarHidden = isMobile || state === "collapsed"
+  const { openEditor, setPaletteOpen } = useAppActions()
+  const [isScrolled, setScrolled] = useState(false)
+  const section = pathname.startsWith("/settings/categories")
+    ? { ns: "settings" as const, title: "Categories" }
+    : ([...MAIN_NAV, SETTINGS_NAV].filter((item) => item.href !== "/").find((item) => pathname.startsWith(item.href)) ?? MAIN_NAV[0]!)
+
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 56)
+    update()
+    window.addEventListener("scroll", update, { passive: true })
+    return () => window.removeEventListener("scroll", update)
+  }, [pathname])
+
   return (
-    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b border-divider bg-background/80 px-4 backdrop-blur md:px-6">
-      <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-2 data-vertical:h-4 data-vertical:self-auto" />
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem className="hidden md:block">
-            <BreadcrumbLink render={<Link href="/" />}>Keepwell</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator className="hidden md:block" />
-          {isCategories ? (
-            <>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink render={<Link href="/settings" />}>{t.in("settings", "Settings")}</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{t.in("settings", "Categories")}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </>
-          ) : (
-            <BreadcrumbItem>
-              <BreadcrumbPage>{t.in(section.ns, section.title)}</BreadcrumbPage>
-            </BreadcrumbItem>
-          )}
-        </BreadcrumbList>
-      </Breadcrumb>
+    <header
+      className={cn(
+        "sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b px-(--gutter) transition-colors md:px-8",
+        isScrolled ? "border-divider bg-background/85 backdrop-blur-xl" : "border-transparent bg-background",
+      )}
+    >
+      <KWCircleButton icon={<PanelLeftIcon className="size-5" strokeWidth={2} aria-hidden />} label={t.in("web", "Toggle sidebar")} shortcut="⌘B" onClick={toggleSidebar} />
+      <p className={cn("min-w-0 flex-1 truncate type-heading transition-opacity duration-200", isScrolled ? "opacity-100" : "opacity-0")} aria-hidden={!isScrolled}>
+        {t.in(section.ns, section.title)}
+      </p>
+      {sidebarHidden ? (
+        <KWCircleButton icon="search" label={t.in("web", "Search or jump to…")} shortcut="⌘K" onClick={() => setPaletteOpen(true)} />
+      ) : null}
+      {/* Phones log from the tab bar's "+". */}
+      {sidebarHidden && !isMobile ? (
+        <KWCircleButton icon="plus" variant="white" label={t.in("home", "Log transaction")} shortcut="N" onClick={() => openEditor()} />
+      ) : null}
     </header>
   )
 }
@@ -125,7 +134,7 @@ function MobileTabBar() {
                 className={cn("flex min-h-14 flex-col items-center justify-center gap-1", isCurrent(item) ? "text-foreground" : "text-text-faint")}
                 aria-current={isCurrent(item) ? "page" : undefined}
               >
-                <item.icon className="size-6" strokeWidth={2} aria-hidden />
+                <KWIcon name={item.kwIcon} size={24} />
                 <span className="type-micro">{t.in(item.ns, item.title)}</span>
               </Link>
             </li>
@@ -134,10 +143,10 @@ function MobileTabBar() {
               <button
                 type="button"
                 onClick={() => openEditor()}
-                className="flex size-12 items-center justify-center rounded-full bg-brand-500 text-white shadow-glow"
+                className="flex size-12 items-center justify-center rounded-full bg-white text-black"
                 aria-label={t.in("home", "Log transaction")}
               >
-                <PlusIcon className="size-6" strokeWidth={2.5} aria-hidden />
+                <KWIcon name="plus" size={24} strokeWidth={2.2} />
               </button>
             </li>
           ),

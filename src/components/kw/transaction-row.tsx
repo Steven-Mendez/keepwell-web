@@ -1,14 +1,15 @@
 "use client"
 
-import { ArrowLeftRightIcon, ClockIcon } from "lucide-react"
-
 import type { Transaction } from "@/lib/schema"
 import type { TransactionDisplay } from "@/lib/presentation/display"
 import { cn } from "@/lib/utils"
 
-import { CategoryBadge, IconBadge } from "./primitives"
+import { KWTransactionIcon, transactionAmountClass } from "./design"
 
-/** KWTransactionRow: icon, description, subtitle and both amounts. Opens the movement on click. */
+/**
+ * KWTransactionRow: the movement's kind icon (not its category: iOS reads direction first),
+ * description, subtitle and both amounts in the kind's color. Opens the movement on click.
+ */
 export function TransactionRow({
   transaction,
   display,
@@ -26,19 +27,9 @@ export function TransactionRow({
 }) {
   const style = display.style(transaction)
   const secondary = display.secondaryAmount(transaction)
-  const amountClass = style === "income" ? "text-positive" : style === "planned" ? "text-pending" : style === "transfer" ? "text-text-secondary" : "text-foreground"
   const content = (
     <>
-      {transaction.kind === "transfer" ? (
-        <IconBadge icon={ArrowLeftRightIcon} tone={style === "planned" ? "pending" : "accent"} />
-      ) : style === "planned" ? (
-        <span className="relative">
-          <CategoryBadge category={display.category(transaction)} />
-          <ClockIcon className="absolute -right-1 -bottom-1 size-4 rounded-full bg-card p-0.5 text-pending" aria-hidden />
-        </span>
-      ) : (
-        <CategoryBadge category={display.category(transaction)} />
-      )}
+      <KWTransactionIcon style={style} />
       <span className="flex min-w-0 flex-1 flex-col text-left">
         <span className="truncate type-label text-foreground">{transaction.description}</span>
         <span className="truncate type-caption text-muted-foreground">
@@ -46,7 +37,7 @@ export function TransactionRow({
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end">
-        <span className={cn("type-label tabular-nums", amountClass)}>{display.amount(transaction)}</span>
+        <span className={cn("type-label tabular-nums", transactionAmountClass(style))}>{display.amount(transaction)}</span>
         {secondary ? <span className="type-caption-sm text-muted-foreground tabular-nums">{secondary}</span> : null}
       </span>
     </>
