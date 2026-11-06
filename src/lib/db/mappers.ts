@@ -1,6 +1,6 @@
-import type { Account, Card, Settings, Transaction, TransactionCategory } from "@/lib/schema"
+import type { Account, Card, RecurringRule, Settings, Transaction, TransactionCategory } from "@/lib/schema"
 
-import type { AccountRow, CardRow, CategoryRow, SettingsRow, TransactionRow } from "./database"
+import type { AccountRow, CardRow, CategoryRow, RecurringRuleRow, SettingsRow, TransactionRow } from "./database"
 import { SETTINGS_ID } from "./database"
 
 // Domain ⇄ row, like the iOS records' `update(from:)` / `toDomain()`. Audit columns are left to the
@@ -131,6 +131,7 @@ export function transactionToRow(transaction: Transaction): Columns<TransactionR
     rate: transaction.exchangeRate.rate,
     is_shared: transaction.isShared,
     note: orNull(transaction.note),
+    recurring_id: orNull(transaction.recurringId),
   }
 }
 
@@ -150,6 +151,53 @@ export function rowToTransaction(row: TransactionRow): Transaction {
     ...present("actualDebitedPrincipal", row.actual_debited_principal),
     exchangeRate: { principal: row.rate_principal, second: row.rate_second, rate: row.rate },
     isShared: row.is_shared,
+    ...present("note", row.note),
+    ...present("recurringId", row.recurring_id ?? null),
+  }
+}
+
+export function recurringRuleToRow(rule: RecurringRule): Columns<RecurringRuleRow> {
+  return {
+    id: rule.id,
+    name: rule.name,
+    kind: rule.kind,
+    category_id: orNull(rule.categoryId),
+    amount: rule.amount,
+    currency: rule.currency,
+    account_id: rule.accountId,
+    card_id: orNull(rule.cardId),
+    destination_account_id: orNull(rule.destinationAccountId),
+    frequency: rule.frequency,
+    interval: rule.interval,
+    start_date: rule.startDate,
+    next_date: rule.nextDate,
+    end_date: orNull(rule.endDate),
+    is_subscription: rule.isSubscription,
+    auto_confirm: rule.autoConfirm,
+    is_paused: rule.isPaused,
+    note: orNull(rule.note),
+  }
+}
+
+export function rowToRecurringRule(row: RecurringRuleRow): RecurringRule {
+  return {
+    id: row.id,
+    name: row.name,
+    kind: row.kind,
+    ...present("categoryId", row.category_id),
+    amount: row.amount,
+    currency: row.currency,
+    accountId: row.account_id,
+    ...present("cardId", row.card_id),
+    ...present("destinationAccountId", row.destination_account_id),
+    frequency: row.frequency,
+    interval: row.interval,
+    startDate: row.start_date,
+    nextDate: row.next_date,
+    ...present("endDate", row.end_date),
+    isSubscription: row.is_subscription,
+    autoConfirm: row.auto_confirm,
+    isPaused: row.is_paused,
     ...present("note", row.note),
   }
 }

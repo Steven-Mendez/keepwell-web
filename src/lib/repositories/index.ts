@@ -2,6 +2,7 @@
 export { accountRepository, cardRepository, type Draft } from "./accounts"
 export { backupRepository, NothingToBackUpError, type RestoreSummary } from "./backup"
 export { categoryRepository, FallbackCategoryError } from "./categories"
+export { recurringRuleRepository } from "./recurring"
 export { settingsRepository } from "./settings"
 export { NotFoundError } from "./shared"
 export { transactionRepository, type Period } from "./transactions"
