@@ -1,5 +1,5 @@
 import type { Account, Card, CardColor, CardKind, CardNetwork, Transaction, TransactionCategory, TransactionKind } from "@/lib/schema"
-import { OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "@/lib/schema"
+import { LOAN_PAYMENTS_ID, OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "@/lib/schema"
 import { accountDisplayName, amountIn, formatAmount, isConfirmed, rateHasSecondCurrency, translatesById } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 
@@ -28,6 +28,7 @@ const DEFAULT_SYMBOLS: Record<string, string> = {
   taxes: "doc.text",
   savings: "banknote",
   donations: "heart.circle",
+  [LOAN_PAYMENTS_ID]: "calendar.badge.clock",
   [OTHER_EXPENSE_ID]: "square.grid.2x2",
   salary: "briefcase",
   freelance: "laptopcomputer",
@@ -51,7 +52,7 @@ export function categorySymbol(category: TransactionCategory | undefined): strin
 export const CATEGORY_COLOR_KEYS = ["blue", "purple", "pink", "orange", "amber", "yellow", "lime", "green", "cyan", "gray"] as const
 
 /** Default categories with a color of their own (`KWColor.category`); the rest are faint. */
-const ID_COLORS = new Set(["tools", "restaurants", "fees", "transport", "utilities", "leisure", "shopping", "subscriptions", "education", OTHER_EXPENSE_ID])
+const ID_COLORS = new Set(["tools", "restaurants", "fees", "transport", "utilities", "leisure", "shopping", "subscriptions", "education", LOAN_PAYMENTS_ID, OTHER_EXPENSE_ID])
 
 /** A CSS color for the category: the picked palette key, the id's own token, or faint. */
 export function categoryColor(category: Pick<TransactionCategory, "id" | "color"> | undefined): string {

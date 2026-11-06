@@ -104,6 +104,7 @@
   --category-id-shopping: #FF8A50;
   --category-id-subscriptions: #A3E635;
   --category-id-education: #F2D16B;
+  --category-id-loan-payments: #3FD69A;
   --category-id-other-expense: #8A8A96;
   /* Charts: the most distinct palette hues, in order */
   --chart-1: var(--category-blue);

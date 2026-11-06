@@ -10,6 +10,7 @@ import {
   BriefcaseIcon,
   BusIcon,
   CakeIcon,
+  CalendarClockIcon,
   CameraIcon,
   CarIcon,
   ChartLineIcon,
@@ -148,6 +149,7 @@ export const SYMBOL_ICONS: Record<string, LucideIcon> = {
   "arrow.left.arrow.right": ArrowLeftRightIcon,
   shield: ShieldIcon,
   mug: BeerIcon,
+  "calendar.badge.clock": CalendarClockIcon,
 }
 
 /** The icons offered when creating a category, in the iOS order (`CategoryDisplay.symbolChoices`). */
