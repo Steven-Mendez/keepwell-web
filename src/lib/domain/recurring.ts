@@ -227,7 +227,7 @@ export async function saveRecurringRule(store: LedgerStore, draft: RecurringRule
   if (!draft.source || !accountId) throw DomainError.notFound("source")
   const note = draft.note.trim()
   const schedule: Schedule = { frequency: draft.frequency, interval: draft.interval, startDate: draft.startDate.toISOString() }
-  const nextDate = existing && sameSchedule(existing, schedule) ? existing.nextDate : firstOccurrence(schedule, laterOf(today, draft.startDate)).toISOString()
+  const nextDate = existing && sameSchedule(existing, schedule) ? existing.nextDate : firstNextDate(schedule, today).toISOString()
   const rule: RecurringRule = {
     id: existing?.id ?? newID(),
     name: draft.name.trim(),
@@ -368,15 +368,25 @@ export function nextOccurrenceOf(rule: RecurringRule): Date | undefined {
   return isFinished(rule) ? undefined : new Date(rule.nextDate)
 }
 
-/** The next `count` occurrences from `nextDate`, within the rule's end. */
-export function nextOccurrences(rule: RecurringRule, count: number): Date[] {
+/** The first `count` occurrences on or after `from`, within the rule's end. */
+export function occurrencesFrom(rule: Schedule & Pick<RecurringRule, "endDate">, from: Date, count: number): Date[] {
   const dates: Date[] = []
-  for (let index = firstIndexOnOrAfter(rule, new Date(rule.nextDate)); dates.length < count; index++) {
+  for (let index = firstIndexOnOrAfter(rule, from); dates.length < count; index++) {
     const date = occurrence(rule, index)
     if (isPastEnd(rule, date)) break
     dates.push(date)
   }
   return dates
+}
+
+/** The next `count` occurrences the rule will produce, from `nextDate`. */
+export function nextOccurrences(rule: RecurringRule, count: number): Date[] {
+  return occurrencesFrom(rule, new Date(rule.nextDate), count)
+}
+
+/** Where a new rule (or one whose schedule changed) starts producing: the later of today and its start. */
+export function firstNextDate(rule: Schedule, today: Date = new Date()): Date {
+  return firstOccurrence(rule, laterOf(today, new Date(rule.startDate)))
 }
 
 export type RecurringSectionKind = "subscriptions" | "bills" | "income" | "transfers"

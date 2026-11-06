@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils"
 import { AddAccountDialog } from "../accounts/add-account-dialog"
 import { MovementDetail } from "../transactions/movement-detail"
 import { MovementEditor } from "../movement-editor/movement-editor"
+import { RuleEditor } from "../recurring/rule-editor"
 import { AppActionsProvider, useAppActions } from "./app-actions"
 import { AppSidebar } from "./app-sidebar"
 import { CommandPalette } from "./command-palette"
@@ -27,6 +28,7 @@ import { KeyboardShortcuts } from "./keyboard-shortcuts"
 import {
   MAIN_NAV,
   ONBOARDING_PATH,
+  RECURRING_NAV,
   SETTINGS_NAV,
   type NavItem,
 } from "./navigation"
@@ -73,6 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </SidebarProvider>
       <MovementEditor />
       <MovementDetail />
+      <RuleEditor />
       <AddAccountDialog />
       <CommandPalette />
       <KeyboardShortcuts />
@@ -101,7 +104,7 @@ function TopBar() {
   const [isScrolled, setScrolled] = useState(false)
   const section = pathname.startsWith("/settings/categories")
     ? { ns: "settings" as const, title: "Categories" }
-    : ([...MAIN_NAV, SETTINGS_NAV]
+    : ([...MAIN_NAV, RECURRING_NAV, SETTINGS_NAV]
         .filter((item) => item.href !== "/")
         .find((item) => pathname.startsWith(item.href)) ?? MAIN_NAV[0]!)
 

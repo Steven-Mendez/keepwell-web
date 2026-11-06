@@ -110,11 +110,10 @@ export const backupRepository = {
             ...audit(row),
           })),
           recurringRules: recurringRules
-            .sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0))
-            .map((row) => ({
-            ...rowToRecurringRule(row),
-            ...audit(row),
-          })),
+            .sort((a, b) =>
+              a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0
+            )
+            .map((row) => ({ ...rowToRecurringRule(row), ...audit(row) })),
         }
       }
     )

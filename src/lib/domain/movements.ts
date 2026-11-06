@@ -56,7 +56,7 @@ export function availableMovementTypes(accounts: readonly Account[]): MovementTy
 }
 
 /** The shape a saved transfer reads as, so editing it opens on the right type. */
-export function movementTypeOf(transaction: Transaction, accounts: readonly Account[]): MovementType {
+export function movementTypeOf(transaction: Pick<Transaction, "kind" | "accountId" | "destinationAccountId">, accounts: readonly Account[]): MovementType {
   if (transaction.kind !== "transfer") return transaction.kind
   const source = accounts.find((account) => account.id === transaction.accountId)
   const destination = accounts.find((account) => account.id === transaction.destinationAccountId)

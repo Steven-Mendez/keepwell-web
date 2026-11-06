@@ -1,4 +1,4 @@
-import { ChartColumnIcon, HouseIcon, ListIcon, SettingsIcon, WalletCardsIcon, type LucideIcon } from "lucide-react"
+import { ChartColumnIcon, HouseIcon, ListIcon, RepeatIcon, SettingsIcon, WalletCardsIcon, type LucideIcon } from "lucide-react"
 
 import type { KWIconName } from "@/components/kw/kw-icon-data"
 import type { Namespace } from "@/lib/i18n"
@@ -22,6 +22,9 @@ export const MAIN_NAV: readonly NavItem[] = [
   { title: "Accounts", ns: "accounts", href: "/accounts", icon: WalletCardsIcon, kwIcon: "tabAccounts", key: "a" },
   { title: "Summary", ns: "summary", href: "/summary", icon: ChartColumnIcon, kwIcon: "chartBars", key: "s" },
 ]
+
+/** Recurring movements and subscriptions: pushed from Home on iOS; on the web a section of the sidebar. */
+export const RECURRING_NAV: NavItem = { title: "Recurring", ns: "web", href: "/recurring", icon: RepeatIcon, kwIcon: "subscription", key: "r" }
 
 /** Reached from home on iOS; on a wide screen it sits at the foot of the sidebar. */
 export const SETTINGS_NAV: NavItem = { title: "Settings", ns: "settings", href: "/settings", icon: SettingsIcon, kwIcon: "settings", key: "," }

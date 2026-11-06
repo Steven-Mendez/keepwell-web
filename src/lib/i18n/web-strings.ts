@@ -77,6 +77,7 @@ export const WEB_STRINGS_CORE: WebStrings = {
 
 import { WEB_STRINGS_ACCOUNTS } from "./web-strings.accounts"
 import { WEB_STRINGS_EDITOR } from "./web-strings.editor"
+import { WEB_STRINGS_RECURRING } from "./web-strings.recurring"
 import { WEB_STRINGS_SETTINGS } from "./web-strings.settings"
 import { WEB_STRINGS_SUMMARY } from "./web-strings.summary"
 
@@ -86,4 +87,5 @@ export const WEB_STRINGS: WebStrings = {
   ...WEB_STRINGS_ACCOUNTS,
   ...WEB_STRINGS_SETTINGS,
   ...WEB_STRINGS_SUMMARY,
+  ...WEB_STRINGS_RECURRING,
 }

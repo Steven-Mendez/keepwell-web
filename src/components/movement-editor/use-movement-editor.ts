@@ -5,12 +5,14 @@ import { newID } from "@/lib/platform/uuid"
 import { useMemo, useState, type KeyboardEvent } from "react"
 
 import type { EditorRequest } from "@/components/app/app-actions"
+import type { RecurringFrequency } from "@/lib/schema"
 import { toast } from "@/components/ui/toast"
 import {
   formatAmountInput,
   formatMoney,
   isDomainError,
   previewMovement,
+  saveRepeatingTransaction,
   saveTransaction,
   type MovementType,
   type TransactionContext,
@@ -39,11 +41,18 @@ export function useCreateTransactionT() {
   return { t, ct }
 }
 
-/** The CreateTransaction view model: the fields, what follows from them, and saving. */
+/** "Repeat" on a new movement: none, or the rule it starts. */
+export type RepeatChoice = "none" | RecurringFrequency
+
+/**
+ * The CreateTransaction view model: the fields, what follows from them, and saving. `seed` opens it
+ * on other fields (the recurring rule editor reuses the same form).
+ */
 export function useMovementEditor(
   request: EditorRequest,
   context: TransactionContext,
-  onClose: () => void
+  onClose: () => void,
+  seed?: { fields: EditorFields; date: Date }
 ) {
   const { t, ct } = useCreateTransactionT()
   const existing = request.mode === "edit" ? request.transaction : undefined
@@ -51,11 +60,14 @@ export function useMovementEditor(
     () => editorTypes(context, existing),
     [context, existing]
   )
-  const [initial] = useState(() => initialFields(request, context, types))
+  const [initial] = useState(
+    () => seed ?? initialFields(request, context, types)
+  )
   const [fields, setFields] = useState(initial.fields)
   const [error, setError] = useState<string>()
   const [saving, setSaving] = useState(false)
   const [creatingCategory, setCreatingCategory] = useState(false)
+  const [repeat, setRepeat] = useState<RepeatChoice>("none")
 
   const update = (patch: Partial<EditorFields>) =>
     setFields((current) => ({ ...current, ...patch }))
@@ -105,10 +117,10 @@ export function useMovementEditor(
     setSaving(true)
     setError(undefined)
     try {
-      await saveTransaction(ledgerStore, {
-        ...form.draft,
-        id: existing?.id ?? newID(),
-      })
+      const draft = { ...form.draft, id: existing?.id ?? newID() }
+      if (!existing && repeat !== "none")
+        await saveRepeatingTransaction(ledgerStore, draft, repeat)
+      else await saveTransaction(ledgerStore, draft)
       toast.add({
         title: ct("Saved"),
         description: `${form.draft.description} · ${formatMoney({ amount: form.draft.amount, currency: fields.currency })}`,
@@ -159,6 +171,8 @@ export function useMovementEditor(
     setError,
     creatingCategory,
     setCreatingCategory,
+    repeat,
+    setRepeat,
     changeType,
     chooseSourceAccount,
     save,
