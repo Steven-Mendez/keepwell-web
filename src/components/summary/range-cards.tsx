@@ -36,7 +36,7 @@ import {
   type YearTotals,
 } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
-import { categoryColor, categoryName } from "@/lib/presentation/display"
+import { categoryColor, categoryNameById } from "@/lib/presentation/display"
 import type { TransactionCategory } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
@@ -595,7 +595,7 @@ function categoryLook(t: Translator, byId: CategoryLookup, id: string) {
   const category = byId.get(id)
   return {
     category,
-    name: category ? categoryName(t, category) : id,
+    name: categoryNameById(t, category, id),
     color: categoryColor(category ?? { id }),
   }
 }
@@ -825,7 +825,7 @@ export function CategoryTrendsCard({
     const category = byId.get(trend.categoryId)
     return {
       id: trend.categoryId,
-      name: category ? categoryName(t, category) : trend.categoryId,
+      name: categoryNameById(t, category, trend.categoryId),
       color: categoryColor(category ?? { id: trend.categoryId }),
     }
   })
@@ -943,7 +943,7 @@ export function HighlightsCard({
   const byId = new Map(categories.map((category) => [category.id, category]))
   const nameOf = (id: string) => {
     const category = byId.get(id)
-    return category ? categoryName(t, category) : id
+    return categoryNameById(t, category, id)
   }
   const active = report.months.filter(
     (month) => month.income.gt(0) || month.expense.gt(0)

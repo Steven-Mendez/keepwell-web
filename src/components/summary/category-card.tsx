@@ -7,7 +7,7 @@ import { SpringFill } from "@/components/kw/motion"
 import { CategoryBadge, Surface } from "@/components/kw/primitives"
 import type { MonthlySummary, SummaryReport } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
-import { categoryColor, categoryName } from "@/lib/presentation/display"
+import { categoryColor, categoryNameById } from "@/lib/presentation/display"
 import type { TransactionCategory } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
@@ -82,7 +82,7 @@ function categoryRow(
   const category = byId.get(entry.slice.id)
   return {
     id: entry.slice.id,
-    name: category ? categoryName(t, category) : entry.slice.id,
+    name: categoryNameById(t, category, entry.slice.id),
     ...figures,
     color: categoryColor(category ?? { id: entry.slice.id }),
     category,
