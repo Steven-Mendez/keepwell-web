@@ -1,4 +1,4 @@
-import type { Account, Card, CurrencySettings, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
+import type { Account, Card, CategorizationRule, CurrencySettings, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
 import { DEFAULT_SETTINGS } from "@/lib/schema"
 
 import { addMonths, contains, daysInMonth, sameMonth, yearMonthContaining, type DateInterval, type YearMonth } from "./calendar"
@@ -25,6 +25,7 @@ import {
   type TransactionScope,
 } from "./rules"
 import { orderedCategories, type LedgerStore } from "./store"
+import { searchedTag } from "./tags"
 
 // Ports of the feature domains that read the whole ledger: Home, Accounts, CreditCard,
 // Transactions, Summary and Settings › Payment methods.
@@ -40,10 +41,12 @@ export interface Ledger {
   savingsGoals: SavingsGoal[]
   loans: Loan[]
   personalDebts: PersonalDebt[]
+  /** In the person's order: the first that matches wins. */
+  categorizationRules: CategorizationRule[]
 }
 
 export async function loadLedger(store: LedgerStore): Promise<Ledger> {
-  const [settings, accounts, cards, transactions, categories, recurringRules, savingsGoals, loans, personalDebts] = await Promise.all([
+  const [settings, accounts, cards, transactions, categories, recurringRules, savingsGoals, loans, personalDebts, categorizationRules] = await Promise.all([
     store.loadSettings(),
     store.fetchAccounts(),
     store.fetchCards(),
@@ -53,6 +56,7 @@ export async function loadLedger(store: LedgerStore): Promise<Ledger> {
     store.fetchSavingsGoals(),
     store.fetchLoans(),
     store.fetchPersonalDebts(),
+    store.fetchCategorizationRules(),
   ])
   return {
     settings: settings ?? DEFAULT_SETTINGS,
@@ -64,6 +68,7 @@ export async function loadLedger(store: LedgerStore): Promise<Ledger> {
     savingsGoals,
     loans,
     personalDebts,
+    categorizationRules,
   }
 }
 
@@ -284,12 +289,16 @@ export interface TransactionQuery {
   text: string
 }
 
-/** Narrows movements; `searchableText` is presentation (translated category, method name). */
+/**
+ * Narrows movements; `searchableText` is presentation (translated category, method name). A search
+ * like "#boda" narrows to that tag instead of the text (iOS `TransactionQuery.tag`).
+ */
 export function filterTransactions(transactions: readonly Transaction[], query: TransactionQuery, searchableText: (transaction: Transaction) => string): Transaction[] {
   const needle = folded(query.text.trim())
-  return transactions.filter(
-    (transaction) => filterMatches(query.kind, transaction) && scopeIncludes(query.scope, transaction) && (needle === "" || folded(searchableText(transaction)).includes(needle)),
-  )
+  const tag = searchedTag(query.text)
+  const matchesText = (transaction: Transaction) =>
+    tag !== undefined ? (transaction.tags ?? []).includes(tag) : needle === "" || folded(searchableText(transaction)).includes(needle)
+  return transactions.filter((transaction) => filterMatches(query.kind, transaction) && scopeIncludes(query.scope, transaction) && matchesText(transaction))
 }
 
 /** Accounts in the Accounts tab's order (credit, bank, cash), each with the card that is its face. */

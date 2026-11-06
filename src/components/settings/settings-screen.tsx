@@ -202,6 +202,11 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
         value={ledger.cards.length}
         onClick={() => setMethodsOpen(true)}
       />
+      <SettingsLinkRow
+        label={t.in("settings", "Rules")}
+        value={ledger.categorizationRules.length}
+        href="/settings/rules"
+      />
       <Dialog open={methodsOpen} onOpenChange={setMethodsOpen}>
         <DialogContent className="max-h-[85svh] gap-5 overflow-y-auto rounded-2xl bg-background p-6 ring-1 ring-border/60 sm:max-w-lg">
           <DialogHeader>

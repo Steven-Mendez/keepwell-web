@@ -495,6 +495,9 @@
   "Category": {
    "es": "Categoría"
   },
+  "Category from rule: %@": {
+   "es": "Categoría por regla: %@"
+  },
   "Check the amount.": {
    "es": "Revisa el monto."
   },
@@ -710,6 +713,9 @@
   },
   "Straight into the account": {
    "es": "Directo a la cuenta"
+  },
+  "Tags": {
+   "es": "Etiquetas"
   },
   "Take cash out of a bank account": {
    "es": "Saca efectivo de una cuenta bancaria"
@@ -1058,8 +1064,14 @@
   "Loans": {
    "es": "Préstamos"
   },
+  "Mark %lld/%lld unpaid?": {
+   "es": "¿Marcar %1$lld/%2$lld como no pagada?"
+  },
   "Mark as settled": {
    "es": "Marcar como saldada"
+  },
+  "Mark unpaid": {
+   "es": "Marcar como no pagada"
   },
   "Monthly": {
    "es": "Mensual"
@@ -1172,6 +1184,9 @@
   "That's more than what's left.": {
    "es": "Es más de lo que falta."
   },
+  "The expense it recorded is deleted, so balances go back to before you paid it.": {
+   "es": "Se elimina el gasto que registró, así que los saldos vuelven a como estaban antes de pagarla."
+  },
   "The installments you already paid stay as movements.": {
    "es": "Las cuotas que ya pagaste se quedan como movimientos."
   },
@@ -1184,8 +1199,14 @@
   "They owe me": {
    "es": "Me deben"
   },
+  "Touch and hold a paid installment to mark it unpaid.": {
+   "es": "Mantén presionada una cuota pagada para marcarla como no pagada."
+  },
   "We couldn't load your debts.": {
    "es": "No pudimos cargar tus deudas."
+  },
+  "We couldn't mark it unpaid. Try again.": {
+   "es": "No pudimos marcarla como no pagada. Intenta de nuevo."
   },
   "We couldn't record the payment. Try again.": {
    "es": "No pudimos registrar el pago. Intenta de nuevo."
@@ -2149,6 +2170,16 @@
     "other": "%lld días"
    }
   },
+  "%lld movements updated.": {
+   "en": {
+    "one": "%lld movement updated.",
+    "other": "%lld movements updated."
+   },
+   "es": {
+    "one": "%lld movimiento actualizado.",
+    "other": "%lld movimientos actualizados."
+   }
+  },
   "%lld rows skipped": {
    "en": {
     "one": "%lld row skipped",
@@ -2175,6 +2206,12 @@
   "App language": {
    "es": "Idioma de la app"
   },
+  "Apply": {
+   "es": "Aplicar"
+  },
+  "Apply to past movements": {
+   "es": "Aplicar a movimientos anteriores"
+  },
   "Ask again after": {
    "es": "Pedirlo al volver después de"
   },
@@ -2187,14 +2224,26 @@
   "Bank transfer": {
    "es": "Transferencia bancaria"
   },
+  "Capitals and accents don't matter.": {
+   "es": "No importan las mayúsculas ni las tildes."
+  },
   "Categories": {
    "es": "Categorías"
+  },
+  "Category": {
+   "es": "Categoría"
   },
   "Change passcode": {
    "es": "Cambiar código"
   },
   "Charged straight to the account": {
    "es": "Se cobra directo de la cuenta"
+  },
+  "Choose": {
+   "es": "Elegir"
+  },
+  "Create rule": {
+   "es": "Crear regla"
   },
   "Credit": {
    "es": "Crédito"
@@ -2211,6 +2260,9 @@
   "Debit": {
    "es": "Débito"
   },
+  "Delete": {
+   "es": "Eliminar"
+  },
   "Delete all my data": {
    "es": "Eliminar todos mis datos"
   },
@@ -2219,6 +2271,15 @@
   },
   "Delete everything": {
    "es": "Eliminar todo"
+  },
+  "Delete rule": {
+   "es": "Eliminar regla"
+  },
+  "Delete this rule?": {
+   "es": "¿Eliminar esta regla?"
+  },
+  "Deleted category": {
+   "es": "Categoría eliminada"
   },
   "Deleted defaults come back and edits to them are undone. Your own categories and movements stay.": {
    "es": "Vuelven las predeterminadas que eliminaste y se deshacen sus cambios. Tus categorías y movimientos se quedan como están."
@@ -2231,6 +2292,9 @@
   },
   "Done": {
    "es": "Listo"
+  },
+  "Edit rule": {
+   "es": "Editar regla"
   },
   "Expense categories": {
    "es": "Categorías de gasto"
@@ -2249,6 +2313,9 @@
   },
   "Hide amounts when leaving": {
    "es": "Ocultar montos al salir"
+  },
+  "If the description or note contains": {
+   "es": "Si la descripción o la nota contiene"
   },
   "Immediately": {
    "es": "De inmediato"
@@ -2292,11 +2359,24 @@
   "Manual · default 1": {
    "es": "Manual · por defecto 1"
   },
+  "Move %lld movements to %@?": {
+   "en": {
+    "one": "Move %lld movement to %@?",
+    "other": "Move %lld movements to %@?"
+   },
+   "es": {
+    "one": "¿Mover %lld movimiento a %@?",
+    "other": "¿Mover %lld movimientos a %@?"
+   }
+  },
   "Move down": {
    "es": "Bajar"
   },
   "Move up": {
    "es": "Subir"
+  },
+  "Movements it already categorized stay as they are.": {
+   "es": "Los movimientos que ya categorizó no cambian."
   },
   "Net worth, summaries and new movements will be in %@, and the rate is turned around. Past movements keep the rate they were logged with.": {
    "es": "El patrimonio, los resúmenes y los movimientos nuevos estarán en %@, y la tasa se invierte. Los movimientos anteriores conservan la tasa con la que se anotaron."
@@ -2304,14 +2384,29 @@
   "New category": {
    "es": "Nueva categoría"
   },
+  "New movements take the category of the first rule that matches, unless you pick one. Past ones stay as they are.": {
+   "es": "Los movimientos nuevos toman la categoría de la primera regla que coincida, salvo que elijas una. Los anteriores no cambian."
+  },
+  "New rule": {
+   "es": "Nueva regla"
+  },
   "No lock": {
    "es": "Sin bloqueo"
+  },
+  "No past movements to change.": {
+   "es": "No hay movimientos anteriores que cambiar."
+  },
+  "No rules yet": {
+   "es": "Aún no tienes reglas"
   },
   "Off: your data stays only on this iPhone.": {
    "es": "Apagado: tus datos quedan solo en este iPhone."
   },
   "On ›": {
    "es": "Activado ›"
+  },
+  "Only movements without a category or in “Other” that match change.": {
+   "es": "Solo cambian los movimientos que coinciden y no tienen categoría o están en “Otros”."
   },
   "Organization": {
    "es": "Organización"
@@ -2356,6 +2451,12 @@
     "other": "Respaldo del %@ restaurado · %lld movimientos"
    }
   },
+  "Rules": {
+   "es": "Reglas"
+  },
+  "Save": {
+   "es": "Guardar"
+  },
   "Second currency": {
    "es": "Segunda moneda"
   },
@@ -2377,6 +2478,15 @@
   "Syncs on its own while you have iCloud on this iPhone.": {
    "es": "Se sincroniza solo mientras tengas iCloud en este iPhone."
   },
+  "Tags to add": {
+   "es": "Etiquetas para agregar"
+  },
+  "Teach Keepwell that “Uber” is Transport, and new movements that say so get it on their own.": {
+   "es": "Enséñale a Keepwell que “Uber” es Transporte, y los movimientos nuevos que lo digan lo tendrán solos."
+  },
+  "Text to look for": {
+   "es": "Texto a buscar"
+  },
   "That file isn't a Keepwell backup, so nothing was changed.": {
    "es": "Ese archivo no es un respaldo de Keepwell, así que no cambió nada."
   },
@@ -2392,6 +2502,9 @@
   "Turn off the Keepwell passcode?": {
    "es": "¿Desactivar el código de Keepwell?"
   },
+  "Uber": {
+   "es": "Uber"
+  },
   "Unlock the app with": {
    "es": "Desbloquear la app con"
   },
@@ -2404,6 +2517,9 @@
   "We couldn't create the file. Try again.": {
    "es": "No pudimos crear el archivo. Inténtalo de nuevo."
   },
+  "We couldn't delete the rule. Try again.": {
+   "es": "No pudimos eliminar la regla. Inténtalo de nuevo."
+  },
   "We couldn't delete your data. Try again.": {
    "es": "No pudimos eliminar tus datos. Inténtalo de nuevo."
   },
@@ -2415,6 +2531,12 @@
   },
   "We couldn't load your payment methods.": {
    "es": "No pudimos cargar tus medios de pago."
+  },
+  "We couldn't load your rules.": {
+   "es": "No pudimos cargar tus reglas."
+  },
+  "We couldn't look at your movements. Try again.": {
+   "es": "No pudimos revisar tus movimientos. Inténtalo de nuevo."
   },
   "We couldn't read that file.": {
    "es": "No pudimos leer ese archivo."
@@ -2434,6 +2556,12 @@
   "We couldn't save the new order. Try again.": {
    "es": "No pudimos guardar el nuevo orden. Inténtalo de nuevo."
   },
+  "We couldn't save the rule. Try again.": {
+   "es": "No pudimos guardar la regla. Inténtalo de nuevo."
+  },
+  "We couldn't update your movements. Try again.": {
+   "es": "No pudimos actualizar tus movimientos. Inténtalo de nuevo."
+  },
   "We use Face ID or Touch ID, whichever your iPhone has": {
    "es": "Usamos Face ID o Touch ID según tu iPhone"
   },
@@ -2448,6 +2576,9 @@
   },
   "iCloud backup": {
    "es": "Respaldo en iCloud"
+  },
+  "“%@” → %@": {
+   "es": "“%1$@” → %2$@"
   }
  },
  "sharedpresentation": {
@@ -2456,6 +2587,15 @@
   },
   "Account name": {
    "es": "Nombre de la cuenta"
+  },
+  "Add": {
+   "es": "Agregar"
+  },
+  "Add a tag": {
+   "es": "Agregar etiqueta"
+  },
+  "Adds the tag": {
+   "es": "Agrega la etiqueta"
   },
   "Amber": {
    "es": "Ámbar"
@@ -2672,6 +2812,9 @@
   },
   "Refunds": {
    "es": "Reembolsos"
+  },
+  "Remove %@": {
+   "es": "Quitar %@"
   },
   "Rental": {
    "es": "Alquiler"
@@ -2936,6 +3079,9 @@
   }
  },
  "transactions": {
+  "%@ · All time": {
+   "es": "%@ · Desde siempre"
+  },
   "Accounts: %@": {
    "es": "Cuentas: %@"
   },
@@ -3011,8 +3157,11 @@
   "Search": {
    "es": "Buscar"
   },
-  "Search merchant, note or category": {
-   "es": "Buscar comercio, nota o categoría"
+  "Search merchant, note, category or #tag": {
+   "es": "Buscar comercio, nota, categoría o #etiqueta"
+  },
+  "Show %@": {
+   "es": "Ver %@"
   },
   "Show all accounts": {
    "es": "Mostrar todas las cuentas"

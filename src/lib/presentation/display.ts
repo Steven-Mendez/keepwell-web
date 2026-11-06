@@ -239,7 +239,9 @@ export class TransactionDisplay {
 
   /** Text a search matches against: description, note, category (translated and stored) and method. */
   searchableText(transaction: Transaction): string {
-    return [transaction.description, transaction.note, this.categoryName(transaction), this.category(transaction)?.name, this.subtitle(transaction)].filter(Boolean).join(" ")
+    // Tags are searchable as text too: "boda" finds "#boda" among everything else it matches.
+    const tags = (transaction.tags ?? []).map((tag) => `#${tag}`)
+    return [transaction.description, transaction.note, this.categoryName(transaction), this.category(transaction)?.name, this.subtitle(transaction), ...tags].filter(Boolean).join(" ")
   }
 }
 

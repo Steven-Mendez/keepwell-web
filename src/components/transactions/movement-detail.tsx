@@ -5,6 +5,7 @@ import { useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
 import { SplitDialog } from "@/components/debts/split-dialog"
+import { TagChip } from "@/components/kw/tag-editor"
 import {
   KWActionButton,
   KWButton,
@@ -43,6 +44,8 @@ import { ledgerStore } from "@/lib/repositories"
 import type { RecurringRule, Transaction } from "@/lib/schema"
 import { frequencyText } from "@/components/recurring/recurring-format"
 import { cn } from "@/lib/utils"
+
+import { useShowTag } from "./show-tag"
 
 type Ct = (key: string, ...args: (string | number)[]) => string
 
@@ -105,6 +108,29 @@ function RateCard({ ct, transaction }: { ct: Ct; transaction: Transaction }) {
   )
 }
 
+/** The movement's tags as "#chips"; one narrows Transactions to it. */
+function DetailTags({ t, tags }: { t: Translator; tags: readonly string[] }) {
+  const showTag = useShowTag()
+  return (
+    <KWGroupedCard>
+      <div className="flex flex-col gap-2 px-4 py-3">
+        <span className="type-caption text-muted-foreground">
+          {t.in("createtransaction", "Tags")}
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {tags.map((tag) => (
+            <TagChip
+              key={tag}
+              tag={tag}
+              onClick={() => showTag(tag)}
+            />
+          ))}
+        </div>
+      </div>
+    </KWGroupedCard>
+  )
+}
+
 /** The details as KWValueRows on grouped cards: when, where, status, rate, note and reference. */
 function DetailCards({
   t,
@@ -163,6 +189,7 @@ function DetailCards({
           </div>
         </KWGroupedCard>
       ) : null}
+      {transaction.tags?.length ? <DetailTags t={t} tags={transaction.tags} /> : null}
       <KWGroupedCard>
         <KWValueRow
           label={ct("Reference")}

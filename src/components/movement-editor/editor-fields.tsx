@@ -1,6 +1,7 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
+import { TagEditor } from "@/components/kw/tag-editor"
 import { KWSegmented } from "@/components/kw/design"
 import { Textarea } from "@/components/ui/textarea"
 import { formatAmountInput } from "@/lib/domain"
@@ -181,7 +182,7 @@ function DebitedField({ editor }: SectionProps) {
 /** Expenses and incomes: the category, with a new one created in place. */
 export function CategorySection({ editor }: SectionProps) {
   const { t } = useCreateTransactionT()
-  const { context, fields, form, update } = editor
+  const { context, fields, form } = editor
   return (
     <section className="flex flex-col gap-3">
       <h3 className="px-1 type-heading text-foreground">
@@ -192,7 +193,7 @@ export function CategorySection({ editor }: SectionProps) {
         usage={context.categoryUsage}
         value={fields.categoryId}
         onChange={(id) => {
-          update({ categoryId: id })
+          editor.pickCategory(id)
           editor.setError(undefined)
         }}
         onCreate={() => editor.setCreatingCategory(true)}
@@ -201,8 +202,13 @@ export function CategorySection({ editor }: SectionProps) {
         kind={form.kind}
         open={editor.creatingCategory}
         onOpenChange={editor.setCreatingCategory}
-        onCreated={(created) => update({ categoryId: created.id })}
+        onCreated={(created) => editor.pickCategory(created.id)}
       />
+      {editor.ruleHint ? (
+        <p className="px-1 type-caption text-muted-foreground" aria-live="polite">
+          {editor.ruleHint}
+        </p>
+      ) : null}
     </section>
   )
 }
@@ -298,6 +304,17 @@ export function DetailsSection({ editor }: SectionProps) {
           className={KW_TEXTAREA}
         />
       </div>
+    </section>
+  )
+}
+
+/** "#chips" besides the category (iOS review's tags card), for expenses and income. */
+export function TagsSection({ editor }: SectionProps) {
+  const { ct } = useCreateTransactionT()
+  return (
+    <section className="flex flex-col gap-1.5">
+      <FieldLabel htmlFor="editor-tags">{ct("Tags")}</FieldLabel>
+      <TagEditor id="editor-tags" tags={editor.tags} onChange={editor.setTags} usage={editor.tagUsage} />
     </section>
   )
 }

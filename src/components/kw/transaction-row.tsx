@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { KWTransactionIcon } from "./design"
 import { ListItem } from "./motion"
 import { CategoryBadge } from "./primitives"
+import { tagLine } from "./tag-editor"
 
 /**
  * KWTransactionRow: the movement's kind icon (not its category: iOS reads direction first),
@@ -102,11 +103,11 @@ function TransactionText({
           columns && "lg:hidden"
         )}
       >
-        {[display.subtitle(transaction), dateLabel].filter(Boolean).join(" · ")}
+        {[display.subtitle(transaction), dateLabel, tagLine(transaction.tags)].filter(Boolean).join(" · ")}
       </span>
-      {columns && transaction.note ? (
+      {columns && (transaction.note || transaction.tags?.length) ? (
         <span className="hidden truncate type-caption text-text-faint lg:block">
-          {transaction.note}
+          {[transaction.note, tagLine(transaction.tags)].filter(Boolean).join(" · ")}
         </span>
       ) : null}
     </span>

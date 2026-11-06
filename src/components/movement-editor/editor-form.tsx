@@ -10,6 +10,7 @@ import {
   CategorySection,
   DetailsSection,
   MethodSection,
+  TagsSection,
   TransferAccountsSection,
 } from "./editor-fields"
 import { typeSubtitle, typeTitle } from "./editor-model"
@@ -73,6 +74,7 @@ export function EditorForm({
           {!movesBetweenAccounts ? <CategorySection editor={editor} /> : null}
           {!movesBetweenAccounts ? <MethodSection editor={editor} /> : null}
           <DetailsSection editor={editor} />
+          {!movesBetweenAccounts ? <TagsSection editor={editor} /> : null}
         </div>
 
         <EditorReview editor={editor} onClose={onClose} />

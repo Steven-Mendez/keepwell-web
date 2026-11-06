@@ -340,3 +340,16 @@ describe("Backup file version 4: tags and categorization rules", () => {
     expect((await transactionRepository.list()).find((row) => row.id === movement.id)?.tags).toEqual(["boda"])
   })
 })
+
+describe("filtering by tag", () => {
+  it("narrows a #tag search to that tag and keeps plain searches as text", async () => {
+    const { filterTransactions } = await import("@/lib/domain")
+    const { transaction } = await import("./fixtures")
+    const boda = { ...transaction({ kind: "expense", amount: "10" }), id: "a", description: "Flowers", tags: ["boda"] }
+    const viaje = { ...transaction({ kind: "expense", amount: "5" }), id: "b", description: "boda gift", tags: ["viaje"] }
+    const query = (text: string) => ({ kind: "all" as const, scope: { kind: "all" as const }, text })
+    const text = (tx: { description: string }) => tx.description
+    expect(filterTransactions([boda, viaje], query(" #Boda "), text).map((tx) => tx.id)).toEqual(["a"])
+    expect(filterTransactions([boda, viaje], query("boda"), text).map((tx) => tx.id)).toEqual(["b"])
+  })
+})
