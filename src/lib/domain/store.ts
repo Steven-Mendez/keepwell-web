@@ -1,4 +1,4 @@
-import type { Account, Card, RecurringRule, Settings, Transaction, TransactionCategory } from "@/lib/schema"
+import type { Account, Card, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
 import { DEFAULT_CATEGORIES, isFallbackCategory, orderedCategories, shippedCategory } from "@/lib/schema"
 
 import { DomainError } from "./errors"
@@ -29,6 +29,13 @@ export interface LedgerStore {
   saveRecurringRule(rule: RecurringRule): Promise<void>
   /** Soft-deletes; throws `notFound` for a missing or deleted rule. */
   deleteRecurringRule(id: string): Promise<void>
+
+  /** Alive savings goals. */
+  fetchSavingsGoals(): Promise<SavingsGoal[]>
+  /** Inserts or replaces the goal with the same id. */
+  saveSavingsGoal(goal: SavingsGoal): Promise<void>
+  /** Soft-deletes; throws `notFound` for a missing or deleted goal. */
+  deleteSavingsGoal(id: string): Promise<void>
 
   /** In the person's order, defaults included except the ones deleted. */
   fetchCategories(): Promise<TransactionCategory[]>
@@ -63,17 +70,19 @@ export class InMemoryStore implements LedgerStore, ProfileStore {
   cards: Card[]
   transactions: Transaction[]
   recurringRules: RecurringRule[]
+  savingsGoals: SavingsGoal[]
   /** In stored order; ids in `deletedCategoryIds` are tombstones. */
   categories: TransactionCategory[]
   deletedCategoryIds = new Set<string>()
   settings: Settings | undefined
   name: string | undefined
 
-  constructor(seed: Partial<{ accounts: Account[]; cards: Card[]; transactions: Transaction[]; recurringRules: RecurringRule[]; categories: TransactionCategory[]; settings: Settings }> = {}) {
+  constructor(seed: Partial<{ accounts: Account[]; cards: Card[]; transactions: Transaction[]; recurringRules: RecurringRule[]; savingsGoals: SavingsGoal[]; categories: TransactionCategory[]; settings: Settings }> = {}) {
     this.accounts = [...(seed.accounts ?? [])]
     this.cards = [...(seed.cards ?? [])]
     this.transactions = [...(seed.transactions ?? [])]
     this.recurringRules = [...(seed.recurringRules ?? [])]
+    this.savingsGoals = [...(seed.savingsGoals ?? [])]
     this.categories = [...(seed.categories ?? DEFAULT_CATEGORIES)]
     this.settings = seed.settings
   }
@@ -122,6 +131,17 @@ export class InMemoryStore implements LedgerStore, ProfileStore {
     this.recurringRules = this.recurringRules.filter((rule) => rule.id !== id)
   }
 
+  async fetchSavingsGoals() {
+    return [...this.savingsGoals]
+  }
+  async saveSavingsGoal(goal: SavingsGoal) {
+    this.savingsGoals = upsert(this.savingsGoals, goal)
+  }
+  async deleteSavingsGoal(id: string) {
+    if (!this.savingsGoals.some((goal) => goal.id === id)) throw DomainError.notFound(id)
+    this.savingsGoals = this.savingsGoals.filter((goal) => goal.id !== id)
+  }
+
   async fetchCategories() {
     const present = new Set(this.categories.map((category) => category.id))
     const missing = DEFAULT_CATEGORIES.filter((category) => !present.has(category.id) && !this.deletedCategoryIds.has(category.id))
@@ -158,7 +178,7 @@ export class InMemoryStore implements LedgerStore, ProfileStore {
   }
 
   async atomically<T>(work: () => Promise<T>): Promise<T> {
-    const snapshot = { accounts: this.accounts, cards: this.cards, transactions: this.transactions, recurringRules: this.recurringRules, categories: this.categories, settings: this.settings }
+    const snapshot = { accounts: this.accounts, cards: this.cards, transactions: this.transactions, recurringRules: this.recurringRules, savingsGoals: this.savingsGoals, categories: this.categories, settings: this.settings }
     try {
       return await work()
     } catch (error) {

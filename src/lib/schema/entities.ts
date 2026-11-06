@@ -163,6 +163,33 @@ export const RecurringRule = z.object({
 })
 export type RecurringRule = z.infer<typeof RecurringRule>
 
+/** A goal's deadline: a month, not a day, so it reads the same in every time zone. */
+export const TargetMonth = z.object({
+  month: z.number().int().min(1).max(12),
+  year: z.number().int().min(2000).max(2199),
+})
+export type TargetMonth = z.infer<typeof TargetMonth>
+
+export const MAX_GOAL_NAME_LENGTH = 40
+
+/**
+ * Money set aside for something ("Trip: C$15,000 by December"), shared contract with iOS
+ * `SavingsGoal`. What is saved is only tracked here: it never moves money between accounts.
+ */
+export const SavingsGoal = z.object({
+  id: Id,
+  name: z.string(),
+  target: Money.refine((target) => isPositiveDecimal(target.amount), "Must be greater than zero"),
+  /** In the target's currency; never negative. */
+  saved: DecimalString.refine((value) => !value.trim().startsWith("-"), "Can't be negative"),
+  targetMonth: TargetMonth.optional(),
+  /** A symbol from the category symbol choices. */
+  icon: z.string().optional(),
+  /** A key into the category palette. */
+  color: z.string().optional(),
+})
+export type SavingsGoal = z.infer<typeof SavingsGoal>
+
 export const UnlockMethod = z.enum(["biometrics", "passcode", "disabled"])
 export type UnlockMethod = z.infer<typeof UnlockMethod>
 

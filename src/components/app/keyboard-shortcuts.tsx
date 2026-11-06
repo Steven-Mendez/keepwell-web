@@ -13,7 +13,7 @@ import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { useT } from "@/lib/i18n"
 
 import { useAppActions } from "./app-actions"
-import { MAIN_NAV, RECURRING_NAV, SETTINGS_NAV } from "./navigation"
+import { MAIN_NAV, SECTION_NAV, SETTINGS_NAV } from "./navigation"
 
 export const FOCUS_SEARCH_EVENT = "keepwell:focus-search"
 
@@ -34,7 +34,7 @@ function dialogIsOpen(): boolean {
 
 /**
  * Desktop keyboard navigation: ⌘K palette, N new movement (E/I/T by type), 1–4 and "g" then a
- * letter for the sections (G R for Recurring), "," settings, "/" search, "?" this list.
+ * letter for the sections (G R for Recurring, G G for Goals), "," settings, "/" search, "?" this list.
  */
 export function KeyboardShortcuts() {
   const t = useT()
@@ -65,7 +65,7 @@ export function KeyboardShortcuts() {
       if (pendingG !== undefined) {
         window.clearTimeout(pendingG)
         pendingG = undefined
-        const target = [...MAIN_NAV, RECURRING_NAV, SETTINGS_NAV].find(
+        const target = [...MAIN_NAV, ...SECTION_NAV, SETTINGS_NAV].find(
           (item) => item.key === key
         )
         if (target) {
@@ -138,7 +138,7 @@ export function KeyboardShortcuts() {
       [String(index + 1)],
       t.in(item.ns, item.title),
     ]),
-    ...[...MAIN_NAV, RECURRING_NAV, SETTINGS_NAV].map((item): [string[], string] => [
+    ...[...MAIN_NAV, ...SECTION_NAV, SETTINGS_NAV].map((item): [string[], string] => [
       ["G", item.key.toUpperCase()],
       t.in(item.ns, item.title),
     ]),

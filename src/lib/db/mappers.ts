@@ -1,6 +1,6 @@
-import type { Account, Card, RecurringRule, Settings, Transaction, TransactionCategory } from "@/lib/schema"
+import type { Account, Card, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
 
-import type { AccountRow, CardRow, CategoryRow, RecurringRuleRow, SettingsRow, TransactionRow } from "./database"
+import type { AccountRow, CardRow, CategoryRow, RecurringRuleRow, SavingsGoalRow, SettingsRow, TransactionRow } from "./database"
 import { SETTINGS_ID } from "./database"
 
 // Domain ⇄ row, like the iOS records' `update(from:)` / `toDomain()`. Audit columns are left to the
@@ -204,6 +204,34 @@ export function rowToRecurringRule(row: RecurringRuleRow): RecurringRule {
     autoConfirm: row.auto_confirm,
     isPaused: row.is_paused,
     ...present("note", row.note),
+  }
+}
+
+export function savingsGoalToRow(goal: SavingsGoal): Columns<SavingsGoalRow> {
+  return {
+    id: goal.id,
+    name: goal.name,
+    target_amount: goal.target.amount,
+    target_currency: goal.target.currency,
+    saved: goal.saved,
+    target_month: orNull(goal.targetMonth?.month),
+    target_year: orNull(goal.targetMonth?.year),
+    icon: orNull(goal.icon),
+    color: orNull(goal.color),
+  }
+}
+
+export function rowToSavingsGoal(row: SavingsGoalRow): SavingsGoal {
+  return {
+    id: row.id,
+    name: row.name,
+    target: { amount: row.target_amount, currency: row.target_currency },
+    saved: row.saved,
+    ...(row.target_month !== null && row.target_year !== null
+      ? { targetMonth: { month: row.target_month, year: row.target_year } }
+      : {}),
+    ...present("icon", row.icon),
+    ...present("color", row.color),
   }
 }
 

@@ -219,7 +219,7 @@ function useCategoryEditor(
   }
 }
 
-function ColorChoices({
+export function ColorChoices({
   t,
   color,
   onChange,
@@ -263,7 +263,7 @@ function ColorChoices({
   )
 }
 
-function IconChoices({
+export function IconChoices({
   t,
   icon,
   onChange,
