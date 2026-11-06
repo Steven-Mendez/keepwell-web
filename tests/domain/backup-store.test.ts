@@ -26,7 +26,7 @@ function v1File(): string {
 }
 
 describe("Backup through IndexedDB", () => {
-  it("restores a version 1 file and exports version 2 with rules and recurringId", async () => {
+  it("restores a version 1 file and exports the current version with rules and recurringId", async () => {
     const summary = await backupRepository.import(v1File())
     expect(summary.accounts).toBe(5)
     // The app seeds the shipped categories on launch; the file listed none.
@@ -57,7 +57,7 @@ describe("Backup through IndexedDB", () => {
     expect(created).toHaveLength(1)
 
     const exported = JSON.parse(await backupRepository.export()) as BackupFile
-    expect(exported.schemaVersion).toBe(2)
+    expect(exported.schemaVersion).toBe(3)
     expect(exported.recurringRules).toHaveLength(1)
     expect(exported.recurringRules[0]).toMatchObject({ id: rule.id, nextDate: date(2026, 11, 2, 9).toISOString() })
     const produced = exported.transactions.find((transaction) => transaction.recurringId === rule.id)

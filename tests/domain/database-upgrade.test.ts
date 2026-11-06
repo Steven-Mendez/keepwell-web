@@ -24,12 +24,14 @@ describe("IndexedDB upgrade from version 1", () => {
 
     const upgraded = new KeepwellDatabase()
     await upgraded.open()
-    expect(upgraded.verno).toBe(3)
+    expect(upgraded.verno).toBe(4)
     const row = await upgraded.transactions.get("t1")
     expect(row?.amount).toBe("10")
     expect(row?.recurring_id).toBeNull()
     expect(await upgraded.recurring_rules.count()).toBe(0)
     // Version 3: categories start without a monthly budget.
+    // Version 4: an empty savings_goals table.
+    expect(await upgraded.savings_goals.count()).toBe(0)
     const category = await upgraded.categories.get("groceries")
     expect(category?.budget_amount).toBeNull()
     expect(category?.budget_currency).toBeNull()

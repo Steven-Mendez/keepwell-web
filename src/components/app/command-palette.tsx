@@ -9,7 +9,7 @@ import { useT } from "@/lib/i18n"
 import { accountName } from "@/lib/presentation/display"
 
 import { useAppActions } from "./app-actions"
-import { MAIN_NAV, RECURRING_NAV, SETTINGS_NAV } from "./navigation"
+import { MAIN_NAV, SECTION_NAV, SETTINGS_NAV } from "./navigation"
 
 /** ⌘K: jump to any section, account or recent movement, or start an action, without the mouse. */
 export function CommandPalette() {
@@ -64,11 +64,11 @@ export function CommandPalette() {
           </CommandItem>
         </CommandGroup>
         <CommandGroup heading={t.in("web", "Go to")}>
-          {[...MAIN_NAV, RECURRING_NAV, SETTINGS_NAV].map((item, index) => (
+          {[...MAIN_NAV, ...SECTION_NAV, SETTINGS_NAV].map((item, index) => (
             <CommandItem key={item.href} onSelect={() => run(() => router.push(item.href))}>
               <item.icon />
               {t.in(item.ns, item.title)}
-              <CommandShortcut>{index < MAIN_NAV.length ? index + 1 : item === RECURRING_NAV ? "G R" : item.key}</CommandShortcut>
+              <CommandShortcut>{index < MAIN_NAV.length ? index + 1 : SECTION_NAV.includes(item) ? `G ${item.key.toUpperCase()}` : item.key}</CommandShortcut>
             </CommandItem>
           ))}
         </CommandGroup>

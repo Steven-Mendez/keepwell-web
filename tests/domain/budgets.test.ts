@@ -88,7 +88,7 @@ describe("Budgets through IndexedDB and the backup", () => {
     const text = await backupRepository.export()
     const exported = parseBackupFile(text).categories.find((c) => c.id === "groceries")
     expect(exported?.monthlyBudget).toEqual({ amount: "8000", currency: "NIO" })
-    expect(parseBackupFile(text).schemaVersion).toBe(2)
+    expect(parseBackupFile(text).schemaVersion).toBe(3)
     // Categories without one leave the key out, as iOS writes it.
     expect(JSON.parse(text).categories.find((c: { id: string }) => c.id === "restaurants")).not.toHaveProperty("monthlyBudget")
 
