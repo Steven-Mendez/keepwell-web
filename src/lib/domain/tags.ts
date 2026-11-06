@@ -33,6 +33,16 @@ export function normalizedTags(tags: readonly string[]): string[] {
   return result
 }
 
+/** How a CSV row writes them: "#viaje-mexico #boda", or "" without any. */
+export function tagsCsvField(tags: readonly string[]): string {
+  return tags.map((tag) => `#${tag}`).join(" ")
+}
+
+/** The tags a CSV cell lists, split on spaces or commas ("#boda, #viaje-mexico"), normalized. */
+export function parsedCsvTags(text: string): string[] {
+  return normalizedTags(text.split(/[\s,]+/u))
+}
+
 /** `tags` with `added` after them, each once. */
 export function mergeTags(tags: readonly string[], added: readonly string[]): string[] {
   return normalizedTags([...tags, ...added])

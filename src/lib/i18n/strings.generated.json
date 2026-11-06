@@ -2792,6 +2792,9 @@
   "Lime": {
    "es": "Lima"
   },
+  "Loan payments": {
+   "es": "Pagos de préstamos"
+  },
   "Monthly budget": {
    "es": "Presupuesto mensual"
   },
@@ -2968,8 +2971,8 @@
   "At the end of each month": {
    "es": "Al cierre de cada mes"
   },
-  "At the end of each month, at today's rate": {
-   "es": "Al cierre de cada mes, con la tasa de hoy"
+  "At the end of each month, at that month's rate": {
+   "es": "Al cierre de cada mes, con la tasa de ese mes"
   },
   "Average %@ / month": {
    "es": "Promedio %@ / mes"

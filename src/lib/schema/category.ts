@@ -34,6 +34,8 @@ export function newCustomCategoryId(): string {
 /** Where reconciliation adjustments and the movements of a deleted category land; never deletable. */
 export const OTHER_EXPENSE_ID = "other-expense"
 export const OTHER_INCOME_ID = "other-income"
+/** Where a loan's "Pay installment" files the expense unless the person picks another. */
+export const LOAN_PAYMENTS_ID = "loan-payments"
 
 function defaults(
   kind: TransactionKind,
@@ -65,6 +67,7 @@ export const DEFAULT_EXPENSE_CATEGORIES = defaults("expense", [
   ["taxes", "Taxes"],
   ["savings", "Savings"],
   ["donations", "Donations"],
+  [LOAN_PAYMENTS_ID, "Loan payments"],
   [OTHER_EXPENSE_ID, "Other"],
 ])
 

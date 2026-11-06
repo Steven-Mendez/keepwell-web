@@ -9,6 +9,7 @@ import {
   InMemoryStore,
   applyRuleToPast,
   applyingRule,
+  exportCsv,
   firstMatchingRule,
   getTransactionContext,
   importCsv,
@@ -16,6 +17,7 @@ import {
   normalizedTag,
   normalizedTags,
   occurrenceTransaction,
+  parseCsvRows,
   pastMatchCount,
   pastMatches,
   reorderCategorizationRules,
@@ -45,7 +47,7 @@ import {
   type Transaction,
 } from "@/lib/schema"
 
-import { IDs, d, date, referenceDate, sampleStore, transaction } from "./fixtures"
+import { IDs, d, date, referenceDate, sampleData, sampleStore, transaction } from "./fixtures"
 
 async function expectDomainError(work: () => unknown, code: DomainError["code"]) {
   const error = await Promise.resolve()
@@ -352,4 +354,29 @@ describe("filtering by tag", () => {
     expect(filterTransactions([boda, viaje], query(" #Boda "), text).map((tx) => tx.id)).toEqual(["a"])
     expect(filterTransactions([boda, viaje], query("boda"), text).map((tx) => tx.id)).toEqual(["b"])
   })
+
+  it("CSV tags go out as the last column and come back", async () => {
+    const tagged = transaction({ amount: "900", currency: "NIO", account: IDs.cash, category: "travel", description: "Hotel" })
+    const csv = exportCsv([{ ...tagged, tags: ["viaje-mexico", "boda"] }], sampleData().accounts, [], DEFAULT_CATEGORIES)
+    const rows = parseCsvRows(csv)
+    expect(rows[0]?.at(-1)).toBe("tags")
+    expect(rows[1]?.at(-1)).toBe("#viaje-mexico #boda")
+    const store = sampleStore()
+    expect(await importCsv(store, csv)).toEqual({ imported: 1, skipped: 0 })
+    expect(store.transactions.find((t) => t.description === "Hotel")?.tags).toEqual(["viaje-mexico", "boda"])
+  })
+
+  it("CSV import splits tags on spaces or commas and normalizes them, the file's before the rule's", async () => {
+    const store = sampleStore()
+    store.categorizationRules = [{ id: "r-taxi", match: "taxi", categoryId: "transport", kind: "expense", tags: ["trabajo"] }]
+    const csv = [
+      "date,type,description,category,amount,currency,account,Tags",
+      '2026-10-04,expense,Flowers,Gifts,50,NIO,Wallet,"#Boda, Viaje  #boda"',
+      "2026-10-04,expense,Taxi,,70,NIO,Wallet,#viaje",
+    ].join("\n")
+    expect(await importCsv(store, csv)).toEqual({ imported: 2, skipped: 0 })
+    expect(store.transactions.find((t) => t.description === "Flowers")?.tags).toEqual(["boda", "viaje"])
+    expect(store.transactions.find((t) => t.description === "Taxi")?.tags).toEqual(["viaje", "trabajo"])
+  })
 })
+

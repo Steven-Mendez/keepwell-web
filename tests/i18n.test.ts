@@ -7,6 +7,9 @@ import { describe, expect, it } from "vitest"
 
 import { hasString, translate } from "@/lib/i18n"
 import { WEB_STRINGS } from "@/lib/i18n/web-strings"
+import { categorySymbol } from "@/lib/presentation/display"
+import { SYMBOL_ICONS } from "@/lib/presentation/icons"
+import { DEFAULT_CATEGORIES } from "@/lib/schema"
 
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -39,5 +42,13 @@ describe("Strings", () => {
     expect(translate("en", "%lld accounts", [1], "home")).toBe("1 account")
     expect(translate("es", "%lld accounts", [3], "home")).toBe("3 cuentas")
     expect(translate("es", "%@%% saved", ["71"], "home")).toBe("71% ahorrado")
+  })
+
+  it("translates every default category by id and draws its icon", () => {
+    for (const category of DEFAULT_CATEGORIES) {
+      expect(hasString(category.name, "sharedpresentation"), category.id).toBe(true)
+      expect(SYMBOL_ICONS[categorySymbol(category)], category.id).toBeDefined()
+    }
+    expect(translate("es", "Loan payments", [], "sharedpresentation")).toBe("Pagos de préstamos")
   })
 })

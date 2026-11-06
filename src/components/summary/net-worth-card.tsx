@@ -33,7 +33,7 @@ export function NetWorthCard({
   t: Translator
   f: SummaryFormat
   points: readonly NetWorthPoint[]
-  /** Whether a second currency is converted at today's rate, which the caption then says. */
+  /** Whether a second currency is converted, each month at its own rate, which the caption then says. */
   convertsCurrencies: boolean
   hidden: boolean
   className?: string
@@ -86,7 +86,7 @@ export function NetWorthCard({
           <h2 className="type-heading">{t.in("summary", "Net worth")}</h2>
           <p className="type-caption text-muted-foreground">
             {convertsCurrencies
-              ? t.in("summary", "At the end of each month, at today's rate")
+              ? t.in("summary", "At the end of each month, at that month's rate")
               : t.in("summary", "At the end of each month")}
           </p>
         </div>
