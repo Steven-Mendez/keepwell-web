@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react"
 
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { KWButton, kwButtonClass } from "@/components/kw/design"
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { useT } from "@/lib/i18n"
 
 /** An iOS-style confirmation: a question, what happens, and one action (destructive or not). */
@@ -26,22 +27,24 @@ export function ConfirmDialog({
   const t = useT()
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="gap-5 rounded-2xl bg-card p-6 ring-1 ring-border/60">
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          {description ? <AlertDialogDescription>{description}</AlertDialogDescription> : null}
+          <AlertDialogTitle className="type-heading">{title}</AlertDialogTitle>
+          {description ? <AlertDialogDescription className="type-body leading-relaxed text-muted-foreground">{description}</AlertDialogDescription> : null}
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t.in("web", "Cancel")}</AlertDialogCancel>
-          <AlertDialogAction
-            variant={destructive ? "destructive" : "default"}
+        <AlertDialogFooter className="-mx-6 -mb-6 rounded-b-2xl border-divider bg-transparent px-6 pb-6">
+          <AlertDialogCancel render={<button type="button" className={kwButtonClass({ variant: "plain", size: "regular" })} />}>{t.in("web", "Cancel")}</AlertDialogCancel>
+          <KWButton
+            variant={destructive ? "destructive" : "primary"}
+            size="regular"
+            className={destructive ? "bg-negative-tint" : undefined}
             onClick={() => {
               onOpenChange(false)
               onConfirm()
             }}
           >
             {action}
-          </AlertDialogAction>
+          </KWButton>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

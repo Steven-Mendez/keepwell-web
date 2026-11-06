@@ -1,12 +1,13 @@
 "use client"
 
-import { ArrowLeftIcon, BanknoteIcon, ChevronRightIcon, CreditCardIcon, LandmarkIcon, type LucideIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState, type FormEvent } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
+import { KWButton, KWCircleButton } from "@/components/kw/design"
+import { KWIcon } from "@/components/kw/kw-icon"
+import type { KWIconName } from "@/components/kw/kw-icon-data"
 import { CardArt } from "@/components/kw/primitives"
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { OptionSelect } from "@/components/kw/pickers"
@@ -18,7 +19,7 @@ import type { CardColor, CardNetwork, CurrencySettings, DebtMode } from "@/lib/s
 import { cardKindLabel, networkName, SELECTABLE_CARD_COLORS } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
 
-import { AmountInput, ColorSwatches, LabeledField, NETWORKS, Segmented, digitsOnly, domainErrorText } from "./form-parts"
+import { AmountInput, ColorSwatches, KW_INPUT, LabeledField, NETWORKS, Segmented, digitsOnly, domainErrorText } from "./form-parts"
 import { DaySelect } from "./manage-dialogs"
 
 type Kind = "debit" | "credit" | "wallet"
@@ -40,27 +41,25 @@ export function AddAccountDialog() {
 
   return (
     <Dialog open={request !== undefined} onOpenChange={(open) => !open && closeAddAccount()}>
-      <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[calc(100svh-2rem)] gap-5 overflow-y-auto rounded-2xl bg-nav p-6 ring-divider sm:max-w-lg">
         {kind === undefined ? (
           <>
             <DialogHeader>
-              <DialogTitle className="type-title-sm">{t.in("addcard", "What do you want to add?")}</DialogTitle>
-              <DialogDescription>{t.in("addcard", "We never ask for the full number or the CVV.")}</DialogDescription>
+              <DialogTitle className="type-title-sm text-foreground">{t.in("addcard", "What do you want to add?")}</DialogTitle>
+              <DialogDescription className="type-body text-muted-foreground">{t.in("addcard", "We never ask for the full number or the CVV.")}</DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col gap-2">
-              <Choice icon={LandmarkIcon} title={t.in("addcard", "Debit card")} description={t.in("addcard", "Your bank account, shown as its card: balance, bank and last 4")} onClick={() => setChosen("debit")} />
-              <Choice icon={CreditCardIcon} title={t.in("addcard", "Credit card")} description={t.in("addcard", "It's its own account: debt in one or two currencies, cutoff and due dates")} onClick={() => setChosen("credit")} />
-              <Choice icon={BanknoteIcon} title={t.in("addcard", "Other wallet")} description={t.in("addcard", "Without a card")} onClick={() => setChosen("wallet")} />
+            <div className="flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card">
+              <Choice icon="bank" title={t.in("addcard", "Debit card")} description={t.in("addcard", "Your bank account, shown as its card: balance, bank and last 4")} onClick={() => setChosen("debit")} />
+              <Choice icon="creditCard" title={t.in("addcard", "Credit card")} description={t.in("addcard", "It's its own account: debt in one or two currencies, cutoff and due dates")} onClick={() => setChosen("credit")} />
+              <Choice icon="wallet" title={t.in("addcard", "Other wallet")} description={t.in("addcard", "Without a card")} onClick={() => setChosen("wallet")} />
             </div>
           </>
         ) : (
           <>
             <DialogHeader>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon-sm" aria-label={t.in("web", "Back")} onClick={() => setChosen(undefined)}>
-                  <ArrowLeftIcon />
-                </Button>
-                <DialogTitle className="type-heading">{kind === "debit" ? t.in("addcard", "Your debit card") : kind === "credit" ? t.in("addcard", "Your credit card") : t.in("addcard", "Other wallet")}</DialogTitle>
+                <KWCircleButton icon="chevronLeft" size={32} label={t.in("web", "Back")} onClick={() => setChosen(undefined)} />
+                <DialogTitle className="type-heading text-foreground">{kind === "debit" ? t.in("addcard", "Your debit card") : kind === "credit" ? t.in("addcard", "Your credit card") : t.in("addcard", "Other wallet")}</DialogTitle>
               </div>
             </DialogHeader>
             {kind === "credit" ? <CreditForm t={t} currencies={currencies} onDone={closeAddAccount} /> : <AccountForm t={t} kind={kind} currencies={currencies} onDone={closeAddAccount} />}
@@ -71,17 +70,18 @@ export function AddAccountDialog() {
   )
 }
 
-function Choice({ icon: Icon, title, description, onClick }: { icon: LucideIcon; title: string; description: string; onClick: () => void }) {
+/** One of the iOS add-card choices: icon, title and what it is, as a navigation row. */
+function Choice({ icon, title, description, onClick }: { icon: KWIconName; title: string; description: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex items-center gap-3 rounded-xl bg-secondary/50 p-3 text-left transition-colors outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring">
+    <button type="button" onClick={onClick} className="flex items-center gap-3 px-4 py-3 text-left transition-colors outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50">
       <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-tint text-link" aria-hidden>
-        <Icon className="size-5" />
+        <KWIcon name={icon} size={20} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="type-label">{title}</span>
+        <span className="type-label text-foreground">{title}</span>
         <span className="type-caption text-muted-foreground">{description}</span>
       </span>
-      <ChevronRightIcon className="size-4 text-muted-foreground" aria-hidden />
+      <KWIcon name="chevronRight" size={16} className="text-text-faint" />
     </button>
   )
 }
@@ -143,11 +143,11 @@ function AccountForm({ t, kind, currencies, onDone }: { t: Translator; kind: "de
       ) : null}
       {isBank ? (
         <LabeledField id="add-bank" label={t.in("addcard", "Bank")}>
-          <Input id="add-bank" placeholder={t.in("addcard", "Bank name")} value={form.bank} maxLength={40} onChange={(event) => setForm({ ...form, bank: event.target.value })} />
+          <Input className={KW_INPUT} id="add-bank" placeholder={t.in("addcard", "Bank name")} value={form.bank} maxLength={40} onChange={(event) => setForm({ ...form, bank: event.target.value })} />
         </LabeledField>
       ) : null}
       <LabeledField id="add-name" label={isBank ? t.in("addcard", "Account") : t.in("addcard", "Name")} error={errors.name}>
-        <Input id="add-name" autoFocus placeholder={isBank ? t.in("addcard", "Savings") : t.in("addcard", "Envelope")} value={form.name} maxLength={40} aria-invalid={errors.name ? true : undefined} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+        <Input className={KW_INPUT} id="add-name" autoFocus placeholder={isBank ? t.in("addcard", "Savings") : t.in("addcard", "Envelope")} value={form.name} maxLength={40} aria-invalid={errors.name ? true : undefined} onChange={(event) => setForm({ ...form, name: event.target.value })} />
       </LabeledField>
       <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-3">
         <LabeledField id="add-balance" label={t.in("addcard", "Today's balance")} error={errors.balance}>
@@ -161,7 +161,7 @@ function AccountForm({ t, kind, currencies, onDone }: { t: Translator; kind: "de
         <>
           <div className="grid grid-cols-2 gap-3">
             <LabeledField id="add-digits" label={t.in("addcard", "Last 4 digits")} error={errors.lastFour}>
-              <Input id="add-digits" inputMode="numeric" placeholder="0000" className="tracking-widest tabular-nums" value={form.lastFour} aria-invalid={errors.lastFour ? true : undefined} onChange={(event) => setForm({ ...form, lastFour: digitsOnly(event.target.value) })} />
+              <Input id="add-digits" inputMode="numeric" placeholder="0000" className={`${KW_INPUT} tracking-widest tabular-nums`} value={form.lastFour} aria-invalid={errors.lastFour ? true : undefined} onChange={(event) => setForm({ ...form, lastFour: digitsOnly(event.target.value) })} />
             </LabeledField>
             <LabeledField id="add-network" label={t.in("addcard", "Network")}>
               <OptionSelect<CardNetwork | "">
@@ -178,13 +178,13 @@ function AccountForm({ t, kind, currencies, onDone }: { t: Translator; kind: "de
         </>
       ) : null}
       {errors.form ? (
-        <p role="alert" className="type-caption text-destructive">
+        <p role="alert" className="type-caption text-negative">
           {errors.form}
         </p>
       ) : null}
-      <Button type="submit" size="lg" disabled={busy}>
+      <KWButton type="submit" size="large" fill disabled={busy}>
         {isBank ? t.in("addcard", "Add card") : t.in("addcard", "Add")}
-      </Button>
+      </KWButton>
     </form>
   )
 }
@@ -262,11 +262,11 @@ function CreditForm({ t, currencies, onDone }: { t: Translator; currencies: Curr
         <CardArt color={form.color} bank={form.bank || t.in("addcard", "Bank")} network={form.network} lastFour={form.lastFour.length === 4 ? form.lastFour : undefined} kind="creditHolder" kindLabel={cardKindLabel(t, "creditHolder")} holder={owner?.toLocaleUpperCase(t.locale)} />
       </div>
       <LabeledField id="credit-bank" label={t.in("addcard", "Bank")}>
-        <Input id="credit-bank" autoFocus placeholder={t.in("addcard", "Bank name")} value={form.bank} maxLength={40} onChange={(event) => setForm({ ...form, bank: event.target.value })} />
+        <Input className={KW_INPUT} id="credit-bank" autoFocus placeholder={t.in("addcard", "Bank name")} value={form.bank} maxLength={40} onChange={(event) => setForm({ ...form, bank: event.target.value })} />
       </LabeledField>
       <div className="grid grid-cols-2 gap-3">
         <LabeledField id="credit-digits" label={t.in("addcard", "Last 4 digits")} error={errors.lastFour}>
-          <Input id="credit-digits" inputMode="numeric" placeholder="0000" className="tracking-widest tabular-nums" value={form.lastFour} aria-invalid={errors.lastFour ? true : undefined} onChange={(event) => setForm({ ...form, lastFour: digitsOnly(event.target.value) })} />
+          <Input id="credit-digits" inputMode="numeric" placeholder="0000" className={`${KW_INPUT} tracking-widest tabular-nums`} value={form.lastFour} aria-invalid={errors.lastFour ? true : undefined} onChange={(event) => setForm({ ...form, lastFour: digitsOnly(event.target.value) })} />
         </LabeledField>
         <LabeledField id="credit-network" label={t.in("addcard", "Network")}>
           <OptionSelect<CardNetwork> id="credit-network" value={form.network} onChange={(network) => setForm({ ...form, network })} options={NETWORKS.map((network) => ({ value: network, label: networkName(t, network) }))} />
@@ -294,7 +294,7 @@ function CreditForm({ t, currencies, onDone }: { t: Translator; currencies: Curr
         <AmountInput id="credit-limit-new" currency={debtCurrency} value={form.limit} invalid={errors.limit !== undefined} onChange={(limit) => setForm({ ...form, limit })} />
       </LabeledField>
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 type-label">{t.in("addcard", "Cycle (optional)")}</legend>
+        <legend className="mb-2 type-label text-text-secondary">{t.in("addcard", "Cycle (optional)")}</legend>
         <div className="grid grid-cols-2 gap-3">
           <LabeledField id="credit-new-cutoff" label={t.in("addcard", "Cutoff day")}>
             <DaySelect id="credit-new-cutoff" value={form.cutoff} notSetLabel={t.in("addcard", "Not set")} onChange={(cutoff) => setForm({ ...form, cutoff })} />
@@ -305,13 +305,13 @@ function CreditForm({ t, currencies, onDone }: { t: Translator; currencies: Curr
         </div>
       </fieldset>
       {errors.form ? (
-        <p role="alert" className="type-caption text-destructive">
+        <p role="alert" className="type-caption text-negative">
           {errors.form}
         </p>
       ) : null}
-      <Button type="submit" size="lg" disabled={busy}>
+      <KWButton type="submit" size="large" fill disabled={busy}>
         {t.in("addcard", "Add card")}
-      </Button>
+      </KWButton>
     </form>
   )
 }

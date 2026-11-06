@@ -137,7 +137,7 @@ export function CashFlowCard({
               const row = active ? (payload?.[0]?.payload as (typeof data)[number] | undefined) : undefined
               if (!row) return null
               return (
-                <div className="grid min-w-44 gap-1.5 rounded-lg bg-popover px-3 py-2 type-caption shadow-depth ring-1 ring-border">
+                <div className="grid min-w-44 gap-1.5 rounded-xl bg-secondary px-3 py-2 type-caption shadow-depth">
                   <span className="type-label">{row.name}</span>
                   <span className="flex items-center justify-between gap-4">
                     <span className="flex items-center gap-1.5 text-text-secondary">
@@ -184,8 +184,8 @@ export function CashFlowCard({
                 onClick={() => onSelect(row.index)}
                 aria-pressed={row.index === selectedIndex}
                 className={cn(
-                  "flex w-full flex-col items-start rounded-lg px-2.5 py-2 text-left ring-1 ring-transparent transition-colors hover:bg-accent/60",
-                  row.index === selectedIndex && "bg-accent ring-border",
+                  "flex w-full flex-col items-start rounded-xl px-2.5 py-2 text-left transition-colors outline-none hover:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-ring",
+                  row.index === selectedIndex && "bg-secondary",
                 )}
               >
                 <span className="type-caption-sm text-muted-foreground">{row.label}</span>

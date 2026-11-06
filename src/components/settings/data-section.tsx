@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
-import { Badge } from "@/components/ui/badge"
+import { KWButton } from "@/components/kw/design"
+import { KWIcon } from "@/components/kw/kw-icon"
 import { toast } from "@/components/ui/toast"
 import { exportCsvFrom, importCsv } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
@@ -143,16 +144,23 @@ export function DataSection({ t }: { t: Translator }) {
       <SettingsSection title={t.in("web", "On this device")} footnote={t.in("web", "Your data lives in this browser. Back it up now and then to keep a copy.")}>
         <SettingsRow label={t.in("web", "Storage")} description={t.in("web", "Stored in this browser")}>
           {persistence === "persisted" ? (
-            <Badge className="bg-positive-tint text-positive">{t.in("web", "Kept by the browser")}</Badge>
+            <StatusPill tone="positive">{t.in("web", "Kept by the browser")}</StatusPill>
           ) : persistence === "best-effort" ? (
-            <Badge className="bg-pending-tint text-pending">{t.in("web", "May be cleared")}</Badge>
+            <StatusPill tone="pending">{t.in("web", "May be cleared")}</StatusPill>
           ) : (
-            <Badge variant="secondary">{persistence ? "—" : "…"}</Badge>
+            <StatusPill tone="neutral">{persistence ? "—" : "…"}</StatusPill>
           )}
         </SettingsRow>
-        <SettingsLinkRow label={t.in("settings", "Delete all my data")} tone="destructive" onClick={() => setEraseOpen(true)} />
       </SettingsSection>
-      <p className="-mt-4 px-1 type-caption text-muted-foreground">{t.in("web", "Deletes the data in this browser.")}</p>
+
+      {/* iOS puts "Delete all my data" apart, as a full-width destructive row button. */}
+      <div className="flex flex-col gap-2">
+        <KWButton variant="destructive" size="row" fill onClick={() => setEraseOpen(true)}>
+          <KWIcon name="trash" size={18} />
+          {t.in("settings", "Delete all my data")}
+        </KWButton>
+        <p className="px-1 type-caption text-muted-foreground">{t.in("web", "Deletes the data in this browser.")}</p>
+      </div>
 
       <ConfirmDialog
         open={pendingRestore !== undefined}
@@ -179,4 +187,10 @@ export function DataSection({ t }: { t: Translator }) {
       />
     </>
   )
+}
+
+/** A state pill on its 14 % tint, as iOS shows state next to a value. */
+function StatusPill({ tone, children }: { tone: "positive" | "pending" | "neutral"; children: React.ReactNode }) {
+  const look = { positive: "bg-positive-tint text-positive", pending: "bg-pending-tint text-pending", neutral: "bg-secondary text-muted-foreground" }[tone]
+  return <span className={`inline-flex h-6 items-center rounded-full px-2.5 type-caption font-semibold ${look}`}>{children}</span>
 }

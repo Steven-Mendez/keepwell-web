@@ -1,18 +1,16 @@
 "use client"
 
-import { ChartColumnIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react"
 import { useMemo, useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
-import { EmptyState, Page, PageHeader, Surface } from "@/components/kw/primitives"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
+import { KWButton, KWCircleButton, KWEmptyState, KWLargeTitleHeader, KWSegmented } from "@/components/kw/design"
+import { Page, Surface } from "@/components/kw/primitives"
 import { useLedger } from "@/hooks/use-ledger"
 import { SUMMARY_MONTH_COUNT, summaryReport } from "@/lib/domain"
 import { useT } from "@/lib/i18n"
 
 import { CashFlowCard, WindowCard } from "./cash-flow-card"
-import { CategoryCard } from "./category-card"
+import { CategoryCard, type CategoryMode } from "./category-card"
 import { PaceCard } from "./pace-card"
 import { summaryFormat } from "./summary-format"
 
@@ -28,6 +26,7 @@ export function SummaryScreen() {
   // Recomputed on every ledger change; "now" is read then, so a new month rolls the window over.
   const report = useMemo(() => (ledger ? summaryReport(ledger.transactions, currency, new Date()) : undefined), [ledger, currency])
   const [picked, setPicked] = useState<number>()
+  const [mode, setMode] = useState<CategoryMode>("expenses")
   const last = (report?.months.length ?? SUMMARY_MONTH_COUNT) - 1
   const selectedIndex = Math.min(picked ?? last, last)
   const f = summaryFormat(t, currency)
@@ -35,10 +34,10 @@ export function SummaryScreen() {
   if (!ledger || !report) {
     return (
       <Page>
-        <PageHeader title={t.in("summary", "Summary")} />
+        <KWLargeTitleHeader title={t.in("summary", "Summary")} />
         <div className="grid gap-4 lg:grid-cols-3">
-          <Skeleton className="h-96 rounded-2xl lg:col-span-2" />
-          <Skeleton className="h-96 rounded-2xl" />
+          <div className="h-96 animate-pulse rounded-2xl bg-card lg:col-span-2" />
+          <div className="h-96 animate-pulse rounded-2xl bg-card" />
         </div>
       </Page>
     )
@@ -50,40 +49,48 @@ export function SummaryScreen() {
   const title = selected ? f.month(selected.month, "long", true, selected.month.year !== currentYear) : ""
 
   const stepper = hasMovements ? (
-    <div className="flex items-center gap-1 rounded-xl bg-card p-1 ring-1 ring-border/60">
-      <Button variant="ghost" size="icon" aria-label={t.in("summary", "Previous month")} disabled={selectedIndex <= 0} onClick={() => setPicked(selectedIndex - 1)}>
-        <ChevronLeftIcon />
-      </Button>
-      <span className="min-w-36 text-center type-label tabular-nums" aria-live="polite">
+    <div className="flex flex-wrap items-center gap-3">
+      <KWSegmented
+        style="compact"
+        aria-label={t.in("summary", "By category")}
+        value={mode}
+        onChange={setMode}
+        options={[
+          { value: "expenses", title: t.in("summary", "Expenses") },
+          { value: "income", title: t.in("summary", "Income") },
+        ]}
+      />
+      <div className="flex items-center gap-2">
+      <KWCircleButton icon="chevronLeft" label={t.in("summary", "Previous month")} disabled={selectedIndex <= 0} onClick={() => setPicked(selectedIndex - 1)} />
+      <span className="min-w-36 text-center type-heading tabular-nums" aria-live="polite">
         {title}
       </span>
-      <Button variant="ghost" size="icon" aria-label={t.in("summary", "Next month")} disabled={selectedIndex >= last} onClick={() => setPicked(selectedIndex + 1)}>
-        <ChevronRightIcon />
-      </Button>
+      <KWCircleButton icon="chevronRight" label={t.in("summary", "Next month")} disabled={selectedIndex >= last} onClick={() => setPicked(selectedIndex + 1)} />
+      </div>
     </div>
   ) : undefined
 
   return (
     <Page>
-      <PageHeader title={t.in("summary", "Summary")} actions={stepper} />
+      <KWLargeTitleHeader title={t.in("summary", "Summary")} trailing={stepper} className="flex-wrap items-center" />
       {!hasMovements ? (
         <Surface>
-          <EmptyState
-            icon={ChartColumnIcon}
+          <KWEmptyState
+            icon="chartBars"
             title={t.in("summary", "Your summary starts with one transaction")}
-            description={t.in("summary", "Once you log expenses and income, you will see what came in, what went out and what you spent it on.")}
-          >
-            <Button onClick={() => openEditor()}>
-              <PlusIcon data-icon="inline-start" />
-              {t.in("summary", "Log transaction")}
-            </Button>
-          </EmptyState>
+            message={t.in("summary", "Once you log expenses and income, you will see what came in, what went out and what you spent it on.")}
+            action={
+              <KWButton icon="plus" onClick={() => openEditor()}>
+                {t.in("summary", "Log transaction")}
+              </KWButton>
+            }
+          />
         </Surface>
       ) : (
         <div className="grid gap-4 lg:grid-cols-3">
           <CashFlowCard t={t} f={f} report={report} selectedIndex={selectedIndex} onSelect={setPicked} className="lg:col-span-2" />
           <WindowCard t={t} f={f} report={report} selectedIndex={selectedIndex} />
-          <CategoryCard t={t} f={f} report={report} selectedIndex={selectedIndex} categories={ledger.categories} className="lg:col-span-2" />
+          <CategoryCard t={t} f={f} report={report} selectedIndex={selectedIndex} categories={ledger.categories} mode={mode} className="lg:col-span-2" />
           <PaceCard t={t} f={f} report={report} selectedIndex={selectedIndex} />
         </div>
       )}

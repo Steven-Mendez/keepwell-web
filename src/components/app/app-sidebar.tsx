@@ -155,7 +155,7 @@ function RowLink({ href, isCurrent, onNavigate, leading, trailing, children }: {
       onClick={onNavigate}
       aria-current={isCurrent ? "page" : undefined}
       className={cn(
-        "flex min-h-11 items-center gap-3 px-3 py-2 transition-colors outline-none hover:bg-secondary/60 focus-visible:bg-secondary/60",
+        "flex min-h-10 items-center gap-3 px-3 py-2 transition-colors outline-none hover:bg-secondary/60 focus-visible:bg-secondary/60",
         isCurrent ? "text-foreground" : "text-text-secondary",
       )}
     >
@@ -208,7 +208,7 @@ function ProfileMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors outline-none hover:bg-card focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-card">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary type-label text-foreground uppercase">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary type-label text-foreground uppercase">
           {name ? [...name][0] : <KWIcon name="person" size={18} />}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">

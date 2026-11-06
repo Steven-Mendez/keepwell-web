@@ -37,7 +37,7 @@ export function OptionSelect<T extends string>({
 }) {
   return (
     <Select<T> items={options} value={value} onValueChange={(next) => next !== null && onChange(next)} {...(disabled ? { disabled } : {})}>
-      <SelectTrigger id={id} className={cn("h-9 w-full", className)} {...(ariaLabel ? { "aria-label": ariaLabel } : {})}>
+      <SelectTrigger id={id} className={cn("h-10 w-full", className)} {...(ariaLabel ? { "aria-label": ariaLabel } : {})}>
         <SelectValue {...(placeholder ? { placeholder } : {})} />
       </SelectTrigger>
       <SelectContent>
@@ -95,7 +95,7 @@ export function CurrencyPicker({
 
   return (
     <Combobox items={items} value={selected} onValueChange={(item) => item && onChange(item.value)} isItemEqualToValue={(a, b) => a.value === b.value} {...(disabled ? { disabled } : {})}>
-      <ComboboxInput id={id} placeholder={t.in("onboarding", "Search currency")} className={cn("h-9 w-full", className)} disabled={disabled ?? false} />
+      <ComboboxInput id={id} placeholder={t.in("onboarding", "Search currency")} className={cn("h-10 w-full", className)} disabled={disabled ?? false} />
       <ComboboxContent>
         <ComboboxEmpty>{t.in("web", "No results.")}</ComboboxEmpty>
         <ComboboxList>

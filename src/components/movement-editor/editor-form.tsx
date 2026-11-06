@@ -1,16 +1,12 @@
 "use client"
 
-import { AlertTriangleIcon, ArrowDownIcon, CalendarIcon, StickyNoteIcon } from "lucide-react"
 import { useMemo, useRef, useState, type KeyboardEvent } from "react"
 
 import type { EditorRequest } from "@/components/app/app-actions"
-import { CategoryBadge } from "@/components/kw/primitives"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { KWButton, KWSegmented } from "@/components/kw/design"
+import { KWIcon } from "@/components/kw/kw-icon"
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Kbd } from "@/components/ui/kbd"
-import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
 import {
@@ -68,6 +64,7 @@ import {
   typeTitle,
   type Thumbnail,
 } from "./editor-model"
+import { FieldLabel, FlowHeader, KWSwitch, KW_FIELD, KW_TEXTAREA, StatusPill } from "./flow-parts"
 import { NewCategoryDialog } from "./new-category-dialog"
 import { AccountPicker, CategoryPicker, MethodPicker, MethodThumbnail } from "./pickers"
 
@@ -353,6 +350,21 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
   const amountClass = kind === "income" ? "text-positive" : "text-foreground"
   const primaryLabel = existing ? t.in("web", "Save changes") : isDraft ? ct("Save as draft") : saveTitle(t, type)
 
+  const reviewRows: { label: string; value: string }[] = [
+    ...(movesBetweenAccounts
+      ? [
+          ...(sourceAccount ? [{ label: ct("From"), value: accountName(sourceAccount) }] : []),
+          ...(destinationAccount ? [{ label: ct("To"), value: accountName(destinationAccount) }] : []),
+        ]
+      : [
+          { label: ct("Method"), value: sourceTitleText ?? (sourceAccount ? accountName(sourceAccount) : "—") },
+          ...(categoryLabel ? [{ label: ct("Category"), value: categoryLabel }] : []),
+        ]),
+    { label: ct("Date"), value: dayLabel(t, date) },
+    ...(conversionLine ? [{ label: ct("Rate used"), value: formatRate(rate) }] : []),
+    ...(note.trim() ? [{ label: ct("Note"), value: note.trim() }] : []),
+  ]
+
   return (
     <form
       ref={formRef}
@@ -361,48 +373,47 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
         event.preventDefault()
         void save()
       }}
-      className="flex min-h-0 flex-1 flex-col"
+      className="flex min-h-0 flex-1 flex-col bg-background"
     >
-      <header className="flex flex-col gap-3 border-b border-divider px-5 pt-5 pb-4 pr-12">
-        <div className="flex items-center gap-2">
-          <DialogTitle className="type-heading">{title}</DialogTitle>
-          {isDraft ? <Badge className="bg-pending-tint text-pending">{ct("Draft")}</Badge> : null}
+      <header className="flex flex-col gap-4 border-b border-divider px-5 pt-5 pb-4 md:px-6">
+        <FlowHeader
+          leading="close"
+          onLeading={onClose}
+          trailing={isDraft ? <StatusPill confirmed={false}>{ct("Draft")}</StatusPill> : undefined}
+        />
+        <div className="flex flex-col gap-1">
+          <DialogTitle className="type-title-sm text-foreground">{title}</DialogTitle>
+          <DialogDescription className="type-body text-muted-foreground">{typeSubtitle(t, type)}</DialogDescription>
         </div>
-        <DialogDescription className="sr-only">{ct("What are you recording?")}</DialogDescription>
-        <div className="flex gap-1.5 overflow-x-auto pb-0.5" role="radiogroup" aria-label={ct("What are you recording?")}>
-          {types.map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="radio"
-              aria-checked={type === option}
-              title={typeSubtitle(t, option)}
-              onClick={() => changeType(option)}
-              disabled={existing !== undefined && movementKind(option) !== movementKind(initial.type)}
-              className={cn(
-                "shrink-0 rounded-full px-3 py-1.5 type-label transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40",
-                type === option ? "bg-primary text-primary-foreground" : "bg-secondary text-text-secondary hover:bg-accent hover:text-foreground",
-              )}
-            >
-              {typeTitle(t, option)}
-            </button>
-          ))}
-        </div>
-        <p className="type-caption text-muted-foreground">{typeSubtitle(t, type)}</p>
+        {types.length > 1 ? (
+          <div className="-mx-1 overflow-x-auto px-1 pb-0.5">
+            <KWSegmented
+              className="min-w-max"
+              aria-label={ct("What are you recording?")}
+              value={type}
+              onChange={changeType}
+              options={types.map((option) => ({
+                value: option,
+                title: typeTitle(t, option),
+                disabled: existing !== undefined && movementKind(option) !== movementKind(initial.type),
+              }))}
+            />
+          </div>
+        ) : null}
       </header>
 
-      <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,1fr)_340px] md:overflow-hidden">
-        <div className="flex flex-col gap-6 px-5 py-5 md:overflow-y-auto">
+      <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,1fr)_360px] md:overflow-hidden">
+        <div className="flex flex-col gap-8 px-5 py-6 md:overflow-y-auto md:px-6">
           {movesBetweenAccounts ? (
-            <section className="grid gap-4 lg:grid-cols-2">
+            <section className="grid gap-5 lg:grid-cols-2">
               <div className="flex flex-col gap-2">
-                <h3 className="type-label text-text-secondary">{sourceQuestion(t, type)}</h3>
+                <h3 className="px-1 type-heading text-foreground">{sourceQuestion(t, type)}</h3>
                 <AccountPicker accounts={sourceAccounts(type, context)} value={sourceAccount?.id} onChange={chooseSourceAccount} describe={accountRow} />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="type-label text-text-secondary">{destinationQuestion(t, type)}</h3>
+                <h3 className="px-1 type-heading text-foreground">{destinationQuestion(t, type)}</h3>
                 {destinationAccounts(type, context, sourceAccount?.id).length === 0 ? (
-                  <p className="type-caption text-muted-foreground">{ct("No account can receive it from this one.")}</p>
+                  <p className="rounded-2xl bg-card px-4 py-3 type-caption text-muted-foreground">{ct("No account can receive it from this one.")}</p>
                 ) : (
                   <AccountPicker accounts={destinationAccounts(type, context, sourceAccount?.id)} value={destinationId} onChange={setDestinationId} describe={accountRow} />
                 )}
@@ -410,69 +421,43 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
             </section>
           ) : null}
 
-          <section className="flex flex-col gap-2">
-            <label htmlFor="editor-amount" className="type-label text-text-secondary">
+          <section className="flex flex-col items-center gap-3 rounded-2xl bg-card px-4 py-6 text-center">
+            <label htmlFor="editor-amount" className="type-title-sm text-foreground">
               {amountQuestion(t, type)}
             </label>
-            <div className="flex items-center gap-2 rounded-2xl bg-secondary/50 px-4 py-3 ring-1 ring-border/60 focus-within:ring-2 focus-within:ring-ring">
-              <input
-                id="editor-amount"
-                autoFocus
-                inputMode="decimal"
-                autoComplete="off"
-                placeholder="0.00"
-                value={amountText}
-                onChange={(event) => {
-                  setAmountText(event.target.value)
-                  setError(undefined)
-                }}
-                onBlur={() => {
-                  const formatted = formatAmountInput(amountText)
-                  if (formatted) setAmountText(formatted)
-                }}
-                onKeyDown={onAmountKeyDown}
-                aria-invalid={amountText.trim() !== "" && amount === undefined ? true : undefined}
-                className={cn("min-w-0 flex-1 bg-transparent type-amount-lg tabular-nums outline-none placeholder:text-text-faint", amountClass)}
-              />
-              {currencies.length > 1 ? (
-                <div className="flex shrink-0 rounded-full bg-background/60 p-0.5" role="radiogroup" aria-label={t.in("onboarding", "Currency")}>
-                  {currencies.map((code) => (
-                    <button
-                      key={code}
-                      type="button"
-                      role="radio"
-                      aria-checked={currency === code}
-                      onClick={() => setCurrency(code)}
-                      className={cn("rounded-full px-3 py-1 type-label transition-colors", currency === code ? "bg-primary text-primary-foreground" : "text-text-secondary hover:text-foreground")}
-                    >
-                      {code}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <span className="shrink-0 type-label text-text-secondary">{currency}</span>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 type-caption">
-              {availableLabel ? (
-                <span className={cn(exceedsAvailable ? "text-pending" : "text-muted-foreground")}>
-                  {exceedsAvailable ? (
-                    <span className="inline-flex items-center gap-1">
-                      <AlertTriangleIcon className="size-3.5" aria-hidden />
-                      {ct("%@ · more than what's there", availableLabel)}
-                    </span>
-                  ) : (
-                    availableLabel
-                  )}
-                </span>
-              ) : null}
-              {conversionLine ? <span className="text-muted-foreground tabular-nums">{conversionLine}</span> : null}
-            </div>
+            <input
+              id="editor-amount"
+              autoFocus
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="0.00"
+              value={amountText}
+              onChange={(event) => {
+                setAmountText(event.target.value)
+                setError(undefined)
+              }}
+              onBlur={() => {
+                const formatted = formatAmountInput(amountText)
+                if (formatted) setAmountText(formatted)
+              }}
+              onKeyDown={onAmountKeyDown}
+              aria-invalid={amountText.trim() !== "" && amount === undefined ? true : undefined}
+              className={cn("w-full min-w-0 bg-transparent text-center type-display tabular-nums outline-none placeholder:text-text-faint aria-invalid:text-negative", amountClass)}
+            />
+            {currencies.length > 1 ? (
+              <KWSegmented style="accent" aria-label={t.in("onboarding", "Currency")} value={currency} onChange={setCurrency} options={currencies.map((code) => ({ value: code, title: code }))} />
+            ) : (
+              <span className="type-label text-text-secondary">{currency}</span>
+            )}
+            {availableLabel ? (
+              <p className={cn("type-label font-normal tabular-nums", exceedsAvailable ? "text-pending" : "text-muted-foreground")}>
+                {exceedsAvailable ? ct("%@ · more than what's there", availableLabel) : kind === "expense" && sourceTitleText ? `${sourceTitleText} · ${availableLabel}` : availableLabel}
+              </p>
+            ) : null}
+            {conversionLine ? <p className="type-caption-sm text-muted-foreground tabular-nums">{conversionLine}</p> : null}
             {showsDebited ? (
-              <div className="flex flex-col gap-1.5 rounded-xl bg-secondary/30 p-3">
-                <label htmlFor="editor-debited" className="type-caption text-text-secondary">
-                  {ct("%@ charged by the bank", principal)}
-                </label>
+              <div className="flex w-full max-w-sm flex-col gap-1.5 text-left">
+                <FieldLabel htmlFor="editor-debited">{ct("%@ charged by the bank", principal)}</FieldLabel>
                 <Input
                   id="editor-debited"
                   inputMode="decimal"
@@ -485,16 +470,16 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
                     if (formatted) setDebitedText(formatted)
                   }}
                   aria-invalid={debitedInvalid ? true : undefined}
-                  className="h-9 tabular-nums"
+                  className={cn(KW_FIELD, "tabular-nums")}
                 />
-                {bankRateLine ? <span className="type-caption-sm text-muted-foreground tabular-nums">{bankRateLine}</span> : null}
+                {bankRateLine ? <span className="px-1 type-caption-sm text-muted-foreground tabular-nums">{bankRateLine}</span> : null}
               </div>
             ) : null}
           </section>
 
           {!movesBetweenAccounts ? (
-            <section className="flex flex-col gap-2">
-              <h3 className="type-label text-text-secondary">{categoryQuestion(t, kind)}</h3>
+            <section className="flex flex-col gap-3">
+              <h3 className="px-1 type-heading text-foreground">{categoryQuestion(t, kind)}</h3>
               <CategoryPicker
                 categories={categories}
                 usage={context.categoryUsage}
@@ -510,20 +495,18 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
           ) : null}
 
           {!movesBetweenAccounts ? (
-            <section className="flex flex-col gap-2">
-              <div className="flex flex-col">
-                <h3 className="type-label text-text-secondary">{sourceQuestion(t, type)}</h3>
+            <section className="flex flex-col gap-3">
+              <div className="flex flex-col gap-0.5 px-1">
+                <h3 className="type-heading text-foreground">{sourceQuestion(t, type)}</h3>
                 <p className="type-caption text-muted-foreground">{ct(kind === "income" ? "The method decides which account increases." : "The method decides which account is charged.")}</p>
               </div>
               <MethodPicker groups={methodGroups(t, context, kind, currency, existing ? source : undefined)} value={source} onChange={setSource} />
             </section>
           ) : null}
 
-          <section className="grid gap-3 sm:grid-cols-2">
+          <section className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <label htmlFor="editor-description" className="type-caption text-text-secondary">
-                {ct("Description")}
-              </label>
+              <FieldLabel htmlFor="editor-description">{ct("Description")}</FieldLabel>
               <Input
                 id="editor-description"
                 ref={descriptionRef}
@@ -531,43 +514,45 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder={descriptionPlaceholder(t, type, categoryLabel)}
                 autoComplete="off"
-                className="h-9"
+                className={KW_FIELD}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="editor-date" className="inline-flex items-center gap-1.5 type-caption text-text-secondary">
-                <CalendarIcon className="size-3.5" aria-hidden />
-                {ct("Date")}
-              </label>
-              <Input id="editor-date" type="datetime-local" value={dateText} onChange={(event) => setDateText(event.target.value)} className="h-9 [color-scheme:dark]" />
+              <FieldLabel htmlFor="editor-date">{ct("Date")}</FieldLabel>
+              <Input id="editor-date" type="datetime-local" value={dateText} onChange={(event) => setDateText(event.target.value)} className={cn(KW_FIELD, "[color-scheme:dark]")} />
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-3 py-2">
-              <label htmlFor="editor-draft" className="flex flex-col">
-                <span className="type-label">{ct("Save as draft")}</span>
-                <span className="type-caption-sm text-muted-foreground">{t.in("transactions", "Drafts · they don't affect balances")}</span>
-              </label>
-              <Switch id="editor-draft" checked={isDraft} onCheckedChange={setIsDraft} />
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel htmlFor="editor-draft">{ct("Save as draft")}</FieldLabel>
+              <div className="flex h-10 items-center justify-between gap-3 rounded-xl bg-secondary px-3.5">
+                <span className="truncate type-caption text-muted-foreground">{t.in("transactions", "Drafts · they don't affect balances")}</span>
+                <KWSwitch id="editor-draft" checked={isDraft} onChange={setIsDraft} label={ct("Save as draft")} />
+              </div>
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <label htmlFor="editor-note" className="inline-flex items-center gap-1.5 type-caption text-text-secondary">
-                <StickyNoteIcon className="size-3.5" aria-hidden />
-                {ct("Note")}
-              </label>
-              <Textarea id="editor-note" value={note} onChange={(event) => setNote(event.target.value)} placeholder={ct("Add a note")} rows={2} />
+              <FieldLabel htmlFor="editor-note">{ct("Note")}</FieldLabel>
+              <Textarea id="editor-note" value={note} onChange={(event) => setNote(event.target.value)} placeholder={ct("Add a note")} rows={2} className={KW_TEXTAREA} />
             </div>
           </section>
         </div>
 
-        <aside className="flex flex-col gap-4 border-t border-divider bg-secondary/25 px-5 py-5 md:overflow-y-auto md:border-t-0 md:border-l">
-          <span className="type-caption text-muted-foreground">{reviewTitle(t, type)}</span>
-          <div className="flex items-center gap-3">
-            {movesBetweenAccounts ? null : <CategoryBadge category={category} size="lg" />}
-            <div className="flex min-w-0 flex-col">
-              <span className={cn("truncate type-amount-sm tabular-nums", amountClass)}>{formatMoney({ amount: hasAmount ? amount : new Decimal(0), currency })}</span>
-              <span className="truncate type-caption text-muted-foreground">
-                {[movesBetweenAccounts ? (destinationAccount ? ct("To %@", accountName(destinationAccount)) : undefined) : categoryLabel, sourceTitleText].filter(Boolean).join(" · ")}
-              </span>
-            </div>
+        <aside className="flex flex-col gap-4 border-t border-divider px-5 py-6 md:overflow-y-auto md:border-t-0 md:border-l md:px-6">
+          {/* The iOS receipt ticket, live: what will be saved, on the `surface` card. */}
+          <div className="flex flex-col items-center gap-1 rounded-2xl bg-card px-4 pt-5 pb-2 text-center">
+            <span className="type-label text-text-secondary">{reviewTitle(t, type)}</span>
+            <span className={cn("max-w-full truncate type-amount-lg tabular-nums", amountClass)}>{formatMoney({ amount: hasAmount ? amount : new Decimal(0), currency })}</span>
+            {/* Until a category or text gives it one, the expense has no description to show yet. */}
+            {movesBetweenAccounts || description.trim() || categoryLabel ? <span className="max-w-full truncate type-body font-semibold text-foreground">{draft.description}</span> : null}
+            <span className="pt-1 pb-3">
+              <StatusPill confirmed={!isDraft}>{ct(isDraft ? "Draft" : "Confirmed")}</StatusPill>
+            </span>
+            <dl className="w-full divide-y divide-divider border-t border-divider text-left">
+              {reviewRows.map((row) => (
+                <div key={row.label} className="flex items-baseline justify-between gap-3 py-2.5">
+                  <dt className="shrink-0 type-caption text-muted-foreground">{row.label}</dt>
+                  <dd className="min-w-0 truncate text-right type-caption text-foreground tabular-nums">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -585,41 +570,27 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
             ) : null}
             {movesBetweenAccounts && destinationAccount ? (
               <>
-                <ArrowDownIcon className="mx-auto size-4 text-muted-foreground" aria-hidden />
+                <KWIcon name="arrowDown" size={16} className="mx-auto text-muted-foreground" />
                 <Party caption={ct("To")} title={accountName(destinationAccount)} detail={balanceAfter(preview?.destinationAfter)} thumbnail={accountThumbnail(destinationAccount, context.cards)} />
               </>
             ) : null}
           </div>
 
-          <dl className="flex flex-col gap-1.5 type-caption">
-            <div className="flex justify-between gap-3">
-              <dt className="text-muted-foreground">{ct("Date")}</dt>
-              <dd>{dayLabel(t, date)}</dd>
-            </div>
-            {conversionLine ? (
-              <div className="flex justify-between gap-3">
-                <dt className="text-muted-foreground">{ct("Rate used")}</dt>
-                <dd className="text-right tabular-nums">{formatRate(rate)}</dd>
-              </div>
-            ) : null}
-          </dl>
-
-          {isDraft ? <p className="rounded-lg bg-pending-tint px-3 py-2 type-caption text-pending">{t.in("web", "Saved as a draft, it doesn't affect balances until you confirm it.")}</p> : null}
-          {existing && rate.second !== rate.principal ? <p className="type-caption-sm text-muted-foreground">{t.in("web", "Edits keep the rate this transaction was logged with.")}</p> : null}
+          {isDraft ? <p className="rounded-xl bg-pending-tint px-3 py-2 type-caption text-pending">{t.in("web", "Saved as a draft, it doesn't affect balances until you confirm it.")}</p> : null}
+          {existing && rate.second !== rate.principal ? <p className="px-1 type-caption-sm text-muted-foreground">{t.in("web", "Edits keep the rate this transaction was logged with.")}</p> : null}
 
           <div className="mt-auto flex flex-col gap-2 pt-2">
             {error ? (
-              <p role="alert" className="type-caption text-negative">
+              <p role="alert" className="px-1 type-caption text-negative">
                 {error}
               </p>
             ) : null}
-            <Button type="submit" size="lg" disabled={!canSave} className="h-11 w-full justify-between">
-              <span>{primaryLabel}</span>
-              <Kbd className="bg-black/10 text-primary-foreground/70">⌘↵</Kbd>
-            </Button>
-            <Button type="button" variant="ghost" onClick={onClose} className="w-full">
+            <KWButton type="submit" fill disabled={!canSave} shortcut="⌘↵" className="justify-between">
+              {primaryLabel}
+            </KWButton>
+            <KWButton variant="plain" fill onClick={onClose}>
               {t.in("web", "Cancel")}
-            </Button>
+            </KWButton>
           </div>
         </aside>
       </div>
@@ -629,14 +600,13 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
 
 function Party({ caption, title, detail, thumbnail }: { caption: string; title: string; detail?: string | undefined; thumbnail: Thumbnail }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-card px-3 py-2.5 ring-1 ring-border/60">
+    <div className="flex items-center gap-3 rounded-2xl bg-card px-4 py-3">
       <MethodThumbnail thumbnail={thumbnail} />
       <div className="flex min-w-0 flex-col">
         <span className="type-caption-sm text-muted-foreground">{caption}</span>
-        <span className="truncate type-label">{title}</span>
+        <span className="truncate type-body font-semibold text-foreground">{title}</span>
         {detail ? <span className="truncate type-caption-sm text-muted-foreground tabular-nums">{detail}</span> : null}
       </div>
     </div>
   )
 }
-

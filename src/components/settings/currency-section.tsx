@@ -1,9 +1,8 @@
 "use client"
 
-import { ArrowLeftRightIcon } from "lucide-react"
 import { useState } from "react"
 
-import { Button } from "@/components/ui/button"
+import { KWButton } from "@/components/kw/design"
 import { Input } from "@/components/ui/input"
 import { CurrencyPicker } from "@/components/kw/pickers"
 import { toast } from "@/components/ui/toast"
@@ -13,8 +12,7 @@ import { ledgerStore } from "@/lib/repositories"
 import type { Settings } from "@/lib/schema"
 
 import { ConfirmDialog } from "./confirm-dialog"
-import { SettingsRow, SettingsSection } from "./settings-rows"
-
+import { SETTINGS_INPUT, SettingsLinkRow, SettingsRow, SettingsSection } from "./settings-rows"
 
 /** "USD · US dollar", in the person's language (iOS `currencyName`). */
 export function currencyName(t: Translator, code: string): string {
@@ -95,16 +93,16 @@ export function CurrencySection({ t, ledger }: { t: Translator; ledger: Ledger }
               }}
             />
             {currencies.second ? (
-              <Button
-                variant="ghost"
-                size="sm"
+              <KWButton
+                variant="plain"
+                size="regular"
                 onClick={() => {
                   void save((settings) => ({ ...settings, currencies: currencySettings(settings.currencies.principal) }))
                   setRateText(undefined)
                 }}
               >
                 {t.in("web", "None")}
-              </Button>
+              </KWButton>
             ) : null}
           </div>
         ) : (
@@ -118,7 +116,7 @@ export function CurrencySection({ t, ledger }: { t: Translator; ledger: Ledger }
             <Input
               id="rate"
               inputMode="decimal"
-              className="w-28 text-right tabular-nums"
+              className={`w-28 text-right tabular-nums ${SETTINGS_INPUT}`}
               value={shownRate}
               aria-invalid={rateError ? true : undefined}
               onChange={(event) => {
@@ -136,12 +134,7 @@ export function CurrencySection({ t, ledger }: { t: Translator; ledger: Ledger }
             />
             <span className="type-label">{currencies.second}</span>
           </SettingsRow>
-          <div className="px-4 py-3">
-            <Button variant="secondary" onClick={() => setSwapOpen(true)}>
-              <ArrowLeftRightIcon data-icon="inline-start" />
-              {t.in("settings", "Make %@ the main currency", currencies.second)}
-            </Button>
-          </div>
+          <SettingsLinkRow label={t.in("settings", "Make %@ the main currency", currencies.second)} tone="link" onClick={() => setSwapOpen(true)} />
           <ConfirmDialog
             open={swapOpen}
             onOpenChange={setSwapOpen}

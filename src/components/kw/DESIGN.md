@@ -32,17 +32,25 @@ stock shadcn styling on screen.
 4. **Type**: only the `type-*` scale (`type-title` screen titles, `type-heading`, `type-body`,
    `type-label`, `type-caption`, `type-micro`, `type-amount-lg`, `type-display`). Never Tailwind
    `text-sm`/`text-lg` for sizes.
-5. **Shapes**: buttons, chips and segmented controls are pills (`rounded-full`); grouped cards
+5. **Control heights** (only three, so nothing in a row looks smaller than its neighbor): 40 px
+   (`h-10`) for every regular control — KWButton `regular`/`medium`/`text`/`row`, inputs, selects,
+   comboboxes, `KWSegmented` large, `KWCircleButton`; 32 px (`h-8`) for compact actions inside rows
+   (KWButton `small`/`mini`, `KWChip`, `KWSegmented` compact/accent); 48 px (`h-12`, KWButton
+   `large`) only for a lone full-width call to action (onboarding, an empty state). Never use other
+   heights (`h-7`, `h-9`, `h-11`, `size-9`…) or shadcn `Button` sizes on screen; icon-only buttons
+   are `KWCircleButton` (40) or `size={32}` in rows. Controls side by side share a height.
+6. **Shapes**: buttons, chips and segmented controls are pills (`rounded-full`); grouped cards
    `rounded-2xl` (20 px, KWRadius.surface); card art 18 px; inputs 12 px.
-6. **Structure of a screen**: `KWLargeTitleHeader` (title + subtitle + trailing `KWCircleButton`s or
+7. **Structure of a screen**: every screen sits in `Page` (one width and gutter for all, so titles line
+   up from screen to screen; never override its width), then `KWLargeTitleHeader` (title + subtitle + trailing `KWCircleButton`s or
    a primary `KWButton`), then sections: `KWSection title=… action=<KWTextAction>` over a
    `KWGroupedCard`. Settings-like lists are `KWValueRow`s. Empty lists use `KWEmptyState` with the
    iOS text and a primary button.
-7. **Web optimizations**: two columns from `lg` (list + side panel, like Revolut web); every
+8. **Web optimizations**: two columns from `lg` (list + side panel, like Revolut web); every
    clickable row has hover (`hover:bg-secondary/50`) and a visible focus ring; tooltips name the
    shortcut; dialogs instead of full-screen sheets on desktop, full screen on phones; the primary
    action of a dialog is a white `KWButton` aligned right, the secondary a `plain` one.
-8. **shadcn stays underneath** for behavior (Dialog, Sheet, Select, Combobox, DropdownMenu,
+9. **shadcn stays underneath** for behavior (Dialog, Sheet, Select, Combobox, DropdownMenu,
    Tooltip, Popover). Restyle what shows: pass Keepwell classes, or wrap it in `kw/`. Never edit
    `src/components/ui`.
-9. **Text**: iOS catalog keys through `t.in(ns, key)`; web-only text in `web-strings*.ts` with `es`.
+10. **Text**: iOS catalog keys through `t.in(ns, key)`; web-only text in `web-strings*.ts` with `es`.

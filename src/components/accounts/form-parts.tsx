@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore, type ReactNode } from "react"
 
+import { KWSegmented } from "@/components/kw/design"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { DomainError, currencySymbol, formatAmountInput } from "@/lib/domain"
@@ -11,19 +12,25 @@ import { cardColorName } from "@/lib/presentation/display"
 import { cn } from "@/lib/utils"
 
 // Small form pieces the account dialogs share: labeled fields, a segmented picker, the card color
-// swatches and the iOS error texts for domain failures.
+// swatches and the iOS error texts for domain failures. Fields follow the iOS forms: muted label,
+// a `surface2` box with the 12 px input radius, errors in the soft negative color.
+
+/** The iOS text field box: `surface2` fill, no border, 12 px radius, focus ring on desktop. */
+export const KW_INPUT = "h-10 rounded-xl border-transparent bg-secondary px-3 type-body shadow-none placeholder:text-text-faint focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-ring/60 dark:bg-secondary aria-invalid:ring-2 aria-invalid:ring-negative/60"
 
 export function LabeledField({ id, label, description, error, children }: { id: string; label: ReactNode; description?: ReactNode; error?: string | undefined; children: ReactNode }) {
   return (
     <Field data-invalid={error ? true : undefined}>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldLabel htmlFor={id} className="type-label text-text-secondary">
+        {label}
+      </FieldLabel>
       {children}
       {error ? (
-        <p role="alert" className="type-caption text-destructive">
+        <p role="alert" className="type-caption text-negative">
           {error}
         </p>
       ) : description ? (
-        <FieldDescription>{description}</FieldDescription>
+        <FieldDescription className="type-caption text-muted-foreground">{description}</FieldDescription>
       ) : null}
     </Field>
   )
@@ -38,7 +45,7 @@ export function AmountInput({ id, value, onChange, currency, invalid, autoFocus 
         id={id}
         inputMode="decimal"
         autoComplete="off"
-        className="h-10 pl-12 text-right tabular-nums"
+        className={cn(KW_INPUT, "pl-12 text-right tabular-nums")}
         value={value}
         aria-invalid={invalid || undefined}
         autoFocus={autoFocus}
@@ -53,26 +60,9 @@ export function AmountInput({ id, value, onChange, currency, invalid, autoFocus 
   )
 }
 
-export function Segmented<T extends string>({ value, onChange, options, label }: { value: T; onChange: (value: T) => void; options: readonly { value: T; label: ReactNode }[]; label: string }) {
-  return (
-    <div role="radiogroup" aria-label={label} className="flex w-full flex-wrap gap-1 rounded-lg bg-secondary/70 p-1">
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          role="radio"
-          aria-checked={option.value === value}
-          onClick={() => onChange(option.value)}
-          className={cn(
-            "min-w-0 flex-1 rounded-md px-3 py-1.5 type-label transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-            option.value === value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  )
+/** KWSegmentedControl (large) with the iOS choice labels. */
+export function Segmented<T extends string>({ value, onChange, options, label }: { value: T; onChange: (value: T) => void; options: readonly { value: T; label: string }[]; label: string }) {
+  return <KWSegmented aria-label={label} value={value} onChange={onChange} options={options.map((option) => ({ value: option.value, title: option.label }))} />
 }
 
 export function ColorSwatches({ t, value, onChange, colors }: { t: Translator; value: CardColor | undefined; onChange: (color: CardColor) => void; colors: readonly CardColor[] }) {
@@ -87,7 +77,7 @@ export function ColorSwatches({ t, value, onChange, colors }: { t: Translator; v
           aria-label={cardColorName(t, color)}
           title={cardColorName(t, color)}
           onClick={() => onChange(color)}
-          className={cn("size-9 rounded-full ring-offset-2 ring-offset-popover transition outline-none focus-visible:ring-2 focus-visible:ring-ring", color === value ? "ring-2 ring-foreground" : "ring-1 ring-border")}
+          className={cn("size-8 rounded-full ring-offset-2 ring-offset-card transition outline-none hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring", color === value ? "ring-2 ring-white" : "ring-1 ring-white/10")}
           style={{ backgroundImage: `linear-gradient(135deg, var(--card-art-${color}-from), var(--card-art-${color}-to))` }}
         />
       ))}

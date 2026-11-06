@@ -30,14 +30,18 @@ const BUTTON_VARIANTS: Record<KWButtonVariant, string> = {
   plain: "bg-transparent text-foreground hover:bg-card",
 }
 
-/** Heights and type from KWButtonStyle.Size; the large ones are a touch shorter on desktop. */
+/**
+ * KWButtonStyle sizes folded onto the web's three control heights, so neighbors always line up:
+ * 48 px for a lone full-width call to action, 40 px for every regular control (buttons, fields,
+ * selects, segmented controls, circle buttons), 32 px for compact actions inside rows and chips.
+ */
 const BUTTON_SIZES: Record<KWButtonSize, string> = {
   large: "h-12 px-6 type-heading",
-  regular: "h-11 px-6 type-heading",
-  row: "h-11 px-5 type-body font-semibold",
-  text: "h-10 px-4 type-body font-semibold",
-  medium: "h-10 px-4 type-label font-bold",
-  small: "h-[34px] px-3.5 type-label",
+  regular: "h-10 px-5 type-label",
+  row: "h-10 px-5 type-label",
+  text: "h-10 px-4 type-label",
+  medium: "h-10 px-4 type-label",
+  small: "h-8 px-3.5 type-caption font-semibold",
   mini: "h-8 px-3 type-caption font-semibold",
 }
 
@@ -94,7 +98,7 @@ export function KWCircleButton({
   size = 40,
   className,
   ...props
-}: { icon: KWIconName | ReactNode; label: string; shortcut?: string; variant?: "surface" | "white" | "translucent"; size?: number } & Omit<ComponentProps<"button">, "children">) {
+}: { icon: KWIconName | ReactNode; label: string; shortcut?: string | undefined; variant?: "surface" | "white" | "translucent"; size?: number } & Omit<ComponentProps<"button">, "children">) {
   return (
     <Tooltip>
       <TooltipTrigger
@@ -124,7 +128,7 @@ export function KWCircleButton({
 
 // KWActionButton: a 48 pt circle with its caption underneath ("Expense", "Pay", "Edit name").
 
-export function KWActionButton({ icon, title, variant = "neutral", shortcut, className, ...props }: { icon: KWIconName; title: string; variant?: "neutral" | "prominent" | "translucent" | "active"; shortcut?: string } & Omit<ComponentProps<"button">, "children">) {
+export function KWActionButton({ icon, title, variant = "neutral", shortcut, className, ...props }: { icon: KWIconName; title: string; variant?: "neutral" | "prominent" | "translucent" | "active"; shortcut?: string | undefined } & Omit<ComponentProps<"button">, "children">) {
   const circle = {
     neutral: "bg-secondary text-foreground group-hover/action:bg-secondary/70",
     prominent: "bg-white text-black group-hover/action:bg-white/90",
@@ -154,7 +158,7 @@ export function KWSegmented<T extends string>({
   options: readonly { value: T; title: string; disabled?: boolean }[]
   value: T
   onChange: (value: T) => void
-  /** large: equal widths, 38 pt; compact: hugging, 30 pt; accent: hugging with the accent selection. */
+  /** large: equal widths, 40 px tall in all; compact and accent: hugging, 32 px tall (row height). */
   style?: "large" | "compact" | "accent"
   className?: string
   "aria-label"?: string
@@ -173,7 +177,7 @@ export function KWSegmented<T extends string>({
             onClick={() => onChange(option.value)}
             className={cn(
               "rounded-full whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40",
-              style === "large" ? "h-[38px] flex-1 px-3 type-label" : style === "accent" ? "h-[30px] px-3.5 type-caption font-bold" : "h-[30px] px-3 type-caption font-semibold",
+              style === "large" ? "h-8 flex-1 px-3 type-label" : style === "accent" ? "h-6 px-3 type-caption font-bold" : "h-6 px-3 type-caption font-semibold",
               selected ? (style === "accent" ? "bg-ring text-foreground" : "bg-white text-black") : "text-text-secondary hover:text-foreground",
             )}
           >
@@ -194,7 +198,7 @@ export function KWChip({ selected, look: variant = "filled", className, children
     extra: selected ? "bg-extra-tint text-extra ring-1 ring-extra" : "bg-card text-text-secondary ring-1 ring-border ring-inset hover:text-foreground",
   }[variant]
   return (
-    <button type="button" aria-pressed={selected} className={cn("inline-flex h-9 items-center gap-1.5 rounded-full px-4 type-label whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring", look, className)} {...props}>
+    <button type="button" aria-pressed={selected} className={cn("inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 type-label whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring", look, className)} {...props}>
       {children}
     </button>
   )

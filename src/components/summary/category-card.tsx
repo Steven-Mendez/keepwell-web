@@ -17,29 +17,6 @@ const OTHERS_COLOR = "var(--control-off)"
 
 export type CategoryMode = "expenses" | "income"
 
-/** A two-option segmented control, like KWSegmentedControl. */
-export function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: readonly { value: T; label: string }[]; onChange: (value: T) => void; label: string }) {
-  return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-lg bg-secondary p-0.5">
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          role="radio"
-          aria-checked={value === option.value}
-          onClick={() => onChange(option.value)}
-          className={cn(
-            "rounded-md px-3 py-1 type-caption font-semibold text-muted-foreground transition-colors",
-            value === option.value && "bg-background text-foreground shadow-sm",
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 /** The selected month's categories as a ring and the list under it, both from one breakdown. */
 export function CategoryCard({
   t,
@@ -47,6 +24,7 @@ export function CategoryCard({
   report,
   selectedIndex,
   categories,
+  mode,
   className,
 }: {
   t: Translator
@@ -54,9 +32,10 @@ export function CategoryCard({
   report: SummaryReport
   selectedIndex: number
   categories: readonly TransactionCategory[]
+  /** Chosen in the summary header (iOS: "Expenses / Income" beside the title). */
+  mode: CategoryMode
   className?: string
 }) {
-  const [mode, setMode] = useState<CategoryMode>("expenses")
   const [active, setActive] = useState<string>()
   const breakdown = (mode === "expenses" ? report.expenseBreakdowns : report.incomeBreakdowns)[selectedIndex]
   const selected: MonthlySummary | undefined = report.months[selectedIndex]
@@ -90,15 +69,7 @@ export function CategoryCard({
             {count === 0 ? t.in("summary", mode === "expenses" ? "No spending" : "No income") : t.in("summary", "%lld categories", count)}
           </p>
         </div>
-        <Segmented
-          label={t.in("summary", "By category")}
-          value={mode}
-          onChange={setMode}
-          options={[
-            { value: "expenses", label: t.in("summary", "Expenses") },
-            { value: "income", label: t.in("summary", "Income") },
-          ]}
-        />
+
       </div>
 
       {rows.length === 0 ? (
@@ -115,7 +86,7 @@ export function CategoryCard({
                     const row = isActive ? (payload?.[0]?.payload as (typeof rows)[number] | undefined) : undefined
                     if (!row) return null
                     return (
-                      <div className="flex items-center gap-2 rounded-lg bg-popover px-3 py-2 type-caption shadow-depth ring-1 ring-border">
+                      <div className="flex items-center gap-2 rounded-xl bg-secondary px-3 py-2 type-caption shadow-depth">
                         <span className="size-2 rounded-full" style={{ backgroundColor: row.color }} />
                         <span>{row.name}</span>
                         <span className="tabular-nums text-text-secondary">
@@ -154,7 +125,7 @@ export function CategoryCard({
               <li
                 key={row.id}
                 onMouseEnter={() => setActive(row.id)}
-                className={cn("flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors", active === row.id && "bg-accent/60")}
+                className={cn("flex items-center gap-3 rounded-xl px-2 py-1.5 transition-colors", active === row.id && "bg-secondary/50")}
               >
                 {row.category ? (
                   <CategoryBadge category={row.category} size="sm" />

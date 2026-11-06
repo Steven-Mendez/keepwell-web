@@ -1,31 +1,16 @@
 "use client"
 
-import {
-  ArrowLeftIcon,
-  ArrowLeftRightIcon,
-  BanknoteIcon,
-  CheckIcon,
-  CreditCardIcon,
-  FileJsonIcon,
-  GlobeIcon,
-  LandmarkIcon,
-  ShieldCheckIcon,
-  SparklesIcon,
-  Trash2Icon,
-  UserRoundXIcon,
-  type LucideIcon,
-} from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useRef, useState, type FormEvent, type ReactNode } from "react"
 
+import { KWButton, KWCircleButton, KWGroupedCard, KWSegmented, KWValueRow } from "@/components/kw/design"
+import { KWAppIconTile, KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
+import type { KWIconName } from "@/components/kw/kw-icon-data"
 import { COMMON_CURRENCIES, CurrencyPicker, OptionSelect } from "@/components/kw/pickers"
-import { IconBadge } from "@/components/kw/primitives"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
+import { FieldLabel, FlowHeader, KW_FIELD } from "@/components/movement-editor/flow-parts"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/toast"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   Decimal,
   ZERO,
@@ -41,11 +26,9 @@ import {
 import { useT } from "@/lib/i18n"
 import { backupRepository, ledgerStore, profileStore } from "@/lib/repositories"
 import type { CardNetwork, DebtMode } from "@/lib/schema"
-import { cn } from "@/lib/utils"
 
 type Step = "welcome" | "returning" | "name" | "currencies" | "accounts" | "done"
 const STEPS: readonly Step[] = ["welcome", "returning", "name", "currencies", "accounts", "done"]
-
 
 /** The region's currency when the browser knows it and it's a common one, else USD (iOS does the same). */
 function regionCurrency(): string {
@@ -58,7 +41,11 @@ function regionCurrency(): string {
   }
 }
 
-/** Onboarding (iOS OnboardingFlowView): restore a backup or set up name, currencies and accounts. */
+/**
+ * Onboarding (iOS OnboardingFlowView): restore a backup or set up name, currencies and accounts.
+ * Drawn with the iOS flow parts (KWFlowHeader with back and step progress, large titles, the white
+ * primary button) in a centered column sized for a desktop window.
+ */
 export function OnboardingFlow() {
   const t = useT()
   const router = useRouter()
@@ -74,7 +61,6 @@ export function OnboardingFlow() {
   const rate = parseAmount(rateText)
   const currencies = usesTwo && rate && rate.gt(0) ? currencySettings(principal, second, rate) : currencySettings(principal)
   const index = STEPS.indexOf(step)
-  const back = index > 1 ? () => setStep(STEPS[index - 1] as Step) : undefined
 
   /** With cash in two currencies, "Cash" alone can't tell them apart (iOS `accountsToSave`). */
   function accountsToSave(): OnboardingAccountDraft[] {
@@ -101,29 +87,17 @@ export function OnboardingFlow() {
 
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden bg-background">
-      <div className="pointer-events-none absolute -top-40 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-brand-600/20 blur-3xl" aria-hidden />
-      <header className="relative flex items-center justify-between px-(--gutter) py-4 md:px-8">
-        <div className="flex items-center gap-2 type-heading">
-          {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG, nothing to optimize */}
-          <img src="/icon.svg" alt="" className="size-7 rounded-mini" />
-          Keepwell
-        </div>
-        {index > 0 && step !== "done" ? (
-          <ol className="flex items-center gap-1.5" aria-label={t.in("designsystem", "Step %lld of %lld", index, STEPS.length - 1)}>
-            {STEPS.slice(1).map((candidate, position) => (
-              <li key={candidate} className={cn("h-1.5 w-6 rounded-full", position < index ? "bg-foreground" : "bg-control-off")} />
-            ))}
-          </ol>
-        ) : null}
-      </header>
-      <main className="relative flex flex-1 items-start justify-center px-(--gutter) pb-10 md:items-center">
-        <div className="w-full max-w-xl">
-          {back ? (
-            <Button variant="ghost" size="sm" className="mb-4 -ml-2" onClick={back}>
-              <ArrowLeftIcon data-icon="inline-start" />
-              {t.in("designsystem", "Back")}
-            </Button>
-          ) : null}
+      <div className="pointer-events-none absolute -top-48 left-1/2 size-[40rem] -translate-x-1/2 rounded-full bg-brand-600/20 blur-3xl" aria-hidden />
+      <main className="relative flex flex-1 items-start justify-center px-(--gutter) py-8 md:items-center md:py-12">
+        <div className="flex w-full max-w-xl flex-col gap-8">
+          {step === "welcome" || step === "done" ? (
+            <div className="flex items-center gap-2.5">
+              <KWAppIconTile size={32} />
+              <span className="text-[1.375rem] leading-none font-extrabold tracking-[-0.06em] text-foreground">keepwell</span>
+            </div>
+          ) : (
+            <FlowHeader leading="back" onLeading={() => setStep(STEPS[index - 1] as Step)} progress={{ total: STEPS.length - 2, current: index }} />
+          )}
           {step === "welcome" ? <WelcomeStep onStart={() => setStep("returning")} /> : null}
           {step === "returning" ? <ReturningStep onScratch={() => setStep("name")} /> : null}
           {step === "name" ? <NameStep name={name} onChange={setName} onNext={() => setStep("currencies")} /> : null}
@@ -165,21 +139,28 @@ export function OnboardingFlow() {
   )
 }
 
+/** OnboardingHeading: the step's large title and its one sentence. */
 function Heading({ title, body }: { title: ReactNode; body?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-2">
-      <h1 className="type-title">{title}</h1>
-      {body ? <p className="type-body text-muted-foreground">{body}</p> : null}
+    <div className="flex flex-col gap-2">
+      <h1 className="type-title text-foreground">{title}</h1>
+      {body ? <p className="type-body leading-relaxed text-muted-foreground">{body}</p> : null}
     </div>
   )
 }
 
-function Feature({ icon, title }: { icon: LucideIcon; title: string }) {
+/** A row with its icon in a `surface2` circle, as the welcome and privacy lists show them. */
+function IconRow({ icon, title, body }: { icon: KWIconName; title: string; body?: string }) {
   return (
-    <li className="flex items-center gap-3">
-      <IconBadge icon={icon} tone="accent" />
-      <span className="type-label">{title}</span>
-    </li>
+    <div className="flex items-center gap-3 px-4 py-3">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground">
+        <KWIcon name={icon} size={20} />
+      </span>
+      <span className="flex min-w-0 flex-col">
+        <span className="type-body font-semibold text-foreground">{title}</span>
+        {body ? <span className="type-caption text-muted-foreground">{body}</span> : null}
+      </span>
+    </div>
   )
 }
 
@@ -187,19 +168,20 @@ function WelcomeStep({ onStart }: { onStart: () => void }) {
   const t = useT()
   return (
     <div className="flex flex-col gap-8">
-      <div className="rounded-2xl bg-card p-6 shadow-glow ring-1 ring-border/60">
-        <p className="type-label text-text-secondary">{t.in("home", "Net worth")}</p>
-        <p className="type-display">$11,157.46</p>
+      <div className="relative overflow-hidden rounded-2xl bg-card p-6 shadow-glow">
+        <div className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full bg-brand-600/25 blur-2xl" aria-hidden />
+        <p className="relative type-label text-text-secondary">{t.in("home", "Net worth")}</p>
+        <p className="relative type-display text-foreground">$11,157.46</p>
       </div>
       <Heading title={t.in("onboarding", "Your money, clear, in one or two currencies")} body={t.in("onboarding", "Log expenses, income and transfers. Cards, cash and drafts to confirm later.")} />
-      <ul className="flex flex-col gap-3">
-        <Feature icon={UserRoundXIcon} title={t.in("onboarding", "No account or sign-up")} />
-        <Feature icon={ShieldCheckIcon} title={t.in("web", "Stored in this browser")} />
-        <Feature icon={GlobeIcon} title={t.in("onboarding", "Any currency, with your own rate")} />
-      </ul>
-      <Button size="lg" className="h-12 type-heading" onClick={onStart} autoFocus>
+      <KWGroupedCard>
+        <IconRow icon="personOff" title={t.in("onboarding", "No account or sign-up")} />
+        <IconRow icon="phone" title={t.in("web", "Stored in this browser")} />
+        <IconRow icon="transfer" title={t.in("onboarding", "Any currency, with your own rate")} />
+      </KWGroupedCard>
+      <KWButton size="large" fill onClick={onStart} autoFocus>
         {t.in("onboarding", "Start")}
-      </Button>
+      </KWButton>
     </div>
   )
 }
@@ -222,10 +204,14 @@ function ReturningStep({ onScratch }: { onScratch: () => void }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-6">
       <Heading title={t.in("onboarding", "Have you used Keepwell before?")} body={t.in("onboarding", "Bring your accounts, cards and movements from a backup, or set everything up from scratch.")} />
-      <ChoiceButton icon={FileJsonIcon} title={t.in("onboarding", "Restore from a backup file (.json)")} body={t.in("onboarding", "A file saved with “Back up now” in Settings")} onClick={() => file.current?.click()} disabled={restoring} />
-      <ChoiceButton icon={SparklesIcon} title={t.in("onboarding", "Start from scratch")} onClick={onScratch} />
+      <KWGroupedCard>
+        <ChoiceRow icon="download" title={t.in("onboarding", "Restore from a backup file (.json)")} body={t.in("onboarding", "A file saved with “Back up now” in Settings")} onClick={() => file.current?.click()} disabled={restoring} />
+      </KWGroupedCard>
+      <KWButton size="large" fill onClick={onScratch}>
+        {t.in("onboarding", "Start from scratch")}
+      </KWButton>
       <input
         ref={file}
         type="file"
@@ -241,19 +227,13 @@ function ReturningStep({ onScratch }: { onScratch: () => void }) {
   )
 }
 
-function ChoiceButton({ icon, title, body, onClick, disabled }: { icon: LucideIcon; title: string; body?: string; onClick: () => void; disabled?: boolean }) {
+function ChoiceRow({ icon, title, body, onClick, disabled }: { icon: KWIconName; title: string; body?: string; onClick: () => void; disabled?: boolean }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="flex items-center gap-4 rounded-2xl bg-card p-4 text-left ring-1 ring-border/60 transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-    >
-      <IconBadge icon={icon} tone="accent" />
-      <span className="flex flex-col gap-0.5">
-        <span className="type-label">{title}</span>
-        {body ? <span className="type-caption text-muted-foreground">{body}</span> : null}
+    <button type="button" onClick={onClick} disabled={disabled} className="flex w-full items-center gap-3 text-left transition-colors outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50 disabled:opacity-40">
+      <span className="min-w-0 flex-1">
+        <IconRow icon={icon} title={title} {...(body ? { body } : {})} />
       </span>
+      <KWIcon name="chevronRight" size={16} className="mr-4 text-text-faint" />
     </button>
   )
 }
@@ -267,32 +247,27 @@ function NameStep({ name, onChange, onNext }: { name: string; onChange: (name: s
   return (
     <form onSubmit={submit} className="flex flex-col gap-6">
       <Heading title={t.in("onboarding", "What's your name?")} body={t.in("web", "We'll use it to greet you and show it on your cards. It's only stored in this browser.")} />
-      <Field>
+      <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor="name">{t.in("onboarding", "Your name")}</FieldLabel>
-        <Input id="name" value={name} onChange={(event) => onChange(event.target.value)} placeholder={t.in("onboarding", "Your first name")} maxLength={30} autoFocus autoComplete="given-name" className="h-11" />
-      </Field>
-      <div className="flex gap-2">
-        <Button type="submit" size="lg" className="flex-1">
+        <Input id="name" value={name} onChange={(event) => onChange(event.target.value)} placeholder={t.in("onboarding", "Your first name")} maxLength={30} autoFocus autoComplete="given-name" className={KW_FIELD} />
+      </div>
+      <div className="flex flex-col gap-2">
+        <KWButton type="submit" size="large" fill>
           {t.in("onboarding", "Continue")}
-        </Button>
-        <Button
-          type="button"
-          size="lg"
-          variant="ghost"
+        </KWButton>
+        <KWButton
+          variant="plain"
+          fill
           onClick={() => {
             onChange("")
             onNext()
           }}
         >
           {t.in("onboarding", "Skip")}
-        </Button>
+        </KWButton>
       </div>
     </form>
   )
-}
-
-function CurrencySelect({ id, value, onChange, exclude }: { id: string; value: string; onChange: (code: string) => void; exclude?: string }) {
-  return <CurrencyPicker id={id} value={value} onChange={onChange} exclude={exclude} className="h-11" />
 }
 
 function CurrenciesStep(props: {
@@ -319,52 +294,57 @@ function CurrenciesStep(props: {
       }}
     >
       <Heading title={t.in("onboarding", "Which currencies do you use?")} body={t.in("onboarding", "Reports and net worth are calculated in the main currency.")} />
-      <ToggleGroup value={[props.usesTwo ? "two" : "one"]} onValueChange={(value: string[]) => value[0] && props.onUsesTwo(value[0] === "two")} variant="outline" className="w-full">
-        <ToggleGroupItem value="one" className="flex-1">
-          {t.in("onboarding", "One currency")}
-        </ToggleGroupItem>
-        <ToggleGroupItem value="two" className="flex-1">
-          {t.in("onboarding", "Two currencies")}
-        </ToggleGroupItem>
-      </ToggleGroup>
-      <div className="flex flex-col gap-4 rounded-2xl bg-card p-4 ring-1 ring-border/60">
-        <Field>
+      <KWSegmented
+        aria-label={t.in("onboarding", "Currencies")}
+        value={props.usesTwo ? "two" : "one"}
+        onChange={(value) => props.onUsesTwo(value === "two")}
+        options={[
+          { value: "one", title: t.in("onboarding", "One currency") },
+          { value: "two", title: t.in("onboarding", "Two currencies") },
+        ]}
+      />
+      <div className="flex flex-col gap-4 rounded-2xl bg-card p-4">
+        <div className="flex flex-col gap-1.5">
           <FieldLabel htmlFor="principal">{t.in("onboarding", "Main currency")}</FieldLabel>
-          <CurrencySelect id="principal" value={props.principal} onChange={props.onPrincipal} />
-        </Field>
+          <CurrencyPicker id="principal" value={props.principal} onChange={props.onPrincipal} />
+        </div>
         {props.usesTwo ? (
           <>
             <div className="flex justify-center">
-              <Button type="button" variant="ghost" size="sm" onClick={props.onSwap} aria-label={t.in("onboarding", "Swap main and second currency")}>
-                <ArrowLeftRightIcon data-icon="inline-start" className="rotate-90" />
+              <KWButton variant="secondary" size="small" icon="transfer" onClick={props.onSwap} aria-label={t.in("onboarding", "Swap main and second currency")}>
                 {t.in("onboarding", "Swap")}
-              </Button>
+              </KWButton>
             </div>
-            <Field>
+            <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="second">{t.in("onboarding", "Second currency")}</FieldLabel>
-              <CurrencySelect id="second" value={props.second} onChange={props.onSecond} exclude={props.principal} />
-            </Field>
-            <Field data-invalid={rateInvalid || undefined}>
+              <CurrencyPicker id="second" value={props.second} onChange={props.onSecond} exclude={props.principal} />
+            </div>
+            <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="rate">{t.in("onboarding", "Exchange rate (you set it)")}</FieldLabel>
               <div className="flex items-center gap-2">
                 <span className="shrink-0 type-label text-text-secondary">1 {props.principal} =</span>
-                <Input id="rate" inputMode="decimal" value={props.rateText} onChange={(event) => props.onRate(event.target.value)} placeholder="1.0000" className="h-11 tabular-nums" aria-invalid={rateInvalid} />
+                <Input id="rate" inputMode="decimal" value={props.rateText} onChange={(event) => props.onRate(event.target.value)} placeholder="1.0000" className={`${KW_FIELD} tabular-nums`} aria-invalid={rateInvalid} />
                 <span className="shrink-0 type-label text-text-secondary">{props.second}</span>
               </div>
-              <FieldDescription>{t.in("onboarding", "It defaults to 1. Change it whenever you want; each transaction keeps the rate from when you logged it.")}</FieldDescription>
-              {rateInvalid ? <FieldError>{t.in("settings", "The rate has to be a number greater than zero.")}</FieldError> : null}
-            </Field>
+              <p className="px-1 type-caption text-muted-foreground">{t.in("onboarding", "It defaults to 1. Change it whenever you want; each transaction keeps the rate from when you logged it.")}</p>
+              {rateInvalid ? <p className="px-1 type-caption text-negative">{t.in("settings", "The rate has to be a number greater than zero.")}</p> : null}
+            </div>
           </>
         ) : null}
       </div>
-      <Button type="submit" size="lg" disabled={rateInvalid}>
+      <KWButton type="submit" size="large" fill disabled={rateInvalid}>
         {t.in("onboarding", "Continue")}
-      </Button>
+      </KWButton>
     </form>
   )
 }
 
 type AccountKind = OnboardingAccountDraft["kind"]
+
+function accountThumbnail(account: OnboardingAccountDraft) {
+  if (account.kind === "cash") return <KWMiniCard kind="cash" />
+  return <KWMiniCard color={account.kind === "credit" ? "azul" : "verde"} />
+}
 
 function AccountsStep({ principal, second, accounts, onChange, onNext }: { principal: string; second: string | undefined; accounts: OnboardingAccountDraft[]; onChange: (accounts: OnboardingAccountDraft[]) => void; onNext: () => void }) {
   const t = useT()
@@ -402,31 +382,30 @@ function AccountsStep({ principal, second, accounts, onChange, onNext }: { princ
     <div className="flex flex-col gap-6">
       <Heading title={t.in("onboarding", "Add your accounts")} body={t.in("onboarding", "With today's balance. Credit cards start with what you owe.")} />
       <div className="grid grid-cols-3 gap-2">
-        <KindButton icon={LandmarkIcon} label={t.in("onboarding", "Bank")} onClick={() => start("bank")} />
-        <KindButton icon={CreditCardIcon} label={t.in("onboarding", "Credit card")} onClick={() => start("credit")} />
-        <KindButton icon={BanknoteIcon} label={t.in("onboarding", "Cash")} onClick={() => start("cash")} />
+        <KindTile icon="bank" label={t.in("onboarding", "Bank")} onClick={() => start("bank")} />
+        <KindTile icon="creditCard" label={t.in("onboarding", "Credit card")} onClick={() => start("credit")} />
+        <KindTile icon="cash" label={t.in("onboarding", "Cash")} onClick={() => start("cash")} />
       </div>
       {accounts.length > 0 ? (
-        <ul className="flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card ring-1 ring-border/60">
+        <KWGroupedCard>
           {accounts.map((account) => (
-            <li key={account.id} className="flex items-center gap-2 pr-2">
-              <button type="button" className="flex min-w-0 flex-1 items-center justify-between gap-3 px-4 py-3 text-left hover:bg-secondary/50" onClick={() => setEditing(account)}>
-                <span className="flex min-w-0 flex-col">
-                  <span className="truncate type-label">{onboardingDisplayName(account) || t.in("onboarding", "Account")}</span>
-                  <span className="type-caption text-muted-foreground">{subtitle(account)}</span>
+            <div key={account.id} className="flex items-center gap-2 pr-3">
+              <button type="button" className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left transition-colors outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50" onClick={() => setEditing(account)}>
+                {accountThumbnail(account)}
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate type-body font-semibold text-foreground">{onboardingDisplayName(account) || t.in("onboarding", "Account")}</span>
+                  <span className="truncate type-caption-sm text-muted-foreground">{subtitle(account)}</span>
                 </span>
-                <span className="type-label tabular-nums">{balance(account)}</span>
+                <span className="shrink-0 type-label text-foreground tabular-nums">{balance(account)}</span>
               </button>
-              <Button variant="ghost" size="icon-sm" aria-label={t.in("onboarding", "Remove account")} onClick={() => onChange(accounts.filter((other) => other.id !== account.id))}>
-                <Trash2Icon />
-              </Button>
-            </li>
+              <KWCircleButton icon="trash" size={32} label={t.in("onboarding", "Remove account")} onClick={() => onChange(accounts.filter((other) => other.id !== account.id))} />
+            </div>
           ))}
-        </ul>
+        </KWGroupedCard>
       ) : null}
-      <Button size="lg" onClick={onNext}>
+      <KWButton size="large" fill onClick={onNext}>
         {t.in("onboarding", "Continue")}
-      </Button>
+      </KWButton>
       {editing ? (
         <AccountForm
           draft={editing}
@@ -449,10 +428,10 @@ function AccountsStep({ principal, second, accounts, onChange, onNext }: { princ
   )
 }
 
-function KindButton({ icon: Icon, label, onClick }: { icon: LucideIcon; label: string; onClick: () => void }) {
+function KindTile({ icon, label, onClick }: { icon: KWIconName; label: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex flex-col items-center gap-2 rounded-2xl bg-card px-3 py-4 ring-1 ring-border/60 transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring">
-      <Icon className="size-6 text-link" aria-hidden />
+    <button type="button" onClick={onClick} className="flex h-24 flex-col items-center justify-center gap-2 rounded-[18px] bg-card px-3 text-foreground transition-colors outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring">
+      <KWIcon name={icon} size={24} />
       <span className="type-label">{label}</span>
     </button>
   )
@@ -522,55 +501,51 @@ function AccountForm({
     })
   }
 
+  const error = (text: string) => <p className="px-1 type-caption text-negative">{text}</p>
+
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="sm:max-w-lg">
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <DialogHeader>
-            <DialogTitle>{t.in("onboarding", title)}</DialogTitle>
+      <DialogContent showCloseButton={false} className="gap-0 rounded-[var(--radius-surface)] bg-background p-5 ring-1 ring-border sm:max-w-lg">
+        <form onSubmit={submit} className="flex flex-col gap-5">
+          <DialogHeader className="flex-row items-center justify-between gap-3">
+            <DialogTitle className="type-title-sm text-foreground">{t.in("onboarding", title)}</DialogTitle>
+            <KWCircleButton icon="close" label={t.in("designsystem", "Close")} shortcut="Esc" onClick={onCancel} />
           </DialogHeader>
           {draft.kind !== "cash" ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field>
+              <div className="flex flex-col gap-1.5">
                 <FieldLabel htmlFor="bank">{t.in("onboarding", "Bank")}</FieldLabel>
-                <Input id="bank" value={bank} onChange={(event) => setBank(event.target.value)} placeholder={t.in("onboarding", "Bank name")} autoFocus />
-              </Field>
-              <Field>
+                <Input id="bank" value={bank} onChange={(event) => setBank(event.target.value)} placeholder={t.in("onboarding", "Bank name")} autoFocus className={KW_FIELD} />
+              </div>
+              <div className="flex flex-col gap-1.5">
                 <FieldLabel htmlFor="account-name">{t.in("onboarding", "Name")}</FieldLabel>
-                <Input id="account-name" value={name} onChange={(event) => setName(event.target.value)} placeholder={draft.kind === "credit" ? "Visa" : t.in("onboarding", "Savings")} />
-              </Field>
+                <Input id="account-name" value={name} onChange={(event) => setName(event.target.value)} placeholder={draft.kind === "credit" ? "Visa" : t.in("onboarding", "Savings")} className={KW_FIELD} />
+              </div>
             </div>
           ) : null}
           {draft.kind !== "credit" && currencies.length > 1 ? (
-            <Field>
+            <div className="flex flex-col gap-1.5">
               <FieldLabel>{t.in("onboarding", "Currency")}</FieldLabel>
-              <ToggleGroup value={[currency]} onValueChange={(value: string[]) => value[0] && setCurrency(value[0])} variant="outline">
-                {currencies.map((code) => (
-                  <ToggleGroupItem key={code} value={code} className="flex-1">
-                    {code}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </Field>
+              <KWSegmented aria-label={t.in("onboarding", "Currency")} value={currency} onChange={setCurrency} options={currencies.map((code) => ({ value: code, title: code }))} />
+            </div>
           ) : null}
           {draft.kind === "credit" && second ? (
-            <Field>
+            <div className="flex flex-col gap-1.5">
               <FieldLabel>{t.in("onboarding", "Which currencies does it charge you in?")}</FieldLabel>
-              <ToggleGroup value={[debtMode]} onValueChange={(value: string[]) => value[0] && setDebtMode(value[0] as DebtMode)} variant="outline" className="flex-wrap">
-                <ToggleGroupItem value="dual" className="flex-1">
-                  {t.in("onboarding", "Two currencies")}
-                </ToggleGroupItem>
-                <ToggleGroupItem value="principal" className="flex-1">
-                  {t.in("onboarding", "Only %@", principal)}
-                </ToggleGroupItem>
-                <ToggleGroupItem value="second" className="flex-1">
-                  {t.in("onboarding", "Only %@", second)}
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </Field>
+              <KWSegmented<DebtMode>
+                aria-label={t.in("onboarding", "Which currencies does it charge you in?")}
+                value={debtMode}
+                onChange={setDebtMode}
+                options={[
+                  { value: "dual", title: t.in("onboarding", "Two currencies") },
+                  { value: "principal", title: t.in("onboarding", "Only %@", principal) },
+                  { value: "second", title: t.in("onboarding", "Only %@", second) },
+                ]}
+              />
+            </div>
           ) : null}
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field data-invalid={(showErrors && balanceInvalid) || undefined}>
+            <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="balance">{draft.kind === "credit" ? t.in("onboarding", "Debt in %@", debtCurrency) : t.in("onboarding", "Today's balance")}</FieldLabel>
               <Input
                 id="balance"
@@ -579,28 +554,28 @@ function AccountForm({
                 onChange={(event) => setBalanceText(event.target.value)}
                 onBlur={() => setBalanceText((text) => formatAmountInput(text) ?? text)}
                 placeholder="10,000.00"
-                className="tabular-nums"
+                className={`${KW_FIELD} tabular-nums`}
                 autoFocus={draft.kind === "cash"}
                 aria-invalid={showErrors && balanceInvalid}
               />
-              {showErrors && balanceInvalid ? <FieldError>{t.in("onboarding", "Enter an amount like 1,250.50.")}</FieldError> : null}
-            </Field>
+              {showErrors && balanceInvalid ? error(t.in("onboarding", "Enter an amount like 1,250.50.")) : null}
+            </div>
             {draft.kind === "credit" && debtMode === "dual" && second ? (
-              <Field data-invalid={(showErrors && secondInvalid) || undefined}>
+              <div className="flex flex-col gap-1.5">
                 <FieldLabel htmlFor="second-balance">{t.in("onboarding", "Debt in %@", second)}</FieldLabel>
-                <Input id="second-balance" inputMode="decimal" value={secondText} onChange={(event) => setSecondText(event.target.value)} onBlur={() => setSecondText((text) => formatAmountInput(text) ?? text)} placeholder="10,000.00" className="tabular-nums" />
-                {showErrors && secondInvalid ? <FieldError>{t.in("onboarding", "Enter an amount like 1,250.50.")}</FieldError> : null}
-              </Field>
+                <Input id="second-balance" inputMode="decimal" value={secondText} onChange={(event) => setSecondText(event.target.value)} onBlur={() => setSecondText((text) => formatAmountInput(text) ?? text)} placeholder="10,000.00" className={`${KW_FIELD} tabular-nums`} aria-invalid={showErrors && secondInvalid} />
+                {showErrors && secondInvalid ? error(t.in("onboarding", "Enter an amount like 1,250.50.")) : null}
+              </div>
             ) : null}
           </div>
           {draft.kind !== "cash" ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field data-invalid={(showErrors && lastFourInvalid) || undefined}>
+              <div className="flex flex-col gap-1.5">
                 <FieldLabel htmlFor="last-four">{t.in("onboarding", draft.kind === "bank" ? "Debit, last 4" : "Last 4 digits")}</FieldLabel>
-                <Input id="last-four" inputMode="numeric" maxLength={4} value={lastFour} onChange={(event) => setLastFour(event.target.value.replace(/\D/g, ""))} placeholder={t.in("onboarding", "Optional")} className="font-mono tracking-widest" />
-                {showErrors && lastFourInvalid ? <FieldError>{t.in("onboarding", "Enter all 4 digits or leave it empty.")}</FieldError> : null}
-              </Field>
-              <Field>
+                <Input id="last-four" inputMode="numeric" maxLength={4} value={lastFour} onChange={(event) => setLastFour(event.target.value.replace(/\D/g, ""))} placeholder={t.in("onboarding", "Optional")} className={`${KW_FIELD} font-mono tracking-widest`} aria-invalid={showErrors && lastFourInvalid} />
+                {showErrors && lastFourInvalid ? error(t.in("onboarding", "Enter all 4 digits or leave it empty.")) : null}
+              </div>
+              <div className="flex flex-col gap-1.5">
                 <FieldLabel htmlFor="network">{t.in("addcard", "Network")}</FieldLabel>
                 <OptionSelect<CardNetwork>
                   id="network"
@@ -613,20 +588,22 @@ function AccountForm({
                     { value: "other", label: t.in("onboarding", "Other") },
                   ]}
                 />
-              </Field>
+              </div>
             </div>
           ) : null}
-          <DialogFooter className="gap-2">
+          <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center">
             {!isNew ? (
-              <Button type="button" variant="ghost" className="text-destructive sm:mr-auto" onClick={onRemove}>
+              <KWButton variant="destructive" icon="trash" className="sm:mr-auto" onClick={onRemove}>
                 {t.in("onboarding", "Remove account")}
-              </Button>
-            ) : null}
-            <Button type="button" variant="outline" onClick={onCancel}>
+              </KWButton>
+            ) : (
+              <span className="hidden sm:mr-auto sm:block" />
+            )}
+            <KWButton variant="plain" onClick={onCancel}>
               {t.in("web", "Cancel")}
-            </Button>
-            <Button type="submit">{t.in("onboarding", isNew ? "Add" : "Save")}</Button>
-          </DialogFooter>
+            </KWButton>
+            <KWButton type="submit">{t.in("onboarding", isNew ? "Add" : "Save")}</KWButton>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
@@ -635,34 +612,25 @@ function AccountForm({
 
 function DoneStep({ name, principal, second, rate, accountCount, saving, onFinish }: { name: string | undefined; principal: string; second: string | undefined; rate: string; accountCount: number; saving: boolean; onFinish: (then: "home" | "expense") => void }) {
   const t = useT()
-  const rows: [string, string][] = [
-    [t.in("onboarding", "Currencies"), second ? `${principal} · ${second}` : principal],
-    ...(second ? [[t.in("onboarding", "Rate"), `1 ${principal} = ${rate} ${second}`] as [string, string]] : []),
-    [t.in("onboarding", "Accounts"), String(accountCount)],
-  ]
   return (
     <div className="flex flex-col gap-6">
-      <span className="flex size-16 items-center justify-center rounded-full bg-positive-tint text-positive">
-        <CheckIcon className="size-8" aria-hidden />
+      <span className="flex size-16 items-center justify-center rounded-full bg-positive text-positive-foreground">
+        <KWIcon name="check" size={30} strokeWidth={2.8} />
       </span>
       <Heading title={name ? t.in("onboarding", "All set, %@", name) : t.in("onboarding", "All set")} body={t.in("onboarding", "Now log your first transaction. The more you record, the better your monthly summary.")} />
-      <dl className="divide-y divide-divider rounded-2xl bg-card ring-1 ring-border/60">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex justify-between gap-4 px-4 py-3">
-            <dt className="type-label text-text-secondary">{label}</dt>
-            <dd className="type-label tabular-nums">{value}</dd>
-          </div>
-        ))}
-      </dl>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button size="lg" className="flex-1" disabled={saving} onClick={() => onFinish("expense")} autoFocus>
+      <KWGroupedCard>
+        <KWValueRow label={t.in("onboarding", "Currencies")} value={second ? `${principal} · ${second}` : principal} />
+        {second ? <KWValueRow label={t.in("onboarding", "Rate")} value={<span className="tabular-nums">{`1 ${principal} = ${rate} ${second}`}</span>} /> : null}
+        <KWValueRow label={t.in("onboarding", "Accounts")} value={String(accountCount)} />
+      </KWGroupedCard>
+      <div className="flex flex-col gap-2">
+        <KWButton size="large" fill disabled={saving} onClick={() => onFinish("expense")} autoFocus>
           {t.in("onboarding", "Log first expense")}
-        </Button>
-        <Button size="lg" variant="secondary" className="flex-1" disabled={saving} onClick={() => onFinish("home")}>
+        </KWButton>
+        <KWButton variant="plain" fill disabled={saving} onClick={() => onFinish("home")}>
           {t.in("onboarding", "Go to home")}
-        </Button>
+        </KWButton>
       </div>
     </div>
   )
 }
-

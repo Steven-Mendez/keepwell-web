@@ -1,12 +1,12 @@
 "use client"
 
-import { ArrowDownIcon, ArrowUpIcon, ChevronLeftIcon, GripVerticalIcon, PlusIcon, RotateCcwIcon } from "lucide-react"
+import { GripVerticalIcon } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
-import { CategoryBadge, Page, PageHeader, Surface } from "@/components/kw/primitives"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
+import { KWButton, KWCircleButton, KWGroupedCard, KWLargeTitleHeader, KWSegmented } from "@/components/kw/design"
+import { KWIcon } from "@/components/kw/kw-icon"
+import { CategoryBadge, Page } from "@/components/kw/primitives"
 import { toast } from "@/components/ui/toast"
 import { useLedger } from "@/hooks/use-ledger"
 import { reorderCategories, restoreDefaultCategories } from "@/lib/domain"
@@ -16,7 +16,6 @@ import { ledgerStore } from "@/lib/repositories"
 import { isFallbackCategory, type TransactionCategory } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
-import { Segmented } from "../summary/category-card"
 import { CategoryEditorDialog, type EditorTarget } from "./category-editor-dialog"
 import { ConfirmDialog } from "./confirm-dialog"
 
@@ -80,38 +79,38 @@ export function CategoriesScreen() {
   })()
 
   return (
-    <Page className="max-w-3xl">
-      <Link href="/settings" className="-mb-2 inline-flex w-fit items-center gap-1 type-label text-link hover:text-link-hover">
-        <ChevronLeftIcon className="size-4" aria-hidden />
+    <Page>
+      <Link href="/settings" className="-mb-2 inline-flex w-fit items-center gap-1 rounded-md type-label text-link outline-none hover:text-link-hover focus-visible:ring-2 focus-visible:ring-ring">
+        <KWIcon name="chevronLeft" size={16} />
         {t.in("settings", "Settings")}
       </Link>
-      <PageHeader
+      <KWLargeTitleHeader
         title={t.in("settings", "Categories")}
-        actions={
-          <Button onClick={() => setEditor({ mode: "create", kind })}>
-            <PlusIcon data-icon="inline-start" />
+        trailing={
+          <KWButton icon="plus" onClick={() => setEditor({ mode: "create", kind })}>
             {t.in("settings", "New category")}
-          </Button>
+          </KWButton>
         }
       />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Segmented
-          label={t.in("settings", "Categories")}
+      <div className="flex flex-col gap-2">
+        <KWSegmented
+          aria-label={t.in("settings", "Categories")}
+          className="sm:max-w-sm"
           value={kind}
           onChange={setKind}
           options={[
-            { value: "expense", label: t.in("settings", "Expenses") },
-            { value: "income", label: t.in("settings", "Income") },
+            { value: "expense", title: t.in("settings", "Expenses") },
+            { value: "income", title: t.in("settings", "Income") },
           ]}
         />
-        <span className="type-caption text-muted-foreground">{t.in("web", "Drag to reorder, or use the arrows.")}</span>
+        <span className="px-1 type-caption text-muted-foreground">{t.in("web", "Drag to reorder, or use the arrows.")}</span>
       </div>
 
       {!ledger ? (
-        <Skeleton className="h-96 rounded-2xl" />
+        <div className="h-96 animate-pulse rounded-2xl bg-card" />
       ) : (
-        <Surface className="p-2">
-          <ol className="flex flex-col">
+        <KWGroupedCard>
+          <ol className="flex flex-col divide-y divide-divider">
             {listed.map((category) => {
               const index = movable.findIndex((candidate) => candidate.id === category.id)
               const isFallback = index < 0
@@ -139,7 +138,7 @@ export function CategoriesScreen() {
                     setOver(undefined)
                   }}
                   className={cn(
-                    "group flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors",
+                    "group flex min-h-14 items-center gap-2 px-2 transition-colors",
                     dragging === category.id && "opacity-40",
                     over === category.id && dragging !== category.id && "bg-accent-tint",
                   )}
@@ -150,33 +149,29 @@ export function CategoriesScreen() {
                   <button
                     type="button"
                     onClick={() => setEditor({ mode: "edit", category })}
-                    className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-1 text-left hover:bg-accent/50 focus-visible:bg-accent/50 focus-visible:outline-none"
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50"
                   >
                     <CategoryBadge category={category} />
-                    <span className="truncate type-label">{categoryName(t, category)}</span>
+                    <span className="min-w-0 flex-1 truncate type-body text-foreground">{categoryName(t, category)}</span>
+                    <KWIcon name="chevronRight" size={16} className="shrink-0 text-text-faint" />
                   </button>
                   {isFallback ? null : (
                     <span className="flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
-                      <Button variant="ghost" size="icon-sm" aria-label={t.in("settings", "Move up")} disabled={index === 0} onClick={() => move(category.id, index - 1)}>
-                        <ArrowUpIcon />
-                      </Button>
-                      <Button variant="ghost" size="icon-sm" aria-label={t.in("settings", "Move down")} disabled={index === movable.length - 1} onClick={() => move(category.id, index + 1)}>
-                        <ArrowDownIcon />
-                      </Button>
+                      <KWCircleButton icon="arrowUp" size={32} label={t.in("settings", "Move up")} disabled={index === 0} onClick={() => move(category.id, index - 1)} />
+                      <KWCircleButton icon="arrowDown" size={32} label={t.in("settings", "Move down")} disabled={index === movable.length - 1} onClick={() => move(category.id, index + 1)} />
                     </span>
                   )}
                 </li>
               )
             })}
           </ol>
-        </Surface>
+        </KWGroupedCard>
       )}
 
-      <div className="flex flex-col items-start gap-2">
-        <Button variant="ghost" className="text-link" onClick={() => setRestoreOpen(true)}>
-          <RotateCcwIcon data-icon="inline-start" />
+      <div className="flex flex-col gap-2">
+        <KWButton variant="surface" size="row" fill onClick={() => setRestoreOpen(true)}>
           {t.in("settings", "Restore default categories")}
-        </Button>
+        </KWButton>
         <p className="px-1 type-caption text-muted-foreground">{t.in("settings", "Deleting a category moves its movements to “%@”, which stays so they always have a place.", fallbackName)}</p>
       </div>
 

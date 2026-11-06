@@ -1,11 +1,9 @@
 "use client"
 
 import { useLiveQuery } from "dexie-react-hooks"
-import { WalletCardsIcon } from "lucide-react"
 
 import { useAppActions, type EditorRequest } from "@/components/app/app-actions"
-import { EmptyState } from "@/components/kw/primitives"
-import { Button } from "@/components/ui/button"
+import { KWButton, KWEmptyState } from "@/components/kw/design"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { getTransactionContext } from "@/lib/domain"
@@ -13,6 +11,7 @@ import { useT } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
 
 import { EditorForm } from "./editor-form"
+import { FlowHeader } from "./flow-parts"
 
 /**
  * Log or edit a movement (iOS CreateTransaction flow) in one desktop dialog: the form on the left,
@@ -23,8 +22,8 @@ export function MovementEditor() {
   return (
     <Dialog open={editor !== undefined} onOpenChange={(open) => (open ? undefined : closeEditor())}>
       <DialogContent
-        showCloseButton
-        className="flex max-h-[min(92vh,860px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl max-md:top-0 max-md:left-0 max-md:h-dvh max-md:max-h-none max-md:w-full max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none"
+        showCloseButton={false}
+        className="flex max-h-[min(92vh,880px)] flex-col gap-0 overflow-hidden rounded-[var(--radius-surface)] bg-background p-0 ring-1 ring-border sm:max-w-5xl max-md:top-0 max-md:left-0 max-md:h-dvh max-md:max-h-none max-md:w-full max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none"
       >
         {editor ? <EditorBody request={editor} onClose={closeEditor} /> : null}
       </DialogContent>
@@ -49,18 +48,25 @@ function EditorBody({ request, onClose }: { request: EditorRequest; onClose: () 
 
   if (context.accounts.length === 0) {
     return (
-      <div className="p-6">
+      <div className="flex flex-col gap-2 p-5">
+        <FlowHeader leading="close" onLeading={onClose} />
         <DialogTitle className="sr-only">{t.in("app", "New transaction")}</DialogTitle>
-        <EmptyState icon={WalletCardsIcon} title={t.in("app", "Add an account in Keepwell first.")} description={t.in("web", "Add an account or card first to log transactions.")}>
-          <Button
-            onClick={() => {
-              onClose()
-              openAddAccount()
-            }}
-          >
-            {t.in("accounts", "Add account or card")}
-          </Button>
-        </EmptyState>
+        <KWEmptyState
+          icon="tabAccounts"
+          title={t.in("app", "Add an account in Keepwell first.")}
+          message={t.in("web", "Add an account or card first to log transactions.")}
+          action={
+            <KWButton
+              icon="addCard"
+              onClick={() => {
+                onClose()
+                openAddAccount()
+              }}
+            >
+              {t.in("accounts", "Add account or card")}
+            </KWButton>
+          }
+        />
       </div>
     )
   }

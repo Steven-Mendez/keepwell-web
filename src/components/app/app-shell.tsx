@@ -100,7 +100,7 @@ function TopBar() {
     <header
       className={cn(
         "sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b px-(--gutter) transition-colors md:px-8",
-        isScrolled ? "border-divider bg-background/85 backdrop-blur-xl" : "border-transparent bg-background",
+        isScrolled ? "border-divider bg-background/85 backdrop-blur-xl" : "border-transparent bg-transparent",
       )}
     >
       <KWCircleButton icon={<PanelLeftIcon className="size-5" strokeWidth={2} aria-hidden />} label={t.in("web", "Toggle sidebar")} shortcut="⌘B" onClick={toggleSidebar} />

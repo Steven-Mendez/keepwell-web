@@ -1,12 +1,12 @@
 "use client"
 
-import { PlusIcon, WalletIcon } from "lucide-react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
-import { CardArt, EmptyState, Page, PageHeader, Surface } from "@/components/kw/primitives"
-import { Button } from "@/components/ui/button"
+import { KWButton, KWCircleButton, KWEmptyState, KWLargeTitleHeader, KWSectionHeader } from "@/components/kw/design"
+import { KWIcon } from "@/components/kw/kw-icon"
+import { CardArt, Page } from "@/components/kw/primitives"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useLedger, usePreferredName, useTransactionDisplay } from "@/hooks/use-ledger"
@@ -77,23 +77,29 @@ function Accounts() {
 
   const holder = owner ? owner.toLocaleUpperCase(t.locale) : undefined
   const isEmpty = ledger.accounts.length === 0
-  const addButton = (
-    <Button onClick={() => openAddAccount()}>
-      <PlusIcon data-icon="inline-start" />
-      {t.in("accounts", "Add account or card")}
-    </Button>
-  )
+  const add = () => openAddAccount()
   const detail = current ? <AccountDetail key={current} ledger={ledger} display={display} accountId={current} onDeleted={() => select(undefined)} /> : null
 
   return (
-    <Page className="max-w-7xl">
-      <PageHeader title={t.in("accounts", "Accounts")} subtitle={t.in("accounts", "Net worth %@", formatMoney(overview.netWorth))} actions={addButton} />
+    <Page>
+      <KWLargeTitleHeader
+        title={t.in("accounts", "Accounts")}
+        subtitle={<span className="tabular-nums">{t.in("accounts", "Net worth %@", formatMoney(overview.netWorth))}</span>}
+        trailing={<KWCircleButton icon="plus" variant="white" label={t.in("accounts", "Add account or card")} onClick={add} />}
+      />
       {isEmpty ? (
-        <Surface>
-          <EmptyState icon={WalletIcon} title={t.in("accounts", "Add account or card")} description={t.in("addcard", "Your bank account, shown as its card: balance, bank and last 4")}>
-            {addButton}
-          </EmptyState>
-        </Surface>
+        <div className="rounded-2xl bg-card">
+          <KWEmptyState
+            icon="wallet"
+            title={t.in("accounts", "Add account or card")}
+            message={t.in("addcard", "Your bank account, shown as its card: balance, bank and last 4")}
+            action={
+              <KWButton icon="plus" onClick={add}>
+                {t.in("accounts", "Add account or card")}
+              </KWButton>
+            }
+          />
+        </div>
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,440px)]">
           <div className="flex min-w-0 flex-col gap-8">
@@ -146,15 +152,18 @@ function Accounts() {
             </Group>
           </div>
           {isWide ? (
-            <Surface className="sticky top-6 max-h-[calc(100svh-3rem)] overflow-y-auto p-5">{detail ?? <p className="py-10 text-center type-body text-muted-foreground">{t.in("web", "Select an account to see its details.")}</p>}</Surface>
+            <aside className="sticky top-20 max-h-[calc(100svh-6rem)] overflow-y-auto rounded-2xl bg-nav p-5 ring-1 ring-divider">
+              {detail ?? <p className="py-10 text-center type-body text-muted-foreground">{t.in("web", "Select an account to see its details.")}</p>}
+            </aside>
           ) : null}
         </div>
       )}
       {!isWide ? (
         <Sheet open={current !== undefined} onOpenChange={(open) => !open && select(undefined)}>
-          <SheetContent side="right" className="w-full overflow-y-auto p-5 data-[side=right]:sm:max-w-md">
-            <SheetHeader className="p-0">
-              <SheetTitle>{current ? accountName(ledger.accounts.find((account) => account.id === current) ?? { name: "" }) : ""}</SheetTitle>
+          <SheetContent side="right" showCloseButton={false} className="w-full gap-5 overflow-y-auto border-l border-divider bg-nav p-5 data-[side=right]:sm:max-w-md">
+            <SheetHeader className="flex-row items-center gap-3 p-0">
+              <KWCircleButton icon="chevronLeft" label={t.in("web", "Back")} onClick={() => select(undefined)} />
+              <SheetTitle className="min-w-0 truncate type-heading">{current ? accountName(ledger.accounts.find((account) => account.id === current) ?? { name: "" }) : ""}</SheetTitle>
             </SheetHeader>
             {detail}
           </SheetContent>
@@ -168,7 +177,7 @@ function Group({ title, hidden, children }: { title: string; hidden: boolean; ch
   if (hidden) return null
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="type-heading">{title}</h2>
+      <KWSectionHeader title={title} style="large" />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{children}</div>
     </section>
   )
@@ -182,8 +191,8 @@ function AccountTile({ art, title, value, secondary, negative, label, isSelected
       aria-label={label}
       aria-current={isSelected ? "true" : undefined}
       className={cn(
-        "group flex flex-col gap-3 rounded-2xl p-2 text-left transition-colors outline-none hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring",
-        isSelected && "bg-accent ring-1 ring-ring/50",
+        "group flex flex-col gap-3 rounded-[22px] p-2 text-left transition-colors outline-none hover:bg-card focus-visible:ring-2 focus-visible:ring-ring",
+        isSelected && "bg-card ring-1 ring-white/20",
       )}
     >
       <div className="transition-transform group-hover:-translate-y-0.5">{art}</div>
@@ -198,12 +207,14 @@ function AccountTile({ art, title, value, secondary, negative, label, isSelected
   )
 }
 
-/** Cash has no plastic: an envelope-like tile in the positive hue. */
+/** Cash has no plastic: a `surface` tile with the iOS cash glyph in the positive hue. */
 function CashArt({ name }: { name: string }) {
   return (
-    <div className="relative flex aspect-[1.586] w-full flex-col justify-between overflow-hidden rounded-xl bg-positive-tint p-3 text-positive">
-      <WalletIcon className="size-6" aria-hidden />
-      <span className="truncate type-caption font-semibold">{name}</span>
+    <div className="relative flex aspect-[1.586] w-full flex-col justify-between overflow-hidden rounded-[18px] bg-card p-3 ring-1 ring-divider">
+      <span className="flex size-10 items-center justify-center rounded-full bg-positive-tint text-positive">
+        <KWIcon name="cash" size={20} />
+      </span>
+      <span className="truncate type-label text-foreground">{name}</span>
     </div>
   )
 }

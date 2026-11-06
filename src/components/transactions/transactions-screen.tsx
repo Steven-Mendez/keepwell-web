@@ -1,17 +1,16 @@
 "use client"
 
-import { PlusIcon, ReceiptIcon, SearchIcon, XIcon } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
 import { FOCUS_SEARCH_EVENT } from "@/components/app/keyboard-shortcuts"
 import { OptionSelect } from "@/components/kw/pickers"
-import { EmptyState, Page, PageHeader, Surface } from "@/components/kw/primitives"
+import { KWButton, KWChip, KWCircleButton, KWEmptyState, KWLargeTitleHeader, KWSectionHeader } from "@/components/kw/design"
+import { KWIcon } from "@/components/kw/kw-icon"
+import { Page } from "@/components/kw/primitives"
 import { TransactionRow } from "@/components/kw/transaction-row"
-import { Button } from "@/components/ui/button"
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Kbd } from "@/components/ui/kbd"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useLedger, useTransactionDisplay } from "@/hooks/use-ledger"
 import {
   TRANSACTION_FILTERS,
@@ -89,28 +88,30 @@ export function TransactionsScreen() {
 
   return (
     <Page>
-      <PageHeader
+      <KWLargeTitleHeader
         title={t.in("transactions", "Transactions")}
-        actions={
-          <Button onClick={() => openEditor(scopedAccount ? { mode: "create", accountId: scopedAccount.id } : undefined)}>
-            <PlusIcon data-icon="inline-start" />
-            {t.in("transactions", "New transaction")}
-          </Button>
-        }
+        trailing={<KWCircleButton icon="plus" variant="white" label={t.in("transactions", "New transaction")} shortcut="N" onClick={() => openEditor(scopedAccount ? { mode: "create", accountId: scopedAccount.id } : undefined)} />}
       />
 
       {isEmpty ? (
-        <Surface>
-          <EmptyState icon={ReceiptIcon} title={t.in("transactions", "No transactions yet")} description={t.in("transactions", "Log your first expense, income or transfer and it shows up here.")}>
-            <Button onClick={() => openEditor()}>{t.in("transactions", "Log transaction")}</Button>
-          </EmptyState>
-        </Surface>
+        <div className="rounded-2xl bg-card">
+          <KWEmptyState
+            icon="list"
+            title={t.in("transactions", "No transactions yet")}
+            message={t.in("transactions", "Log your first expense, income or transfer and it shows up here.")}
+            action={
+              <KWButton icon="plus" shortcut="N" onClick={() => openEditor()}>
+                {t.in("transactions", "Log transaction")}
+              </KWButton>
+            }
+          />
+        </div>
       ) : (
         <>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <InputGroup className="h-10 lg:max-w-md">
-              <InputGroupAddon>
-                <SearchIcon />
+            <InputGroup className="rounded-full border-transparent bg-card lg:max-w-md">
+              <InputGroupAddon className="pl-3.5 text-muted-foreground">
+                <KWIcon name="search" size={18} />
               </InputGroupAddon>
               <InputGroupInput
                 ref={search}
@@ -127,16 +128,16 @@ export function TransactionsScreen() {
               />
               <InputGroupAddon align="inline-end">
                 {text ? (
-                  <InputGroupButton size="icon-xs" onClick={() => setText("")} aria-label={t.in("transactions", "Clear search")}>
-                    <XIcon />
-                  </InputGroupButton>
+                  <button type="button" className="mr-1 flex size-8 items-center justify-center rounded-full bg-secondary text-text-secondary hover:text-foreground" onClick={() => setText("")} aria-label={t.in("transactions", "Clear search")}>
+                    <KWIcon name="close" size={14} />
+                  </button>
                 ) : (
-                  <Kbd>/</Kbd>
+                  <Kbd className="mr-1.5">/</Kbd>
                 )}
               </InputGroupAddon>
             </InputGroup>
             <OptionSelect
-              className="h-10 lg:w-72"
+              className="rounded-full border-transparent bg-card lg:w-72"
               value={scope.kind === "all" ? "" : scope.id}
               onChange={(value) => setScope(value ? { kind: "account", id: value } : { kind: "all" })}
               aria-label={t.in("transactions", "Show movements from")}
@@ -146,50 +147,44 @@ export function TransactionsScreen() {
               ]}
             />
           </div>
-          <ToggleGroup
-            value={[filter]}
-            onValueChange={(value: string[]) => {
-              const next = value[0] as TransactionFilter | undefined
-              if (next) setFilter(next)
-            }}
-            variant="outline"
-            className="flex-wrap"
-          >
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t.in("transactions", "Transactions")}>
             {TRANSACTION_FILTERS.map((option) => (
-              <ToggleGroupItem key={option} value={option} className="rounded-full px-4">
+              <KWChip key={option} selected={filter === option} onClick={() => setFilter(option)}>
                 {filterLabel(t, option)}
-              </ToggleGroupItem>
+              </KWChip>
             ))}
-          </ToggleGroup>
+          </div>
 
           {scopedAccount && scopedBalances ? (
-            <Surface className="flex flex-wrap items-end justify-between gap-3 p-4">
-              <div>
-                <p className="type-label text-text-secondary">{t.in("transactions", scopedAccount.kind === "credit" ? "Current debt" : "Available balance")}</p>
+            <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl bg-card p-[18px]">
+              <div className="flex flex-col gap-0.5">
+                <p className="type-label font-normal text-muted-foreground">{t.in("transactions", scopedAccount.kind === "credit" ? "Current debt" : "Available balance")}</p>
                 <p className="type-amount-lg">{formatMoney(netWorth(scopedBalances, ledger.settings.currencies))}</p>
                 {scopedBalances.length > 1 ? <p className="type-caption text-muted-foreground tabular-nums">{joinedMoney(scopedBalances)}</p> : null}
               </div>
-              <Button variant="ghost" onClick={() => setScope({ kind: "all" })}>
+              <KWButton variant="secondary" onClick={() => setScope({ kind: "all" })}>
                 {t.in("transactions", "Show all accounts")}
-              </Button>
-            </Surface>
+              </KWButton>
+            </div>
           ) : null}
 
           {filter === "planned" ? <p className="type-caption text-muted-foreground">{t.in("transactions", "Drafts · they don't affect balances")}</p> : null}
 
           {groups.length === 0 ? (
-            <Surface>
-              <EmptyState icon={SearchIcon} title={text ? t.in("transactions", "Nothing matches. Try another word or filter.") : t.in("transactions", "No movements here yet.")} />
-            </Surface>
+            <div className="rounded-2xl bg-card">
+              <KWEmptyState icon="search" title={text ? t.in("transactions", "Nothing matches. Try another word or filter.") : t.in("transactions", "No movements here yet.")} />
+            </div>
           ) : (
             <div className="flex flex-col gap-4">
               {groups.map(([key, transactions]) => (
-                <Surface key={key} className="p-1.5">
-                  <h2 className="px-3 pt-2 pb-1 type-caption font-semibold text-muted-foreground">{dayLabel(t, new Date(transactions[0]!.date))}</h2>
-                  {transactions.map((transaction) => (
-                    <TransactionRow key={transaction.id} transaction={transaction} display={display} onSelect={(tx) => showDetail(tx.id)} isSelected={detailId === transaction.id} />
-                  ))}
-                </Surface>
+                <section key={key} className="flex flex-col gap-2">
+                  <KWSectionHeader title={dayLabel(t, new Date(transactions[0]!.date))} />
+                  <div className="rounded-2xl bg-card p-1.5">
+                    {transactions.map((transaction) => (
+                      <TransactionRow key={transaction.id} transaction={transaction} display={display} onSelect={(tx) => showDetail(tx.id)} isSelected={detailId === transaction.id} />
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           )}

@@ -1,10 +1,9 @@
 "use client"
 
-import { ArrowLeftRightIcon, BanknoteIcon, CheckIcon, PlusIcon, SearchIcon } from "lucide-react"
 import { useMemo, useState } from "react"
 
+import { KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
 import { CategoryBadge } from "@/components/kw/primitives"
-import { Input } from "@/components/ui/input"
 import { folded, sourceKey, type PaymentSource } from "@/lib/domain"
 import { useT } from "@/lib/i18n"
 import { categoryName } from "@/lib/presentation/display"
@@ -13,30 +12,18 @@ import { isFallbackCategory } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
 import type { MethodGroup, Thumbnail } from "./editor-model"
+import { RadioMark } from "./flow-parts"
 
-/** The plastic, banknote or transfer tile that stands for a method (iOS `MethodRow.Thumbnail`). */
+/** The plastic, banknote or transfer tile that stands for a method (iOS `MethodRow` thumbnail, KWMiniCard). */
 export function MethodThumbnail({ thumbnail }: { thumbnail: Thumbnail }) {
-  if (thumbnail.kind === "card") {
-    const art = thumbnail.color ?? "azul"
-    return (
-      <span
-        className="relative inline-flex h-7 w-11 shrink-0 overflow-hidden rounded-[5px] shadow-depth"
-        style={{ backgroundImage: `linear-gradient(135deg, var(--card-art-${art}-from), var(--card-art-${art}-to))` }}
-        aria-hidden
-      >
-        <span className="absolute top-2 left-1.5 h-2 w-2.5 rounded-[2px]" style={{ backgroundImage: "linear-gradient(135deg, var(--card-art-chip-from), var(--card-art-chip-to))" }} />
-      </span>
-    )
-  }
-  const Icon = thumbnail.kind === "cash" ? BanknoteIcon : ArrowLeftRightIcon
-  return (
-    <span className={cn("inline-flex h-7 w-11 shrink-0 items-center justify-center rounded-[5px]", thumbnail.kind === "cash" ? "bg-positive-tint text-positive" : "bg-accent-tint text-link")} aria-hidden>
-      <Icon className="size-4" />
-    </span>
-  )
+  if (thumbnail.kind === "card") return <KWMiniCard color={thumbnail.color} />
+  return <KWMiniCard kind={thumbnail.kind === "cash" ? "cash" : "transfer"} />
 }
 
-/** A selectable row of a list (method, account): radio semantics inside a `role="radiogroup"`. */
+/**
+ * A selectable row (method, account), like the iOS flow rows: on the `surface` card, title 15/600,
+ * muted subtitle, the green check on the chosen one. Radio semantics inside a `radiogroup`.
+ */
 export function ChoiceRow({
   selected,
   onSelect,
@@ -58,39 +45,40 @@ export function ChoiceRow({
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
-      className={cn(
-        "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        selected ? "bg-accent-tint ring-ring/70" : "ring-transparent hover:bg-accent/60",
-      )}
+      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50"
     >
       <MethodThumbnail thumbnail={thumbnail} />
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate type-label">{title}</span>
-        {subtitle ? <span className="truncate type-caption text-muted-foreground">{subtitle}</span> : null}
+        <span className="truncate type-body font-semibold text-foreground">{title}</span>
+        {subtitle ? <span className="truncate type-caption-sm text-muted-foreground">{subtitle}</span> : null}
       </span>
       {trailing ? <span className="shrink-0 type-caption text-muted-foreground tabular-nums">{trailing}</span> : null}
-      <CheckIcon className={cn("size-4 shrink-0 text-link", selected ? "opacity-100" : "opacity-0")} aria-hidden />
+      <RadioMark selected={selected} />
     </button>
   )
 }
 
+const GROUP = "flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card"
+
 export function MethodPicker({ groups, value, onChange }: { groups: MethodGroup[]; value: PaymentSource | undefined; onChange: (source: PaymentSource) => void }) {
   const selected = value ? sourceKey(value) : undefined
   return (
-    <div className="flex flex-col gap-3" role="radiogroup">
+    <div className="flex flex-col gap-4" role="radiogroup">
       {groups.map((group) => (
-        <div key={group.title} className="flex flex-col gap-1">
-          <span className="px-1 type-caption-sm text-muted-foreground">{group.title}</span>
-          {group.rows.map((row) => (
-            <ChoiceRow
-              key={sourceKey(row.source)}
-              selected={sourceKey(row.source) === selected}
-              onSelect={() => onChange(row.source)}
-              thumbnail={row.thumbnail}
-              title={row.title}
-              subtitle={row.subtitle}
-            />
-          ))}
+        <div key={group.title} className="flex flex-col gap-2">
+          <span className="px-1 type-caption font-semibold text-muted-foreground">{group.title}</span>
+          <div className={GROUP}>
+            {group.rows.map((row) => (
+              <ChoiceRow
+                key={sourceKey(row.source)}
+                selected={sourceKey(row.source) === selected}
+                onSelect={() => onChange(row.source)}
+                thumbnail={row.thumbnail}
+                title={row.title}
+                subtitle={row.subtitle}
+              />
+            ))}
+          </div>
         </div>
       ))}
     </div>
@@ -109,7 +97,7 @@ export function AccountPicker({
   describe: (account: Account) => { title: string; subtitle?: string | undefined; trailing?: string | undefined; thumbnail: Thumbnail }
 }) {
   return (
-    <div className="flex flex-col gap-1" role="radiogroup">
+    <div className={GROUP} role="radiogroup">
       {accounts.map((account) => {
         const row = describe(account)
         return <ChoiceRow key={account.id} selected={account.id === value} onSelect={() => onChange(account.id)} {...row} />
@@ -120,7 +108,10 @@ export function AccountPicker({
 
 const COLLAPSED_COUNT = 11
 
-/** Category tiles, the usual ones first, with search and "New category" (iOS CategoryView). */
+/**
+ * Category tiles (iOS CategoryView): 96 px tiles on `surface`, the chosen one white with black
+ * text, "New category" dashed; search in a `surface` capsule; the usual ones first.
+ */
 export function CategoryPicker({
   categories,
   usage,
@@ -158,12 +149,18 @@ export function CategoryPicker({
   if (chosen && !visible.includes(chosen)) visible[visible.length - 1] = chosen
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="relative">
-        <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.in("createtransaction", "Search category")} className="h-9 pl-8" data-editor-category-search />
-      </div>
-      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4" role="radiogroup" aria-label={t.in("createtransaction", "Category")}>
+    <div className="flex flex-col gap-3">
+      <label className="flex h-10 items-center gap-2 rounded-full bg-card px-4 text-muted-foreground focus-within:ring-2 focus-within:ring-ring">
+        <KWIcon name="search" size={18} />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t.in("createtransaction", "Search category")}
+          className="min-w-0 flex-1 bg-transparent type-body text-foreground outline-none placeholder:text-muted-foreground"
+          data-editor-category-search
+        />
+      </label>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" role="radiogroup" aria-label={t.in("createtransaction", "Category")}>
         {visible.map((category) => {
           const selected = category.id === value
           return (
@@ -174,28 +171,28 @@ export function CategoryPicker({
               aria-checked={selected}
               onClick={() => onChange(category.id)}
               className={cn(
-                "flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl px-1.5 py-2 text-center ring-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                selected ? "bg-accent-tint ring-ring/70" : "bg-secondary/40 ring-transparent hover:bg-accent/70",
+                "flex h-24 flex-col items-center justify-center gap-2 rounded-[18px] px-2 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                selected ? "bg-white text-black" : "bg-card text-foreground hover:bg-secondary",
               )}
             >
               <CategoryBadge category={category} size="sm" />
-              <span className="line-clamp-2 type-caption-sm leading-tight">{categoryName(t, category)}</span>
+              <span className={cn("line-clamp-2 type-caption leading-tight", selected ? "font-bold" : "font-semibold")}>{categoryName(t, category)}</span>
             </button>
           )
         })}
         <button
           type="button"
           onClick={onCreate}
-          className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border px-1.5 py-2 text-center text-muted-foreground transition-colors outline-none hover:bg-accent/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex h-24 flex-col items-center justify-center gap-2 rounded-[18px] border-[1.5px] border-dashed border-control-off px-2 text-center text-muted-foreground transition-colors outline-none hover:bg-card hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="inline-flex size-8 items-center justify-center rounded-full bg-secondary">
-            <PlusIcon className="size-4" aria-hidden />
+            <KWIcon name="plus" size={16} strokeWidth={2.2} />
           </span>
-          <span className="type-caption-sm leading-tight">{t.in("createtransaction", "New category")}</span>
+          <span className="type-caption font-semibold leading-tight">{t.in("createtransaction", "New category")}</span>
         </button>
       </div>
       {!searching && ordered.length > COLLAPSED_COUNT ? (
-        <button type="button" onClick={() => setExpanded((open) => !open)} className="self-start px-1 type-label text-link hover:text-link-hover">
+        <button type="button" onClick={() => setExpanded((open) => !open)} className="self-start px-1 type-label text-link transition-colors hover:text-link-hover">
           {expanded ? t.in("web", "Show fewer") : t.in("createtransaction", "See all %lld", ordered.length)}
         </button>
       ) : null}

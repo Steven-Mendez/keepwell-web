@@ -1,16 +1,14 @@
 "use client"
 
-import { KeyboardIcon } from "lucide-react"
 import { useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
-import { CardArt, DetailGroup, Page, PageHeader } from "@/components/kw/primitives"
-import { Button } from "@/components/ui/button"
+import { KWGroupedCard, KWLargeTitleHeader, KWSectionHeader } from "@/components/kw/design"
+import { KWMiniCard } from "@/components/kw/kw-icon"
+import { OptionSelect } from "@/components/kw/pickers"
+import { Page } from "@/components/kw/primitives"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Kbd } from "@/components/ui/kbd"
-import { OptionSelect } from "@/components/kw/pickers"
-import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/toast"
 import { useLedger, usePreferredName } from "@/hooks/use-ledger"
 import { PREFERRED_NAME_MAX_LENGTH, compareExpiry, normalizedPreferredName, paymentMethodGroups, updateSettings, type Ledger } from "@/lib/domain"
@@ -21,7 +19,7 @@ import type { Card } from "@/lib/schema"
 
 import { CurrencySection } from "./currency-section"
 import { DataSection } from "./data-section"
-import { SettingsLinkRow, SettingsRow, SettingsSection } from "./settings-rows"
+import { SETTINGS_INPUT, SettingsLinkRow, SettingsRow, SettingsSection } from "./settings-rows"
 
 /** iOS SettingsViewModel.reminderOptions. */
 const REMINDER_OPTIONS = [1, 2, 3, 5, 7] as const
@@ -32,12 +30,12 @@ export function SettingsScreen() {
   const ledger = useLedger()
 
   return (
-    <Page className="max-w-5xl">
-      <PageHeader title={t.in("settings", "Settings")} />
+    <Page>
+      <KWLargeTitleHeader title={t.in("settings", "Settings")} />
       {!ledger ? (
         <div className="grid gap-6 lg:grid-cols-2">
-          <Skeleton className="h-80 rounded-2xl" />
-          <Skeleton className="h-80 rounded-2xl" />
+          <div className="h-80 animate-pulse rounded-2xl bg-card" />
+          <div className="h-80 animate-pulse rounded-2xl bg-card" />
         </div>
       ) : (
         <div className="grid items-start gap-8 lg:grid-cols-2">
@@ -71,7 +69,7 @@ function ProfileSection({ t }: { t: Translator }) {
       <SettingsRow label={t.in("settings", "Your name")} htmlFor="preferred-name">
         <Input
           id="preferred-name"
-          className="w-56"
+          className={`w-56 ${SETTINGS_INPUT}`}
           maxLength={PREFERRED_NAME_MAX_LENGTH}
           placeholder={t.in("settings", "For the greeting")}
           value={text ?? stored ?? ""}
@@ -139,9 +137,9 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
       <SettingsLinkRow label={t.in("settings", "Income categories")} value={income} href="/settings/categories#income" />
       <SettingsLinkRow label={t.in("settings", "Payment methods")} value={ledger.cards.length} onClick={() => setMethodsOpen(true)} />
       <Dialog open={methodsOpen} onOpenChange={setMethodsOpen}>
-        <DialogContent className="max-h-[85svh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="max-h-[85svh] gap-5 overflow-y-auto rounded-2xl bg-background p-6 ring-1 ring-border/60 sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{t.in("settings", "Payment methods")}</DialogTitle>
+            <DialogTitle className="type-heading">{t.in("settings", "Payment methods")}</DialogTitle>
           </DialogHeader>
           {groups.length === 0 ? (
             <p className="type-body text-muted-foreground">{t.in("settings", "Add a bank account or a card from Accounts to see it here.")}</p>
@@ -149,17 +147,13 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
             <div className="flex flex-col gap-5">
               {groups.map(({ account, methods }) => (
                 <div key={account.id} className="flex flex-col gap-2">
-                  <h3 className="type-label text-text-secondary">{accountName(account)}</h3>
-                  <DetailGroup>
+                  <KWSectionHeader title={accountName(account)} />
+                  <KWGroupedCard>
                     {methods.map((card) => (
-                      <div key={card.id} className="flex items-center gap-3 px-3 py-2.5">
-                        {card.kind === "transfer" ? (
-                          <span className="flex h-8 w-12 items-center justify-center rounded-md bg-secondary type-micro text-muted-foreground">⇄</span>
-                        ) : (
-                          <CardArt className="w-12 rounded-md! p-1!" size="sm" color={card.color} bank="" kind={card.kind} />
-                        )}
+                      <div key={card.id} className="flex min-h-12 items-center gap-3 px-4 py-2.5">
+                        {card.kind === "transfer" ? <KWMiniCard kind="transfer" /> : <KWMiniCard color={card.color} />}
                         <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="truncate type-label">{methodTitle(t, card, account)}</span>
+                          <span className="truncate type-label text-foreground">{methodTitle(t, card, account)}</span>
                           <span className="truncate type-caption text-muted-foreground">
                             {card.kind === "transfer"
                               ? t.in("settings", "Charged straight to the account")
@@ -168,7 +162,7 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
                         </span>
                       </div>
                     ))}
-                  </DetailGroup>
+                  </KWGroupedCard>
                 </div>
               ))}
             </div>
@@ -195,13 +189,7 @@ function ShortcutsSection({ t }: { t: Translator }) {
   const { setShortcutsOpen } = useAppActions()
   return (
     <SettingsSection title={t.in("web", "Keyboard shortcuts")}>
-      <SettingsRow label={t.in("web", "Show shortcuts")}>
-        <Kbd>?</Kbd>
-        <Button variant="secondary" size="sm" onClick={() => setShortcutsOpen(true)}>
-          <KeyboardIcon data-icon="inline-start" />
-          {t.in("web", "Keyboard shortcuts")}
-        </Button>
-      </SettingsRow>
+      <SettingsLinkRow label={t.in("web", "Show shortcuts")} value="?" onClick={() => setShortcutsOpen(true)} />
     </SettingsSection>
   )
 }

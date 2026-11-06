@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent, type ReactNode } from "react"
 
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { KWButton, kwButtonClass } from "@/components/kw/design"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { OptionSelect } from "@/components/kw/pickers"
@@ -14,7 +14,7 @@ import type { Account, Card, CardNetwork } from "@/lib/schema"
 import { networkName } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
 
-import { AmountInput, LabeledField, NETWORKS, digitsOnly, domainErrorText } from "./form-parts"
+import { AmountInput, KW_INPUT, LabeledField, NETWORKS, digitsOnly, domainErrorText } from "./form-parts"
 
 /** A small edit dialog: the fields, then Save. `onSubmit` throws to keep it open. */
 function EditDialog({ open, onOpenChange, title, description, children, onSubmit }: { open: boolean; onOpenChange: (open: boolean) => void; title: ReactNode; description?: ReactNode; children: ReactNode; onSubmit: () => Promise<boolean> }) {
@@ -31,20 +31,20 @@ function EditDialog({ open, onOpenChange, title, description, children, onSubmit
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="gap-5 rounded-2xl bg-nav p-6 ring-divider sm:max-w-md">
         <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            {description ? <DialogDescription>{description}</DialogDescription> : null}
+            <DialogTitle className="type-heading text-foreground">{title}</DialogTitle>
+            {description ? <DialogDescription className="type-body text-muted-foreground">{description}</DialogDescription> : null}
           </DialogHeader>
           <div className="flex flex-col gap-4">{children}</div>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="-mx-6 -mb-6 rounded-b-2xl border-divider bg-transparent px-6 pb-6">
+            <KWButton type="button" variant="plain" onClick={() => onOpenChange(false)}>
               {t.in("web", "Cancel")}
-            </Button>
-            <Button type="submit" disabled={busy}>
+            </KWButton>
+            <KWButton type="submit" disabled={busy}>
               {t.in("creditcard", "Save")}
-            </Button>
+            </KWButton>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -84,7 +84,7 @@ export function RenameDialog({ account, open, onOpenChange }: { account: Account
       }}
     >
       <LabeledField id="account-name" label={t.in("sharedpresentation", "Account name")} error={error}>
-        <Input id="account-name" value={name} maxLength={40} autoFocus onChange={(event) => setName(event.target.value)} aria-invalid={error ? true : undefined} />
+        <Input className={KW_INPUT} id="account-name" value={name} maxLength={40} autoFocus onChange={(event) => setName(event.target.value)} aria-invalid={error ? true : undefined} />
       </LabeledField>
     </EditDialog>
   )
@@ -130,7 +130,7 @@ export function ProductExpiryDialog({ card, open, onOpenChange }: { card: Card; 
       }}
     >
       <LabeledField id="card-product" label={t.in("sharedpresentation", "Product name (e.g. Platinum)")}>
-        <Input id="card-product" value={product} maxLength={30} onChange={(event) => setProduct(event.target.value)} />
+        <Input className={KW_INPUT} id="card-product" value={product} maxLength={30} onChange={(event) => setProduct(event.target.value)} />
       </LabeledField>
       <div className="grid grid-cols-2 gap-3">
         <LabeledField id="card-month" label={t.in("sharedpresentation", "Expiry month")}>
@@ -154,7 +154,7 @@ export function ProductExpiryDialog({ card, open, onOpenChange }: { card: Card; 
         </LabeledField>
       </div>
       {error ? (
-        <p role="alert" className="type-caption text-destructive">
+        <p role="alert" className="type-caption text-negative">
           {error}
         </p>
       ) : null}
@@ -192,7 +192,7 @@ export function CardNumberDialog({ card, open, onOpenChange }: { card: Card; ope
     >
       <div className="grid grid-cols-2 gap-3">
         <LabeledField id="card-digits" label={t.in("addcard", "Last 4 digits")} error={error}>
-          <Input id="card-digits" inputMode="numeric" className="tracking-widest tabular-nums" placeholder="0000" value={digits} autoFocus onChange={(event) => setDigits(digitsOnly(event.target.value))} />
+          <Input id="card-digits" inputMode="numeric" className={`${KW_INPUT} tracking-widest tabular-nums`} placeholder="0000" value={digits} autoFocus onChange={(event) => setDigits(digitsOnly(event.target.value))} />
         </LabeledField>
         <LabeledField id="card-network" label={t.in("addcard", "Network")}>
           <OptionSelect<CardNetwork | "">
@@ -272,15 +272,16 @@ export function DeleteAccountDialog({ account, displayName, movementCount, open,
       : t.in("accounts", "The account, its card and its %lld movements are deleted, including transfers with your other accounts, so their balances change too. This can't be undone.", movementCount)
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="rounded-2xl bg-nav p-6 ring-divider">
         <AlertDialogHeader>
-          <AlertDialogTitle>{t.in("accounts", "Delete %@?", displayName)}</AlertDialogTitle>
-          <AlertDialogDescription>{message}</AlertDialogDescription>
+          <AlertDialogTitle className="type-heading text-foreground">{t.in("accounts", "Delete %@?", displayName)}</AlertDialogTitle>
+          <AlertDialogDescription className="type-body text-muted-foreground">{message}</AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t.in("web", "Cancel")}</AlertDialogCancel>
-          <AlertDialogAction
+        <AlertDialogFooter className="-mx-6 -mb-6 rounded-b-2xl border-divider bg-transparent px-6 pb-6">
+          <AlertDialogCancel render={<button type="button" className={kwButtonClass({ variant: "plain", size: "regular" })} />}>{t.in("web", "Cancel")}</AlertDialogCancel>
+          <KWButton
             variant="destructive"
+            icon="trash"
             disabled={busy}
             onClick={() => {
               setBusy(true)
@@ -294,7 +295,7 @@ export function DeleteAccountDialog({ account, displayName, movementCount, open,
             }}
           >
             {t.in("accounts", "Delete account")}
-          </AlertDialogAction>
+          </KWButton>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

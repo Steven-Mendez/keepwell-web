@@ -178,6 +178,19 @@
   font-weight: var(--type-micro-weight);
 }
 
+/*
+ * One control height: shadcn's fields default to 32 px and its buttons vary, while Keepwell lines
+ * every regular control up at 40 px (see src/components/kw/DESIGN.md). Unlayered, so it wins over
+ * the components' own h-* utilities; compact controls inside rows use the kw 32 px sizes instead.
+ */
+[data-slot="input"],
+[data-slot="input-group"],
+[data-slot="select-trigger"][data-size="default"],
+[data-slot="native-select"] {
+  height: --spacing(10);
+  border-radius: var(--radius-input);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

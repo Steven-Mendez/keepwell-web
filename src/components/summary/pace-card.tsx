@@ -85,7 +85,7 @@ export function PaceCard({ t, f, report, selectedIndex, className }: { t: Transl
               const row = active ? (payload?.[0]?.payload as (typeof data)[number] | undefined) : undefined
               if (!row) return null
               return (
-                <div className="grid min-w-40 gap-1 rounded-lg bg-popover px-3 py-2 type-caption shadow-depth ring-1 ring-border">
+                <div className="grid min-w-40 gap-1 rounded-xl bg-secondary px-3 py-2 type-caption shadow-depth">
                   <span className="type-label">
                     {t.in("summary", "Day")} {label}
                   </span>
