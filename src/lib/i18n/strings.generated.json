@@ -2472,6 +2472,9 @@
   "%@ over": {
    "es": "%@ por encima"
   },
+  "%@ since %@": {
+   "es": "%1$@ desde %2$@"
+  },
   "%@ total: %@": {
    "es": "Total de %1$@: %2$@"
   },
@@ -2503,6 +2506,12 @@
   },
   "Amount": {
    "es": "Monto"
+  },
+  "At the end of each month": {
+   "es": "Al cierre de cada mes"
+  },
+  "At the end of each month, at today's rate": {
+   "es": "Al cierre de cada mes, con la tasa de hoy"
   },
   "Average %@ / month": {
    "es": "Promedio %@ / mes"
@@ -2553,8 +2562,14 @@
   "Month": {
    "es": "Mes"
   },
+  "Net worth": {
+   "es": "Patrimonio neto"
+  },
   "Next month": {
    "es": "Mes siguiente"
+  },
+  "No change since %@": {
+   "es": "Sin cambios desde %@"
   },
   "No income": {
    "es": "Sin ingresos"

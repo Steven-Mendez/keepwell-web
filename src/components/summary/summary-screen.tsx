@@ -12,8 +12,13 @@ import {
 } from "@/components/kw/design"
 import { Page, Surface } from "@/components/kw/primitives"
 import { SummarySkeleton } from "@/components/kw/skeletons"
+import { useHiddenBalances } from "@/hooks/use-hidden-balances"
 import { useLedger } from "@/hooks/use-ledger"
-import { SUMMARY_MONTH_COUNT, summaryReport } from "@/lib/domain"
+import {
+  SUMMARY_MONTH_COUNT,
+  netWorthHistory,
+  summaryReport,
+} from "@/lib/domain"
 import { useT, type Translator } from "@/lib/i18n"
 import type { TransactionCategory } from "@/lib/schema"
 
@@ -21,6 +26,7 @@ import { CashFlowCard } from "./cash-flow-card"
 import { BudgetCard } from "./budget-card"
 import { CategoryCard, type CategoryMode } from "./category-card"
 import { KpiStrip } from "./kpi-strip"
+import { NetWorthCard } from "./net-worth-card"
 import { PaceCard } from "./pace-card"
 import {
   CustomRangePicker,
@@ -221,6 +227,19 @@ export function SummaryScreen() {
         : undefined,
     [ledger, currency]
   )
+  const netWorth = useMemo(
+    () =>
+      ledger
+        ? netWorthHistory(
+            ledger.accounts,
+            ledger.transactions,
+            ledger.settings.currencies,
+            new Date()
+          )
+        : [],
+    [ledger]
+  )
+  const [hidden] = useHiddenBalances()
   const [mode, setMode] = useState<CategoryMode>("expenses")
   const [period, setPeriod] = useState<Period>("month")
   const [custom, setCustom] = useState<CustomRange>()
@@ -260,42 +279,56 @@ export function SummaryScreen() {
   ) : undefined
 
   return (
-    // Wide: a month fits exactly the window's height below the top bar, so it reads without
-    // scrolling; a period has more charts and scrolls.
-    <Page
-      className={cn(
-        "lg:gap-4 lg:py-6",
-        !range && "lg:h-[calc(100svh-var(--topbar-h))] lg:min-h-[640px]"
-      )}
-    >
-      <KWLargeTitleHeader
-        title={t.in("summary", "Summary")}
-        subtitle={rangeSubtitle(t, f, range)}
-        trailing={controls}
-        className="flex-wrap items-center"
-      />
-      {!hasMovements ? (
-        <EmptySummary t={t} onLog={() => openEditor()} />
-      ) : range ? (
-        <RangeSummary
-          t={t}
-          f={f}
-          report={range.report}
-          years={range.years}
-          categories={ledger.categories}
+    <>
+      {/* Wide: a month fits exactly the window's height below the top bar, so it reads without
+        scrolling; a period has more charts and scrolls. Net worth spans a year whatever the
+        period, so it follows below, outside that first screen. */}
+      <Page
+        className={cn(
+          "lg:gap-4 lg:py-6",
+          !range && "lg:h-[calc(100svh-var(--topbar-h))] lg:min-h-[640px]"
+        )}
+      >
+        <KWLargeTitleHeader
+          title={t.in("summary", "Summary")}
+          subtitle={rangeSubtitle(t, f, range)}
+          trailing={controls}
+          className="flex-wrap items-center"
         />
-      ) : (
-        <MonthSummary
-          t={t}
-          f={f}
-          report={report}
-          selectedIndex={selectedIndex}
-          onSelect={pick}
-          categories={ledger.categories}
-          mode={mode}
-          onModeChange={setMode}
-        />
-      )}
-    </Page>
+        {!hasMovements ? (
+          <EmptySummary t={t} onLog={() => openEditor()} />
+        ) : range ? (
+          <RangeSummary
+            t={t}
+            f={f}
+            report={range.report}
+            years={range.years}
+            categories={ledger.categories}
+          />
+        ) : (
+          <MonthSummary
+            t={t}
+            f={f}
+            report={report}
+            selectedIndex={selectedIndex}
+            onSelect={pick}
+            categories={ledger.categories}
+            mode={mode}
+            onModeChange={setMode}
+          />
+        )}
+      </Page>
+      {hasMovements && netWorth.length > 0 ? (
+        <Page className="pt-0 md:pt-0 lg:pt-0">
+          <NetWorthCard
+            t={t}
+            f={f}
+            points={netWorth}
+            convertsCurrencies={ledger.settings.currencies.second !== undefined}
+            hidden={hidden}
+          />
+        </Page>
+      ) : null}
+    </>
   )
 }
