@@ -1,7 +1,9 @@
 import {
+  budgetStatuses,
   compareMonths,
   confirmPlannedTransaction,
   formatAmount,
+  monthlySummary,
   nextOccurrence,
   startOfDay,
   upcoming,
@@ -11,7 +13,11 @@ import {
 } from "@/lib/domain"
 import type { KWIconName } from "@/components/kw/kw-icon-data"
 import type { Translator } from "@/lib/i18n"
-import { accountName, cardShortName } from "@/lib/presentation/display"
+import {
+  accountName,
+  cardShortName,
+  categoryNameById,
+} from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
 import type { Account } from "@/lib/schema"
 
@@ -27,7 +33,7 @@ export interface Reminder {
 /**
  * What iOS sends as notifications, shown in place on the web: drafts due today, card payments
  * within the reminder window, statements closing today, subscriptions renewing tomorrow and plastics
- * expiring this month.
+ * expiring this month. Budgets warn from 80% of the month's limit and again once it's spent.
  */
 export function homeReminders(
   t: Translator,
@@ -168,5 +174,42 @@ export function homeReminders(
             ),
     })
   }
+  reminders.push(...budgetReminders(t, ledger, now))
   return reminders
+}
+
+function budgetReminders(t: Translator, ledger: Ledger, now: Date): Reminder[] {
+  const currency = ledger.settings.currencies.principal
+  const summary = monthlySummary(
+    yearMonthContaining(now),
+    ledger.transactions,
+    currency
+  )
+  const byId = new Map(
+    ledger.categories.map((category) => [category.id, category])
+  )
+  return budgetStatuses(summary, ledger.categories)
+    .filter((status) => status.level !== "onTrack")
+    .map((status) => {
+      const name = categoryNameById(
+        t,
+        byId.get(status.categoryId),
+        status.categoryId
+      )
+      const exceeded = status.level === "exceeded"
+      return {
+        id: `budget-${status.categoryId}`,
+        icon: "chartBars",
+        tone: exceeded ? "negative" : "pending",
+        title: exceeded
+          ? t.in("home", "%@ went over its budget", name)
+          : t.in("home", "%@ is close to its budget", name),
+        body: t.in(
+          "home",
+          "%@ spent of %@ this month.",
+          formatAmount(status.spent, currency),
+          formatAmount(status.budget, currency)
+        ),
+      } satisfies Reminder
+    })
 }
