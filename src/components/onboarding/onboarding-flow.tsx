@@ -7,22 +7,23 @@ import { newID } from "@/lib/platform/uuid"
 import { useRouter } from "next/navigation"
 import { useRef, useState, type FormEvent, type ReactNode } from "react"
 
-import { KWButton, KWCircleButton, KWGroupedCard, KWSegmented, KWTransactionIcon, KWValueRow } from "@/components/kw/design"
+import {
+  KWButton,
+  KWCircleButton,
+  KWGroupedCard,
+  KWSegmented,
+  KWTransactionIcon,
+  KWValueRow,
+} from "@/components/kw/design"
 import { KWAppIconTile, KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
 import type { KWIconName } from "@/components/kw/kw-icon-data"
-import { CurrencyPicker, OptionSelect } from "@/components/kw/pickers"
+import { CurrencyPicker } from "@/components/kw/pickers"
 import { CardArt } from "@/components/kw/primitives"
 import {
   FieldLabel,
   FlowHeader,
   KW_FIELD,
 } from "@/components/movement-editor/flow-parts"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/toast"
 import {
@@ -31,7 +32,6 @@ import {
   completeOnboarding,
   currencySettings,
   formatAmount,
-  formatAmountInput,
   normalizedPreferredName,
   onboardingDisplayName,
   parseAmount,
@@ -40,6 +40,8 @@ import {
 import { useT } from "@/lib/i18n"
 import { backupRepository, ledgerStore, profileStore } from "@/lib/repositories"
 import type { CardNetwork, DebtMode } from "@/lib/schema"
+
+import { AccountForm } from "./account-form"
 
 type Step =
   "welcome" | "returning" | "name" | "currencies" | "accounts" | "done"
@@ -909,315 +911,6 @@ function KindTile({
       <KWIcon name={icon} size={24} />
       <span className="type-label">{label}</span>
     </button>
-  )
-}
-
-function amountText(value: Decimal): string {
-  return value.isZero()
-    ? ""
-    : (formatAmountInput(value.toFixed()) ?? value.toFixed())
-}
-
-function AccountForm({
-  draft,
-  isNew,
-  currencies,
-  principal,
-  second,
-  onSave,
-  onCancel,
-  onRemove,
-}: {
-  draft: OnboardingAccountDraft
-  isNew: boolean
-  currencies: string[]
-  principal: string
-  second: string | undefined
-  onSave: (draft: OnboardingAccountDraft) => void
-  onCancel: () => void
-  onRemove: () => void
-}) {
-  const t = useT()
-  const [bank, setBank] = useState(draft.bank ?? "")
-  const [name, setName] = useState(draft.name)
-  const [currency, setCurrency] = useState(draft.currency)
-  const [balanceText, setBalanceText] = useState(() =>
-    amountText(draft.balance)
-  )
-  const [secondText, setSecondText] = useState(() =>
-    amountText(draft.secondBalance)
-  )
-  const [lastFour, setLastFour] = useState(draft.lastFour ?? "")
-  const [network, setNetwork] = useState<CardNetwork>(draft.network ?? "visa")
-  const [debtMode, setDebtMode] = useState<DebtMode>(
-    draft.debtMode ?? (second ? "dual" : "principal")
-  )
-  const [showErrors, setShowErrors] = useState(false)
-
-  const balance = balanceText.trim() === "" ? ZERO : parseAmount(balanceText)
-  const secondBalance =
-    secondText.trim() === "" ? ZERO : parseAmount(secondText)
-  const lastFourInvalid = lastFour !== "" && !/^[0-9]{4}$/.test(lastFour)
-  const balanceInvalid = balance === undefined
-  const secondInvalid =
-    draft.kind === "credit" &&
-    debtMode === "dual" &&
-    secondBalance === undefined
-  const title = { bank: "Bank account", credit: "Credit card", cash: "Cash" }[
-    draft.kind
-  ]
-  const debtCurrency = debtMode === "second" && second ? second : principal
-
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    if (lastFourInvalid || balanceInvalid || secondInvalid || !balance) {
-      setShowErrors(true)
-      return
-    }
-    const trimmedBank = bank.trim()
-    const defaultName =
-      draft.kind === "credit"
-        ? (
-            {
-              visa: "Visa",
-              mastercard: "Mastercard",
-              amex: "Amex",
-              other: t.in("onboarding", "Credit card"),
-            } as const
-          )[network]
-        : t.in("onboarding", draft.kind === "cash" ? "Cash" : "Savings")
-    onSave({
-      id: draft.id,
-      kind: draft.kind,
-      name: name.trim() || defaultName,
-      ...(trimmedBank ? { bank: trimmedBank } : {}),
-      currency: draft.kind === "credit" ? debtCurrency : currency,
-      balance,
-      secondBalance: secondBalance ?? ZERO,
-      ...(lastFour ? { lastFour } : {}),
-      ...(draft.kind === "cash" ? {} : { network }),
-      ...(draft.kind === "credit"
-        ? { debtMode: second ? debtMode : "principal" }
-        : {}),
-    })
-  }
-
-  const error = (text: string) => (
-    <p className="px-1 type-caption text-negative">{text}</p>
-  )
-
-  return (
-    <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent
-        showCloseButton={false}
-        className="gap-0 rounded-[var(--radius-surface)] bg-background p-5 ring-1 ring-border sm:max-w-lg"
-      >
-        <form onSubmit={submit} className="flex flex-col gap-5">
-          <DialogHeader className="flex-row items-center justify-between gap-3">
-            <DialogTitle className="type-title-sm text-foreground">
-              {t.in("onboarding", title)}
-            </DialogTitle>
-            <KWCircleButton
-              icon="close"
-              label={t.in("designsystem", "Close")}
-              shortcut="Esc"
-              onClick={onCancel}
-            />
-          </DialogHeader>
-          {draft.kind !== "cash" ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel htmlFor="bank">
-                  {t.in("onboarding", "Bank")}
-                </FieldLabel>
-                <Input
-                  id="bank"
-                  value={bank}
-                  onChange={(event) => setBank(event.target.value)}
-                  placeholder={t.in("onboarding", "Bank name")}
-                  autoFocus
-                  className={KW_FIELD}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel htmlFor="account-name">
-                  {t.in("onboarding", "Name")}
-                </FieldLabel>
-                <Input
-                  id="account-name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder={
-                    draft.kind === "credit"
-                      ? "Visa"
-                      : t.in("onboarding", "Savings")
-                  }
-                  className={KW_FIELD}
-                />
-              </div>
-            </div>
-          ) : null}
-          {draft.kind !== "credit" && currencies.length > 1 ? (
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>{t.in("onboarding", "Currency")}</FieldLabel>
-              <KWSegmented
-                aria-label={t.in("onboarding", "Currency")}
-                value={currency}
-                onChange={setCurrency}
-                options={currencies.map((code) => ({
-                  value: code,
-                  title: code,
-                }))}
-              />
-            </div>
-          ) : null}
-          {draft.kind === "credit" && second ? (
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>
-                {t.in("onboarding", "Which currencies does it charge you in?")}
-              </FieldLabel>
-              <KWSegmented<DebtMode>
-                aria-label={t.in(
-                  "onboarding",
-                  "Which currencies does it charge you in?"
-                )}
-                value={debtMode}
-                onChange={setDebtMode}
-                options={[
-                  {
-                    value: "dual",
-                    title: t.in("onboarding", "Two currencies"),
-                  },
-                  {
-                    value: "principal",
-                    title: t.in("onboarding", "Only %@", principal),
-                  },
-                  {
-                    value: "second",
-                    title: t.in("onboarding", "Only %@", second),
-                  },
-                ]}
-              />
-            </div>
-          ) : null}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="balance">
-                {draft.kind === "credit"
-                  ? t.in("onboarding", "Debt in %@", debtCurrency)
-                  : t.in("onboarding", "Today's balance")}
-              </FieldLabel>
-              <Input
-                id="balance"
-                inputMode="decimal"
-                value={balanceText}
-                onChange={(event) => setBalanceText(event.target.value)}
-                onBlur={() =>
-                  setBalanceText((text) => formatAmountInput(text) ?? text)
-                }
-                placeholder="10,000.00"
-                className={`${KW_FIELD} tabular-nums`}
-                autoFocus={draft.kind === "cash"}
-                aria-invalid={showErrors && balanceInvalid}
-              />
-              {showErrors && balanceInvalid
-                ? error(t.in("onboarding", "Enter an amount like 1,250.50."))
-                : null}
-            </div>
-            {draft.kind === "credit" && debtMode === "dual" && second ? (
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel htmlFor="second-balance">
-                  {t.in("onboarding", "Debt in %@", second)}
-                </FieldLabel>
-                <Input
-                  id="second-balance"
-                  inputMode="decimal"
-                  value={secondText}
-                  onChange={(event) => setSecondText(event.target.value)}
-                  onBlur={() =>
-                    setSecondText((text) => formatAmountInput(text) ?? text)
-                  }
-                  placeholder="10,000.00"
-                  className={`${KW_FIELD} tabular-nums`}
-                  aria-invalid={showErrors && secondInvalid}
-                />
-                {showErrors && secondInvalid
-                  ? error(t.in("onboarding", "Enter an amount like 1,250.50."))
-                  : null}
-              </div>
-            ) : null}
-          </div>
-          {draft.kind !== "cash" ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel htmlFor="last-four">
-                  {t.in(
-                    "onboarding",
-                    draft.kind === "bank" ? "Debit, last 4" : "Last 4 digits"
-                  )}
-                </FieldLabel>
-                <Input
-                  id="last-four"
-                  inputMode="numeric"
-                  maxLength={4}
-                  value={lastFour}
-                  onChange={(event) =>
-                    setLastFour(event.target.value.replace(/\D/g, ""))
-                  }
-                  placeholder={t.in("onboarding", "Optional")}
-                  className={`${KW_FIELD} font-mono tracking-widest`}
-                  aria-invalid={showErrors && lastFourInvalid}
-                />
-                {showErrors && lastFourInvalid
-                  ? error(
-                      t.in(
-                        "onboarding",
-                        "Enter all 4 digits or leave it empty."
-                      )
-                    )
-                  : null}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel htmlFor="network">
-                  {t.in("addcard", "Network")}
-                </FieldLabel>
-                <OptionSelect<CardNetwork>
-                  id="network"
-                  value={network}
-                  onChange={setNetwork}
-                  options={[
-                    { value: "visa", label: "Visa" },
-                    { value: "mastercard", label: "Mastercard" },
-                    { value: "amex", label: "Amex" },
-                    { value: "other", label: t.in("onboarding", "Other") },
-                  ]}
-                />
-              </div>
-            </div>
-          ) : null}
-          <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center">
-            {!isNew ? (
-              <KWButton
-                variant="destructive"
-                icon="trash"
-                className="sm:mr-auto"
-                onClick={onRemove}
-              >
-                {t.in("onboarding", "Remove account")}
-              </KWButton>
-            ) : (
-              <span className="hidden sm:mr-auto sm:block" />
-            )}
-            <KWButton variant="plain" onClick={onCancel}>
-              {t.in("web", "Cancel")}
-            </KWButton>
-            <KWButton type="submit">
-              {t.in("onboarding", isNew ? "Add" : "Save")}
-            </KWButton>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
   )
 }
 
