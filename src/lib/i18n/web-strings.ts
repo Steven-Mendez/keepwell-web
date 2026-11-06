@@ -45,6 +45,13 @@ export const WEB_STRINGS_CORE: WebStrings = {
   Planned: { es: "Previsto" },
   "Rate stored": { es: "Tasa guardada" },
   Back: { es: "Atrás" },
+  /** iOS takes these from the system; the web needs them spelled out. */
+  Cancel: { es: "Cancelar" },
+  /** iOS says "on this iPhone"; on the web the name stays in the browser. */
+  "We'll use it to greet you and show it on your cards. It's only stored in this browser.": {
+    es: "Lo usaremos para saludarte y mostrarlo en tus tarjetas. Solo se guarda en este navegador.",
+  },
+  OK: { es: "OK" },
 }
 
 import { WEB_STRINGS_ACCOUNTS } from "./web-strings.accounts"

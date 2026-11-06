@@ -57,9 +57,10 @@ const pluralRules: Record<Locale, Intl.PluralRules> = {
 
 function fill(template: string, args: readonly Arg[]): string {
   let index = 0
-  return template.replace(/%(%|@|lld|d)/g, (match, spec: string) => {
+  // "%@" takes the next argument; "%2$@" names one, as translations reorder them ("%1$@ y %2$@").
+  return template.replace(/%(?:(\d+)\$)?(%|@|lld|d)/g, (match, position: string | undefined, spec: string) => {
     if (spec === "%") return "%"
-    const value = args[index++]
+    const value = position === undefined ? args[index++] : args[Number(position) - 1]
     return value === undefined ? match : String(value)
   })
 }

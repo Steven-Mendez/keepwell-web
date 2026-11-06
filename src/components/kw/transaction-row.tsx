@@ -49,7 +49,6 @@ export function TransactionRow({
         <span className={cn("text-label tabular-nums", amountClass)}>{display.amount(transaction)}</span>
         {secondary ? <span className="text-caption-sm text-muted-foreground tabular-nums">{secondary}</span> : null}
       </span>
-      {trailing}
     </>
   )
   const className = cn(
@@ -57,10 +56,19 @@ export function TransactionRow({
     onSelect && "cursor-pointer hover:bg-accent/60 focus-visible:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring/60",
     isSelected && "bg-accent",
   )
-  if (!onSelect) return <div className={className}>{content}</div>
-  return (
+  const row = onSelect ? (
     <button type="button" className={className} onClick={() => onSelect(transaction)} aria-current={isSelected ? "true" : undefined}>
       {content}
     </button>
+  ) : (
+    <div className={className}>{content}</div>
+  )
+  // An action of its own (Confirm) sits beside the row, never inside its button.
+  if (!trailing) return row
+  return (
+    <div className="flex items-center gap-2 pr-2">
+      <div className="min-w-0 flex-1">{row}</div>
+      {trailing}
+    </div>
   )
 }

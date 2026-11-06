@@ -2,7 +2,7 @@
 
 import { ChevronRightIcon, type LucideIcon } from "lucide-react"
 import Link from "next/link"
-import type { ComponentProps, ReactNode } from "react"
+import { createElement, type ComponentProps, type ReactNode } from "react"
 
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { formatMoney, type Money, type Sign } from "@/lib/domain"
@@ -58,7 +58,6 @@ export function Amount({ value, sign, fractionDigits, className }: { value: Mone
 
 /** A category's symbol in a tinted circle, like the iOS rows. */
 export function CategoryBadge({ category, symbol, size = "md", className }: { category?: TransactionCategory | undefined; symbol?: string; size?: "sm" | "md" | "lg"; className?: string }) {
-  const Icon = symbolIcon(symbol ?? categorySymbol(category))
   const color = categoryColor(category)
   return (
     <span
@@ -66,7 +65,8 @@ export function CategoryBadge({ category, symbol, size = "md", className }: { ca
       style={{ color, backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)` }}
       aria-hidden
     >
-      <Icon className={size === "sm" ? "size-4" : size === "lg" ? "size-6" : "size-5"} strokeWidth={2} />
+      {/* A lookup by stored symbol name, so the glyph is created from the table rather than declared here. */}
+      {createElement(symbolIcon(symbol ?? categorySymbol(category)), { className: size === "sm" ? "size-4" : size === "lg" ? "size-6" : "size-5", strokeWidth: 2 })}
     </span>
   )
 }

@@ -1,4 +1,8 @@
 import type { WebStrings } from "./web-strings"
 
 /** Web-only text for the accounts screens (see web-strings.ts). */
-export const WEB_STRINGS_ACCOUNTS: WebStrings = {}
+export const WEB_STRINGS_ACCOUNTS: WebStrings = {
+  "Card number": { es: "Número de la tarjeta" },
+  "Select an account to see its details.": { es: "Elige una cuenta para ver su detalle." },
+  "Total %@": { es: "Total %@" },
+}
