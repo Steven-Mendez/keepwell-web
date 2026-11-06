@@ -3,12 +3,13 @@ import type { LedgerStore, ProfileStore } from "@/lib/domain/store"
 
 import { accountRepository, cardRepository } from "./accounts"
 import { categoryRepository } from "./categories"
+import { loanRepository, personalDebtRepository } from "./debts"
 import { recurringRuleRepository } from "./recurring"
 import { savingsGoalRepository } from "./savings-goals"
 import { settingsRepository } from "./settings"
 import { transactionRepository } from "./transactions"
 
-const allTables = () => [db.accounts, db.cards, db.categories, db.transactions, db.recurring_rules, db.savings_goals, db.settings, db.sync_outbox]
+const allTables = () => [db.accounts, db.cards, db.categories, db.transactions, db.recurring_rules, db.savings_goals, db.loans, db.personal_debts, db.settings, db.sync_outbox]
 
 /** The domain's storage contract over IndexedDB: every write goes through the repositories (audit + outbox). */
 export const ledgerStore: LedgerStore = {
@@ -31,6 +32,14 @@ export const ledgerStore: LedgerStore = {
   fetchSavingsGoals: () => savingsGoalRepository.list(),
   saveSavingsGoal: async (goal) => void (await savingsGoalRepository.save(goal)),
   deleteSavingsGoal: (id) => savingsGoalRepository.remove(id),
+
+  fetchLoans: () => loanRepository.list(),
+  saveLoan: async (loan) => void (await loanRepository.save(loan)),
+  deleteLoan: (id) => loanRepository.remove(id),
+
+  fetchPersonalDebts: () => personalDebtRepository.list(),
+  savePersonalDebt: async (debt) => void (await personalDebtRepository.save(debt)),
+  deletePersonalDebt: (id) => personalDebtRepository.remove(id),
 
   fetchCategories: () => categoryRepository.list(),
   saveCategory: async (category) => void (await categoryRepository.save(category)),

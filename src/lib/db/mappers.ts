@@ -1,6 +1,26 @@
-import type { Account, Card, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
+import type {
+  Account,
+  Card,
+  Loan,
+  PersonalDebt,
+  RecurringRule,
+  SavingsGoal,
+  Settings,
+  Transaction,
+  TransactionCategory,
+} from "@/lib/schema"
 
-import type { AccountRow, CardRow, CategoryRow, RecurringRuleRow, SavingsGoalRow, SettingsRow, TransactionRow } from "./database"
+import type {
+  AccountRow,
+  CardRow,
+  CategoryRow,
+  LoanRow,
+  PersonalDebtRow,
+  RecurringRuleRow,
+  SavingsGoalRow,
+  SettingsRow,
+  TransactionRow,
+} from "./database"
 import { SETTINGS_ID } from "./database"
 
 // Domain ⇄ row, like the iOS records' `update(from:)` / `toDomain()`. Audit columns are left to the
@@ -232,6 +252,72 @@ export function rowToSavingsGoal(row: SavingsGoalRow): SavingsGoal {
       : {}),
     ...present("icon", row.icon),
     ...present("color", row.color),
+  }
+}
+
+export function loanToRow(loan: Loan): Columns<LoanRow> {
+  return {
+    id: loan.id,
+    name: loan.name,
+    lender: orNull(loan.lender),
+    borrowed_amount: loan.borrowed.amount,
+    borrowed_currency: loan.borrowed.currency,
+    installment_amount: loan.installmentAmount,
+    installment_count: loan.installmentCount,
+    frequency: loan.frequency,
+    first_due_date: loan.firstDueDate,
+    payments: loan.payments.map((payment) => ({
+      number: payment.number,
+      paid_at: payment.paidAt,
+      transaction_id: orNull(payment.transactionId),
+    })),
+  }
+}
+
+export function rowToLoan(row: LoanRow): Loan {
+  return {
+    id: row.id,
+    name: row.name,
+    ...present("lender", row.lender),
+    borrowed: { amount: row.borrowed_amount, currency: row.borrowed_currency },
+    installmentAmount: row.installment_amount,
+    installmentCount: row.installment_count,
+    frequency: row.frequency as Loan["frequency"],
+    firstDueDate: row.first_due_date,
+    payments: row.payments.map((payment) => ({
+      number: payment.number,
+      paidAt: payment.paid_at,
+      ...present("transactionId", payment.transaction_id),
+    })),
+  }
+}
+
+export function personalDebtToRow(debt: PersonalDebt): Columns<PersonalDebtRow> {
+  return {
+    id: debt.id,
+    person: debt.person,
+    direction: debt.direction,
+    amount: debt.amount.amount,
+    currency: debt.amount.currency,
+    date: debt.date,
+    note: orNull(debt.note),
+    repayments: debt.repayments.map((repayment) => ({ amount: repayment.amount, date: repayment.date })),
+    settled_at: orNull(debt.settledAt),
+    transaction_id: orNull(debt.transactionId),
+  }
+}
+
+export function rowToPersonalDebt(row: PersonalDebtRow): PersonalDebt {
+  return {
+    id: row.id,
+    person: row.person,
+    direction: row.direction as PersonalDebt["direction"],
+    amount: { amount: row.amount, currency: row.currency },
+    date: row.date,
+    ...present("note", row.note),
+    repayments: row.repayments.map((repayment) => ({ amount: repayment.amount, date: repayment.date })),
+    ...present("settledAt", row.settled_at),
+    ...present("transactionId", row.transaction_id),
   }
 }
 

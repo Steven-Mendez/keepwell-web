@@ -1,4 +1,4 @@
-import type { Account, Card, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
+import type { Account, Card, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
 import { DEFAULT_CATEGORIES, isFallbackCategory, orderedCategories, shippedCategory } from "@/lib/schema"
 
 import { DomainError } from "./errors"
@@ -37,6 +37,20 @@ export interface LedgerStore {
   /** Soft-deletes; throws `notFound` for a missing or deleted goal. */
   deleteSavingsGoal(id: string): Promise<void>
 
+  /** Alive loans. */
+  fetchLoans(): Promise<Loan[]>
+  /** Inserts or replaces the loan with the same id. */
+  saveLoan(loan: Loan): Promise<void>
+  /** Soft-deletes; throws `notFound` for a missing or deleted loan. */
+  deleteLoan(id: string): Promise<void>
+
+  /** Alive personal debts. */
+  fetchPersonalDebts(): Promise<PersonalDebt[]>
+  /** Inserts or replaces the debt with the same id. */
+  savePersonalDebt(debt: PersonalDebt): Promise<void>
+  /** Soft-deletes; throws `notFound` for a missing or deleted debt. */
+  deletePersonalDebt(id: string): Promise<void>
+
   /** In the person's order, defaults included except the ones deleted. */
   fetchCategories(): Promise<TransactionCategory[]>
   /** A new id goes after the existing ones; an existing one keeps its place. */
@@ -71,18 +85,22 @@ export class InMemoryStore implements LedgerStore, ProfileStore {
   transactions: Transaction[]
   recurringRules: RecurringRule[]
   savingsGoals: SavingsGoal[]
+  loans: Loan[]
+  personalDebts: PersonalDebt[]
   /** In stored order; ids in `deletedCategoryIds` are tombstones. */
   categories: TransactionCategory[]
   deletedCategoryIds = new Set<string>()
   settings: Settings | undefined
   name: string | undefined
 
-  constructor(seed: Partial<{ accounts: Account[]; cards: Card[]; transactions: Transaction[]; recurringRules: RecurringRule[]; savingsGoals: SavingsGoal[]; categories: TransactionCategory[]; settings: Settings }> = {}) {
+  constructor(seed: Partial<{ accounts: Account[]; cards: Card[]; transactions: Transaction[]; recurringRules: RecurringRule[]; savingsGoals: SavingsGoal[]; loans: Loan[]; personalDebts: PersonalDebt[]; categories: TransactionCategory[]; settings: Settings }> = {}) {
     this.accounts = [...(seed.accounts ?? [])]
     this.cards = [...(seed.cards ?? [])]
     this.transactions = [...(seed.transactions ?? [])]
     this.recurringRules = [...(seed.recurringRules ?? [])]
     this.savingsGoals = [...(seed.savingsGoals ?? [])]
+    this.loans = [...(seed.loans ?? [])]
+    this.personalDebts = [...(seed.personalDebts ?? [])]
     this.categories = [...(seed.categories ?? DEFAULT_CATEGORIES)]
     this.settings = seed.settings
   }
@@ -142,6 +160,28 @@ export class InMemoryStore implements LedgerStore, ProfileStore {
     this.savingsGoals = this.savingsGoals.filter((goal) => goal.id !== id)
   }
 
+  async fetchLoans() {
+    return [...this.loans]
+  }
+  async saveLoan(loan: Loan) {
+    this.loans = upsert(this.loans, loan)
+  }
+  async deleteLoan(id: string) {
+    if (!this.loans.some((loan) => loan.id === id)) throw DomainError.notFound(id)
+    this.loans = this.loans.filter((loan) => loan.id !== id)
+  }
+
+  async fetchPersonalDebts() {
+    return [...this.personalDebts]
+  }
+  async savePersonalDebt(debt: PersonalDebt) {
+    this.personalDebts = upsert(this.personalDebts, debt)
+  }
+  async deletePersonalDebt(id: string) {
+    if (!this.personalDebts.some((debt) => debt.id === id)) throw DomainError.notFound(id)
+    this.personalDebts = this.personalDebts.filter((debt) => debt.id !== id)
+  }
+
   async fetchCategories() {
     const present = new Set(this.categories.map((category) => category.id))
     const missing = DEFAULT_CATEGORIES.filter((category) => !present.has(category.id) && !this.deletedCategoryIds.has(category.id))
@@ -178,7 +218,7 @@ export class InMemoryStore implements LedgerStore, ProfileStore {
   }
 
   async atomically<T>(work: () => Promise<T>): Promise<T> {
-    const snapshot = { accounts: this.accounts, cards: this.cards, transactions: this.transactions, recurringRules: this.recurringRules, savingsGoals: this.savingsGoals, categories: this.categories, settings: this.settings }
+    const snapshot = { accounts: this.accounts, cards: this.cards, transactions: this.transactions, recurringRules: this.recurringRules, savingsGoals: this.savingsGoals, loans: this.loans, personalDebts: this.personalDebts, categories: this.categories, settings: this.settings }
     try {
       return await work()
     } catch (error) {

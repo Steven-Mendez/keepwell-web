@@ -1,4 +1,5 @@
 import {
+  orderedLoans,
   budgetStatuses,
   compareMonths,
   confirmPlannedTransaction,
@@ -33,9 +34,10 @@ export interface Reminder {
 
 /**
  * What iOS sends as notifications, shown in place on the web: drafts due today, card payments
- * within the reminder window, statements closing today, subscriptions renewing tomorrow and plastics
- * expiring this month. Budgets warn from 80% of the month's limit and again once it's spent, and
- * subscriptions whose latest charge cost more than the one before say so.
+ * and loan installments within the reminder window (an installment past its day stays until paid),
+ * statements closing today, subscriptions renewing tomorrow and plastics expiring this month. Budgets
+ * warn from 80% of the month's limit and again once it's spent, and subscriptions whose latest charge
+ * cost more than the one before say so.
  */
 export function homeReminders(
   t: Translator,
@@ -123,6 +125,31 @@ export function homeReminders(
         ),
       })
     }
+  }
+  for (const progress of orderedLoans(ledger.loans, now)) {
+    const next = progress.next
+    if (!next) continue
+    const days = Math.round(
+      (startOfDay(next.dueDate).getTime() - today) / 86_400_000
+    )
+    if (days > overview.paymentReminderDaysBefore) continue
+    const { loan } = progress
+    reminders.push({
+      id: `installment-${loan.id}-${next.number}`,
+      icon: "cash",
+      tone: days < 0 ? "negative" : "pending",
+      title:
+        days < 0
+          ? t.in("web", "%@: installment overdue", loan.name)
+          : t.in("home", "%@: installment in %lld days", loan.name, days),
+      body: t.in(
+        "home",
+        "Installment %lld of %lld · %@",
+        next.number,
+        loan.installmentCount,
+        formatAmount(loan.installmentAmount, loan.borrowed.currency)
+      ),
+    })
   }
   const tomorrow = new Date(
     now.getFullYear(),

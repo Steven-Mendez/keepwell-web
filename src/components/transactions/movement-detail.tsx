@@ -4,6 +4,7 @@ import { transactionAmountClass } from "@/components/kw/design-styles"
 import { useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
+import { SplitDialog } from "@/components/debts/split-dialog"
 import {
   KWActionButton,
   KWButton,
@@ -187,6 +188,7 @@ function DetailBody({
   onEdit,
   onDelete,
   onReceipt,
+  onSplit,
   rule,
   onOpenRule,
 }: {
@@ -198,6 +200,8 @@ function DetailBody({
   onEdit: () => void
   onDelete: () => void
   onReceipt: () => void
+  /** Expenses only: share it with others, who then owe their part. */
+  onSplit: () => void
   /** The recurring rule that produced it, while the rule exists. */
   rule: RecurringRule | undefined
   onOpenRule: () => void
@@ -254,6 +258,13 @@ function DetailBody({
           variant={planned ? "neutral" : "prominent"}
           onClick={onEdit}
         />
+        {transaction.kind === "expense" ? (
+          <KWActionButton
+            icon="person"
+            title={t.in("transactions", "Split")}
+            onClick={onSplit}
+          />
+        ) : null}
         <KWActionButton
           icon="share"
           title={t.in("web", "Receipt")}
@@ -325,6 +336,7 @@ export function MovementDetail() {
   const { detailId, showDetail, openEditor, openRuleEditor } = useAppActions()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [showingReceipt, setShowingReceipt] = useState(false)
+  const [splitting, setSplitting] = useState<Transaction>()
   const transaction = ledger?.transactions.find(
     (candidate) => candidate.id === detailId
   )
@@ -385,6 +397,10 @@ export function MovementDetail() {
               }}
               onDelete={() => setConfirmingDelete(true)}
               onReceipt={() => setShowingReceipt(true)}
+              onSplit={() => {
+                showDetail(undefined)
+                setSplitting(transaction)
+              }}
               rule={rule}
               onOpenRule={() => {
                 if (!rule) return
@@ -400,6 +416,14 @@ export function MovementDetail() {
           transaction={transaction}
           open={showingReceipt && open}
           onOpenChange={setShowingReceipt}
+        />
+      ) : null}
+      {splitting ? (
+        <SplitDialog
+          key={splitting.id}
+          t={t}
+          transaction={splitting}
+          onClose={() => setSplitting(undefined)}
         />
       ) : null}
       <DeleteDialog

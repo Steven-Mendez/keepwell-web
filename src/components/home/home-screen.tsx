@@ -52,6 +52,7 @@ import { cn } from "@/lib/utils"
 
 import { ForecastSection } from "./home-forecast"
 import { homeReminders, type Reminder } from "./home-reminders"
+import { DebtsSection } from "./home-debts"
 import { GoalsSection } from "./home-goals"
 import { UpcomingSection } from "./home-upcoming"
 
@@ -175,6 +176,8 @@ export function HomeScreen() {
             <UpcomingSection t={t} ledger={ledger} now={now} hidden={hidden} />
 
             <GoalsSection t={t} ledger={ledger} now={now} hidden={hidden} />
+
+            <DebtsSection t={t} ledger={ledger} now={now} hidden={hidden} />
 
             <AccountsSection
               t={t}
