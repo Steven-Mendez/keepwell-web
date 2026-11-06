@@ -1,10 +1,11 @@
 "use client"
 
+import { transactionAmountClass } from "@/components/kw/design-styles"
 import type { Transaction } from "@/lib/schema"
 import type { TransactionDisplay } from "@/lib/presentation/display"
 import { cn } from "@/lib/utils"
 
-import { KWTransactionIcon, transactionAmountClass } from "./design"
+import { KWTransactionIcon } from "./design"
 import { ListItem } from "./motion"
 import { CategoryBadge } from "./primitives"
 

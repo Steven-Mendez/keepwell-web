@@ -1,5 +1,6 @@
 "use client"
 
+import { NETWORKS, digitsOnly, domainErrorText } from "./form-helpers"
 import { useRouter } from "next/navigation"
 import { useState, type FormEvent } from "react"
 
@@ -34,16 +35,7 @@ import {
 } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
 
-import {
-  AmountInput,
-  ColorSwatches,
-  KW_INPUT,
-  LabeledField,
-  NETWORKS,
-  Segmented,
-  digitsOnly,
-  domainErrorText,
-} from "./form-parts"
+import { AmountInput, ColorSwatches, KW_INPUT, LabeledField, Segmented } from "./form-parts"
 import { DaySelect } from "./manage-dialogs"
 
 type Kind = "debit" | "credit" | "wallet"

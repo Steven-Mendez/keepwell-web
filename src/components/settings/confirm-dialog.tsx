@@ -1,8 +1,9 @@
 "use client"
 
+import { kwButtonClass } from "@/components/kw/design-styles"
 import type { ReactNode } from "react"
 
-import { KWButton, kwButtonClass } from "@/components/kw/design"
+import { KWButton } from "@/components/kw/design"
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { useT } from "@/lib/i18n"
 

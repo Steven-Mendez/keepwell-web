@@ -1,9 +1,10 @@
 "use client"
 
+import { transactionAmountClass } from "@/components/kw/design-styles"
 import { useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
-import { KWActionButton, KWButton, KWCircleButton, KWGroupedCard, KWTransactionIcon, KWValueRow, transactionAmountClass } from "@/components/kw/design"
+import { KWActionButton, KWButton, KWCircleButton, KWGroupedCard, KWTransactionIcon, KWValueRow } from "@/components/kw/design"
 import { StatusPill } from "@/components/movement-editor/flow-parts"
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"

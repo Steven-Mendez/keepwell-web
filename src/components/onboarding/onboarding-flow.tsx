@@ -1,26 +1,16 @@
 "use client"
 
+import { COMMON_CURRENCIES } from "@/components/kw/currencies"
+import { transactionAmountClass } from "@/components/kw/design-styles"
 import { newID } from "@/lib/platform/uuid"
 
 import { useRouter } from "next/navigation"
 import { useRef, useState, type FormEvent, type ReactNode } from "react"
 
-import {
-  KWButton,
-  KWCircleButton,
-  KWGroupedCard,
-  KWSegmented,
-  KWTransactionIcon,
-  KWValueRow,
-  transactionAmountClass,
-} from "@/components/kw/design"
+import { KWButton, KWCircleButton, KWGroupedCard, KWSegmented, KWTransactionIcon, KWValueRow } from "@/components/kw/design"
 import { KWAppIconTile, KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
 import type { KWIconName } from "@/components/kw/kw-icon-data"
-import {
-  COMMON_CURRENCIES,
-  CurrencyPicker,
-  OptionSelect,
-} from "@/components/kw/pickers"
+import { CurrencyPicker, OptionSelect } from "@/components/kw/pickers"
 import { CardArt } from "@/components/kw/primitives"
 import {
   FieldLabel,

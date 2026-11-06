@@ -15,7 +15,7 @@ import { ConfirmDialog } from "./confirm-dialog"
 import { SETTINGS_INPUT, SettingsLinkRow, SettingsRow, SettingsSection } from "./settings-rows"
 
 /** "USD · US dollar", in the person's language (iOS `currencyName`). */
-export function currencyName(t: Translator, code: string): string {
+function currencyName(t: Translator, code: string): string {
   try {
     const name = new Intl.DisplayNames([t.locale], { type: "currency" }).of(code)
     return name && name !== code ? `${code} · ${name.charAt(0).toUpperCase()}${name.slice(1)}` : code

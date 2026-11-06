@@ -16,14 +16,18 @@ import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import {
   cashFlowOutcome,
   monthKey,
-  savingsRate,
   type MonthlySummary,
   type SummaryReport,
 } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
-import { toneClass, type SummaryFormat, type Tone } from "./summary-format"
+import {
+  headline,
+  toneClass,
+  type SummaryFormat,
+  type Tone,
+} from "./summary-format"
 
 const chartConfig = {
   income: { label: "income", color: "var(--positive)" },
@@ -37,61 +41,6 @@ function toneOf(month: MonthlySummary): Tone {
     : kind === "overspent"
       ? "negative"
       : "neutral"
-}
-
-/** "Saved in November +$60.00 · You kept 60% of what came in." (iOS FlowHeadline). */
-export function headline(
-  t: Translator,
-  f: SummaryFormat,
-  selected: MonthlySummary
-) {
-  const month = f.month(selected.month, "long", false)
-  const outcome = cashFlowOutcome(selected.income, selected.expense)
-  switch (outcome.kind) {
-    case "saved": {
-      const rate = savingsRate(selected)
-      return {
-        title: t.in("summary", "You saved in %@", month),
-        amount: f.money(outcome.amount, "always"),
-        detail: t.in(
-          "summary",
-          "You kept %@ of what came in.",
-          rate ? f.percent(rate) : ""
-        ),
-        tone: "positive" as Tone,
-      }
-    }
-    case "overspent":
-      return {
-        title: t.in("summary", "You overspent in %@", month),
-        amount: f.money(outcome.amount.neg()),
-        detail: selected.income.gt(0)
-          ? t.in(
-              "summary",
-              "You spent %@ more than came in.",
-              f.money(outcome.amount)
-            )
-          : t.in(
-              "summary",
-              "Nothing came in, so all of it came from your savings."
-            ),
-        tone: "negative" as Tone,
-      }
-    case "even":
-      return {
-        title: t.in("summary", "You broke even in %@", month),
-        amount: f.money(selected.income.minus(selected.income)),
-        detail: t.in("summary", "You spent exactly what came in."),
-        tone: "neutral" as Tone,
-      }
-    case "noActivity":
-      return {
-        title: t.in("summary", "Nothing moved in %@", month),
-        amount: f.money(selected.income),
-        detail: undefined,
-        tone: "neutral" as Tone,
-      }
-  }
 }
 
 function outcomeSentence(
