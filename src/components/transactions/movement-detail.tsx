@@ -4,6 +4,7 @@ import { transactionAmountClass } from "@/components/kw/design-styles"
 import { useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
+import { SplitDialog } from "@/components/debts/split-dialog"
 import {
   KWActionButton,
   KWButton,
@@ -185,6 +186,7 @@ function DetailBody({
   onConfirm,
   onEdit,
   onDelete,
+  onSplit,
   rule,
   onOpenRule,
 }: {
@@ -195,6 +197,8 @@ function DetailBody({
   onConfirm: () => void
   onEdit: () => void
   onDelete: () => void
+  /** Expenses only: share it with others, who then owe their part. */
+  onSplit: () => void
   /** The recurring rule that produced it, while the rule exists. */
   rule: RecurringRule | undefined
   onOpenRule: () => void
@@ -251,6 +255,13 @@ function DetailBody({
           variant={planned ? "neutral" : "prominent"}
           onClick={onEdit}
         />
+        {transaction.kind === "expense" ? (
+          <KWActionButton
+            icon="person"
+            title={t.in("transactions", "Split")}
+            onClick={onSplit}
+          />
+        ) : null}
         <KWActionButton
           icon="trash"
           title={t.in("transactions", "Delete")}
@@ -316,6 +327,7 @@ export function MovementDetail() {
   const display = useTransactionDisplay(ledger)
   const { detailId, showDetail, openEditor, openRuleEditor } = useAppActions()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [splitting, setSplitting] = useState<Transaction>()
   const transaction = ledger?.transactions.find(
     (candidate) => candidate.id === detailId
   )
@@ -375,6 +387,10 @@ export function MovementDetail() {
                 openEditor({ mode: "edit", transaction })
               }}
               onDelete={() => setConfirmingDelete(true)}
+              onSplit={() => {
+                showDetail(undefined)
+                setSplitting(transaction)
+              }}
               rule={rule}
               onOpenRule={() => {
                 if (!rule) return
@@ -385,6 +401,14 @@ export function MovementDetail() {
           ) : null}
         </SheetContent>
       </Sheet>
+      {splitting ? (
+        <SplitDialog
+          key={splitting.id}
+          t={t}
+          transaction={splitting}
+          onClose={() => setSplitting(undefined)}
+        />
+      ) : null}
       <DeleteDialog
         t={t}
         open={confirmingDelete}
