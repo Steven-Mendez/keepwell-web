@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowDownLeftIcon, ArrowLeftRightIcon, ArrowUpRightIcon, CreditCardIcon, KeyboardIcon, TagsIcon } from "lucide-react"
+import { ArrowDownLeftIcon, ArrowLeftRightIcon, ArrowUpRightIcon, CreditCardIcon, KeyboardIcon, RepeatIcon, TagsIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command"
@@ -9,7 +9,7 @@ import { useT } from "@/lib/i18n"
 import { accountName } from "@/lib/presentation/display"
 
 import { useAppActions } from "./app-actions"
-import { MAIN_NAV, SETTINGS_NAV } from "./navigation"
+import { MAIN_NAV, RECURRING_NAV, SETTINGS_NAV } from "./navigation"
 
 /** ⌘K: jump to any section, account or recent movement, or start an action, without the mouse. */
 export function CommandPalette() {
@@ -17,7 +17,7 @@ export function CommandPalette() {
   const router = useRouter()
   const ledger = useLedger()
   const display = useTransactionDisplay(ledger)
-  const { paletteOpen, setPaletteOpen, openEditor, openAddAccount, showDetail, setShortcutsOpen } = useAppActions()
+  const { paletteOpen, setPaletteOpen, openEditor, openAddAccount, openRuleEditor, showDetail, setShortcutsOpen } = useAppActions()
 
   const run = (work: () => void) => {
     setPaletteOpen(false)
@@ -49,6 +49,10 @@ export function CommandPalette() {
             <CreditCardIcon />
             {t.in("accounts", "Add account or card")}
           </CommandItem>
+          <CommandItem onSelect={() => run(() => openRuleEditor({ mode: "create" }))}>
+            <RepeatIcon />
+            {t.in("web", "Add recurring")}
+          </CommandItem>
           <CommandItem onSelect={() => run(() => router.push("/settings/categories"))}>
             <TagsIcon />
             {t.in("settings", "Categories")}
@@ -60,11 +64,11 @@ export function CommandPalette() {
           </CommandItem>
         </CommandGroup>
         <CommandGroup heading={t.in("web", "Go to")}>
-          {[...MAIN_NAV, SETTINGS_NAV].map((item, index) => (
+          {[...MAIN_NAV, RECURRING_NAV, SETTINGS_NAV].map((item, index) => (
             <CommandItem key={item.href} onSelect={() => run(() => router.push(item.href))}>
               <item.icon />
               {t.in(item.ns, item.title)}
-              <CommandShortcut>{index < MAIN_NAV.length ? index + 1 : item.key}</CommandShortcut>
+              <CommandShortcut>{index < MAIN_NAV.length ? index + 1 : item === RECURRING_NAV ? "G R" : item.key}</CommandShortcut>
             </CommandItem>
           ))}
         </CommandGroup>

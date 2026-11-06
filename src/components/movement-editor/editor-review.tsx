@@ -3,6 +3,8 @@
 import { AnimatedNumber } from "@/components/kw/animated-number"
 import { KWButton } from "@/components/kw/design"
 import { KWIcon } from "@/components/kw/kw-icon"
+import { OptionSelect } from "@/components/kw/pickers"
+import { frequencyText } from "@/components/recurring/recurring-format"
 import { Decimal, formatMoney } from "@/lib/domain"
 import { accountName } from "@/lib/presentation/display"
 import { cn } from "@/lib/utils"
@@ -15,11 +17,12 @@ import {
   sourceCaptionKey,
   sourceThumbnail,
 } from "./editor-state"
-import { StatusPill } from "./flow-parts"
+import { FieldLabel, StatusPill } from "./flow-parts"
 import { MethodThumbnail } from "./pickers"
 import {
   useCreateTransactionT,
   type MovementEditorModel,
+  type RepeatChoice,
 } from "./use-movement-editor"
 
 // The editor's right column: the iOS review step, kept live beside the form.
@@ -36,6 +39,7 @@ export function EditorReview({
     <aside className="flex flex-col gap-4 border-t border-divider px-5 py-6 md:overflow-y-auto md:border-t-0 md:border-l md:px-6">
       <ReceiptTicket editor={editor} />
       <ReviewParties editor={editor} />
+      {existing ? null : <RepeatField editor={editor} />}
 
       {fields.isDraft ? (
         <p className="rounded-xl bg-pending-tint px-3 py-2 type-caption text-pending">
@@ -112,6 +116,38 @@ function ReceiptTicket({ editor }: ReviewProps) {
           </div>
         ))}
       </dl>
+    </div>
+  )
+}
+
+/** "Repeat": a new movement can start a recurring rule, whose next ones wait as drafts. */
+function RepeatField({ editor }: ReviewProps) {
+  const { t } = useCreateTransactionT()
+  const options: { value: RepeatChoice; label: string }[] = [
+    { value: "none", label: t.in("web", "None") },
+    ...(["weekly", "monthly", "yearly"] as const).map((frequency) => ({
+      value: frequency,
+      label: frequencyText(t, frequency, 1),
+    })),
+  ]
+  return (
+    <div className="flex flex-col gap-1.5">
+      <FieldLabel htmlFor="editor-repeat">{t.in("web", "Repeat")}</FieldLabel>
+      <OptionSelect
+        id="editor-repeat"
+        className="rounded-xl border-0 bg-secondary px-3.5 type-body dark:bg-secondary"
+        value={editor.repeat}
+        options={options}
+        onChange={editor.setRepeat}
+      />
+      {editor.repeat === "none" ? null : (
+        <p className="px-1 type-caption-sm text-muted-foreground">
+          {t.in(
+            "web",
+            "The next ones wait as drafts on their date for you to confirm."
+          )}
+        </p>
+      )}
     </div>
   )
 }
