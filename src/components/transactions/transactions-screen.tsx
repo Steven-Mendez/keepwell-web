@@ -20,9 +20,11 @@ import {
   joinedMoney,
   netWorth,
   scopeOptions,
+  searchedTag,
   type Ledger,
   type TransactionScope,
 } from "@/lib/domain"
+import { tagLabel } from "@/components/kw/tag-editor"
 import { useT, type Translator } from "@/lib/i18n"
 import type { Account } from "@/lib/schema"
 
@@ -154,6 +156,7 @@ export function TransactionsScreen() {
   if (!ledger || !display) return <TransactionsSkeleton />
 
   const scopedAccount = scopedAccountOf(ledger, scope)
+  const tag = searchedTag(text)
 
   return (
     <Page>
@@ -204,6 +207,14 @@ export function TransactionsScreen() {
           {filter === "planned" ? (
             <p className="type-caption text-muted-foreground">
               {t.in("transactions", "Drafts · they don't affect balances")}
+            </p>
+          ) : null}
+
+          {tag ? (
+            // A tag search totals that tag over all time, like iOS's tag totals: a trip or a
+            // wedding rarely fits in one month.
+            <p className="px-1 type-label text-muted-foreground">
+              {t.in("transactions", "%@ · All time", tagLabel(tag))}
             </p>
           ) : null}
 

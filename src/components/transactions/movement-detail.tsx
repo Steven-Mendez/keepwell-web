@@ -4,6 +4,8 @@ import { transactionAmountClass } from "@/components/kw/design-styles"
 import { useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
+import { SplitDialog } from "@/components/debts/split-dialog"
+import { TagChip } from "@/components/kw/tag-editor"
 import {
   KWActionButton,
   KWButton,
@@ -13,6 +15,7 @@ import {
   KWValueRow,
 } from "@/components/kw/design"
 import { StatusPill } from "@/components/movement-editor/flow-parts"
+import { ReceiptDialog } from "@/components/receipt/receipt-dialog"
 import {
   AlertDialog,
   AlertDialogContent,
@@ -42,6 +45,8 @@ import { ledgerStore } from "@/lib/repositories"
 import type { RecurringRule, Transaction } from "@/lib/schema"
 import { frequencyText } from "@/components/recurring/recurring-format"
 import { cn } from "@/lib/utils"
+
+import { useShowTag } from "./show-tag"
 
 type Ct = (key: string, ...args: (string | number)[]) => string
 
@@ -104,6 +109,29 @@ function RateCard({ ct, transaction }: { ct: Ct; transaction: Transaction }) {
   )
 }
 
+/** The movement's tags as "#chips"; one narrows Transactions to it. */
+function DetailTags({ t, tags }: { t: Translator; tags: readonly string[] }) {
+  const showTag = useShowTag()
+  return (
+    <KWGroupedCard>
+      <div className="flex flex-col gap-2 px-4 py-3">
+        <span className="type-caption text-muted-foreground">
+          {t.in("createtransaction", "Tags")}
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {tags.map((tag) => (
+            <TagChip
+              key={tag}
+              tag={tag}
+              onClick={() => showTag(tag)}
+            />
+          ))}
+        </div>
+      </div>
+    </KWGroupedCard>
+  )
+}
+
 /** The details as KWValueRows on grouped cards: when, where, status, rate, note and reference. */
 function DetailCards({
   t,
@@ -162,6 +190,7 @@ function DetailCards({
           </div>
         </KWGroupedCard>
       ) : null}
+      {transaction.tags?.length ? <DetailTags t={t} tags={transaction.tags} /> : null}
       <KWGroupedCard>
         <KWValueRow
           label={ct("Reference")}
@@ -185,6 +214,8 @@ function DetailBody({
   onConfirm,
   onEdit,
   onDelete,
+  onReceipt,
+  onSplit,
   rule,
   onOpenRule,
 }: {
@@ -195,6 +226,9 @@ function DetailBody({
   onConfirm: () => void
   onEdit: () => void
   onDelete: () => void
+  onReceipt: () => void
+  /** Expenses only: share it with others, who then owe their part. */
+  onSplit: () => void
   /** The recurring rule that produced it, while the rule exists. */
   rule: RecurringRule | undefined
   onOpenRule: () => void
@@ -250,6 +284,18 @@ function DetailBody({
           title={t.in("web", "Edit")}
           variant={planned ? "neutral" : "prominent"}
           onClick={onEdit}
+        />
+        {transaction.kind === "expense" ? (
+          <KWActionButton
+            icon="person"
+            title={t.in("transactions", "Split")}
+            onClick={onSplit}
+          />
+        ) : null}
+        <KWActionButton
+          icon="share"
+          title={t.in("web", "Receipt")}
+          onClick={onReceipt}
         />
         <KWActionButton
           icon="trash"
@@ -316,6 +362,8 @@ export function MovementDetail() {
   const display = useTransactionDisplay(ledger)
   const { detailId, showDetail, openEditor, openRuleEditor } = useAppActions()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [showingReceipt, setShowingReceipt] = useState(false)
+  const [splitting, setSplitting] = useState<Transaction>()
   const transaction = ledger?.transactions.find(
     (candidate) => candidate.id === detailId
   )
@@ -375,6 +423,11 @@ export function MovementDetail() {
                 openEditor({ mode: "edit", transaction })
               }}
               onDelete={() => setConfirmingDelete(true)}
+              onReceipt={() => setShowingReceipt(true)}
+              onSplit={() => {
+                showDetail(undefined)
+                setSplitting(transaction)
+              }}
               rule={rule}
               onOpenRule={() => {
                 if (!rule) return
@@ -385,6 +438,21 @@ export function MovementDetail() {
           ) : null}
         </SheetContent>
       </Sheet>
+      {transaction ? (
+        <ReceiptDialog
+          transaction={transaction}
+          open={showingReceipt && open}
+          onOpenChange={setShowingReceipt}
+        />
+      ) : null}
+      {splitting ? (
+        <SplitDialog
+          key={splitting.id}
+          t={t}
+          transaction={splitting}
+          onClose={() => setSplitting(undefined)}
+        />
+      ) : null}
       <DeleteDialog
         t={t}
         open={confirmingDelete}

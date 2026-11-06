@@ -2,9 +2,15 @@ import { newID } from "@/lib/platform/uuid"
 import {
   accountToRow,
   cardToRow,
+  categorizationRuleToRow,
+  rowToCategorizationRule,
   categoryToRow,
   db,
+  loanToRow,
+  personalDebtToRow,
   recurringRuleToRow,
+  rowToLoan,
+  rowToPersonalDebt,
   rowToSavingsGoal,
   savingsGoalToRow,
   rowToAccount,
@@ -63,6 +69,9 @@ function columns(record: {
   }
 }
 
+const byCreation = (a: AuditColumns, b: AuditColumns) =>
+  a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0
+
 const allTables = () => [
   db.accounts,
   db.cards,
@@ -70,12 +79,15 @@ const allTables = () => [
   db.transactions,
   db.recurring_rules,
   db.savings_goals,
+  db.loans,
+  db.personal_debts,
+  db.categorization_rules,
   db.settings,
   db.sync_outbox,
 ]
 
 export const backupRepository = {
-  /** The whole store, deleted records included, as the JSON file iOS reads (`schemaVersion` 3). */
+  /** The whole store, deleted records included, as the JSON file iOS reads (`schemaVersion` 4). */
   async export(): Promise<string> {
     const file = await db.transaction(
       "r",
@@ -83,7 +95,7 @@ export const backupRepository = {
       async (): Promise<BackupFile> => {
         const settings = await db.settings.get(SETTINGS_ID)
         if (!settings) throw new NothingToBackUpError()
-        const [accounts, cards, categories, transactions, recurringRules, savingsGoals] = await Promise.all([
+        const [accounts, cards, categories, transactions, recurringRules, savingsGoals, loans, personalDebts, categorizationRules] = await Promise.all([
           db.accounts.orderBy("created_at").toArray(),
           db.cards.orderBy("created_at").toArray(),
           db.categories.orderBy("sort_index").toArray(),
@@ -91,6 +103,9 @@ export const backupRepository = {
           // No `created_at` index on this table (shared contract): sorted below instead.
           db.recurring_rules.toArray(),
           db.savings_goals.toArray(),
+          db.loans.toArray(),
+          db.personal_debts.toArray(),
+          db.categorization_rules.orderBy("sort_index").toArray(),
         ])
         return {
           schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -123,6 +138,15 @@ export const backupRepository = {
               a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0
             )
             .map((row) => ({ ...rowToSavingsGoal(row), ...audit(row) })),
+          loans: loans.sort(byCreation).map((row) => ({ ...rowToLoan(row), ...audit(row) })),
+          personalDebts: personalDebts
+            .sort(byCreation)
+            .map((row) => ({ ...rowToPersonalDebt(row), ...audit(row) })),
+          categorizationRules: categorizationRules.map((row, index) => ({
+            ...rowToCategorizationRule(row),
+            sortIndex: index,
+            ...audit(row),
+          })),
         }
       }
     )
@@ -171,6 +195,23 @@ export const backupRepository = {
       ...columns(record),
     }))
 
+    const loans = file.loans.map((record) => ({
+      ...loanToRow(record),
+      ...columns(record),
+    }))
+
+    const personalDebts = file.personalDebts.map((record) => ({
+      ...personalDebtToRow(record),
+      ...columns(record),
+    }))
+
+    const categorizationRules = [...file.categorizationRules]
+      .sort((a, b) => a.sortIndex - b.sortIndex)
+      .map((record, index) => ({
+        ...categorizationRuleToRow(record, index),
+        ...columns(record),
+      }))
+
     const events: SyncOutboxRow[] = []
     const record = (
       entity: SyncEntity,
@@ -193,6 +234,9 @@ export const backupRepository = {
     record("transaction", transactions)
     record("recurringRule", recurringRules)
     record("savingsGoal", savingsGoals)
+    record("loan", loans)
+    record("personalDebt", personalDebts)
+    record("categorizationRule", categorizationRules)
     events.push({
       id: newID(),
       entity: "settings",
@@ -211,6 +255,9 @@ export const backupRepository = {
       await db.transactions.bulkPut(transactions)
       await db.recurring_rules.bulkPut(recurringRules)
       await db.savings_goals.bulkPut(savingsGoals)
+      await db.loans.bulkPut(loans)
+      await db.personal_debts.bulkPut(personalDebts)
+      await db.categorization_rules.bulkPut(categorizationRules)
       await db.sync_outbox.bulkAdd(events)
     })
 

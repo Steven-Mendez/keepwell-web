@@ -34,7 +34,7 @@ function dialogIsOpen(): boolean {
 
 /**
  * Desktop keyboard navigation: ⌘K palette, N new movement (E/I/T by type), 1–4 and "g" then a
- * letter for the sections (G R for Recurring, G G for Goals), "," settings, "/" search, "?" this list.
+ * letter for the sections (G R for Recurring, G G for Goals, G D for Debts), "," settings, "/" search, "?" this list.
  */
 export function KeyboardShortcuts() {
   const t = useT()
