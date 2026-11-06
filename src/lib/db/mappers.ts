@@ -98,6 +98,8 @@ export function categoryToRow(category: TransactionCategory, sortIndex: number):
     color: orNull(category.color),
     is_renamed: category.isRenamed,
     sort_index: sortIndex,
+    budget_amount: orNull(category.monthlyBudget?.amount),
+    budget_currency: orNull(category.monthlyBudget?.currency),
   }
 }
 
@@ -109,6 +111,9 @@ export function rowToCategory(row: CategoryRow): TransactionCategory {
     ...present("icon", row.icon),
     ...present("color", row.color),
     isRenamed: row.is_renamed,
+    ...(row.budget_amount != null && row.budget_currency != null
+      ? { monthlyBudget: { amount: row.budget_amount, currency: row.budget_currency } }
+      : {}),
   }
 }
 

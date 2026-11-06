@@ -1,7 +1,8 @@
 import { newID } from "@/lib/platform/uuid"
 import { z } from "zod"
 
-import { TransactionKind } from "./primitives"
+import { Money } from "./entities"
+import { TransactionKind, isPositiveDecimal } from "./primitives"
 
 /**
  * A category. `id` is a stable slug, not a UUID: defaults share theirs on every device
@@ -18,6 +19,11 @@ export const TransactionCategory = z.object({
   color: z.string().optional(),
   /** A renamed default shows its name as typed instead of translating by id. */
   isRenamed: z.boolean(),
+  /**
+   * Monthly spending limit, expense categories only, in the principal currency it was set in. A
+   * budget in another currency is kept but not compared (never converted), iOS `monthlyBudget`.
+   */
+  monthlyBudget: Money.refine((budget) => isPositiveDecimal(budget.amount), "Must be greater than zero").optional(),
 })
 export type TransactionCategory = z.infer<typeof TransactionCategory>
 
