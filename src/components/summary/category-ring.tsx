@@ -1,11 +1,12 @@
 "use client"
 
+import { useRef, useState } from "react"
 import {
   Cell,
   Pie,
   PieChart,
   Sector,
-  Tooltip,
+  type PieSectorDataItem,
   type PieSectorShapeProps,
 } from "recharts"
 
@@ -26,6 +27,12 @@ export interface RingSlice {
  * A category breakdown as a ring whose center shows the total. Hovering a slice lights it and shows
  * its name, amount and share in a tooltip; hovering its list row lights it too.
  */
+
+/** Where the tooltip opens: just outside the ring at the slice's middle, so it never covers the ring. */
+type TipPlace = { slice: RingSlice; x: number; y: number; cos: number; sin: number }
+
+/** Clear of the lit slice, which grows 6px. */
+const TIP_GAP = 14
 export function CategoryRing({
   slices,
   active,
@@ -43,6 +50,15 @@ export function CategoryRing({
   /** The ring's width cap, which differs per card. */
   className: string
 }) {
+  const [tip, setTip] = useState<TipPlace>()
+  // The slice under the pointer, set synchronously: moving between slices fires the next slice's
+  // enter before the last one's leave, and that leave must not clear the new slice.
+  const pointed = useRef<string>(undefined)
+  const clear = () => {
+    pointed.current = undefined
+    setTip(undefined)
+    onActiveChange(undefined)
+  }
   const config: ChartConfig = Object.fromEntries(
     slices.map((slice) => [slice.id, { label: slice.name, color: slice.color }])
   )
@@ -52,38 +68,14 @@ export function CategoryRing({
         "relative mx-auto aspect-square w-full shrink-0",
         className
       )}
-      // On the wrapper, not the Pie: moving between slices fires the next slice's enter before the
-      // last one's leave, which cleared the new slice.
-      onMouseLeave={() => onActiveChange(undefined)}
+      onMouseLeave={clear}
     >
-      <ChartContainer config={config} className="aspect-square w-full">
+      <ChartContainer
+        config={config}
+        className="aspect-square w-full"
+        aria-hidden
+      >
         <PieChart>
-          <Tooltip
-            isAnimationActive={false}
-            allowEscapeViewBox={{ x: true, y: true }}
-            wrapperStyle={{ zIndex: 20, pointerEvents: "none" }}
-            content={({ active: shown, payload }) => {
-              const slice = shown
-                ? (payload?.[0]?.payload as RingSlice | undefined)
-                : undefined
-              if (!slice) return null
-              return (
-                <div className="grid min-w-36 gap-1 rounded-xl bg-secondary px-3 py-2 type-caption shadow-depth">
-                  <span className="flex items-center gap-1.5 type-label">
-                    <span
-                      className="size-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: slice.color }}
-                    />
-                    {slice.name}
-                  </span>
-                  <span className="flex items-center justify-between gap-4 tabular-nums">
-                    <span>{slice.amount}</span>
-                    <span className="text-text-secondary">{slice.percent}</span>
-                  </span>
-                </div>
-              )
-            }}
-          />
           <Pie
             data={slices}
             dataKey="value"
@@ -116,7 +108,28 @@ export function CategoryRing({
             isAnimationActive="auto"
             animationDuration={280}
             animationEasing="ease-out"
-            onMouseEnter={(_, index) => onActiveChange(slices[index]?.id)}
+            onMouseEnter={(sector: PieSectorDataItem, index: number) => {
+              const slice = slices[index]
+              pointed.current = slice?.id
+              onActiveChange(slice?.id)
+              // Recharts angles run counter-clockwise from 3 o'clock, with y pointing down on screen.
+              const angle = -((sector.midAngle ?? 0) * Math.PI) / 180
+              const radius = (sector.outerRadius ?? 0) + TIP_GAP
+              const cos = Math.cos(angle)
+              const sin = Math.sin(angle)
+              setTip(
+                slice && {
+                  slice,
+                  x: (sector.cx ?? 0) + radius * cos,
+                  y: (sector.cy ?? 0) + radius * sin,
+                  cos,
+                  sin,
+                }
+              )
+            }}
+            onMouseLeave={(_: PieSectorDataItem, index: number) => {
+              if (pointed.current === slices[index]?.id) clear()
+            }}
           >
             {slices.map((slice) => (
               <Cell key={slice.id} fill={slice.color} />
@@ -130,6 +143,31 @@ export function CategoryRing({
           {totalCaption}
         </span>
       </div>
+      {tip && tip.slice.id === active && (
+        <div
+          role="tooltip"
+          className="pointer-events-none absolute z-20 grid min-w-36 gap-1 rounded-xl bg-secondary px-3 py-2 type-caption whitespace-nowrap shadow-depth"
+          style={{
+            left: tip.x,
+            top: tip.y,
+            // Grows away from the ring: right of a right-hand slice, left of a left-hand one, above
+            // a top one, below a bottom one, and in between for the slices around them.
+            transform: `translate(${(tip.cos - 1) * 50}%, ${(tip.sin - 1) * 50}%)`,
+          }}
+        >
+          <span className="flex items-center gap-1.5 type-label">
+            <span
+              className="size-2 shrink-0 rounded-full"
+              style={{ backgroundColor: tip.slice.color }}
+            />
+            {tip.slice.name}
+          </span>
+          <span className="flex items-center justify-between gap-4 tabular-nums">
+            <span>{tip.slice.amount}</span>
+            <span className="text-text-secondary">{tip.slice.percent}</span>
+          </span>
+        </div>
+      )}
     </div>
   )
 }
