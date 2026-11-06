@@ -210,7 +210,8 @@ export async function addCreditCard(
 
 /**
  * "Delete account": the account, its cards and every movement that touches it, transfers with other
- * accounts included, since a movement can't point at an account that no longer exists.
+ * accounts included, since a movement can't point at an account that no longer exists. Recurring
+ * rules from or to it go too.
  */
 export async function deleteAccount(
   store: LedgerStore,
@@ -225,6 +226,10 @@ export async function deleteAccount(
     for (const movement of await store.fetchTransactions()) {
       if (scopeIncludes(scope, movement))
         await store.deleteTransaction(movement.id)
+    }
+    for (const rule of await store.fetchRecurringRules()) {
+      if (rule.accountId === accountId || rule.destinationAccountId === accountId)
+        await store.deleteRecurringRule(rule.id)
     }
     for (const card of await store.fetchCards()) {
       if (card.accountId === accountId) await store.deleteCard(card.id)
@@ -347,7 +352,7 @@ export function keeperOf(
 
 /**
  * Every bank account ends with exactly one debit card and one transfer channel: duplicates merge
- * into the most used one, their movements move with them. Safe on every launch; returns whether
+ * into the most used one, their movements and recurring rules move with them. Safe on every launch; returns whether
  * anything changed.
  */
 export async function normalizeBankCards(store: LedgerStore): Promise<boolean> {
@@ -389,6 +394,10 @@ export async function normalizeBankCards(store: LedgerStore): Promise<boolean> {
             return moved
           })
         )
+        for (const rule of await store.fetchRecurringRules()) {
+          if (rule.cardId && merged.has(rule.cardId))
+            await store.saveRecurringRule({ ...rule, cardId: keeper.id })
+        }
         for (const id of merged) await store.deleteCard(id)
       }
     }

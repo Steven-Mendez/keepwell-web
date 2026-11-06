@@ -64,7 +64,7 @@ export async function saveCategory(store: LedgerStore, draft: CategoryDraft): Pr
   return category
 }
 
-/** Deletes a category; its movements move to "Other" of the same kind. */
+/** Deletes a category; its movements and recurring rules move to "Other" of the same kind. */
 export async function deleteCategory(store: LedgerStore, id: string): Promise<void> {
   const category = (await store.fetchCategories()).find((candidate) => candidate.id === id)
   if (!category) return
@@ -73,6 +73,9 @@ export async function deleteCategory(store: LedgerStore, id: string): Promise<vo
   await store.atomically(async () => {
     for (const movement of await store.fetchTransactions()) {
       if (movement.categoryId === id) await store.saveTransaction({ ...movement, categoryId: otherId })
+    }
+    for (const rule of await store.fetchRecurringRules()) {
+      if (rule.categoryId === id) await store.saveRecurringRule({ ...rule, categoryId: otherId })
     }
     await store.deleteCategory(id)
   })

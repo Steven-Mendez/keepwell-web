@@ -86,6 +86,8 @@ export interface TransactionDraft {
   note: string
   /** Saved without counting toward balances until confirmed. */
   isDraft: boolean
+  /** The recurring rule it belongs to; an edit keeps the one it had. */
+  recurringId?: string
 }
 
 export interface TransactionContext {
@@ -150,6 +152,7 @@ export function validatedTransaction(draft: TransactionDraft, context: Transacti
   const description = draft.description.trim()
   const note = draft.note.trim()
   const debited = draft.currency === rate.principal ? undefined : draft.actualDebitedPrincipal
+  const recurringId = draft.recurringId ?? existing?.recurringId
   return {
     id: draft.id,
     date: draft.date.toISOString(),
@@ -167,6 +170,7 @@ export function validatedTransaction(draft: TransactionDraft, context: Transacti
     exchangeRate: rate,
     isShared: existing?.isShared ?? false,
     ...(note === "" ? {} : { note }),
+    ...(recurringId === undefined ? {} : { recurringId }),
   }
 }
 
