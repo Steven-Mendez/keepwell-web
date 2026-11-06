@@ -1,15 +1,13 @@
 import { LocalDataOverview } from "@/components/app/local-data-overview"
 
-export default function Page() {
+export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-svh max-w-md flex-col gap-6 px-(--kw-gutter) py-14">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-(--gutter) py-8 md:px-8 md:py-10">
       <header className="flex flex-col gap-1">
-        <h1 className="text-title">Keepwell</h1>
-        <p className="text-body text-text-muted">
-          Everything below lives in this browser and works offline. Backups open in Keepwell for iPhone too.
-        </p>
+        <h1 className="text-title">Home</h1>
+        <p className="text-body text-muted-foreground">Your data lives on this device and works offline.</p>
       </header>
       <LocalDataOverview />
-    </main>
+    </div>
   )
 }

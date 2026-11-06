@@ -4,6 +4,9 @@ import { Geist_Mono, Inter } from "next/font/google"
 
 import "./globals.css"
 import { AppBootstrap } from "@/components/app/app-bootstrap"
+import { AppShell } from "@/components/app/app-shell"
+import { Toaster } from "@/components/ui/toast"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 // Inter, the family iOS bundles (KWFonts). next/font self-hosts it, so it works offline.
@@ -41,7 +44,12 @@ export default function RootLayout({
         {/* The service worker would cache dev bundles and hide changes, so it only runs in production. */}
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV === "development"}>
           <AppBootstrap />
-          {children}
+          {/* Providers the shadcn tooltip and toast need, once for the whole app. */}
+          <TooltipProvider>
+            <Toaster>
+              <AppShell>{children}</AppShell>
+            </Toaster>
+          </TooltipProvider>
         </SerwistProvider>
       </body>
     </html>

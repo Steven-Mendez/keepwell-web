@@ -1,132 +1,29 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "./tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Keepwell design tokens, mirrored from keepwell-ios Packages/DesignSystem (ColorTokens,
- * OverlayTokens, LayoutTokens, KWTypography). iOS is dark-only (`preferredColorScheme(.dark)`), so
- * this is the app's only palette: `<html class="dark">` applies it. A light palette would go in its
- * own block remapping the same shadcn variables; iOS defines none, so none is invented here.
+ * Structure only: every value lives in tokens.css, derived from the iOS DesignSystem (the single
+ * source of truth) and replaceable by the generator. Rule: our tokens adapt to shadcn's system,
+ * never the components to ours — generated src/components/ui/* stay untouched, and a Keepwell look
+ * shadcn variables can't express is a wrapper in src/components/.
+ *
+ * Utilities added beyond shadcn's: bg/text-positive|pending|negative|extra (+ -foreground, -tint),
+ * brand-500…900, link, nav, divider, control-off, text-secondary, text-faint, category-<key>,
+ * rounded-mini, shadow-glow/depth and the iOS type scale (text-display … text-micro; amount styles
+ * also take `tabular-nums`). Spacing is Tailwind's 4px scale, which KWSpacing already follows.
  */
 :root {
-  color-scheme: dark;
-
-  /* KWColor.Surface */
-  --kw-surface-bg: #000000;
-  --kw-surface-nav: #0b0b0d;
-  --kw-surface: #16161a;
-  --kw-surface-2: #26262d;
-  --kw-surface-divider: #24242a;
-  --kw-surface-border: #2a2a31;
-  --kw-surface-control-off: #3a3a44;
-  --kw-surface-light: #ededf2;
-
-  /* KWColor.Text */
-  --kw-text-primary: #ffffff;
-  --kw-text-secondary: #c9c9d2;
-  --kw-text-muted: #9a9aa6;
-  --kw-text-faint: #8a8a96;
-  --kw-text-on-brand: #c7cdeb;
-  --kw-text-on-positive: #00261a;
-  --kw-text-on-extra: #152000;
-
-  /* KWColor.Brand */
-  --kw-brand-500: #4a74ff;
-  --kw-brand-600: #2448e0;
-  --kw-brand-700: #1a33a8;
-  --kw-brand-900: #0b1550;
-  --kw-brand-accent: #5b7cff;
-  --kw-brand-link: #8fa8ff;
-  --kw-brand-link-hover: #b8c7ff;
-  --kw-brand-gradient: linear-gradient(135deg, var(--kw-brand-500), var(--kw-brand-700));
-
-  /* KWColor.State; `neutral` (transfers between own accounts) uses secondary text */
-  --kw-positive: #3fd69a;
-  --kw-pending: #ffb547;
-  --kw-negative: #ff8a7f;
-  --kw-neutral: var(--kw-text-secondary);
-  --kw-extra: #c8f560;
-
-  /* KWColor.Tint: soft backgrounds behind state icons and pills */
-  --kw-tint-positive: color-mix(in srgb, var(--kw-positive) 14%, transparent);
-  --kw-tint-pending: color-mix(in srgb, var(--kw-pending) 14%, transparent);
-  --kw-tint-negative: color-mix(in srgb, var(--kw-negative) 14%, transparent);
-  --kw-tint-neutral: color-mix(in srgb, var(--kw-neutral) 14%, transparent);
-  --kw-tint-extra: color-mix(in srgb, var(--kw-extra) 14%, transparent);
-  --kw-tint-accent: color-mix(in srgb, var(--kw-brand-accent) 18%, transparent);
-
-  /* KWColor.CardArt: two-stop gradients (135°), by the stored `CardColor` name */
-  --kw-card-azul: linear-gradient(135deg, #4a74ff, #1a33a8);
-  --kw-card-grafito: linear-gradient(135deg, #3a3a44, #121216);
-  --kw-card-platino: linear-gradient(135deg, #e4e6ea, #8c919b);
-  --kw-card-verde: linear-gradient(135deg, #1fc28e, #0b6b4f);
-  --kw-card-violeta: linear-gradient(135deg, #a47bff, #5a2fd0);
-  --kw-card-coral: linear-gradient(135deg, #ff7a50, #c93a12);
-  --kw-card-rojo: linear-gradient(135deg, #d8323f, #6e0b17);
-  --kw-card-oro: linear-gradient(135deg, #edd596, #9a7429);
-  --kw-card-lima: linear-gradient(135deg, #e4fc98, #9cd228);
-  --kw-card-chip: linear-gradient(135deg, #f3e6bc, #b99a5c);
-
-  /* KWColor.categoryPalette: the colors a person can give a created category, by stored key */
-  --kw-category-blue: #5b7cff;
-  --kw-category-purple: #c77dff;
-  --kw-category-pink: #ff7a90;
-  --kw-category-orange: #ff8a50;
-  --kw-category-amber: #ffb547;
-  --kw-category-yellow: #f2d16b;
-  --kw-category-lime: #a3e635;
-  --kw-category-green: #3fd69a;
-  --kw-category-cyan: #4fd1e8;
-  --kw-category-gray: #8a8a96;
-
-  /* KWShadow */
-  --kw-shadow-glow: 0 18px 40px rgb(36 72 224 / 0.4);
-  --kw-shadow-depth: 0 10px 30px rgb(0 0 0 / 0.6);
-
-  /* KWLayout and KWComponentMetrics */
-  --kw-gutter: 16px;
-  --kw-min-touch: 44px;
-  --kw-tab-bar: 84px;
-  --kw-button-height: 54px;
-  --kw-chip-height: 36px;
-  --kw-card-art-ratio: 1.586;
-
-  /* shadcn semantic variables, mapped onto the tokens above */
-  --background: var(--kw-surface-bg);
-  --foreground: var(--kw-text-primary);
-  --card: var(--kw-surface);
-  --card-foreground: var(--kw-text-primary);
-  --popover: var(--kw-surface-2);
-  --popover-foreground: var(--kw-text-primary);
-  --primary: var(--kw-brand-600);
-  --primary-foreground: var(--kw-text-primary);
-  --secondary: var(--kw-surface-2);
-  --secondary-foreground: var(--kw-text-primary);
-  --muted: var(--kw-surface);
-  --muted-foreground: var(--kw-text-muted);
-  --accent: var(--kw-surface-2);
-  --accent-foreground: var(--kw-text-primary);
-  --destructive: var(--kw-negative);
-  --border: var(--kw-surface-border);
-  --input: var(--kw-surface-border);
-  --ring: var(--kw-brand-accent);
-  --chart-1: var(--kw-brand-accent);
-  --chart-2: var(--kw-positive);
-  --chart-3: var(--kw-pending);
-  --chart-4: var(--kw-negative);
-  --chart-5: var(--kw-extra);
-  /* KWRadius.input; shadcn derives sm…4xl from it */
-  --radius: 12px;
-  --sidebar: var(--kw-surface-nav);
-  --sidebar-foreground: var(--kw-text-primary);
-  --sidebar-primary: var(--kw-brand-600);
-  --sidebar-primary-foreground: var(--kw-text-primary);
-  --sidebar-accent: var(--kw-surface-2);
-  --sidebar-accent-foreground: var(--kw-text-primary);
-  --sidebar-border: var(--kw-surface-divider);
-  --sidebar-ring: var(--kw-brand-accent);
+  /* KWColor.Tint: 14% (18% for accent) backgrounds behind state icons and pills */
+  --positive-tint: color-mix(in srgb, var(--positive) 14%, transparent);
+  --pending-tint: color-mix(in srgb, var(--pending) 14%, transparent);
+  --negative-tint: color-mix(in srgb, var(--negative) 14%, transparent);
+  --extra-tint: color-mix(in srgb, var(--extra) 14%, transparent);
+  --neutral-tint: color-mix(in srgb, var(--neutral) 14%, transparent);
+  --accent-tint: color-mix(in srgb, var(--ring) 18%, transparent);
 }
 
 @theme inline {
@@ -165,71 +62,81 @@
   --color-foreground: var(--foreground);
   --color-background: var(--background);
 
-  /* Keepwell names as utilities: bg-surface-2, text-text-muted, text-positive, … */
-  --color-nav: var(--kw-surface-nav);
-  --color-surface: var(--kw-surface);
-  --color-surface-2: var(--kw-surface-2);
-  --color-divider: var(--kw-surface-divider);
-  --color-control-off: var(--kw-surface-control-off);
-  --color-text-primary: var(--kw-text-primary);
-  --color-text-secondary: var(--kw-text-secondary);
-  --color-text-muted: var(--kw-text-muted);
-  --color-text-faint: var(--kw-text-faint);
-  --color-brand-500: var(--kw-brand-500);
-  --color-brand-600: var(--kw-brand-600);
-  --color-brand-700: var(--kw-brand-700);
-  --color-brand-900: var(--kw-brand-900);
-  --color-brand-accent: var(--kw-brand-accent);
-  --color-link: var(--kw-brand-link);
-  --color-positive: var(--kw-positive);
-  --color-pending: var(--kw-pending);
-  --color-negative: var(--kw-negative);
-  --color-neutral: var(--kw-neutral);
-  --color-extra: var(--kw-extra);
+  --color-positive: var(--positive);
+  --color-positive-foreground: var(--positive-foreground);
+  --color-positive-tint: var(--positive-tint);
+  --color-pending: var(--pending);
+  --color-pending-tint: var(--pending-tint);
+  --color-negative: var(--negative);
+  --color-negative-tint: var(--negative-tint);
+  --color-extra: var(--extra);
+  --color-extra-foreground: var(--extra-foreground);
+  --color-extra-tint: var(--extra-tint);
+  --color-neutral: var(--neutral);
+  --color-neutral-tint: var(--neutral-tint);
+  --color-accent-tint: var(--accent-tint);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-900: var(--brand-900);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+  --color-nav: var(--nav);
+  --color-divider: var(--divider);
+  --color-control-off: var(--control-off);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-faint: var(--text-faint);
+  --color-category-blue: var(--category-blue);
+  --color-category-purple: var(--category-purple);
+  --color-category-pink: var(--category-pink);
+  --color-category-orange: var(--category-orange);
+  --color-category-amber: var(--category-amber);
+  --color-category-yellow: var(--category-yellow);
+  --color-category-lime: var(--category-lime);
+  --color-category-green: var(--category-green);
+  --color-category-cyan: var(--category-cyan);
+  --color-category-gray: var(--category-gray);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
+  /* KWRadius.card and KWRadius.surface, so shadcn cards and sheets match iOS exactly */
+  --radius-xl: var(--radius-card);
+  --radius-2xl: var(--radius-surface);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  /* KWRadius by name */
-  --radius-mini: 5px;
-  --radius-input: 12px;
-  --radius-card: 18px;
-  --radius-surface: 20px;
+  --radius-mini: var(--radius-mini);
 
-  --shadow-glow: var(--kw-shadow-glow);
-  --shadow-depth: var(--kw-shadow-depth);
+  --shadow-glow: var(--shadow-glow);
+  --shadow-depth: var(--shadow-depth);
 
-  /* KWTextStyle: size, CSS weight and tracking (pt = px). Amount styles add `tabular-nums`. */
-  --text-display: 3.25rem;
-  --text-display--font-weight: 800;
-  --text-display--letter-spacing: -1.5px;
-  --text-amount-lg: 2.5rem;
-  --text-amount-lg--font-weight: 800;
-  --text-amount-lg--letter-spacing: -1px;
-  --text-title: 1.875rem;
-  --text-title--font-weight: 800;
-  --text-title--letter-spacing: -0.5px;
-  --text-title-sm: 1.625rem;
-  --text-title-sm--font-weight: 800;
-  --text-title-sm--letter-spacing: -0.5px;
-  --text-amount-sm: 1.25rem;
-  --text-amount-sm--font-weight: 800;
-  --text-heading: 1.0625rem;
-  --text-heading--font-weight: 700;
-  --text-body: 0.9375rem;
-  --text-body--font-weight: 400;
-  --text-label: 0.875rem;
-  --text-label--font-weight: 600;
-  --text-caption: 0.8125rem;
-  --text-caption--font-weight: 500;
-  --text-caption-sm: 0.75rem;
-  --text-caption-sm--font-weight: 500;
-  --text-micro: 0.6875rem;
-  --text-micro--font-weight: 600;
+  --text-display: var(--type-display-size);
+  --text-display--font-weight: var(--type-display-weight);
+  --text-display--letter-spacing: var(--type-display-tracking);
+  --text-amount-lg: var(--type-amount-lg-size);
+  --text-amount-lg--font-weight: var(--type-amount-lg-weight);
+  --text-amount-lg--letter-spacing: var(--type-amount-lg-tracking);
+  --text-title: var(--type-title-size);
+  --text-title--font-weight: var(--type-title-weight);
+  --text-title--letter-spacing: var(--type-title-tracking);
+  --text-title-sm: var(--type-title-sm-size);
+  --text-title-sm--font-weight: var(--type-title-sm-weight);
+  --text-title-sm--letter-spacing: var(--type-title-sm-tracking);
+  --text-amount-sm: var(--type-amount-sm-size);
+  --text-amount-sm--font-weight: var(--type-amount-sm-weight);
+  --text-heading: var(--type-heading-size);
+  --text-heading--font-weight: var(--type-heading-weight);
+  --text-body: var(--type-body-size);
+  --text-body--font-weight: var(--type-body-weight);
+  --text-label: var(--type-label-size);
+  --text-label--font-weight: var(--type-label-weight);
+  --text-caption: var(--type-caption-size);
+  --text-caption--font-weight: var(--type-caption-weight);
+  --text-caption-sm: var(--type-caption-sm-size);
+  --text-caption-sm--font-weight: var(--type-caption-sm-weight);
+  --text-micro: var(--type-micro-size);
+  --text-micro--font-weight: var(--type-micro-weight);
 }
 
 @layer base {

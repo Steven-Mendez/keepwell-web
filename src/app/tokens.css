@@ -1,0 +1,158 @@
+/*
+ * Design token VALUES, derived from keepwell-ios Packages/DesignSystem (ColorTokens, LayoutTokens,
+ * KWTypography), the single source of truth. Hand-written first version; meant to be replaced by
+ * the generator that reads the Swift files. globals.css holds only the structure (@theme inline
+ * mappings, variants, base layer), so this file can be swapped wholesale.
+ *
+ * iOS is dark-only (`preferredColorScheme(.dark)`): one palette, applied by `<html class="dark">`.
+ *
+ * shadcn variable                 ← iOS token
+ * background                      ← Surface.bg #000000
+ * foreground                      ← Text.primary #FFFFFF
+ * card, popover                   ← Surface.surface #16161A
+ * primary / primary-foreground    ← the white primary button: #FFFFFF / #000000
+ * secondary, muted, accent        ← Surface.surface2 #26262D
+ * muted-foreground                ← Text.muted #9A9AA6
+ * destructive                     ← State.negative #FF8A7F
+ * border, input                   ← Surface.border #2A2A31
+ * ring                            ← Brand.accent #5B7CFF
+ * chart-1…5                       ← categoryPalette blue, green, amber, purple, cyan
+ * radius                          ← KWRadius.input 12px (rounded-lg 12, rounded-xl 18 = card,
+ *                                   rounded-2xl 20 = surface; see globals.css)
+ */
+:root {
+  color-scheme: dark;
+
+  /* shadcn semantic variables */
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #16161a;
+  --card-foreground: #ffffff;
+  --popover: #16161a;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #26262d;
+  --secondary-foreground: #ffffff;
+  --muted: #26262d;
+  --muted-foreground: #9a9aa6;
+  --accent: #26262d;
+  --accent-foreground: #ffffff;
+  --destructive: #ff8a7f;
+  --border: #2a2a31;
+  --input: #2a2a31;
+  --ring: #5b7cff;
+  --chart-1: #5b7cff;
+  --chart-2: #3fd69a;
+  --chart-3: #ffb547;
+  --chart-4: #c77dff;
+  --chart-5: #4fd1e8;
+  --radius: 12px;
+  --sidebar: #0b0b0d;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #26262d;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #24242a;
+  --sidebar-ring: #5b7cff;
+
+  /* KWColor.State; `neutral` (transfers between own accounts) is Text.secondary */
+  --positive: #3fd69a;
+  --positive-foreground: #00261a;
+  --pending: #ffb547;
+  --negative: #ff8a7f;
+  --extra: #c8f560;
+  --extra-foreground: #152000;
+  --neutral: #c9c9d2;
+
+  /* KWColor.Brand */
+  --brand-500: #4a74ff;
+  --brand-600: #2448e0;
+  --brand-700: #1a33a8;
+  --brand-900: #0b1550;
+  --brand-foreground: #c7cdeb;
+  --link: #8fa8ff;
+  --link-hover: #b8c7ff;
+
+  /* KWColor.Surface and Text beyond shadcn's set */
+  --nav: #0b0b0d;
+  --divider: #24242a;
+  --control-off: #3a3a44;
+  --text-secondary: #c9c9d2;
+  --text-faint: #8a8a96;
+
+  /* KWColor.CardArt: two-stop gradients drawn at 135°, by stored `CardColor` (+ chip) */
+  --card-art-azul-from: #4a74ff;
+  --card-art-azul-to: #1a33a8;
+  --card-art-grafito-from: #3a3a44;
+  --card-art-grafito-to: #121216;
+  --card-art-platino-from: #e4e6ea;
+  --card-art-platino-to: #8c919b;
+  --card-art-verde-from: #1fc28e;
+  --card-art-verde-to: #0b6b4f;
+  --card-art-violeta-from: #a47bff;
+  --card-art-violeta-to: #5a2fd0;
+  --card-art-coral-from: #ff7a50;
+  --card-art-coral-to: #c93a12;
+  --card-art-rojo-from: #d8323f;
+  --card-art-rojo-to: #6e0b17;
+  --card-art-oro-from: #edd596;
+  --card-art-oro-to: #9a7429;
+  --card-art-lima-from: #e4fc98;
+  --card-art-lima-to: #9cd228;
+  --card-art-chip-from: #f3e6bc;
+  --card-art-chip-to: #b99a5c;
+
+  /* KWColor.categoryPalette, by the key a created category stores */
+  --category-blue: #5b7cff;
+  --category-purple: #c77dff;
+  --category-pink: #ff7a90;
+  --category-orange: #ff8a50;
+  --category-amber: #ffb547;
+  --category-yellow: #f2d16b;
+  --category-lime: #a3e635;
+  --category-green: #3fd69a;
+  --category-cyan: #4fd1e8;
+  --category-gray: #8a8a96;
+
+  /* KWRadius beyond --radius */
+  --radius-card: 18px;
+  --radius-surface: 20px;
+  --radius-mini: 5px;
+
+  /* KWShadow */
+  --shadow-glow: 0 18px 40px rgb(36 72 224 / 0.4);
+  --shadow-depth: 0 10px 30px rgb(0 0 0 / 0.6);
+
+  /* KWLayout */
+  --gutter: 16px;
+
+  /* KWTextStyle: size, CSS weight, tracking (iOS pt = CSS px) */
+  --type-display-size: 3.25rem;
+  --type-display-weight: 800;
+  --type-display-tracking: -1.5px;
+  --type-amount-lg-size: 2.5rem;
+  --type-amount-lg-weight: 800;
+  --type-amount-lg-tracking: -1px;
+  --type-title-size: 1.875rem;
+  --type-title-weight: 800;
+  --type-title-tracking: -0.5px;
+  --type-title-sm-size: 1.625rem;
+  --type-title-sm-weight: 800;
+  --type-title-sm-tracking: -0.5px;
+  --type-amount-sm-size: 1.25rem;
+  --type-amount-sm-weight: 800;
+  --type-heading-size: 1.0625rem;
+  --type-heading-weight: 700;
+  --type-body-size: 0.9375rem;
+  --type-body-weight: 400;
+  --type-label-size: 0.875rem;
+  --type-label-weight: 600;
+  --type-caption-size: 0.8125rem;
+  --type-caption-weight: 500;
+  --type-caption-sm-size: 0.75rem;
+  --type-caption-sm-weight: 500;
+  --type-micro-size: 0.6875rem;
+  --type-micro-weight: 600;
+}
