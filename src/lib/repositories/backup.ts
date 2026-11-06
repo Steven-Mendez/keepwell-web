@@ -1,3 +1,4 @@
+import { newID } from "@/lib/platform/uuid"
 import {
   accountToRow,
   cardToRow,
@@ -46,34 +47,66 @@ function audit(row: AuditColumns) {
   }
 }
 
-function columns(record: { createdAt: string; updatedAt: string; deletedAt?: string | undefined }): AuditColumns {
-  return { created_at: record.createdAt, updated_at: record.updatedAt, deleted_at: record.deletedAt ?? null }
+function columns(record: {
+  createdAt: string
+  updatedAt: string
+  deletedAt?: string | undefined
+}): AuditColumns {
+  return {
+    created_at: record.createdAt,
+    updated_at: record.updatedAt,
+    deleted_at: record.deletedAt ?? null,
+  }
 }
 
-const allTables = () => [db.accounts, db.cards, db.categories, db.transactions, db.settings, db.sync_outbox]
+const allTables = () => [
+  db.accounts,
+  db.cards,
+  db.categories,
+  db.transactions,
+  db.settings,
+  db.sync_outbox,
+]
 
 export const backupRepository = {
   /** The whole store, deleted records included, as the JSON file iOS reads (`schemaVersion` 1). */
   async export(): Promise<string> {
-    const file = await db.transaction("r", allTables(), async (): Promise<BackupFile> => {
-      const settings = await db.settings.get(SETTINGS_ID)
-      if (!settings) throw new NothingToBackUpError()
-      const [accounts, cards, categories, transactions] = await Promise.all([
-        db.accounts.orderBy("created_at").toArray(),
-        db.cards.orderBy("created_at").toArray(),
-        db.categories.orderBy("sort_index").toArray(),
-        db.transactions.orderBy("date").reverse().toArray(),
-      ])
-      return {
-        schemaVersion: CURRENT_SCHEMA_VERSION,
-        exportedAt: nowIso(),
-        settings: { ...rowToSettings(settings), updatedAt: settings.updated_at },
-        accounts: accounts.map((row) => ({ ...rowToAccount(row), ...audit(row) })),
-        cards: cards.map((row) => ({ ...rowToCard(row), ...audit(row) })),
-        categories: categories.map((row, index) => ({ ...rowToCategory(row), sortIndex: index, ...audit(row) })),
-        transactions: transactions.map((row) => ({ ...rowToTransaction(row), ...audit(row) })),
+    const file = await db.transaction(
+      "r",
+      allTables(),
+      async (): Promise<BackupFile> => {
+        const settings = await db.settings.get(SETTINGS_ID)
+        if (!settings) throw new NothingToBackUpError()
+        const [accounts, cards, categories, transactions] = await Promise.all([
+          db.accounts.orderBy("created_at").toArray(),
+          db.cards.orderBy("created_at").toArray(),
+          db.categories.orderBy("sort_index").toArray(),
+          db.transactions.orderBy("date").reverse().toArray(),
+        ])
+        return {
+          schemaVersion: CURRENT_SCHEMA_VERSION,
+          exportedAt: nowIso(),
+          settings: {
+            ...rowToSettings(settings),
+            updatedAt: settings.updated_at,
+          },
+          accounts: accounts.map((row) => ({
+            ...rowToAccount(row),
+            ...audit(row),
+          })),
+          cards: cards.map((row) => ({ ...rowToCard(row), ...audit(row) })),
+          categories: categories.map((row, index) => ({
+            ...rowToCategory(row),
+            sortIndex: index,
+            ...audit(row),
+          })),
+          transactions: transactions.map((row) => ({
+            ...rowToTransaction(row),
+            ...audit(row),
+          })),
+        }
       }
-    })
+    )
     return serializeBackupFile(file)
   },
 
@@ -86,19 +119,37 @@ export const backupRepository = {
   async import(text: string): Promise<RestoreSummary> {
     const file = parseBackupFile(text)
     const now = nowIso()
-    const settings = settingsToRow({ ...file.settings, hasCompletedOnboarding: true }, file.settings.updatedAt)
-    const accounts = file.accounts.map((record) => ({ ...accountToRow(record), ...columns(record) }))
-    const cards = file.cards.map((record) => ({ ...cardToRow(record), ...columns(record) }))
+    const settings = settingsToRow(
+      { ...file.settings, hasCompletedOnboarding: true },
+      file.settings.updatedAt
+    )
+    const accounts = file.accounts.map((record) => ({
+      ...accountToRow(record),
+      ...columns(record),
+    }))
+    const cards = file.cards.map((record) => ({
+      ...cardToRow(record),
+      ...columns(record),
+    }))
     const categories = [...file.categories]
       .sort((a, b) => a.sortIndex - b.sortIndex)
-      .map((record, index) => ({ ...categoryToRow(record, index), ...columns(record) }))
-    const transactions = file.transactions.map((record) => ({ ...transactionToRow(record), ...columns(record) }))
+      .map((record, index) => ({
+        ...categoryToRow(record, index),
+        ...columns(record),
+      }))
+    const transactions = file.transactions.map((record) => ({
+      ...transactionToRow(record),
+      ...columns(record),
+    }))
 
     const events: SyncOutboxRow[] = []
-    const record = (entity: SyncEntity, rows: ReadonlyArray<AuditColumns & { id: string }>) => {
+    const record = (
+      entity: SyncEntity,
+      rows: ReadonlyArray<AuditColumns & { id: string }>
+    ) => {
       for (const row of rows) {
         events.push({
-          id: crypto.randomUUID(),
+          id: newID(),
           entity,
           entity_id: row.id,
           operation: row.deleted_at === null ? "update" : "delete",
@@ -111,7 +162,14 @@ export const backupRepository = {
     record("card", cards)
     record("category", categories)
     record("transaction", transactions)
-    events.push({ id: crypto.randomUUID(), entity: "settings", entity_id: SETTINGS_ID, operation: "update", payload: settings, created_at: now })
+    events.push({
+      id: newID(),
+      entity: "settings",
+      entity_id: SETTINGS_ID,
+      operation: "update",
+      payload: settings,
+      created_at: now,
+    })
 
     await db.transaction("rw", allTables(), async () => {
       await Promise.all(allTables().map((table) => table.clear()))
@@ -125,7 +183,8 @@ export const backupRepository = {
 
     return {
       accounts: accounts.filter((row) => row.deleted_at === null).length,
-      transactions: transactions.filter((row) => row.deleted_at === null).length,
+      transactions: transactions.filter((row) => row.deleted_at === null)
+        .length,
       backupDate: file.exportedAt,
     }
   },

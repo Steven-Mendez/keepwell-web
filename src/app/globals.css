@@ -13,8 +13,7 @@
  *
  * Utilities added beyond shadcn's: bg/text-positive|pending|negative|extra (+ -foreground, -tint),
  * brand-500…900, link, nav, divider, control-off, text-secondary, text-faint, category-<key>,
- * rounded-mini, shadow-glow/depth and the iOS type scale (text-display … text-micro; amount styles
- * also take `tabular-nums`). Spacing is Tailwind's 4px scale, which KWSpacing already follows.
+ * rounded-mini, shadow-glow/depth and the iOS type scale (type-display … type-micro, see below). Spacing is Tailwind's 4px scale, which KWSpacing already follows.
  */
 :root {
   /* KWColor.Tint: 14% (18% for accent) backgrounds behind state icons and pills */
@@ -24,6 +23,28 @@
   --extra-tint: color-mix(in srgb, var(--extra) 14%, transparent);
   --neutral-tint: color-mix(in srgb, var(--neutral) 14%, transparent);
   --accent-tint: color-mix(in srgb, var(--ring) 18%, transparent);
+
+  /*
+   * Motion, the web's SwiftUI curves. `out-ios` is the entrance curve for elements and modals (fast
+   * out, long soft landing, no overshoot); `snappy` is `.snappy` and now shares it. `spring` is the
+   * app's standard spring (src/lib/motion.ts: stiffness 450, damping 32, mass 0.8 → ζ 0.84, response
+   * 0.265 s) sampled over --duration-slow into linear(), so CSS and motion/react move alike: a 0.7%
+   * settle past 1, no visible bounce. Frequent actions never exceed 300 ms; `press` is the
+   * `configuration.isPressed` beat.
+   */
+  --ease-out-ios: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snappy: var(--ease-out-ios);
+  --ease-spring: linear(0, 0.046 5%, 0.152 10%, 0.283 15%, 0.418 20%, 0.544 25%, 0.654 30%, 0.746 35%, 0.82 40%, 0.877 45%, 0.92 50%, 0.951 55%, 0.973 60%, 0.988 65%, 0.997 70%, 1.003 75%, 1.006 80%, 1.007 85%, 1.007 90%, 1.007 95%, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --duration-press: 100ms;
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 280ms;
+
+  /* Floating surfaces (dialogs, sheets, menus): a 1 px light edge and two-layer depth on black. */
+  --edge: rgb(255 255 255 / 0.07);
+  --shadow-elevated: 0 0 0 1px var(--edge), 0 1px 0 0 rgb(255 255 255 / 0.05) inset, 0 8px 24px -8px rgb(0 0 0 / 0.6), 0 32px 80px -16px rgb(0 0 0 / 0.85);
+  --shadow-popover: 0 0 0 1px var(--edge), 0 12px 32px -8px rgb(0 0 0 / 0.7);
 }
 
 @theme inline {
@@ -110,33 +131,303 @@
 
   --shadow-glow: var(--shadow-glow);
   --shadow-depth: var(--shadow-depth);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-popover: var(--shadow-popover);
 
-  --text-display: var(--type-display-size);
-  --text-display--font-weight: var(--type-display-weight);
-  --text-display--letter-spacing: var(--type-display-tracking);
-  --text-amount-lg: var(--type-amount-lg-size);
-  --text-amount-lg--font-weight: var(--type-amount-lg-weight);
-  --text-amount-lg--letter-spacing: var(--type-amount-lg-tracking);
-  --text-title: var(--type-title-size);
-  --text-title--font-weight: var(--type-title-weight);
-  --text-title--letter-spacing: var(--type-title-tracking);
-  --text-title-sm: var(--type-title-sm-size);
-  --text-title-sm--font-weight: var(--type-title-sm-weight);
-  --text-title-sm--letter-spacing: var(--type-title-sm-tracking);
-  --text-amount-sm: var(--type-amount-sm-size);
-  --text-amount-sm--font-weight: var(--type-amount-sm-weight);
-  --text-heading: var(--type-heading-size);
-  --text-heading--font-weight: var(--type-heading-weight);
-  --text-body: var(--type-body-size);
-  --text-body--font-weight: var(--type-body-weight);
-  --text-label: var(--type-label-size);
-  --text-label--font-weight: var(--type-label-weight);
-  --text-caption: var(--type-caption-size);
-  --text-caption--font-weight: var(--type-caption-weight);
-  --text-caption-sm: var(--type-caption-sm-size);
-  --text-caption-sm--font-weight: var(--type-caption-sm-weight);
-  --text-micro: var(--type-micro-size);
-  --text-micro--font-weight: var(--type-micro-weight);
+  --ease-out-ios: var(--ease-out-ios);
+  --ease-snappy: var(--ease-snappy);
+  --ease-spring: var(--ease-spring);
+  --ease-exit: var(--ease-exit);
+}
+
+/*
+ * The iOS type scale (KWTextStyle) as `type-*` utilities rather than Tailwind `text-*` sizes: the
+ * class merger shadcn components use reads an unknown `text-*` as a color and would drop the real
+ * color next to it (`text-heading text-primary-foreground`). Amount styles use tabular figures.
+ */
+@utility type-display {
+  font-size: var(--type-display-size);
+  font-weight: var(--type-display-weight);
+  letter-spacing: var(--type-display-tracking);
+  font-variant-numeric: tabular-nums;
+}
+
+@utility type-amount-lg {
+  font-size: var(--type-amount-lg-size);
+  font-weight: var(--type-amount-lg-weight);
+  letter-spacing: var(--type-amount-lg-tracking);
+  font-variant-numeric: tabular-nums;
+}
+
+@utility type-title {
+  font-size: var(--type-title-size);
+  font-weight: var(--type-title-weight);
+  letter-spacing: var(--type-title-tracking);
+}
+
+@utility type-title-sm {
+  font-size: var(--type-title-sm-size);
+  font-weight: var(--type-title-sm-weight);
+  letter-spacing: var(--type-title-sm-tracking);
+}
+
+@utility type-amount-sm {
+  font-size: var(--type-amount-sm-size);
+  font-weight: var(--type-amount-sm-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+@utility type-heading {
+  font-size: var(--type-heading-size);
+  font-weight: var(--type-heading-weight);
+}
+
+@utility type-body {
+  font-size: var(--type-body-size);
+  font-weight: var(--type-body-weight);
+}
+
+@utility type-label {
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+}
+
+@utility type-caption {
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-caption-weight);
+}
+
+@utility type-caption-sm {
+  font-size: var(--type-caption-sm-size);
+  font-weight: var(--type-caption-sm-weight);
+}
+
+@utility type-micro {
+  font-size: var(--type-micro-size);
+  font-weight: var(--type-micro-weight);
+}
+
+/*
+ * One control height: shadcn's fields default to 32 px and its buttons vary, while Keepwell lines
+ * every regular control up at 40 px (see src/components/kw/DESIGN.md). Unlayered, so it wins over
+ * the components' own h-* utilities; compact controls inside rows use the kw 32 px sizes instead.
+ */
+[data-slot="input"],
+[data-slot="input-group"],
+[data-slot="select-trigger"][data-size="default"],
+[data-slot="native-select"] {
+  height: --spacing(10);
+  border-radius: var(--radius-input);
+}
+
+/*
+ * Press feedback, the web's `configuration.isPressed`: iOS buttons dim to 0.7 while held. `press`
+ * adds a slight 0.98 scale for buttons, pills and circles; `press-row` only dims, like tappable list
+ * rows. 100 ms both ways, so a tap reads as touched before the finger lifts.
+ */
+@utility press {
+  transition-property: transform, opacity, background-color, color, box-shadow;
+  transition-duration: var(--duration-press);
+  transition-timing-function: var(--ease-out-ios);
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: scale(0.98);
+    opacity: 0.75;
+  }
+}
+
+@utility press-row {
+  transition-property: opacity, background-color, color;
+  transition-duration: var(--duration-press);
+  transition-timing-function: var(--ease-out-ios);
+  &:active:not(:disabled) {
+    opacity: 0.7;
+  }
+}
+
+/* A row arriving in a list (iOS inserts with opacity + offset); plays once when it mounts. */
+@utility animate-row-in {
+  animation: kw-row-in var(--duration-slow) var(--ease-snappy) both;
+}
+
+/* A row leaving after an action (confirming a draft): fades and slides out before it's removed. */
+@utility animate-row-out {
+  animation: kw-row-out var(--duration-base) var(--ease-exit) both;
+  pointer-events: none;
+}
+
+/* A digit replaced inside an AnimatedNumber (`.contentTransition(.numericText())`). */
+@utility animate-digit-up {
+  animation: kw-digit-up var(--duration-slow) var(--ease-spring) both;
+}
+
+@utility animate-digit-down {
+  animation: kw-digit-down var(--duration-slow) var(--ease-spring) both;
+}
+
+/* Content swapping in place (masking balances, a chart's headline): `.contentTransition(.opacity)`. */
+@utility animate-fade-in {
+  animation: kw-fade-in var(--duration-base) var(--ease-snappy) both;
+}
+
+@keyframes kw-row-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+@keyframes kw-row-out {
+  to {
+    opacity: 0;
+    translate: 24px 0;
+  }
+}
+
+@keyframes kw-digit-up {
+  from {
+    opacity: 0;
+    translate: 0 0.45em;
+    filter: blur(2px);
+  }
+}
+
+@keyframes kw-digit-down {
+  from {
+    opacity: 0;
+    translate: 0 -0.45em;
+    filter: blur(2px);
+  }
+}
+
+@keyframes kw-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+ * Floating layers, restyled from here so src/components/ui stays generated (DESIGN.md rule 9): the
+ * backdrop dims and blurs the app like an iOS sheet's, the surfaces get the light edge and depth,
+ * and tw-animate's enter/exit run on the SwiftUI curves instead of shadcn's flat 100 ms fade.
+ */
+[data-slot="dialog-overlay"],
+[data-slot="alert-dialog-overlay"],
+[data-slot="sheet-overlay"] {
+  background-color: rgb(0 0 0 / 0.62);
+  backdrop-filter: blur(6px) saturate(140%);
+  --tw-duration: var(--duration-base);
+}
+
+[data-slot="dialog-content"],
+[data-slot="alert-dialog-content"] {
+  box-shadow: var(--shadow-elevated);
+  --tw-enter-scale: 0.96;
+  --tw-exit-scale: 0.97;
+  --tw-enter-translate-y: 8px;
+  &[data-open] {
+    --tw-duration: var(--duration-slow);
+    --tw-ease: var(--ease-out-ios);
+  }
+  &[data-closed] {
+    --tw-duration: var(--duration-fast);
+    --tw-ease: var(--ease-exit);
+  }
+}
+
+[data-slot="sheet-content"] {
+  box-shadow: var(--shadow-elevated);
+  transition-duration: var(--duration-slow);
+  transition-timing-function: var(--ease-spring);
+  &[data-ending-style] {
+    transition-duration: var(--duration-base);
+    transition-timing-function: var(--ease-exit);
+  }
+}
+
+[data-slot="popover-content"],
+[data-slot="dropdown-menu-content"],
+[data-slot="select-content"],
+[data-slot="combobox-content"],
+[data-slot="context-menu-content"] {
+  box-shadow: var(--shadow-popover);
+  --tw-enter-scale: 0.96;
+  --tw-exit-scale: 0.97;
+  &[data-open] {
+    --tw-duration: var(--duration-base);
+    --tw-ease: var(--ease-out-ios);
+  }
+  &[data-closed] {
+    --tw-duration: var(--duration-fast);
+    --tw-ease: var(--ease-exit);
+  }
+}
+
+/*
+ * Toasts slide in on the iOS curve in 280 ms instead of shadcn's 500 ms, so the confirmation lands
+ * while the eye is still on the action.
+ */
+[data-slot="toast"] {
+  transition:
+    transform var(--duration-slow) var(--ease-out-ios),
+    opacity var(--duration-base) var(--ease-out-ios),
+    height var(--duration-fast) var(--ease-out-ios);
+}
+
+/*
+ * Success confirmation (a transaction saved, a backup restored): the check badge pops in with the
+ * spring while its ring and tick draw, like iOS's `.sensoryFeedback(.success)` moment made visible.
+ * Lucide's circle-check is a r=10 circle (≈63 long) and a 8.5-long tick; 300 ms all told.
+ */
+[data-slot="toast"][data-type="success"] [data-slot="toast-icon"] {
+  color: var(--positive);
+  & svg {
+    animation: kw-check-pop var(--duration-slow) var(--ease-spring) both;
+  }
+  & circle {
+    stroke-dasharray: 63;
+    animation: kw-draw-63 var(--duration-slow) var(--ease-out-ios) both;
+  }
+  & path {
+    stroke-dasharray: 9;
+    animation: kw-draw-9 var(--duration-base) var(--ease-out-ios) 100ms both;
+  }
+}
+
+@keyframes kw-check-pop {
+  from {
+    scale: 0.5;
+    opacity: 0;
+  }
+}
+
+@keyframes kw-draw-63 {
+  from {
+    stroke-dashoffset: 63;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes kw-draw-9 {
+  from {
+    stroke-dashoffset: 9;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Reduce Motion: keep state changes, drop the travel (SwiftUI's accessibilityReduceMotion). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @layer base {
