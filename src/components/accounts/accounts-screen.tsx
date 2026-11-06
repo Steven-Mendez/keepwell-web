@@ -1,7 +1,7 @@
 "use client"
 
-import { AnimatePresence, motion } from "motion/react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { AnimatePresence, m } from "motion/react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useMemo, useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
@@ -158,7 +158,6 @@ function Accounts() {
   const owner = usePreferredName()
   const { openAddAccount } = useAppActions()
   const router = useRouter()
-  const pathname = usePathname()
   const params = useSearchParams()
   const isWide = useMediaQuery("(min-width: 1024px)")
   const requested = params.get("id") ?? undefined
@@ -191,6 +190,8 @@ function Accounts() {
 
   const select = (id: string | undefined) => {
     setSelected(id)
+    // Read on click rather than with usePathname, which would redraw the screen on every navigation.
+    const { pathname } = window.location
     router.replace(id ? `${pathname}?id=${id}` : pathname, { scroll: false })
   }
 
@@ -296,9 +297,11 @@ function Accounts() {
           </div>
           {isWide ? (
             <aside className="relative min-h-0 overflow-hidden rounded-3xl bg-nav ring-1 ring-divider">
-              {/* The panel swaps cards with a short cross-fade, as a sheet's content does on iOS. */}
+              {/* The panel swaps cards with a short cross-fade, as a sheet's content does on iOS. It
+                  animates the keyed swap only; the panel itself just goes when the window narrows. */}
+              {/* react-doctor-disable-next-line react-doctor/motion-animate-presence-must-outlive-child */}
               <AnimatePresence mode="wait" initial={false}>
-                <motion.div
+                <m.div
                   key={current ?? "none"}
                   className="h-full [scrollbar-width:thin] overflow-y-auto p-5"
                   initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
@@ -314,7 +317,7 @@ function Accounts() {
                       {t.in("web", "Select an account to see its details.")}
                     </p>
                   )}
-                </motion.div>
+                </m.div>
               </AnimatePresence>
             </aside>
           ) : null}

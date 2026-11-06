@@ -1,6 +1,6 @@
 "use client"
 
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, m } from "motion/react"
 import { useState, type ReactNode } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
@@ -215,7 +215,7 @@ function DetailShell({
         onChange={onTab}
       />
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div
+        <m.div
           key={shown.value}
           className="flex flex-col gap-5"
           initial={{ opacity: 0, y: 6 }}
@@ -224,7 +224,7 @@ function DetailShell({
           transition={{ duration: DURATION.base, ease: EASE_OUT_IOS }}
         >
           {shown.content}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   )

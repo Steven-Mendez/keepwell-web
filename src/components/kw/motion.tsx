@@ -2,8 +2,9 @@
 
 import {
   AnimatePresence,
+  LazyMotion,
   MotionConfig,
-  motion,
+  m,
   useReducedMotion,
 } from "motion/react"
 import type { ReactNode } from "react"
@@ -11,16 +12,22 @@ import type { ReactNode } from "react"
 import { DURATION, EASE_OUT_IOS, SPRING } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 
+const loadFeatures = () =>
+  import("@/lib/motion-features").then((module) => module.default)
+
 /**
  * Once for the whole app: every motion/react animation defaults to the standard spring and, under
  * `prefers-reduced-motion`, keeps opacity changes while dropping travel and scale (SwiftUI's
- * accessibilityReduceMotion), like the CSS rule in globals.css.
+ * accessibilityReduceMotion), like the CSS rule in globals.css. The animation code loads after the
+ * first paint (LazyMotion), so every component uses `m.*`, never `motion.*`.
  */
 export function MotionProvider({ children }: { children: ReactNode }) {
   return (
-    <MotionConfig reducedMotion="user" transition={SPRING}>
-      {children}
-    </MotionConfig>
+    <LazyMotion features={loadFeatures} strict>
+      <MotionConfig reducedMotion="user" transition={SPRING}>
+        {children}
+      </MotionConfig>
+    </LazyMotion>
   )
 }
 
@@ -37,7 +44,7 @@ export function SelectionPill({
   className?: string
 }) {
   return (
-    <motion.span
+    <m.span
       aria-hidden
       layoutId={layoutId}
       className={cn(
@@ -63,7 +70,7 @@ export function SpringFill({
 }) {
   const clamped = Math.min(Math.max(fraction, 0), 1)
   return (
-    <motion.span
+    <m.span
       aria-hidden
       className={cn("block h-full w-full origin-left rounded-full", className)}
       initial={{ scaleX: 0 }}
@@ -94,7 +101,7 @@ export function ListItem({
   const reduce = useReducedMotion()
   const hidden = reduce ? { opacity: 0 } : COLLAPSED
   return (
-    <motion.div
+    <m.div
       className={cn("overflow-clip", className)}
       initial={hidden}
       animate={reduce ? { opacity: 1 } : SHOWN}
@@ -102,7 +109,7 @@ export function ListItem({
       transition={{ ...SPRING, opacity: FADE, filter: FADE }}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }
 
