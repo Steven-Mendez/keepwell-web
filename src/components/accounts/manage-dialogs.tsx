@@ -1,5 +1,7 @@
 "use client"
 
+import { NETWORKS, digitsOnly, domainErrorText } from "./form-helpers"
+import { kwButtonClass } from "@/components/kw/design-styles"
 import { useState, type FormEvent, type ReactNode } from "react"
 
 import {
@@ -11,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { KWButton, kwButtonClass } from "@/components/kw/design"
+import { KWButton } from "@/components/kw/design"
 import {
   Dialog,
   DialogContent,
@@ -38,14 +40,7 @@ import type { Account, Card, CardNetwork } from "@/lib/schema"
 import { networkName } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
 
-import {
-  AmountInput,
-  KW_INPUT,
-  LabeledField,
-  NETWORKS,
-  digitsOnly,
-  domainErrorText,
-} from "./form-parts"
+import { AmountInput, KW_INPUT, LabeledField } from "./form-parts"
 
 /** A small edit dialog: the fields, then Save. `onSubmit` throws to keep it open. */
 function EditDialog({

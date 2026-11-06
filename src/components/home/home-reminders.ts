@@ -1,0 +1,142 @@
+import {
+  compareMonths,
+  confirmPlannedTransaction,
+  formatAmount,
+  nextOccurrence,
+  startOfDay,
+  yearMonthContaining,
+  type HomeOverview,
+  type Ledger,
+} from "@/lib/domain"
+import type { KWIconName } from "@/components/kw/kw-icon-data"
+import type { Translator } from "@/lib/i18n"
+import { accountName, cardShortName } from "@/lib/presentation/display"
+import { ledgerStore } from "@/lib/repositories"
+import type { Account } from "@/lib/schema"
+
+export interface Reminder {
+  id: string
+  icon: KWIconName
+  tone: "pending" | "accent" | "negative"
+  title: string
+  body: string
+  action?: { label: string; run: () => void }
+}
+
+/**
+ * What iOS sends as notifications, shown in place on the web: drafts due today, card payments
+ * within the reminder window, statements closing today and plastics expiring this month.
+ */
+export function homeReminders(
+  t: Translator,
+  ledger: Ledger,
+  overview: HomeOverview,
+  now: Date
+): Reminder[] {
+  const today = startOfDay(now).getTime()
+  const endOfToday = today + 86_400_000
+  const display = (account: Account) => {
+    const holder = ledger.cards.find(
+      (card) => card.accountId === account.id && card.kind === "creditHolder"
+    )
+    return holder ? cardShortName(t, holder) : accountName(account)
+  }
+  const reminders: Reminder[] = []
+  const cardsByID = new Map(ledger.cards.map((card) => [card.id, card]))
+  const accountsByID = new Map(
+    ledger.accounts.map((account) => [account.id, account])
+  )
+  for (const transaction of overview.planned) {
+    if (new Date(transaction.date).getTime() >= endOfToday) continue
+    const card = transaction.cardId
+      ? cardsByID.get(transaction.cardId)
+      : undefined
+    const account = accountsByID.get(transaction.accountId)
+    const method = card
+      ? cardShortName(t, card)
+      : account
+        ? accountName(account)
+        : ""
+    reminders.push({
+      id: `planned-${transaction.id}`,
+      icon: "clock",
+      tone: "pending",
+      title: t.in("home", "Draft for today"),
+      body: t.in(
+        "home",
+        "%@ · %@ from %@. Has it been paid?",
+        transaction.description,
+        formatAmount(transaction.amount, transaction.currency),
+        method
+      ),
+      action: {
+        label: t.in("home", "Confirm"),
+        run: () => void confirmPlannedTransaction(ledgerStore, transaction.id),
+      },
+    })
+  }
+  for (const account of ledger.accounts) {
+    if (account.kind !== "credit") continue
+    const dueDay = account.creditTerms?.dueDay
+    if (dueDay) {
+      const due = nextOccurrence(dueDay, now)
+      const days = Math.round((due.getTime() - today) / 86_400_000)
+      if (days <= overview.paymentReminderDaysBefore) {
+        reminders.push({
+          id: `payment-${account.id}`,
+          icon: "creditCard",
+          tone: "negative",
+          title: t.in(
+            "home",
+            "%@: payment in %lld days",
+            display(account),
+            days
+          ),
+          body: t.in(
+            "home",
+            "Pay before day %lld so it doesn't generate interest.",
+            dueDay
+          ),
+        })
+      }
+    }
+    const cutoffDay = account.creditTerms?.cutoffDay
+    if (cutoffDay && nextOccurrence(cutoffDay, now).getTime() === today) {
+      reminders.push({
+        id: `cutoff-${account.id}`,
+        icon: "clock",
+        tone: "accent",
+        title: t.in("home", "%@: statement closes today", display(account)),
+        body: t.in(
+          "home",
+          "From tomorrow, purchases go to next month's statement."
+        ),
+      })
+    }
+  }
+  const thisMonth = yearMonthContaining(now)
+  for (const card of ledger.cards) {
+    if (!card.expiry || compareMonths(card.expiry, thisMonth) !== 0) continue
+    const services = overview.cardSubscriptions.get(card.id) ?? []
+    reminders.push({
+      id: `expiry-${card.id}`,
+      icon: "creditCard",
+      tone: "pending",
+      title: t.in("home", "%@ expires this month", cardShortName(t, card)),
+      body:
+        services.length === 0
+          ? t.in(
+              "home",
+              "Update it wherever it's saved before it stops working."
+            )
+          : t.in(
+              "home",
+              "Update it in %@ before it stops working.",
+              new Intl.ListFormat(t.locale, { type: "conjunction" }).format(
+                services
+              )
+            ),
+    })
+  }
+  return reminders
+}

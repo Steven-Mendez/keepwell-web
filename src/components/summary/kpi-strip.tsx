@@ -1,5 +1,6 @@
 "use client"
 
+import { headline } from "./summary-format"
 import type { ReactNode } from "react"
 
 import { AnimatedNumber } from "@/components/kw/animated-number"
@@ -8,7 +9,7 @@ import { cashFlowOutcome, type SummaryReport } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
-import { headline } from "./cash-flow-card"
+
 import { toneClass, type SummaryFormat, type Tone } from "./summary-format"
 
 /**
