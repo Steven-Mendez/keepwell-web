@@ -14,7 +14,11 @@ import { categoryRepository, ledgerStore } from "@/lib/repositories"
 export function AppBootstrap() {
   useEffect(() => {
     void requestPersistentStorage()
-    void categoryRepository.ensureDefaults().then(() => normalizeBankCards(ledgerStore))
+    // Logged instead of swallowed: a failed seed leaves Categories empty with no other trace.
+    categoryRepository
+      .ensureDefaults()
+      .then(() => normalizeBankCards(ledgerStore))
+      .catch((error: unknown) => console.error("[keepwell] launch setup failed", error))
   }, [])
   return null
 }

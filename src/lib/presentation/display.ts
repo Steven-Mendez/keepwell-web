@@ -70,6 +70,14 @@ export function categoryName(t: Translator, category: TransactionCategory): stri
   return translatesById(category) ? t.in("sharedpresentation", category.name) : category.name
 }
 
+/** A category id's name when the category may be missing: the built-in "Other" ones read as such, anything else as its id. */
+export function categoryNameById(t: Translator, category: TransactionCategory | undefined, id: string): string {
+  if (category) return categoryName(t, category)
+  if (id === OTHER_EXPENSE_ID) return fallbackCategoryName(t, "expense")
+  if (id === OTHER_INCOME_ID) return fallbackCategoryName(t, "income")
+  return id
+}
+
 export function fallbackCategoryName(t: Translator, kind: TransactionKind): string {
   return t.in("sharedpresentation", kind === "income" ? "Other income" : "Other")
 }
