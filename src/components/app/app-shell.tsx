@@ -28,7 +28,7 @@ import { KeyboardShortcuts } from "./keyboard-shortcuts"
 import {
   MAIN_NAV,
   ONBOARDING_PATH,
-  RECURRING_NAV,
+  SECTION_NAV,
   SETTINGS_NAV,
   isStandalonePath,
   type NavItem,
@@ -112,7 +112,7 @@ function TopBar() {
   const [isScrolled, setScrolled] = useState(false)
   const section = pathname.startsWith("/settings/categories")
     ? { ns: "settings" as const, title: "Categories" }
-    : ([...MAIN_NAV, RECURRING_NAV, SETTINGS_NAV]
+    : ([...MAIN_NAV, ...SECTION_NAV, SETTINGS_NAV]
         .filter((item) => item.href !== "/")
         .find((item) => pathname.startsWith(item.href)) ?? MAIN_NAV[0]!)
 

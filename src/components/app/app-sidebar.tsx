@@ -43,7 +43,7 @@ import { accountName } from "@/lib/presentation/display"
 import { cn } from "@/lib/utils"
 
 import { useAppActions } from "./app-actions"
-import { MAIN_NAV, RECURRING_NAV, SETTINGS_NAV, type NavItem } from "./navigation"
+import { MAIN_NAV, SECTION_NAV, SETTINGS_NAV, type NavItem } from "./navigation"
 
 /**
  * The desktop navigation, drawn with the iOS design system: the `nav` surface with its divider (as
@@ -133,14 +133,16 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
                 />
               </li>
             ))}
-            <li>
-              <TabLink
-                item={RECURRING_NAV}
-                shortcut="G R"
-                isCurrent={isCurrent(RECURRING_NAV.href)}
-                onNavigate={close}
-              />
-            </li>
+            {SECTION_NAV.map((item) => (
+              <li key={item.href}>
+                <TabLink
+                  item={item}
+                  shortcut={`G ${item.key.toUpperCase()}`}
+                  isCurrent={isCurrent(item.href)}
+                  onNavigate={close}
+                />
+              </li>
+            ))}
           </ul>
         </nav>
 
