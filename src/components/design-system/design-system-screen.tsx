@@ -1,958 +1,363 @@
 "use client"
 
-import { useState, useSyncExternalStore, type ReactNode } from "react"
+import { useEffect, useState } from "react"
 
-import {
-  KWActionButton,
-  KWButton,
-  KWChip,
-  KWCircleButton,
-  KWEmptyState,
-  KWGroupedCard,
-  KWLargeTitleHeader,
-  KWSegmented,
-  KWTransactionIcon,
-  KWValueRow,
-  type KWButtonSize,
-  type KWButtonVariant,
-  type KWTransactionStyle,
-} from "@/components/kw/design"
-import { transactionAmountClass } from "@/components/kw/design-styles"
-import { KWAppIconTile, KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
-import { KW_ICONS, type KWIconName } from "@/components/kw/kw-icon-data"
-import { CardArt, Page } from "@/components/kw/primitives"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { CardColor } from "@/lib/schema"
+import { KWIcon } from "@/components/kw/kw-icon"
+import { KW_ICONS } from "@/components/kw/kw-icon-data"
+import { Kbd } from "@/components/ui/kbd"
 import { cn } from "@/lib/utils"
 
-// A living reference of the Keepwell design language: every value is read from the tokens the iOS
-// DesignSystem generates (tokens.css), and every sample is the real kw/ component, so the sheet can
-// never drift from what screens actually show. See src/components/kw/DESIGN.md.
+import { BrandSection, Wordmark } from "./ds-brand"
+import {
+  AnatomySection,
+  ButtonsSection,
+  FeedbackSection,
+  FormsSection,
+  ListsSection,
+  SelectionSection,
+  StatusSection,
+} from "./ds-components"
+import {
+  ColorSection,
+  LayoutSection,
+  MotionSection,
+  ShapeSection,
+  TypographySection,
+} from "./ds-foundations"
+import { IconsSection } from "./ds-icons"
+import { DocSection, DoDont } from "./ds-parts"
 
-/** The current value of a CSS custom property on :root (empty on the server). */
-function useToken(name: string): string {
-  return useSyncExternalStore(
-    subscribeNever,
-    () =>
-      getComputedStyle(document.documentElement).getPropertyValue(name).trim(),
-    () => ""
-  )
-}
+// El sistema de diseño de Keepwell, como página propia (sin la barra lateral de la app): marca,
+// fundamentos, componentes y patrones, cada uno dibujado con los componentes reales.
 
-function subscribeNever() {
-  return () => {}
+const NAV: { group: string; items: { id: string; title: string }[] }[] = [
+  { group: "Introducción", items: [{ id: "principios", title: "Principios" }] },
+  { group: "Marca", items: [{ id: "marca", title: "Logo e identidad" }] },
+  {
+    group: "Fundamentos",
+    items: [
+      { id: "color", title: "Color" },
+      { id: "tipografia", title: "Tipografía" },
+      { id: "espaciado", title: "Espaciado y maquetación" },
+      { id: "formas", title: "Radios y elevación" },
+      { id: "movimiento", title: "Movimiento" },
+      { id: "iconos", title: "Iconografía" },
+    ],
+  },
+  {
+    group: "Componentes",
+    items: [
+      { id: "botones", title: "Botones" },
+      { id: "seleccion", title: "Segmentados y chips" },
+      { id: "estados", title: "Movimientos y estados" },
+      { id: "formularios", title: "Formularios" },
+      { id: "listas", title: "Listas y tarjetas" },
+      { id: "comunicacion", title: "Comunicación" },
+    ],
+  },
+  {
+    group: "Patrones",
+    items: [
+      { id: "anatomia", title: "Anatomía de una pantalla" },
+      { id: "accesibilidad", title: "Accesibilidad" },
+    ],
+  },
+]
+
+const IDS = NAV.flatMap((group) => group.items.map((item) => item.id))
+
+/** La sección que se está leyendo, para resaltarla en la navegación. */
+function useActiveSection() {
+  const [active, setActive] = useState(IDS[0]!)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+        if (visible[0]) setActive(visible[0].target.id)
+      },
+      { rootMargin: "-10% 0px -75% 0px" }
+    )
+    for (const id of IDS) {
+      const node = document.getElementById(id)
+      if (node) observer.observe(node)
+    }
+    return () => observer.disconnect()
+  }, [])
+  return active
 }
 
 export function DesignSystemScreen() {
+  const active = useActiveSection()
   return (
-    <Page>
-      <KWLargeTitleHeader
-        title="Design system"
-        subtitle="Keepwell's tokens and components, generated from the iOS DesignSystem."
-        trailing={<KWAppIconTile size={40} />}
-      />
-      <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)] lg:items-start">
-        <div className="flex flex-col gap-6">
-          <TypographyCard />
-          <ColorsCard />
-        </div>
-        <ComponentsCard />
+    <div className="min-h-svh bg-background">
+      <div className="mx-auto grid w-full max-w-[1600px] gap-10 px-(--gutter) md:px-8 lg:grid-cols-[232px_minmax(0,1fr)]">
+        <aside className="hidden lg:block">
+          <nav
+            aria-label="Secciones"
+            className="sticky top-0 flex max-h-svh flex-col gap-6 overflow-y-auto py-10"
+          >
+            <a
+              href="#inicio"
+              className="self-start rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Wordmark size={26} />
+            </a>
+            {NAV.map((group) => (
+              <div key={group.group} className="flex flex-col gap-1">
+                <span className="px-3 pb-1 type-micro tracking-widest text-text-faint uppercase">
+                  {group.group}
+                </span>
+                {group.items.map((item) => (
+                  <a
+                    key={item.id}
+                    href={`#${item.id}`}
+                    aria-current={active === item.id ? "location" : undefined}
+                    className={cn(
+                      "rounded-lg px-3 py-1.5 type-label transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      active === item.id
+                        ? "bg-card text-foreground"
+                        : "text-text-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.title}
+                  </a>
+                ))}
+              </div>
+            ))}
+          </nav>
+        </aside>
+
+        <main className="flex min-w-0 flex-col gap-16 py-10">
+          <Hero />
+          <MobileNav />
+          <PrinciplesSection />
+          <BrandSection />
+          <ColorSection />
+          <TypographySection />
+          <LayoutSection />
+          <ShapeSection />
+          <MotionSection />
+          <IconsSection />
+          <ButtonsSection />
+          <SelectionSection />
+          <StatusSection />
+          <FormsSection />
+          <ListsSection />
+          <FeedbackSection />
+          <AnatomySection />
+          <AccessibilitySection />
+          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-divider pt-6 type-caption text-text-faint">
+            <Wordmark size={18} className="text-text-faint" />
+            <span>Sistema de diseño de Keepwell</span>
+          </footer>
+        </main>
       </div>
-    </Page>
+    </div>
   )
 }
 
-// MARK: - Layout pieces
-
-function Card({
-  className,
-  children,
-}: {
-  className?: string
-  children: ReactNode
-}) {
+function Hero() {
+  const stats = [
+    { value: "Inter", label: "familia tipográfica" },
+    { value: "11", label: "estilos de texto" },
+    { value: String(Object.keys(KW_ICONS).length), label: "iconos" },
+    { value: "32 · 40 · 48", label: "alturas de control" },
+  ]
   return (
-    <section
-      className={cn(
-        "flex flex-col gap-6 rounded-[var(--radius-surface)] bg-card p-6 md:p-8",
-        className
-      )}
+    <header
+      id="inicio"
+      className="flex scroll-mt-8 flex-col gap-8 overflow-hidden rounded-[var(--radius-surface)] p-8 md:p-12"
+      style={{
+        backgroundImage:
+          "linear-gradient(135deg, var(--brand-600), var(--brand-900) 60%, var(--kw-surface-surface))",
+      }}
     >
-      {children}
-    </section>
-  )
-}
-
-function CardTitle({ title, tag }: { title: string; tag: string }) {
-  return (
-    <header className="flex flex-wrap items-center gap-3">
-      <h2 className="type-title-sm text-foreground">{title}</h2>
-      <Tag>{tag}</Tag>
+      <Wordmark size={36} className="text-white" />
+      <div className="flex max-w-2xl flex-col gap-3">
+        <h1 className="type-display text-white">Sistema de diseño</h1>
+        <p className="type-heading font-medium text-brand-foreground">
+          Este es el sistema de diseño de Keepwell.
+        </p>
+      </div>
+      <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            className="flex flex-col rounded-2xl bg-black/25 p-4 backdrop-blur-sm"
+          >
+            <dt className="order-2 type-caption text-brand-foreground">
+              {stat.label}
+            </dt>
+            <dd className="type-amount-sm text-white">{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
     </header>
   )
 }
 
-/** The outlined pill beside a card title ("11 styles"). */
-function Tag({ children }: { children: ReactNode }) {
+/** En pantallas estrechas la navegación lateral se convierte en una fila de enlaces desplazable. */
+function MobileNav() {
   return (
-    <span className="inline-flex h-8 items-center rounded-full px-3.5 type-micro tracking-wider text-link uppercase ring-1 ring-ring/60 ring-inset">
-      {children}
-    </span>
-  )
-}
-
-function Block({
-  title,
-  meta,
-  children,
-}: {
-  title: string
-  meta: string
-  children: ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <h3 className="type-heading text-foreground">{title}</h3>
-        <span className="type-caption text-muted-foreground">{meta}</span>
-      </div>
-      {children}
-    </div>
-  )
-}
-
-/** The dashed frame that marks a component set, split into dashed columns. */
-function Frame({
-  columns,
-  className,
-  children,
-}: {
-  columns?: boolean
-  className?: string
-  children: ReactNode
-}) {
-  return (
-    <div
-      className={cn(
-        "overflow-x-auto rounded-xl border border-dashed border-ring/45 bg-background",
-        columns && "flex divide-x divide-dashed divide-ring/45 [&>*]:shrink-0",
-        className
-      )}
+    <nav
+      aria-label="Secciones"
+      className="-mx-(--gutter) flex gap-2 overflow-x-auto px-(--gutter) md:-mx-8 md:px-8 lg:hidden"
     >
-      {children}
-    </div>
-  )
-}
-
-function Caption({
-  children,
-  className,
-}: {
-  children: ReactNode
-  className?: string
-}) {
-  return (
-    <span className={cn("type-caption-sm text-text-faint", className)}>
-      {children}
-    </span>
-  )
-}
-
-// MARK: - Typography
-
-const TYPE_STYLES = [
-  { name: "display", className: "type-display", sample: "C$12,480" },
-  { name: "amount-lg", className: "type-amount-lg", sample: "C$3,215.40" },
-  { name: "title", className: "type-title", sample: "Summary" },
-  { name: "title-sm", className: "type-title-sm", sample: "Accounts" },
-  { name: "amount-sm", className: "type-amount-sm", sample: "−C$84.00" },
-  { name: "heading", className: "type-heading", sample: "Recent movements" },
-  {
-    name: "body",
-    className: "type-body",
-    sample: "Personal finances on your device.",
-  },
-  { name: "label", className: "type-label", sample: "Add account" },
-  {
-    name: "caption",
-    className: "type-caption",
-    sample: "Yesterday · Groceries",
-  },
-  {
-    name: "caption-sm",
-    className: "type-caption-sm",
-    sample: "Updated 2 min ago",
-  },
-  { name: "micro", className: "type-micro", sample: "LAST FOUR" },
-] as const
-
-function TypographyCard() {
-  return (
-    <Card>
-      <CardTitle title="Typography" tag={`${TYPE_STYLES.length} styles`} />
-      <p className="type-body leading-relaxed text-muted-foreground">
-        Inter, the variable family iOS bundles, on the KWTextStyle scale.
-        Amounts use tabular figures so columns of numbers line up.
-      </p>
-      <div className="flex items-end gap-3 text-foreground" aria-hidden>
-        <span
-          className="leading-none font-extrabold tracking-tighter"
-          style={{ fontSize: "8rem" }}
+      {NAV.flatMap((group) => group.items).map((item) => (
+        <a
+          key={item.id}
+          href={`#${item.id}`}
+          className="inline-flex h-8 shrink-0 items-center rounded-full bg-card px-3.5 type-label whitespace-nowrap text-text-secondary outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
-          Aa
-        </span>
-        <span className="pb-3 type-title">Aa</span>
-        <span className="pb-4 type-heading">Aa</span>
-      </div>
-      <ul className="flex flex-col divide-y divide-divider">
-        {TYPE_STYLES.map((style) => (
-          <TypeRow key={style.name} {...style} />
-        ))}
-      </ul>
-    </Card>
+          {item.title}
+        </a>
+      ))}
+    </nav>
   )
 }
 
-function TypeRow({
-  name,
-  className,
-  sample,
-}: {
-  name: string
-  className: string
-  sample: string
-}) {
-  const size = useToken(`--type-${name}-size`)
-  const weight = useToken(`--type-${name}-weight`)
-  const px = size.endsWith("rem")
-    ? `${Math.round(parseFloat(size) * 16)}`
-    : size
-  return (
-    <li className="flex flex-col gap-1 py-3">
-      <span className={cn("truncate text-foreground", className)}>
-        {sample}
-      </span>
-      <Caption>
-        type-{name} · {px}/{weight}
-      </Caption>
-    </li>
-  )
-}
-
-// MARK: - Colors
-
-const RAMPS: { name: string; tokens: string[] }[] = [
+const PRINCIPLES = [
   {
-    name: "Surface",
-    tokens: [
-      "--kw-surface-bg",
-      "--kw-surface-nav",
-      "--kw-surface-surface",
-      "--kw-surface-divider",
-      "--kw-surface-surface2",
-      "--kw-surface-border",
-      "--kw-surface-control-off",
-      "--kw-surface-light",
-    ],
+    icon: "list",
+    title: "Construye con kw/",
+    text: "Las pantallas se arman con los componentes de src/components/kw. shadcn queda debajo para el comportamiento, nunca con su aspecto.",
   },
   {
-    name: "Text",
-    tokens: [
-      "--kw-text-faint",
-      "--kw-text-muted",
-      "--kw-text-secondary",
-      "--kw-text-on-brand",
-      "--kw-text-primary",
-    ],
+    icon: "droplet",
+    title: "Color por rol",
+    text: "Nunca hex sueltos: bg-card, text-negative, text-link… El gasto es coral suave, nunca rojo de alarma.",
   },
   {
-    name: "Brand",
-    tokens: [
-      "--kw-brand-b900",
-      "--kw-brand-b700",
-      "--kw-brand-b600",
-      "--kw-brand-b500",
-      "--kw-brand-accent",
-      "--kw-brand-link",
-      "--kw-brand-link-hover",
-    ],
+    icon: "pencil",
+    title: "Una escala de texto",
+    text: "Solo las clases type-* (display, title, heading, body, label, caption, micro). Nunca los tamaños de texto de Tailwind.",
   },
   {
-    name: "State",
-    tokens: [
-      "--kw-state-negative",
-      "--kw-state-pending",
-      "--kw-state-extra",
-      "--kw-state-positive",
-    ],
+    icon: "barsBaseline",
+    title: "Tres alturas",
+    text: "32, 40 y 48 px. Los controles de una misma fila comparten altura.",
   },
   {
-    name: "Tints",
-    tokens: [
-      "--negative-tint",
-      "--pending-tint",
-      "--extra-tint",
-      "--positive-tint",
-      "--neutral-tint",
-      "--accent-tint",
-    ],
+    icon: "creditCard",
+    title: "Formas constantes",
+    text: "Píldoras para botones y chips; 20 px para tarjetas; 12 px para campos; 18 px para el arte de tarjetas.",
   },
   {
-    name: "Category",
-    tokens: [
-      "--category-blue",
-      "--category-purple",
-      "--category-pink",
-      "--category-orange",
-      "--category-amber",
-      "--category-yellow",
-      "--category-lime",
-      "--category-green",
-      "--category-cyan",
-      "--category-gray",
-    ],
-  },
-]
-
-function ColorsCard() {
-  const count = RAMPS.reduce((total, ramp) => total + ramp.tokens.length, 0)
-  return (
-    <Card>
-      <CardTitle title="Colors" tag={`${count} tokens`} />
-      <p className="type-body leading-relaxed text-muted-foreground">
-        Dark only, like iOS. Screens never use raw hex: hover a swatch for its
-        token.
-      </p>
-      <div className="flex flex-col gap-4">
-        {RAMPS.map((ramp) => (
-          <div key={ramp.name} className="flex flex-col gap-1.5">
-            <Caption>{ramp.name}</Caption>
-            <div className="flex h-14 overflow-hidden rounded-xl ring-1 ring-border ring-inset">
-              {ramp.tokens.map((token) => (
-                <Swatch key={token} token={token} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
-  )
-}
-
-function Swatch({ token }: { token: string }) {
-  const value = useToken(token)
-  const label = `${token.replace(/^--(kw-)?/, "")} ${value}`
-  return (
-    <span
-      className="min-w-0 flex-1 transition-[flex-grow] duration-(--duration-base) hover:grow-[2.5]"
-      style={{ backgroundColor: `var(${token})` }}
-      title={label}
-      aria-label={label}
-    />
-  )
-}
-
-// MARK: - Components
-
-function ComponentsCard() {
-  return (
-    <Card className="min-w-0 gap-10">
-      <CardTitle title="Components" tag="src/components/kw" />
-      <ButtonsBlock />
-      <CircleBlock />
-      <SelectionBlock />
-      <PillsBlock />
-      <MovementsBlock />
-      <FormsBlock />
-      <RowsBlock />
-      <CardArtBlock />
-      <IconsBlock />
-      <SpacingBlock />
-    </Card>
-  )
-}
-
-const BUTTON_VARIANTS: KWButtonVariant[] = [
-  "primary",
-  "secondary",
-  "surface",
-  "destructive",
-  "link",
-  "plain",
-]
-const BUTTON_SIZES: { size: KWButtonSize; px: number }[] = [
-  { size: "large", px: 48 },
-  { size: "regular", px: 40 },
-  { size: "small", px: 32 },
-]
-
-function ButtonsBlock() {
-  return (
-    <Block
-      title="Button"
-      meta={`${BUTTON_SIZES.length} heights / ${BUTTON_VARIANTS.length} roles + disabled`}
-    >
-      <Frame columns>
-        {BUTTON_SIZES.map(({ size, px }) => (
-          <div key={size} className="flex flex-col gap-4 p-5">
-            <Caption>
-              {size} · {px}px
-            </Caption>
-            {BUTTON_VARIANTS.map((variant) => (
-              <div key={variant} className="flex items-center gap-3">
-                <KWButton variant={variant} size={size} icon="plus">
-                  Button
-                </KWButton>
-                <KWButton
-                  variant={variant}
-                  size={size}
-                  aria-label="Next"
-                  className="aspect-square px-0"
-                >
-                  <KWIcon
-                    name="arrowRight"
-                    size={size === "small" ? 16 : 18}
-                    strokeWidth={2.2}
-                  />
-                </KWButton>
-              </div>
-            ))}
-            <div className="flex items-center gap-3">
-              <KWButton size={size} icon="plus" disabled>
-                Button
-              </KWButton>
-              <KWButton
-                size={size}
-                aria-label="Next"
-                className="aspect-square px-0"
-                disabled
-              >
-                <KWIcon
-                  name="arrowRight"
-                  size={size === "small" ? 16 : 18}
-                  strokeWidth={2.2}
-                />
-              </KWButton>
-            </div>
-          </div>
-        ))}
-      </Frame>
-      <Caption>
-        Rows, top to bottom: {[...BUTTON_VARIANTS, "disabled"].join(" · ")}
-      </Caption>
-      <Frame className="flex flex-wrap items-center gap-3 p-5">
-        <KWButton shortcut="N" icon="plus">
-          New expense
-        </KWButton>
-        <KWButton variant="surface" shortcut="⌘K" icon="search">
-          Search
-        </KWButton>
-        <KWButton size="large" fill className="sm:w-auto">
-          Continue
-        </KWButton>
-      </Frame>
-    </Block>
-  )
-}
-
-function CircleBlock() {
-  return (
-    <Block title="Circle & action buttons" meta="40px circles / 48px actions">
-      <Frame columns>
-        <div className="flex flex-col gap-4 p-5">
-          <Caption>KWCircleButton</Caption>
-          <div className="flex items-center gap-3">
-            <KWCircleButton
-              icon="plus"
-              label="Add"
-              variant="white"
-              shortcut="N"
-            />
-            <KWCircleButton icon="search" label="Search" shortcut="/" />
-            <KWCircleButton icon="chevronLeft" label="Back" />
-            <KWCircleButton icon="close" label="Close" />
-            <KWCircleButton icon="more" label="More" size={32} />
-          </div>
-          <div
-            className="flex items-center gap-3 rounded-xl p-3"
-            style={{
-              backgroundImage:
-                "linear-gradient(135deg, var(--brand-500), var(--brand-700))",
-            }}
-          >
-            <KWCircleButton
-              icon="eye"
-              label="Show balances"
-              variant="translucent"
-            />
-            <KWCircleButton icon="share" label="Share" variant="translucent" />
-          </div>
-        </div>
-        <div className="flex flex-col gap-4 p-5">
-          <Caption>KWActionButton</Caption>
-          <div className="flex items-start gap-2">
-            <KWActionButton
-              icon="arrowUpRight"
-              title="Expense"
-              variant="prominent"
-            />
-            <KWActionButton icon="arrowDownLeft" title="Income" />
-            <KWActionButton icon="transfer" title="Transfer" />
-            <KWActionButton icon="freeze" title="Freeze" variant="active" />
-          </div>
-        </div>
-      </Frame>
-    </Block>
-  )
-}
-
-function SelectionBlock() {
-  const [period, setPeriod] = useState<"week" | "month" | "year">("month")
-  const [compact, setCompact] = useState<"in" | "out">("out")
-  const [accent, setAccent] = useState<"1m" | "3m" | "6m" | "1y">("3m")
-  const [filter, setFilter] = useState("all")
-  const [currency, setCurrency] = useState("NIO")
-  return (
-    <Block title="Segmented & chip" meta="3 segmented styles / 3 chip looks">
-      <Frame columns>
-        <div className="flex w-80 flex-col gap-4 p-5">
-          <Caption>KWSegmented large · compact · accent</Caption>
-          <KWSegmented
-            aria-label="Period"
-            value={period}
-            onChange={setPeriod}
-            options={[
-              { value: "week", title: "Week" },
-              { value: "month", title: "Month" },
-              { value: "year", title: "Year" },
-            ]}
-          />
-          <div className="flex flex-wrap gap-3">
-            <KWSegmented
-              aria-label="Direction"
-              style="compact"
-              value={compact}
-              onChange={setCompact}
-              options={[
-                { value: "out", title: "Money out" },
-                { value: "in", title: "Money in" },
-              ]}
-            />
-            <KWSegmented
-              aria-label="Range"
-              style="accent"
-              value={accent}
-              onChange={setAccent}
-              options={[
-                { value: "1m", title: "1M" },
-                { value: "3m", title: "3M" },
-                { value: "6m", title: "6M" },
-                { value: "1y", title: "1Y" },
-              ]}
-            />
-          </div>
-        </div>
-        <div className="flex flex-col gap-4 p-5">
-          <Caption>KWChip filled · outlined · extra</Caption>
-          <div className="flex gap-2">
-            {["all", "expenses", "income"].map((value) => (
-              <KWChip
-                key={value}
-                selected={filter === value}
-                onClick={() => setFilter(value)}
-                pillId="ds-filter"
-                className="capitalize"
-              >
-                {value}
-              </KWChip>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            {["NIO", "USD", "EUR"].map((value) => (
-              <KWChip
-                key={value}
-                look="outlined"
-                selected={currency === value}
-                onClick={() => setCurrency(value)}
-              >
-                {value}
-              </KWChip>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <KWChip look="extra" selected>
-              <KWIcon name="bolt" size={14} /> Highlight
-            </KWChip>
-            <KWChip look="extra" selected={false}>
-              Off
-            </KWChip>
-          </div>
-        </div>
-      </Frame>
-    </Block>
-  )
-}
-
-const PILL_TONES = [
-  { tone: "accent", className: "bg-accent-tint text-link", ring: "ring-ring" },
-  {
-    tone: "positive",
-    className: "bg-positive-tint text-positive",
-    ring: "ring-positive",
+    icon: "home",
+    title: "Misma estructura",
+    text: "Page → KWLargeTitleHeader → KWSection → KWGroupedCard. Los títulos se alinean de pantalla a pantalla.",
   },
   {
-    tone: "negative",
-    className: "bg-negative-tint text-negative",
-    ring: "ring-negative",
+    icon: "bolt",
+    title: "Pensado para escritorio",
+    text: "Hover y foco visibles en todo lo clicable, tooltips con atajos, dos columnas desde lg y diálogos en lugar de hojas.",
   },
   {
-    tone: "pending",
-    className: "bg-pending-tint text-pending",
-    ring: "ring-pending",
-  },
-  { tone: "extra", className: "bg-extra-tint text-extra", ring: "ring-extra" },
-  {
-    tone: "neutral",
-    className: "bg-neutral-tint text-neutral",
-    ring: "ring-neutral",
+    icon: "phone",
+    title: "iOS es la referencia",
+    text: "Colores, tipografía, radios e iconos vienen del DesignSystem de iOS y se sincronizan con pnpm tokens:sync.",
   },
 ] as const
 
-function PillsBlock() {
+function PrinciplesSection() {
   return (
-    <Block title="Badge & chip" meta="2 sizes / 2 styles / 6 tones">
-      <Frame columns>
-        {(["tint", "outline"] as const).map((style) =>
-          ([32, 24] as const).map((height) => (
-            <div key={`${style}-${height}`} className="flex flex-col gap-3 p-5">
-              <Caption>
-                {style} · {height}px
-              </Caption>
-              {PILL_TONES.map((pill) => (
-                <div key={pill.tone} className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full font-semibold capitalize",
-                      height === 32
-                        ? "h-8 px-3 type-caption"
-                        : "h-6 px-2.5 type-micro",
-                      style === "tint"
-                        ? pill.className
-                        : cn(
-                            "ring-1 ring-inset",
-                            pill.ring,
-                            pill.className.split(" ")[1]
-                          )
-                    )}
-                  >
-                    <KWIcon
-                      name="check"
-                      size={height === 32 ? 14 : 12}
-                      strokeWidth={2.4}
-                    />
-                    {pill.tone}
-                    <KWIcon
-                      name="close"
-                      size={height === 32 ? 12 : 10}
-                      strokeWidth={2.4}
-                      className="opacity-70"
-                    />
-                  </span>
-                  <span
-                    className={cn(
-                      "inline-flex items-center justify-center rounded-full",
-                      height === 32 ? "size-8" : "size-6",
-                      style === "tint"
-                        ? pill.className
-                        : cn(
-                            "ring-1 ring-inset",
-                            pill.ring,
-                            pill.className.split(" ")[1]
-                          )
-                    )}
-                  >
-                    <KWIcon
-                      name="heart"
-                      size={height === 32 ? 14 : 12}
-                      strokeWidth={2.2}
-                    />
-                  </span>
-                </div>
-              ))}
-            </div>
-          ))
-        )}
-      </Frame>
-    </Block>
-  )
-}
-
-const MOVEMENTS: {
-  style: KWTransactionStyle
-  title: string
-  amount: string
-}[] = [
-  { style: "expense", title: "Expense", amount: "−C$420.00" },
-  { style: "income", title: "Income", amount: "+C$18,500.00" },
-  { style: "transfer", title: "Transfer", amount: "C$2,000.00" },
-  { style: "planned", title: "Planned", amount: "−C$299.00" },
-]
-
-function MovementsBlock() {
-  return (
-    <Block title="Movement styles" meta="KWTransactionIcon / amount colors">
-      <Frame className="grid gap-4 p-5 sm:grid-cols-2 xl:grid-cols-4">
-        {MOVEMENTS.map((movement) => (
-          <div key={movement.style} className="flex items-center gap-3">
-            <KWTransactionIcon style={movement.style} />
-            <div className="flex min-w-0 flex-col">
-              <span className="type-label text-foreground">
-                {movement.title}
-              </span>
-              <span
-                className={cn(
-                  "type-body font-semibold tabular-nums",
-                  transactionAmountClass(movement.style)
-                )}
-              >
-                {movement.amount}
-              </span>
-            </div>
-          </div>
-        ))}
-      </Frame>
-    </Block>
-  )
-}
-
-const INPUT =
-  "h-10 rounded-xl border-0 bg-secondary px-3 type-body shadow-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-secondary"
-
-function FormsBlock() {
-  return (
-    <Block title="Forms" meta="40px fields / 12px radius">
-      <Frame className="grid gap-5 p-5 md:grid-cols-2 xl:grid-cols-4">
-        <Field label="Placeholder">
-          <Input className={INPUT} placeholder="Account name" />
-        </Field>
-        <Field label="Filled">
-          <Input className={INPUT} defaultValue="BAC Credomatic" />
-        </Field>
-        <Field
-          label="Invalid"
-          hint={
-            <span className="text-negative">Enter the last four digits.</span>
-          }
-        >
-          <Input
-            className={cn(
-              INPUT,
-              "ring-2 ring-negative focus-visible:ring-negative"
-            )}
-            defaultValue="12"
-            aria-invalid
-          />
-        </Field>
-        <Field label="Disabled">
-          <Input className={INPUT} defaultValue="NIO" disabled />
-        </Field>
-      </Frame>
-    </Block>
-  )
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string
-  hint?: ReactNode
-  children: ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label className="type-label text-text-secondary">{label}</Label>
-      {children}
-      {hint ? <span className="type-caption">{hint}</span> : null}
-    </div>
-  )
-}
-
-function RowsBlock() {
-  return (
-    <Block
-      title="Grouped card & rows"
-      meta="KWGroupedCard / KWValueRow / KWEmptyState"
+    <DocSection
+      id="principios"
+      eyebrow="Introducción"
+      title="Principios"
+      description="Ocho reglas que mantienen la web y la app de iPhone como un mismo producto. La guía para el código está en src/components/kw/DESIGN.md."
     >
-      <Frame className="grid gap-5 p-5 lg:grid-cols-2">
-        <KWGroupedCard>
-          <KWValueRow
-            label="Currency"
-            value="Córdoba (NIO)"
-            onClick={() => {}}
-          />
-          <KWValueRow
-            label="Reminders"
-            value="3 days before"
-            onClick={() => {}}
-          />
-          <KWValueRow
-            label="Main card"
-            leading={<KWMiniCard color="azul" size="tiny" />}
-            value="•••• 4821"
-          />
-          <KWValueRow label="Export CSV" tone="link" onClick={() => {}} />
-          <KWValueRow
-            label="Erase all data"
-            tone="destructive"
-            onClick={() => {}}
-          />
-        </KWGroupedCard>
-        <div className="rounded-[var(--radius-surface)] bg-card">
-          <KWEmptyState
-            icon="list"
-            title="No movements yet"
-            message="Record your first expense or income to see it here."
-            action={
-              <KWButton icon="plus" shortcut="N">
-                New expense
-              </KWButton>
-            }
-          />
-        </div>
-      </Frame>
-    </Block>
-  )
-}
-
-function CardArtBlock() {
-  const colors = CardColor.options
-  return (
-    <Block title="Card art" meta={`${colors.length} palettes / 135° gradients`}>
-      <Frame className="grid gap-5 p-5 sm:grid-cols-2 xl:grid-cols-3">
-        {colors.map((color, index) => (
-          <CardArt
-            key={color}
-            color={color}
-            bank={color.charAt(0).toUpperCase() + color.slice(1)}
-            kind="debit"
-            network={(["visa", "mastercard", "amex"] as const)[index % 3]}
-            lastFour={String(4821 + index * 111).slice(-4)}
-            kindLabel="Debit"
-            holder="KEEPWELL"
-          />
-        ))}
-      </Frame>
-    </Block>
-  )
-}
-
-function IconsBlock() {
-  const names = Object.keys(KW_ICONS) as KWIconName[]
-  return (
-    <Block
-      title="Icons"
-      meta={`${names.length} KWIcon glyphs / 24×24 / 2px stroke`}
-    >
-      <Frame className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-1 p-3">
-        {names.map((name) => (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {PRINCIPLES.map((principle, index) => (
           <div
-            key={name}
-            className="flex flex-col items-center gap-2 rounded-xl px-1 py-3 text-foreground transition-colors hover:bg-secondary/50"
+            key={principle.title}
+            className="flex flex-col gap-3 rounded-[var(--radius-surface)] bg-card p-5"
           >
-            <KWIcon name={name} size={24} />
-            <span className="w-full truncate text-center type-micro text-text-faint">
-              {name}
+            <div className="flex items-center justify-between">
+              <span className="flex size-10 items-center justify-center rounded-full bg-accent-tint text-link">
+                <KWIcon name={principle.icon} size={20} />
+              </span>
+              <span className="font-mono type-caption-sm text-text-faint">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+            </div>
+            <span className="type-heading text-foreground">
+              {principle.title}
+            </span>
+            <span className="type-caption leading-relaxed text-muted-foreground">
+              {principle.text}
             </span>
           </div>
         ))}
-      </Frame>
-    </Block>
+      </div>
+    </DocSection>
   )
 }
 
-const SPACING = [4, 8, 12, 16, 24, 32, 48]
-const RADII = [
-  { name: "mini", token: "--radius-mini" },
-  { name: "input", token: "--radius-input" },
-  { name: "card", token: "--radius-card" },
-  { name: "surface", token: "--radius-surface" },
-  { name: "full", token: "--radius-full" },
-]
-const SHADOWS = [
-  { name: "glow", token: "--shadow-glow" },
-  { name: "depth", token: "--shadow-depth" },
-  { name: "elevated", token: "--shadow-elevated" },
-  { name: "popover", token: "--shadow-popover" },
-]
-
-function SpacingBlock() {
+function AccessibilitySection() {
   return (
-    <Block
-      title="Spacing, radius & elevation"
-      meta="4px grid / KWRadius / KWShadow"
+    <DocSection
+      id="accesibilidad"
+      eyebrow="Patrones"
+      title="Accesibilidad"
+      description="Lo mínimo que debe cumplir cualquier pantalla nueva."
     >
-      <Frame columns>
-        <div className="flex flex-col gap-3 p-5">
-          <Caption>spacing</Caption>
-          {SPACING.map((px) => (
-            <div key={px} className="flex items-center gap-4">
-              <span className="flex w-12 justify-center">
-                <span
-                  className="bg-accent-tint ring-1 ring-ring ring-inset"
-                  style={{ width: px, height: px, borderRadius: 2 }}
-                />
-              </span>
-              <span className="type-caption text-text-secondary tabular-nums">
-                {px}px
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="flex flex-col gap-3 p-5">
-          <Caption>radius</Caption>
-          {RADII.map((radius) => (
-            <RadiusRow key={radius.name} {...radius} />
-          ))}
-        </div>
-        <div className="flex flex-col gap-5 p-5 pb-8">
-          <Caption>elevation</Caption>
-          <div className="grid grid-cols-2 gap-6">
-            {SHADOWS.map((shadow) => (
-              <div
-                key={shadow.name}
-                className="flex flex-col items-center gap-3"
-              >
-                <span
-                  className="size-16 rounded-2xl bg-card"
-                  style={{ boxShadow: `var(${shadow.token})` }}
-                />
-                <span className="type-caption text-text-secondary">
-                  {shadow.name}
-                </span>
-              </div>
-            ))}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            title: "Foco visible",
+            text: "Todo elemento interactivo muestra el anillo azul (ring-2 ring-ring) al navegar con teclado. Pulsa Tab en esta página para verlo.",
+          },
+          {
+            title: "Contraste",
+            text: "Revisa la tabla de contraste en Color. text-faint se reserva para metadatos, nunca para información esencial.",
+          },
+          {
+            title: "Etiquetas",
+            text: "Los botones de solo icono llevan label (aria-label) y tooltip. Los iconos decorativos van con aria-hidden.",
+          },
+          {
+            title: "No solo color",
+            text: "Un estado nunca se comunica solo con color: el gasto lleva el signo «−» y su icono; las píldoras, texto.",
+          },
+        ].map((item) => (
+          <div
+            key={item.title}
+            className="flex flex-col gap-2 rounded-[var(--radius-surface)] bg-card p-5"
+          >
+            <span className="type-heading text-foreground">{item.title}</span>
+            <span className="type-caption leading-relaxed text-muted-foreground">
+              {item.text}
+            </span>
           </div>
-        </div>
-      </Frame>
-    </Block>
-  )
-}
-
-function RadiusRow({ name, token }: { name: string; token: string }) {
-  const value = useToken(token)
-  return (
-    <div className="flex items-center gap-4">
-      <span
-        className="size-12 border-2 border-ring bg-accent-tint"
-        style={{ borderRadius: `var(${token})` }}
-      />
-      <span className="flex flex-col">
-        <span className="type-label text-foreground">{name}</span>
-        <Caption>{value === "9999px" ? "pill" : value}</Caption>
-      </span>
-    </div>
+        ))}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <DoDont
+          good
+          note="Importe con signo, color e icono: se entiende aunque no se distinga el color."
+        >
+          <span className="flex size-10 items-center justify-center rounded-full bg-negative-tint text-negative">
+            <KWIcon name="arrowUpRight" />
+          </span>
+          <span className="type-amount-sm text-negative">−C$420.00</span>
+        </DoDont>
+        <DoDont
+          good={false}
+          note="Solo color, sin signo ni icono, y en rojo de alarma: ambiguo y alarmista."
+        >
+          <span className="type-amount-sm" style={{ color: "#FF3B30" }}>
+            C$420.00
+          </span>
+        </DoDont>
+      </div>
+      <p className="flex flex-wrap items-center gap-1.5 type-caption text-text-secondary">
+        Atajos de la app: <Kbd>⌘K</Kbd> paleta de comandos, <Kbd>N</Kbd> nuevo
+        movimiento, <Kbd>/</Kbd> buscar, <Kbd>G</Kbd> + letra para ir a una
+        sección, <Kbd>?</Kbd> ver todos.
+      </p>
+    </DocSection>
   )
 }
