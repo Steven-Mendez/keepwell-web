@@ -10,6 +10,7 @@ export type WebStrings = Record<
 
 export const WEB_STRINGS_CORE: WebStrings = {
   "Keyboard shortcuts": { es: "Atajos de teclado" },
+  "Design system": { es: "Sistema de diseño" },
   "Hide balances": { es: "Ocultar saldos" },
   "Show balances": { es: "Mostrar saldos" },
   "Search or jump to…": { es: "Busca o ve a…" },
