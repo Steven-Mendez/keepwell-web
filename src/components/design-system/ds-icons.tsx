@@ -15,11 +15,7 @@ export function IconsSection() {
     name.toLowerCase().includes(query.trim().toLowerCase())
   )
   return (
-    <DocSection
-      id="iconos"
-      title="Iconos"
-      description={`${NAMES.length} iconos propios de línea: retícula de 24 × 24, trazo de 2 px y extremos redondeados. Toman el color del texto que los rodea.`}
-    >
+    <DocSection id="iconos" title="Iconos">
       <label className="relative w-full max-w-xs">
         <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-faint">
           <KWIcon name="search" size={16} />
