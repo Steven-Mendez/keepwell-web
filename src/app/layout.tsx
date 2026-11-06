@@ -7,6 +7,7 @@ import { AppBootstrap } from "@/components/app/app-bootstrap"
 import { AppShell } from "@/components/app/app-shell"
 import { Toaster } from "@/components/ui/toast"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { I18nProvider } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
 // Inter, the family iOS bundles (KWFonts). next/font self-hosts it, so it works offline.
@@ -39,17 +40,19 @@ export default function RootLayout({
 }>) {
   return (
     // Dark only, like iOS (`preferredColorScheme(.dark)`).
-    <html lang="en" className={cn("dark antialiased", fontMono.variable, "font-sans", inter.variable)}>
+    <html lang="en" suppressHydrationWarning className={cn("dark antialiased", fontMono.variable, "font-sans", inter.variable)}>
       <body>
         {/* The service worker would cache dev bundles and hide changes, so it only runs in production. */}
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV === "development"}>
           <AppBootstrap />
           {/* Providers the shadcn tooltip and toast need, once for the whole app. */}
-          <TooltipProvider>
-            <Toaster>
-              <AppShell>{children}</AppShell>
-            </Toaster>
-          </TooltipProvider>
+          <I18nProvider>
+            <TooltipProvider>
+              <Toaster>
+                <AppShell>{children}</AppShell>
+              </Toaster>
+            </TooltipProvider>
+          </I18nProvider>
         </SerwistProvider>
       </body>
     </html>
