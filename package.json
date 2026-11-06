@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "tokens:sync": "node scripts/sync-ios-tokens.mjs",
+    "tokens:check": "node scripts/sync-ios-tokens.mjs --check"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

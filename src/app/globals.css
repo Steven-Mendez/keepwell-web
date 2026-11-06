@@ -6,8 +6,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Structure only: every value lives in tokens.css, derived from the iOS DesignSystem (the single
- * source of truth) and replaceable by the generator. Rule: our tokens adapt to shadcn's system,
+ * Structure only: every value lives in tokens.css, generated from the iOS DesignSystem (the single
+ * source of truth) by `pnpm tokens:sync`; `pnpm tokens:check` fails when the two drift. Rule: our tokens adapt to shadcn's system,
  * never the components to ours — generated src/components/ui/* stay untouched, and a Keepwell look
  * shadcn variables can't express is a wrapper in src/components/.
  *
