@@ -33,6 +33,7 @@ import {
   scopeIncludes,
   setCardColor,
   settingsRate,
+  type CreditCardDetail,
   type Ledger,
 } from "@/lib/domain"
 import { useT, type Translator } from "@/lib/i18n"
@@ -50,6 +51,7 @@ import { ledgerStore } from "@/lib/repositories"
 import { DURATION, EASE_OUT_IOS } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 
+import { creditDayValue } from "./credit-format"
 import { ColorSwatches } from "./form-parts"
 import {
   CardNumberDialog,
@@ -603,12 +605,7 @@ function CreditDetail({
   const { openEditor } = useAppActions()
   const [open, setOpen] = useState<Open>()
   const [tab, setTab] = useState("movements")
-  let detail: ReturnType<typeof creditCardDetail> | undefined
-  try {
-    detail = creditCardDetail(ledger, account.id)
-  } catch {
-    detail = undefined
-  }
+  const detail = loadCreditDetail(ledger, account.id)
   if (!detail)
     return (
       <KWEmptyState
@@ -616,23 +613,10 @@ function CreditDetail({
         title={t.in("creditcard", "We couldn't load this card.")}
       />
     )
-  const { holder, balances, totalDebt, available, cycleTransactions } = detail
-  const terms = account.creditTerms
-  const name = accountName(account)
+  const { holder, cycleTransactions } = detail
   const movementCount = ledger.transactions.filter((transaction) =>
     scopeIncludes({ kind: "account", id: account.id }, transaction)
   ).length
-  const toggle = (value: Open) => (next: boolean) =>
-    setOpen(next ? value : undefined)
-  const shortDay = (date: Date) =>
-    date.toLocaleDateString(t.locale, { day: "numeric", month: "short" })
-  const dayValue = (day: number | undefined, next: Date | undefined) =>
-    day === undefined
-      ? t.in("creditcard", "Not set")
-      : next
-        ? t.in("creditcard", "Day %lld · next %@", day, shortDay(next))
-        : t.in("creditcard", "Day %lld", day)
-  const owes = [...balances].reverse()
   return (
     <>
       <DetailShell
@@ -650,25 +634,7 @@ function CreditDetail({
             caption={holder?.expiry ? expiryText(holder.expiry) : undefined}
           />
         }
-        balance={
-          <>
-            <span className="type-caption text-muted-foreground">
-              {t.in("creditcard", "Current debt")}
-            </span>
-            <AnimatedNumber
-              value={joinedMoney(owes)}
-              className={cn(
-                "type-amount-lg",
-                owes.some((owed) => owed.amount.lt(0)) && "text-negative"
-              )}
-            />
-            {balances.length > 1 ? (
-              <span className="type-caption text-muted-foreground">
-                {t.in("web", "Total %@", formatMoney(totalDebt))}
-              </span>
-            ) : null}
-          </>
-        }
+        balance={<CreditBalance t={t} detail={detail} />}
         actions={
           <Actions>
             <KWActionButton
@@ -711,113 +677,241 @@ function CreditDetail({
             value: "billing",
             title: t.in("creditcard", "Billing details"),
             content: (
-              <>
-                <KWGroupedCard>
-                  <KWValueRow
-                    label={t.in("creditcard", "Credit limit")}
-                    value={
-                      terms?.limit ? (
-                        formatAmount(terms.limit.amount, terms.limit.currency)
-                      ) : (
-                        <span className="text-text-faint">
-                          {t.in("creditcard", "Not set")}
-                        </span>
-                      )
-                    }
-                  />
-                  <KWValueRow
-                    label={t.in("creditcard", "Available")}
-                    value={
-                      available ? (
-                        <Amount
-                          animated
-                          value={available}
-                          className={cn(
-                            available.amount.lt(0) && "text-negative"
-                          )}
-                        />
-                      ) : (
-                        <span className="text-text-faint">—</span>
-                      )
-                    }
-                  />
-                  <KWValueRow
-                    label={t.in("creditcard", "Cutoff date")}
-                    value={dayValue(terms?.cutoffDay, detail.nextCutoff)}
-                  />
-                  <KWValueRow
-                    label={t.in("creditcard", "Payment date")}
-                    value={dayValue(terms?.dueDay, detail.nextDue)}
-                  />
-                </KWGroupedCard>
-                <KWButton
-                  variant={
-                    !terms?.limit || !terms.cutoffDay || !terms.dueDay
-                      ? "link"
-                      : "secondary"
-                  }
-                  size="medium"
-                  fill
-                  onClick={() => setOpen("terms")}
-                >
-                  {!terms?.limit || !terms.cutoffDay || !terms.dueDay
-                    ? t.in("creditcard", "Complete card details")
-                    : t.in("creditcard", "Billing details")}
-                </KWButton>
-              </>
+              <CreditBilling
+                t={t}
+                account={account}
+                detail={detail}
+                onEdit={() => setOpen("terms")}
+              />
             ),
           },
           {
             value: "manage",
             title: t.in("web", "Manage"),
             content: (
-              <>
-                {holder ? <ColorSection t={t} card={holder} /> : null}
-                <Section title={t.in("creditcard", "Manage card")}>
-                  <KWGroupedCard>
-                    <ManageRow
-                      icon="pencil"
-                      label={t.in("creditcard", "Edit name")}
-                      value={account.name}
-                      onClick={() => setOpen("rename")}
-                    />
-                    {holder ? (
-                      <>
-                        <ManageRow
-                          icon="creditCard"
-                          label={t.in("web", "Card number")}
-                          value={
-                            holder.lastFour
-                              ? `•••• ${holder.lastFour}`
-                              : t.in("creditcard", "Not set")
-                          }
-                          onClick={() => setOpen("number")}
-                        />
-                        <ManageRow
-                          icon="addCard"
-                          label={t.in("creditcard", "Product and expiry")}
-                          value={
-                            [
-                              holder.productName,
-                              holder.expiry
-                                ? expiryText(holder.expiry)
-                                : undefined,
-                            ]
-                              .filter(Boolean)
-                              .join(" · ") || t.in("creditcard", "Not set")
-                          }
-                          onClick={() => setOpen("product")}
-                        />
-                      </>
-                    ) : null}
-                  </KWGroupedCard>
-                </Section>
-                <DeleteButton t={t} onClick={() => setOpen("delete")} />
-              </>
+              <CreditManage
+                t={t}
+                account={account}
+                holder={holder}
+                onOpen={setOpen}
+              />
             ),
           },
         ]}
       />
+      <CreditDialogs
+        account={account}
+        detail={detail}
+        movementCount={movementCount}
+        open={open}
+        onOpen={setOpen}
+        onDeleted={onDeleted}
+      />
+    </>
+  )
+}
+
+/** The card's detail, or nothing when the ledger no longer holds it as a credit card. */
+function loadCreditDetail(
+  ledger: Ledger,
+  accountId: string
+): CreditCardDetail | undefined {
+  try {
+    return creditCardDetail(ledger, accountId)
+  } catch {
+    return undefined
+  }
+}
+
+/** The debt per currency (as the card shows it, last currency first) and its total when there are several. */
+function CreditBalance({
+  t,
+  detail,
+}: {
+  t: Translator
+  detail: CreditCardDetail
+}) {
+  const { balances, totalDebt } = detail
+  const owes = [...balances].reverse()
+  return (
+    <>
+      <span className="type-caption text-muted-foreground">
+        {t.in("creditcard", "Current debt")}
+      </span>
+      <AnimatedNumber
+        value={joinedMoney(owes)}
+        className={cn(
+          "type-amount-lg",
+          owes.some((owed) => owed.amount.lt(0)) && "text-negative"
+        )}
+      />
+      {balances.length > 1 ? (
+        <span className="type-caption text-muted-foreground">
+          {t.in("web", "Total %@", formatMoney(totalDebt))}
+        </span>
+      ) : null}
+    </>
+  )
+}
+
+/** Limit, what's available and the cycle's days, with the button that edits them. */
+function CreditBilling({
+  t,
+  account,
+  detail,
+  onEdit,
+}: {
+  t: Translator
+  account: Account
+  detail: CreditCardDetail
+  onEdit: () => void
+}) {
+  const terms = account.creditTerms
+  const { available } = detail
+  const incomplete = !terms?.limit || !terms.cutoffDay || !terms.dueDay
+  return (
+    <>
+      <KWGroupedCard>
+        <KWValueRow
+          label={t.in("creditcard", "Credit limit")}
+          value={
+            terms?.limit ? (
+              formatAmount(terms.limit.amount, terms.limit.currency)
+            ) : (
+              <span className="text-text-faint">
+                {t.in("creditcard", "Not set")}
+              </span>
+            )
+          }
+        />
+        <KWValueRow
+          label={t.in("creditcard", "Available")}
+          value={
+            available ? (
+              <Amount
+                animated
+                value={available}
+                className={cn(available.amount.lt(0) && "text-negative")}
+              />
+            ) : (
+              <span className="text-text-faint">—</span>
+            )
+          }
+        />
+        <KWValueRow
+          label={t.in("creditcard", "Cutoff date")}
+          value={creditDayValue(t, terms?.cutoffDay, detail.nextCutoff)}
+        />
+        <KWValueRow
+          label={t.in("creditcard", "Payment date")}
+          value={creditDayValue(t, terms?.dueDay, detail.nextDue)}
+        />
+      </KWGroupedCard>
+      <KWButton
+        variant={incomplete ? "link" : "secondary"}
+        size="medium"
+        fill
+        onClick={onEdit}
+      >
+        {incomplete
+          ? t.in("creditcard", "Complete card details")
+          : t.in("creditcard", "Billing details")}
+      </KWButton>
+    </>
+  )
+}
+
+/** The "Manage" tab: color, name, the plastic's number, product and expiry, and delete. */
+function CreditManage({
+  t,
+  account,
+  holder,
+  onOpen,
+}: {
+  t: Translator
+  account: Account
+  holder: Card | undefined
+  onOpen: (open: Open) => void
+}) {
+  return (
+    <>
+      {holder ? <ColorSection t={t} card={holder} /> : null}
+      <Section title={t.in("creditcard", "Manage card")}>
+        <KWGroupedCard>
+          <ManageRow
+            icon="pencil"
+            label={t.in("creditcard", "Edit name")}
+            value={account.name}
+            onClick={() => onOpen("rename")}
+          />
+          {holder ? (
+            <HolderManageRows t={t} holder={holder} onOpen={onOpen} />
+          ) : null}
+        </KWGroupedCard>
+      </Section>
+      <DeleteButton t={t} onClick={() => onOpen("delete")} />
+    </>
+  )
+}
+
+function HolderManageRows({
+  t,
+  holder,
+  onOpen,
+}: {
+  t: Translator
+  holder: Card
+  onOpen: (open: Open) => void
+}) {
+  const product = [
+    holder.productName,
+    holder.expiry ? expiryText(holder.expiry) : undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ")
+  return (
+    <>
+      <ManageRow
+        icon="creditCard"
+        label={t.in("web", "Card number")}
+        value={
+          holder.lastFour
+            ? `•••• ${holder.lastFour}`
+            : t.in("creditcard", "Not set")
+        }
+        onClick={() => onOpen("number")}
+      />
+      <ManageRow
+        icon="addCard"
+        label={t.in("creditcard", "Product and expiry")}
+        value={product || t.in("creditcard", "Not set")}
+        onClick={() => onOpen("product")}
+      />
+    </>
+  )
+}
+
+/** The credit card's editors; the plastic's own only when it has one. */
+function CreditDialogs({
+  account,
+  detail,
+  movementCount,
+  open,
+  onOpen,
+  onDeleted,
+}: {
+  account: Account
+  detail: CreditCardDetail
+  movementCount: number
+  open: Open
+  onOpen: (open: Open) => void
+  onDeleted: () => void
+}) {
+  const { holder } = detail
+  const toggle = (value: Open) => (next: boolean) =>
+    onOpen(next ? value : undefined)
+  return (
+    <>
       <RenameDialog
         account={account}
         open={open === "rename"}
@@ -845,7 +939,7 @@ function CreditDetail({
       ) : null}
       <DeleteAccountDialog
         account={account}
-        displayName={name}
+        displayName={accountName(account)}
         movementCount={movementCount}
         open={open === "delete"}
         onOpenChange={toggle("delete")}

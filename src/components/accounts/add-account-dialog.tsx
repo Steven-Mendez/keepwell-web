@@ -35,7 +35,19 @@ import {
 } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
 
-import { AmountInput, ColorSwatches, KW_INPUT, LabeledField, Segmented } from "./form-parts"
+import {
+  AmountInput,
+  ColorSwatches,
+  KW_INPUT,
+  LabeledField,
+  Segmented,
+} from "./form-parts"
+import {
+  initialCreditForm,
+  validateCreditForm,
+  type CreditFormErrors,
+  type CreditFormValues,
+} from "./credit-form"
 import { DaySelect } from "./manage-dialogs"
 
 type Kind = "debit" | "credit" | "wallet"
@@ -417,98 +429,12 @@ function CreditForm({
   onDone: () => void
 }) {
   const owner = usePreferredName()
-  const afterAdding = useAfterAdding()
-  const second = currencies.second
-  const [form, setForm] = useState({
-    bank: "",
-    lastFour: "",
-    network: "visa" as CardNetwork,
-    color: "azul" as CardColor,
-    debtMode: (second ? "dual" : "principal") as DebtMode,
-    principalDebt: "",
-    secondDebt: "",
-    limit: "",
-    cutoff: "",
-    due: "",
-  })
-  const [errors, setErrors] = useState<{
-    lastFour?: string
-    principalDebt?: string
-    secondDebt?: string
-    limit?: string
-    form?: string
-  }>({})
-  const [busy, setBusy] = useState(false)
-  const debtCurrency =
-    form.debtMode === "second" && second ? second : currencies.principal
-
-  async function submit(event: FormEvent) {
-    event.preventDefault()
-    const amount = (text: string) =>
-      text.trim() === "" ? ZERO : parseAmount(text)
-    const principalDebt = amount(form.principalDebt)
-    const secondDebt = form.debtMode === "dual" ? amount(form.secondDebt) : ZERO
-    const limit = form.limit.trim() === "" ? undefined : parseAmount(form.limit)
-    const next: typeof errors = {}
-    if (form.lastFour.length !== 4)
-      next.lastFour = t.in(
-        "onboarding",
-        "Enter all 4 digits or leave it empty."
-      )
-    if (!principalDebt)
-      next.principalDebt = t.in("addcard", "Check the balance.")
-    if (!secondDebt) next.secondDebt = t.in("addcard", "Check the balance.")
-    if (form.limit.trim() !== "" && (!limit || limit.lte(0)))
-      next.limit = t.in("creditcard", "Check the credit limit.")
-    setErrors(next)
-    if (Object.keys(next).length > 0 || !principalDebt || !secondDebt) return
-    setBusy(true)
-    try {
-      const { account } = await addCreditCard(ledgerStore, {
-        bank: form.bank,
-        lastFour: form.lastFour,
-        network: form.network,
-        color: form.color,
-        debtMode: form.debtMode,
-        principalDebt,
-        secondDebt,
-        ...(limit ? { limit } : {}),
-        ...(form.cutoff ? { cutoffDay: Number(form.cutoff) } : {}),
-        ...(form.due ? { dueDay: Number(form.due) } : {}),
-      })
-      afterAdding(account.id, onDone, t.in("addcard", "Card added"))
-    } catch (error) {
-      setErrors({
-        form: domainErrorText(
-          t,
-          error,
-          t.in("addcard", "We couldn't add the card. Try again.")
-        ),
-      })
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const modes: { value: DebtMode; label: string }[] = second
-    ? [
-        { value: "dual", label: t.in("addcard", "Two currencies") },
-        {
-          value: "principal",
-          label: t.in("addcard", "Only %@", currencies.principal),
-        },
-        { value: "second", label: t.in("addcard", "Only %@", second) },
-      ]
-    : []
-  const modeDescription =
-    form.debtMode === "dual" && second
-      ? t.in(
-          "addcard",
-          "%@ and %@, paid separately",
-          currencies.principal,
-          second
-        )
-      : t.in("addcard", "Everything is converted to %@", debtCurrency)
+  const { form, setForm, errors, busy, submit } = useCreditForm(
+    t,
+    currencies,
+    onDone
+  )
+  const debtCurrency = creditDebtCurrency(form, currencies)
 
   return (
     <form
@@ -575,57 +501,13 @@ function CreditForm({
           colors={SELECTABLE_CARD_COLORS}
         />
       </LabeledField>
-      {second ? (
-        <LabeledField
-          id="credit-mode"
-          label={t.in("addcard", "Which currencies does it charge you in?")}
-          description={modeDescription}
-        >
-          <Segmented
-            label={t.in("addcard", "How the debt works")}
-            value={form.debtMode}
-            onChange={(debtMode) => setForm({ ...form, debtMode })}
-            options={modes}
-          />
-        </LabeledField>
-      ) : null}
-      <div
-        className={
-          form.debtMode === "dual" && second
-            ? "grid grid-cols-2 gap-3"
-            : "grid gap-3"
-        }
-      >
-        <LabeledField
-          id="credit-debt"
-          label={t.in("addcard", "Debt in %@", debtCurrency)}
-          description={t.in("addcard", "What you owe today")}
-          error={errors.principalDebt}
-        >
-          <AmountInput
-            id="credit-debt"
-            currency={debtCurrency}
-            value={form.principalDebt}
-            invalid={errors.principalDebt !== undefined}
-            onChange={(principalDebt) => setForm({ ...form, principalDebt })}
-          />
-        </LabeledField>
-        {form.debtMode === "dual" && second ? (
-          <LabeledField
-            id="credit-second-debt"
-            label={t.in("addcard", "Debt in %@", second)}
-            error={errors.secondDebt}
-          >
-            <AmountInput
-              id="credit-second-debt"
-              currency={second}
-              value={form.secondDebt}
-              invalid={errors.secondDebt !== undefined}
-              onChange={(secondDebt) => setForm({ ...form, secondDebt })}
-            />
-          </LabeledField>
-        ) : null}
-      </div>
+      <CreditDebtFields
+        t={t}
+        currencies={currencies}
+        form={form}
+        setForm={setForm}
+        errors={errors}
+      />
       <LabeledField
         id="credit-limit-new"
         label={t.in("addcard", "Limit")}
@@ -675,5 +557,137 @@ function CreditForm({
         {t.in("addcard", "Add card")}
       </KWButton>
     </form>
+  )
+}
+
+/** The currency the debt and the limit are typed in: the second one only for a second-only card. */
+function creditDebtCurrency(
+  form: CreditFormValues,
+  currencies: CurrencySettings
+) {
+  return form.debtMode === "second" && currencies.second
+    ? currencies.second
+    : currencies.principal
+}
+
+/** The credit form's values, its per-field errors and the save. */
+function useCreditForm(
+  t: Translator,
+  currencies: CurrencySettings,
+  onDone: () => void
+) {
+  const afterAdding = useAfterAdding()
+  const [form, setForm] = useState(() => initialCreditForm(currencies.second))
+  const [errors, setErrors] = useState<CreditFormErrors>({})
+  const [busy, setBusy] = useState(false)
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    const { errors: next, draft } = validateCreditForm(t, form)
+    setErrors(next)
+    if (!draft) return
+    setBusy(true)
+    try {
+      const { account } = await addCreditCard(ledgerStore, draft)
+      afterAdding(account.id, onDone, t.in("addcard", "Card added"))
+    } catch (error) {
+      setErrors({
+        form: domainErrorText(
+          t,
+          error,
+          t.in("addcard", "We couldn't add the card. Try again.")
+        ),
+      })
+    } finally {
+      setBusy(false)
+    }
+  }
+  return { form, setForm, errors, busy, submit }
+}
+
+/** How the card charges (one or two currencies) and what's owed today in each. */
+function CreditDebtFields({
+  t,
+  currencies,
+  form,
+  setForm,
+  errors,
+}: {
+  t: Translator
+  currencies: CurrencySettings
+  form: CreditFormValues
+  setForm: (form: CreditFormValues) => void
+  errors: CreditFormErrors
+}) {
+  const second = currencies.second
+  const debtCurrency = creditDebtCurrency(form, currencies)
+  const dual = form.debtMode === "dual" && second
+  const modes: { value: DebtMode; label: string }[] = second
+    ? [
+        { value: "dual", label: t.in("addcard", "Two currencies") },
+        {
+          value: "principal",
+          label: t.in("addcard", "Only %@", currencies.principal),
+        },
+        { value: "second", label: t.in("addcard", "Only %@", second) },
+      ]
+    : []
+  const modeDescription = dual
+    ? t.in(
+        "addcard",
+        "%@ and %@, paid separately",
+        currencies.principal,
+        second
+      )
+    : t.in("addcard", "Everything is converted to %@", debtCurrency)
+
+  return (
+    <>
+      {second ? (
+        <LabeledField
+          id="credit-mode"
+          label={t.in("addcard", "Which currencies does it charge you in?")}
+          description={modeDescription}
+        >
+          <Segmented
+            label={t.in("addcard", "How the debt works")}
+            value={form.debtMode}
+            onChange={(debtMode) => setForm({ ...form, debtMode })}
+            options={modes}
+          />
+        </LabeledField>
+      ) : null}
+      <div className={dual ? "grid grid-cols-2 gap-3" : "grid gap-3"}>
+        <LabeledField
+          id="credit-debt"
+          label={t.in("addcard", "Debt in %@", debtCurrency)}
+          description={t.in("addcard", "What you owe today")}
+          error={errors.principalDebt}
+        >
+          <AmountInput
+            id="credit-debt"
+            currency={debtCurrency}
+            value={form.principalDebt}
+            invalid={errors.principalDebt !== undefined}
+            onChange={(principalDebt) => setForm({ ...form, principalDebt })}
+          />
+        </LabeledField>
+        {dual ? (
+          <LabeledField
+            id="credit-second-debt"
+            label={t.in("addcard", "Debt in %@", second)}
+            error={errors.secondDebt}
+          >
+            <AmountInput
+              id="credit-second-debt"
+              currency={second}
+              value={form.secondDebt}
+              invalid={errors.secondDebt !== undefined}
+              onChange={(secondDebt) => setForm({ ...form, secondDebt })}
+            />
+          </LabeledField>
+        ) : null}
+      </div>
+    </>
   )
 }
