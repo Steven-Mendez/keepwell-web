@@ -51,6 +51,7 @@ import type { Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
 import { homeReminders, type Reminder } from "./home-reminders"
+import { UpcomingSection } from "./home-upcoming"
 
 const MASK = BALANCE_MASK
 
@@ -160,6 +161,8 @@ export function HomeScreen() {
               categoryIds={overview.frequentExpenseCategoryIds}
               hasCredit={hasCredit}
             />
+
+            <UpcomingSection t={t} ledger={ledger} now={now} hidden={hidden} />
 
             <AccountsSection
               t={t}

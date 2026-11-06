@@ -4,6 +4,7 @@ import {
   formatAmount,
   nextOccurrence,
   startOfDay,
+  upcoming,
   yearMonthContaining,
   type HomeOverview,
   type Ledger,
@@ -25,7 +26,8 @@ export interface Reminder {
 
 /**
  * What iOS sends as notifications, shown in place on the web: drafts due today, card payments
- * within the reminder window, statements closing today and plastics expiring this month.
+ * within the reminder window, statements closing today, subscriptions renewing tomorrow and plastics
+ * expiring this month.
  */
 export function homeReminders(
   t: Translator,
@@ -113,6 +115,34 @@ export function homeReminders(
         ),
       })
     }
+  }
+  const tomorrow = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1
+  ).toDateString()
+  for (const { rule, date } of upcoming(ledger.recurringRules, now, 1)) {
+    if (!rule.isSubscription || date.toDateString() !== tomorrow) continue
+    const card = rule.cardId ? cardsByID.get(rule.cardId) : undefined
+    const account = accountsByID.get(rule.accountId)
+    const method =
+      card && card.kind !== "transfer"
+        ? cardShortName(t, card)
+        : account
+          ? accountName(account)
+          : ""
+    reminders.push({
+      id: `renews-${rule.id}`,
+      icon: "subscription",
+      tone: "accent",
+      title: t.in("web", "%@ renews tomorrow", rule.name),
+      body: t.in(
+        "web",
+        "%@ on %@",
+        formatAmount(rule.amount, rule.currency),
+        method
+      ),
+    })
   }
   const thisMonth = yearMonthContaining(now)
   for (const card of ledger.cards) {
