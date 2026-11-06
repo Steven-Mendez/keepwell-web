@@ -22,6 +22,7 @@ import {
 import type { Translator } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
+import { MonthFlowTable } from "./month-flow-table"
 import {
   headline,
   toneClass,
@@ -224,27 +225,17 @@ export function CashFlowCard({
         </BarChart>
       </ChartContainer>
 
-      <table className="sr-only">
-        <caption>{t.in("summary", "Cash flow")}</caption>
-        <thead>
-          <tr>
-            <th>{t.in("summary", "Month")}</th>
-            <th>{t.in("summary", "Came in")}</th>
-            <th>{t.in("summary", "Went out")}</th>
-            <th>{t.in("summary", "Result")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row) => (
-            <tr key={row.key}>
-              <td>{row.name}</td>
-              <td>{row.incomeText}</td>
-              <td>{row.expenseText}</td>
-              <td>{row.result}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <MonthFlowTable
+        t={t}
+        caption={t.in("summary", "Cash flow")}
+        rows={data.map((row) => ({
+          key: row.key,
+          name: row.name,
+          income: row.incomeText,
+          expense: row.expenseText,
+          result: row.result,
+        }))}
+      />
     </Surface>
   )
 }

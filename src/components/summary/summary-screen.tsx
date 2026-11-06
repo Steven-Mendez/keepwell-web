@@ -14,7 +14,8 @@ import { Page, Surface } from "@/components/kw/primitives"
 import { SummarySkeleton } from "@/components/kw/skeletons"
 import { useLedger } from "@/hooks/use-ledger"
 import { SUMMARY_MONTH_COUNT, summaryReport } from "@/lib/domain"
-import { useT } from "@/lib/i18n"
+import { useT, type Translator } from "@/lib/i18n"
+import type { TransactionCategory } from "@/lib/schema"
 
 import { CashFlowCard } from "./cash-flow-card"
 import { CategoryCard, type CategoryMode } from "./category-card"
@@ -29,7 +30,169 @@ import {
   type Period,
 } from "./range-view"
 import { rangeText } from "./range-format"
-import { summaryFormat } from "./summary-format"
+import { summaryFormat, type SummaryFormat } from "./summary-format"
+
+type RangeSummaryData = NonNullable<ReturnType<typeof useRangeSummary>>
+type Report = ReturnType<typeof summaryReport>
+
+/**
+ * The month the stepper and the month charts follow: the latest unless one was picked, and which
+ * way the title rolls, like `.contentTransition(.numericText())` on iOS's stepper.
+ */
+function useMonthPick(last: number) {
+  const [picked, setPicked] = useState<number>()
+  const [direction, setDirection] = useState<"up" | "down">()
+  const selectedIndex = Math.min(picked ?? last, last)
+  const pick = (index: number) => {
+    setDirection(index < selectedIndex ? "down" : "up")
+    setPicked(index)
+  }
+  return { selectedIndex, direction, pick }
+}
+
+/** The header's subtitle in a period: its months, and that it runs through today while it does. */
+function rangeSubtitle(
+  t: Translator,
+  f: SummaryFormat,
+  range: RangeSummaryData | undefined
+) {
+  if (!range) return undefined
+  const text = rangeText(f, range.report.range)
+  return range.report.isRunning ? t.in("web", "%@ · through today", text) : text
+}
+
+/** The selected month's title, with its year once it isn't this year's. */
+function monthTitle(f: SummaryFormat, report: Report, selectedIndex: number) {
+  const selected = report.months[selectedIndex]
+  const currentYear = report.months.at(-1)?.month.year
+  return selected
+    ? f.month(selected.month, "long", true, selected.month.year !== currentYear)
+    : ""
+}
+
+function MonthStepper({
+  t,
+  title,
+  direction,
+  selectedIndex,
+  last,
+  onPick,
+}: {
+  t: Translator
+  title: string
+  direction: "up" | "down" | undefined
+  selectedIndex: number
+  last: number
+  onPick: (index: number) => void
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="flex items-center gap-2">
+        <KWCircleButton
+          icon="chevronLeft"
+          label={t.in("summary", "Previous month")}
+          disabled={selectedIndex <= 0}
+          onClick={() => onPick(selectedIndex - 1)}
+        />
+        <span
+          className="min-w-36 overflow-hidden text-center type-heading tabular-nums"
+          aria-live="polite"
+        >
+          <span
+            key={title}
+            className={cn(
+              "inline-block",
+              direction === "up" && "animate-digit-up",
+              direction === "down" && "animate-digit-down"
+            )}
+          >
+            {title}
+          </span>
+        </span>
+        <KWCircleButton
+          icon="chevronRight"
+          label={t.in("summary", "Next month")}
+          disabled={selectedIndex >= last}
+          onClick={() => onPick(selectedIndex + 1)}
+        />
+      </div>
+    </div>
+  )
+}
+
+function EmptySummary({ t, onLog }: { t: Translator; onLog: () => void }) {
+  return (
+    <Surface>
+      <KWEmptyState
+        icon="chartBars"
+        title={t.in("summary", "Your summary starts with one transaction")}
+        message={t.in(
+          "summary",
+          "Once you log expenses and income, you will see what came in, what went out and what you spent it on."
+        )}
+        action={
+          <KWButton icon="plus" onClick={onLog}>
+            {t.in("summary", "Log transaction")}
+          </KWButton>
+        }
+      />
+    </Surface>
+  )
+}
+
+function MonthSummary({
+  t,
+  f,
+  report,
+  selectedIndex,
+  onSelect,
+  categories,
+  mode,
+  onModeChange,
+}: {
+  t: Translator
+  f: SummaryFormat
+  report: Report
+  selectedIndex: number
+  onSelect: (index: number) => void
+  categories: readonly TransactionCategory[]
+  mode: CategoryMode
+  onModeChange: (mode: CategoryMode) => void
+}) {
+  return (
+    <>
+      <KpiStrip t={t} f={f} report={report} selectedIndex={selectedIndex} />
+      {/* Charts on the left, stacked; categories as a tall column on the right (Mobbin: Monarch, YNAB). */}
+      <div className="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-3 lg:grid-rows-2">
+        <CashFlowCard
+          t={t}
+          f={f}
+          report={report}
+          selectedIndex={selectedIndex}
+          onSelect={onSelect}
+          className="lg:col-span-2"
+        />
+        <CategoryCard
+          t={t}
+          f={f}
+          report={report}
+          selectedIndex={selectedIndex}
+          categories={categories}
+          mode={mode}
+          onModeChange={onModeChange}
+          className="lg:col-start-3 lg:row-span-2 lg:row-start-1"
+        />
+        <PaceCard
+          t={t}
+          f={f}
+          report={report}
+          selectedIndex={selectedIndex}
+          className="lg:col-span-2"
+        />
+      </div>
+    </>
+  )
+}
 
 /**
  * The three questions iOS Summary answers — did I save, where did it go, am I on track — as one
@@ -51,69 +214,32 @@ export function SummaryScreen() {
         : undefined,
     [ledger, currency]
   )
-  const [picked, setPicked] = useState<number>()
-  // Which way the month title rolls, like `.contentTransition(.numericText())` on iOS's stepper.
-  const [direction, setDirection] = useState<"up" | "down">()
   const [mode, setMode] = useState<CategoryMode>("expenses")
   const [period, setPeriod] = useState<Period>("month")
   const [custom, setCustom] = useState<CustomRange>()
   const range = useRangeSummary(ledger?.transactions, currency, period, custom)
   const last = (report?.months.length ?? SUMMARY_MONTH_COUNT) - 1
-  const selectedIndex = Math.min(picked ?? last, last)
+  const { selectedIndex, direction, pick } = useMonthPick(last)
   const f = summaryFormat(t, currency)
-  const pick = (index: number) => {
-    setDirection(index < selectedIndex ? "down" : "up")
-    setPicked(index)
-  }
 
   if (!ledger || !report) return <SummarySkeleton />
 
   const hasMovements =
     report.averageExpense !== undefined || report.averageIncome !== undefined
-  const selected = report.months[selectedIndex]
-  const currentYear = report.months.at(-1)?.month.year
-  const title = selected
-    ? f.month(selected.month, "long", true, selected.month.year !== currentYear)
-    : ""
-
-  const stepper = (
-    <div className="flex flex-wrap items-center gap-3">
-      <div className="flex items-center gap-2">
-        <KWCircleButton
-          icon="chevronLeft"
-          label={t.in("summary", "Previous month")}
-          disabled={selectedIndex <= 0}
-          onClick={() => pick(selectedIndex - 1)}
-        />
-        <span
-          className="min-w-36 overflow-hidden text-center type-heading tabular-nums"
-          aria-live="polite"
-        >
-          <span
-            key={title}
-            className={cn(
-              "inline-block",
-              direction === "up" && "animate-digit-up",
-              direction === "down" && "animate-digit-down"
-            )}
-          >
-            {title}
-          </span>
-        </span>
-        <KWCircleButton
-          icon="chevronRight"
-          label={t.in("summary", "Next month")}
-          disabled={selectedIndex >= last}
-          onClick={() => pick(selectedIndex + 1)}
-        />
-      </div>
-    </div>
-  )
 
   const controls = hasMovements ? (
     <div className="flex flex-wrap items-center gap-3">
       <PeriodPicker t={t} value={period} onChange={setPeriod} />
-      {period === "month" ? stepper : null}
+      {period === "month" ? (
+        <MonthStepper
+          t={t}
+          title={monthTitle(f, report, selectedIndex)}
+          direction={direction}
+          selectedIndex={selectedIndex}
+          last={last}
+          onPick={pick}
+        />
+      ) : null}
       {period === "custom" && range ? (
         <CustomRangePicker
           t={t}
@@ -125,11 +251,6 @@ export function SummaryScreen() {
       ) : null}
     </div>
   ) : undefined
-  const subtitle = range
-    ? range.report.isRunning
-      ? t.in("web", "%@ · through today", rangeText(f, range.report.range))
-      : rangeText(f, range.report.range)
-    : undefined
 
   return (
     // Wide: a month fits exactly the window's height below the top bar, so it reads without
@@ -142,26 +263,12 @@ export function SummaryScreen() {
     >
       <KWLargeTitleHeader
         title={t.in("summary", "Summary")}
-        subtitle={subtitle}
+        subtitle={rangeSubtitle(t, f, range)}
         trailing={controls}
         className="flex-wrap items-center"
       />
       {!hasMovements ? (
-        <Surface>
-          <KWEmptyState
-            icon="chartBars"
-            title={t.in("summary", "Your summary starts with one transaction")}
-            message={t.in(
-              "summary",
-              "Once you log expenses and income, you will see what came in, what went out and what you spent it on."
-            )}
-            action={
-              <KWButton icon="plus" onClick={() => openEditor()}>
-                {t.in("summary", "Log transaction")}
-              </KWButton>
-            }
-          />
-        </Surface>
+        <EmptySummary t={t} onLog={() => openEditor()} />
       ) : range ? (
         <RangeSummary
           t={t}
@@ -171,37 +278,16 @@ export function SummaryScreen() {
           categories={ledger.categories}
         />
       ) : (
-        <>
-          <KpiStrip t={t} f={f} report={report} selectedIndex={selectedIndex} />
-          {/* Charts on the left, stacked; categories as a tall column on the right (Mobbin: Monarch, YNAB). */}
-          <div className="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-3 lg:grid-rows-2">
-            <CashFlowCard
-              t={t}
-              f={f}
-              report={report}
-              selectedIndex={selectedIndex}
-              onSelect={pick}
-              className="lg:col-span-2"
-            />
-            <CategoryCard
-              t={t}
-              f={f}
-              report={report}
-              selectedIndex={selectedIndex}
-              categories={ledger.categories}
-              mode={mode}
-              onModeChange={setMode}
-              className="lg:col-start-3 lg:row-span-2 lg:row-start-1"
-            />
-            <PaceCard
-              t={t}
-              f={f}
-              report={report}
-              selectedIndex={selectedIndex}
-              className="lg:col-span-2"
-            />
-          </div>
-        </>
+        <MonthSummary
+          t={t}
+          f={f}
+          report={report}
+          selectedIndex={selectedIndex}
+          onSelect={pick}
+          categories={ledger.categories}
+          mode={mode}
+          onModeChange={setMode}
+        />
       )}
     </Page>
   )
