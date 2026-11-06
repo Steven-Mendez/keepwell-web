@@ -1,8 +1,11 @@
 "use client"
 
+import { newID } from "@/lib/platform/uuid"
+
 import { useMemo, useRef, useState, type KeyboardEvent } from "react"
 
 import type { EditorRequest } from "@/components/app/app-actions"
+import { AnimatedNumber } from "@/components/kw/animated-number"
 import { KWButton, KWSegmented } from "@/components/kw/design"
 import { KWIcon } from "@/components/kw/kw-icon"
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog"
@@ -64,9 +67,21 @@ import {
   typeTitle,
   type Thumbnail,
 } from "./editor-model"
-import { FieldLabel, FlowHeader, KWSwitch, KW_FIELD, KW_TEXTAREA, StatusPill } from "./flow-parts"
+import {
+  FieldLabel,
+  FlowHeader,
+  KWSwitch,
+  KW_FIELD,
+  KW_TEXTAREA,
+  StatusPill,
+} from "./flow-parts"
 import { NewCategoryDialog } from "./new-category-dialog"
-import { AccountPicker, CategoryPicker, MethodPicker, MethodThumbnail } from "./pickers"
+import {
+  AccountPicker,
+  CategoryPicker,
+  MethodPicker,
+  MethodThumbnail,
+} from "./pickers"
 
 /** `<input type="datetime-local">` text for a date, in the person's time zone. */
 function localDateTime(date: Date): string {
@@ -88,12 +103,19 @@ interface InitialState {
   debitedText: string
 }
 
-function initialState(request: EditorRequest, context: TransactionContext, types: MovementType[]): InitialState {
+function initialState(
+  request: EditorRequest,
+  context: TransactionContext,
+  types: MovementType[]
+): InitialState {
   if (request.mode === "edit") {
     const draft = draftFrom(request.transaction)
     return {
       type: movementTypeOf(request.transaction, context.accounts),
-      amountText: formatNumber(draft.amount, Math.max(2, draft.amount.decimalPlaces())),
+      amountText: formatNumber(
+        draft.amount,
+        Math.max(2, draft.amount.decimalPlaces())
+      ),
       currency: draft.currency,
       categoryId: draft.categoryId,
       source: draft.source,
@@ -102,15 +124,25 @@ function initialState(request: EditorRequest, context: TransactionContext, types
       date: draft.date,
       note: draft.note,
       isDraft: draft.isDraft,
-      debitedText: draft.actualDebitedPrincipal ? formatNumber(draft.actualDebitedPrincipal) : "",
+      debitedText: draft.actualDebitedPrincipal
+        ? formatNumber(draft.actualDebitedPrincipal)
+        : "",
     }
   }
-  const type = request.type && types.includes(request.type) ? request.type : (types[0] ?? "expense")
+  const type =
+    request.type && types.includes(request.type)
+      ? request.type
+      : (types[0] ?? "expense")
   const state: InitialState = {
     type,
     amountText: "",
     currency: context.currencies.principal,
-    categoryId: undefined,
+    // A category chosen before opening (Home's "Log quickly"), when it fits the movement.
+    categoryId:
+      request.categoryId &&
+      context.categories.some((category) => category.id === request.categoryId)
+        ? request.categoryId
+        : undefined,
     source: undefined,
     destinationId: undefined,
     description: "",
@@ -119,54 +151,122 @@ function initialState(request: EditorRequest, context: TransactionContext, types
     isDraft: request.isDraft ?? false,
     debitedText: "",
   }
-  return { ...state, ...defaultAccounts(type, context, request.accountId, state.source, state.currency) }
+  return {
+    ...state,
+    ...defaultAccounts(
+      type,
+      context,
+      request.accountId,
+      state.source,
+      state.currency
+    ),
+  }
 }
 
 /** iOS `chooseDefaultAccounts` and the method step's default: the last used source that qualifies. */
-function defaultAccounts(type: MovementType, context: TransactionContext, presetAccountId: string | undefined, current: PaymentSource | undefined, currency: string) {
-  const preset = context.accounts.find((account) => account.id === presetAccountId)
+function defaultAccounts(
+  type: MovementType,
+  context: TransactionContext,
+  presetAccountId: string | undefined,
+  current: PaymentSource | undefined,
+  currency: string
+) {
+  const preset = context.accounts.find(
+    (account) => account.id === presetAccountId
+  )
   if (movementKind(type) !== "transfer") {
     if (preset) return { source: primarySource(preset.id, context) }
     if (current) return { source: current }
     const last = lastUsedSource(context)
-    return { source: last ? pickerSource(last, context) : primarySource(context.accounts[0]?.id, context) }
+    return {
+      source: last
+        ? pickerSource(last, context)
+        : primarySource(context.accounts[0]?.id, context),
+    }
   }
-  const destinationId = preset && type === "cardPayment" && preset.kind === "credit" ? preset.id : undefined
+  const destinationId =
+    preset && type === "cardPayment" && preset.kind === "credit"
+      ? preset.id
+      : undefined
   const sourceId =
     preset && allowsSource(type, preset) && preset.kind !== "credit"
       ? preset.id
-      : (sourceAccounts(type, context).find((account) => account.id !== destinationId) ?? sourceAccounts(type, context)[0])?.id
+      : (
+          sourceAccounts(type, context).find(
+            (account) => account.id !== destinationId
+          ) ?? sourceAccounts(type, context)[0]
+        )?.id
   return { ...selectSource(type, context, sourceId, destinationId, currency) }
 }
 
 /** A bank account's card, a credit card's plastic, or cash on its own. */
-function primarySource(accountId: string | undefined, context: TransactionContext): PaymentSource | undefined {
+function primarySource(
+  accountId: string | undefined,
+  context: TransactionContext
+): PaymentSource | undefined {
   if (!accountId) return undefined
   const cards = context.cards.filter((card) => card.accountId === accountId)
-  const face = cards.find((card) => card.kind === "debit" || card.kind === "creditHolder") ?? cards[0]
-  return face ? { type: "card", id: face.id } : { type: "account", id: accountId }
+  const face =
+    cards.find(
+      (card) => card.kind === "debit" || card.kind === "creditHolder"
+    ) ?? cards[0]
+  return face
+    ? { type: "card", id: face.id }
+    : { type: "account", id: accountId }
 }
 
 /** iOS `selectSourceAccount`: the transfer channel, keep a valid destination, type in the currency held. */
-function selectSource(type: MovementType, context: TransactionContext, sourceId: string | undefined, destinationId: string | undefined, currency: string) {
+function selectSource(
+  type: MovementType,
+  context: TransactionContext,
+  sourceId: string | undefined,
+  destinationId: string | undefined,
+  currency: string
+) {
   if (!sourceId) return { source: undefined, destinationId, currency }
   const destinations = destinationAccounts(type, context, sourceId)
-  let destination = destinationId && destinations.some((account) => account.id === destinationId) ? destinationId : undefined
-  if (!destination && destinations.length === 1) destination = destinations[0]?.id
-  const account = context.accounts.find((candidate) => candidate.id === sourceId)
+  let destination =
+    destinationId &&
+    destinations.some((account) => account.id === destinationId)
+      ? destinationId
+      : undefined
+  if (!destination && destinations.length === 1)
+    destination = destinations[0]?.id
+  const account = context.accounts.find(
+    (candidate) => candidate.id === sourceId
+  )
   const held = account ? accountCurrencies(account)[0] : undefined
-  const options = [context.currencies.principal, ...(context.currencies.second ? [context.currencies.second] : [])]
-  return { source: accountSource(sourceId, context), destinationId: destination, currency: held && options.includes(held) ? held : currency }
+  const options = [
+    context.currencies.principal,
+    ...(context.currencies.second ? [context.currencies.second] : []),
+  ]
+  return {
+    source: accountSource(sourceId, context),
+    destinationId: destination,
+    currency: held && options.includes(held) ? held : currency,
+  }
 }
 
-export function EditorForm({ request, context, onClose }: { request: EditorRequest; context: TransactionContext; onClose: () => void }) {
+export function EditorForm({
+  request,
+  context,
+  onClose,
+}: {
+  request: EditorRequest
+  context: TransactionContext
+  onClose: () => void
+}) {
   const t = useT()
-  const ct = (key: string, ...args: (string | number)[]) => t.in("createtransaction", key, ...args)
-  const existing: Transaction | undefined = request.mode === "edit" ? request.transaction : undefined
+  const ct = (key: string, ...args: (string | number)[]) =>
+    t.in("createtransaction", key, ...args)
+  const existing: Transaction | undefined =
+    request.mode === "edit" ? request.transaction : undefined
   const types = useMemo(() => {
     const available = availableMovementTypes(context.accounts)
     // An edited movement keeps its own type even if the accounts changed since.
-    return existing ? [...new Set([...available, movementTypeOf(existing, context.accounts)])] : available
+    return existing
+      ? [...new Set([...available, movementTypeOf(existing, context.accounts)])]
+      : available
   }, [context.accounts, existing])
   const [initial] = useState(() => initialState(request, context, types))
 
@@ -190,9 +290,13 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
   const kind = movementKind(type)
   const movesBetweenAccounts = kind === "transfer"
   // An edit keeps the rate it was logged with, so its two currencies are the ones on offer.
-  const rate: ExchangeRate = existing?.exchangeRate ?? settingsRate(context.currencies)
+  const rate: ExchangeRate =
+    existing?.exchangeRate ?? settingsRate(context.currencies)
   const principal = rate.principal
-  const currencies = rate.second !== rate.principal ? [rate.principal, rate.second] : [rate.principal]
+  const currencies =
+    rate.second !== rate.principal
+      ? [rate.principal, rate.second]
+      : [rate.principal]
   const amount = parseAmount(amountText)
   const date = useMemo(() => {
     const parsed = new Date(dateText)
@@ -200,15 +304,25 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
   }, [dateText, initial.date])
 
   const sourceAccount = sourceAccountOf(source, context)
-  const destinationAccount = context.accounts.find((account) => account.id === destinationId)
-  const categories = context.categories.filter((category) => category.kind === kind)
+  const destinationAccount = context.accounts.find(
+    (account) => account.id === destinationId
+  )
+  const categories = context.categories.filter(
+    (category) => category.kind === kind
+  )
   const category = categories.find((candidate) => candidate.id === categoryId)
   const categoryLabel = category ? categoryName(t, category) : undefined
 
   // "USD charged by the bank": paying in the second currency from an account kept in the principal one.
-  const showsDebited = currency !== principal && sourceAccount !== undefined && accountCurrencies(sourceAccount).join() === principal
+  const showsDebited =
+    currency !== principal &&
+    sourceAccount !== undefined &&
+    accountCurrencies(sourceAccount).join() === principal
   const debited = showsDebited ? parseAmount(debitedText) : undefined
-  const debitedInvalid = showsDebited && debitedText.trim() !== "" && (debited === undefined || debited.lte(0))
+  const debitedInvalid =
+    showsDebited &&
+    debitedText.trim() !== "" &&
+    (debited === undefined || debited.lte(0))
 
   const draft: TransactionDraft = {
     id: existing?.id ?? request.mode,
@@ -217,8 +331,13 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
     currency,
     ...(kind !== "transfer" && categoryId ? { categoryId } : {}),
     ...(source ? { source } : {}),
-    ...(movesBetweenAccounts && destinationId ? { destinationAccountId: destinationId } : {}),
-    description: description.trim() === "" ? descriptionPlaceholder(t, type, categoryLabel) : description,
+    ...(movesBetweenAccounts && destinationId
+      ? { destinationAccountId: destinationId }
+      : {}),
+    description:
+      description.trim() === ""
+        ? descriptionPlaceholder(t, type, categoryLabel)
+        : description,
     date,
     ...(debited && debited.gt(0) ? { actualDebitedPrincipal: debited } : {}),
     note,
@@ -227,9 +346,27 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
 
   // Before an amount is typed the balances still matter: preview a cent so the rules run.
   const preview = useMemo(
-    () => previewMovement(context, { ...draft, amount: amount && amount.gt(0) ? amount : new Decimal("0.01") }, existing),
+    () =>
+      previewMovement(
+        context,
+        {
+          ...draft,
+          amount: amount && amount.gt(0) ? amount : new Decimal("0.01"),
+        },
+        existing
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the draft is rebuilt every render; these are what it depends on
-    [context, existing, kind, amountText, currency, source, destinationId, debitedText, dateText],
+    [
+      context,
+      existing,
+      kind,
+      amountText,
+      currency,
+      source,
+      destinationId,
+      debitedText,
+      dateText,
+    ]
   )
   const hasAmount = amount !== undefined && amount.gt(0)
 
@@ -237,20 +374,34 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
     if (kind === "income" || !sourceAccount) return undefined
     const balance = balanceIn(preview?.sourceBefore, currency)
     if (!balance) return undefined
-    return sourceAccount.kind === "credit" ? ct("Card balance %@", formatMoney(balance)) : ct("Available %@", formatMoney(balance))
+    return sourceAccount.kind === "credit"
+      ? ct("Card balance %@", formatMoney(balance))
+      : ct("Available %@", formatMoney(balance))
   })()
   const exceedsAvailable = (() => {
-    if (!hasAmount || kind === "income" || !sourceAccount || sourceAccount.kind === "credit" || !preview?.leaving) return false
-    const balance = preview.sourceBefore.find((money) => money.currency === preview.leaving?.currency)
+    if (
+      !hasAmount ||
+      kind === "income" ||
+      !sourceAccount ||
+      sourceAccount.kind === "credit" ||
+      !preview?.leaving
+    )
+      return false
+    const balance = preview.sourceBefore.find(
+      (money) => money.currency === preview.leaving?.currency
+    )
     return balance ? preview.leaving.amount.gt(balance.amount) : false
   })()
   const conversionLine = (() => {
     if (rate.second === rate.principal) return undefined
     if (movesBetweenAccounts) {
-      if (!hasAmount || !preview || !convertsCurrency(preview, currency)) return undefined
+      if (!hasAmount || !preview || !convertsCurrency(preview, currency))
+        return undefined
       const parts: string[] = []
-      if (preview.leaving && preview.leaving.currency !== currency) parts.push(ct("Leaves as %@", formatMoney(preview.leaving)))
-      if (preview.arriving && preview.arriving.currency !== currency) parts.push(ct("Arrives as %@", formatMoney(preview.arriving)))
+      if (preview.leaving && preview.leaving.currency !== currency)
+        parts.push(ct("Leaves as %@", formatMoney(preview.leaving)))
+      if (preview.arriving && preview.arriving.currency !== currency)
+        parts.push(ct("Arrives as %@", formatMoney(preview.arriving)))
       return [...parts, formatRate(rate)].join(" · ")
     }
     if (!hasAmount) return undefined
@@ -258,17 +409,23 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
     return `≈ ${formatMoney(convert({ amount, currency }, rate, other))} · ${formatRate(rate)}`
   })()
   const bankRateLine =
-    showsDebited && hasAmount && debited && debited.gt(0) ? `${ct("Bank rate")}: ${formatNumber(amount.div(debited), 4)} ${currency} / ${principal}` : undefined
+    showsDebited && hasAmount && debited && debited.gt(0)
+      ? `${ct("Bank rate")}: ${formatNumber(amount.div(debited), 4)} ${currency} / ${principal}`
+      : undefined
 
   const balanceAfter = (balances: readonly Money[] | undefined) => {
     const balance = balanceIn(balances, currency)
-    return balance && hasAmount ? ct("Balance after %@", formatMoney(balance)) : undefined
+    return balance && hasAmount
+      ? ct("Balance after %@", formatMoney(balance))
+      : undefined
   }
 
   const canSave =
     hasAmount &&
     source !== undefined &&
-    (movesBetweenAccounts ? destinationId !== undefined : category !== undefined) &&
+    (movesBetweenAccounts
+      ? destinationId !== undefined
+      : category !== undefined) &&
     !debitedInvalid &&
     !saving
 
@@ -279,16 +436,38 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
     const nextKind = movementKind(next)
     if (nextKind !== kind) setCategoryId(undefined)
     if (nextKind === "transfer") {
-      const currentAccount = sourceAccount && allowsSource(next, sourceAccount) ? sourceAccount.id : undefined
-      const fallback = (sourceAccounts(next, context).find((account) => account.id !== destinationId) ?? sourceAccounts(next, context)[0])?.id
-      const chosen = selectSource(next, context, currentAccount ?? fallback, destinationId, currency)
+      const currentAccount =
+        sourceAccount && allowsSource(next, sourceAccount)
+          ? sourceAccount.id
+          : undefined
+      const fallback = (
+        sourceAccounts(next, context).find(
+          (account) => account.id !== destinationId
+        ) ?? sourceAccounts(next, context)[0]
+      )?.id
+      const chosen = selectSource(
+        next,
+        context,
+        currentAccount ?? fallback,
+        destinationId,
+        currency
+      )
       setSource(chosen.source)
       setDestinationId(chosen.destinationId)
       setCurrency(chosen.currency)
     } else {
       setDestinationId(undefined)
-      if (source?.type === "card" && context.cards.find((card) => card.id === source.id)?.kind === "transfer" && !existing) setSource(pickerSource(source, context))
-      if (!source) setSource(defaultAccounts(next, context, undefined, undefined, currency).source)
+      if (
+        source?.type === "card" &&
+        context.cards.find((card) => card.id === source.id)?.kind ===
+          "transfer" &&
+        !existing
+      )
+        setSource(pickerSource(source, context))
+      if (!source)
+        setSource(
+          defaultAccounts(next, context, undefined, undefined, currency).source
+        )
     }
   }
 
@@ -308,8 +487,15 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
     setSaving(true)
     setError(undefined)
     try {
-      await saveTransaction(ledgerStore, { ...draft, id: existing?.id ?? crypto.randomUUID() })
-      toast.add({ title: ct("Saved"), description: `${draft.description} · ${formatMoney({ amount: draft.amount, currency })}`, type: "success" })
+      await saveTransaction(ledgerStore, {
+        ...draft,
+        id: existing?.id ?? newID(),
+      })
+      toast.add({
+        title: ct("Saved"),
+        description: `${draft.description} · ${formatMoney({ amount: draft.amount, currency })}`,
+        type: "success",
+      })
       onClose()
     } catch (thrown) {
       setError(errorMessage(t, isDomainError(thrown) ? thrown.code : undefined))
@@ -331,37 +517,67 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
     const formatted = formatAmountInput(amountText)
     if (formatted) setAmountText(formatted)
     // Enter advances: to the categories when one is still missing, else to the description.
-    const search = formRef.current?.querySelector<HTMLInputElement>("[data-editor-category-search]")
+    const search = formRef.current?.querySelector<HTMLInputElement>(
+      "[data-editor-category-search]"
+    )
     if (!movesBetweenAccounts && !category && search) search.focus()
     else descriptionRef.current?.focus()
   }
 
   const sourceTitleText = sourceTitle(t, source, context)
-  const accountRow = (account: (typeof context.accounts)[number]): { title: string; subtitle?: string | undefined; trailing?: string | undefined; thumbnail: Thumbnail } => {
+  const accountRow = (
+    account: (typeof context.accounts)[number]
+  ): {
+    title: string
+    subtitle?: string | undefined
+    trailing?: string | undefined
+    thumbnail: Thumbnail
+  } => {
     const balance = context.balances.get(account.id)
     return {
       title: accountName(account),
       subtitle: accountCardLabel(t, account, context),
-      trailing: balance ? balance.map((money) => formatMoney(money, { fractionDigits: 0 })).join(" · ") : undefined,
+      trailing: balance
+        ? balance
+            .map((money) => formatMoney(money, { fractionDigits: 0 }))
+            .join(" · ")
+        : undefined,
       thumbnail: accountThumbnail(account, context.cards),
     }
   }
   const title = existing ? t.in("web", "Edit transaction") : typeTitle(t, type)
   const amountClass = kind === "income" ? "text-positive" : "text-foreground"
-  const primaryLabel = existing ? t.in("web", "Save changes") : isDraft ? ct("Save as draft") : saveTitle(t, type)
+  const primaryLabel = existing
+    ? t.in("web", "Save changes")
+    : isDraft
+      ? ct("Save as draft")
+      : saveTitle(t, type)
 
   const reviewRows: { label: string; value: string }[] = [
     ...(movesBetweenAccounts
       ? [
-          ...(sourceAccount ? [{ label: ct("From"), value: accountName(sourceAccount) }] : []),
-          ...(destinationAccount ? [{ label: ct("To"), value: accountName(destinationAccount) }] : []),
+          ...(sourceAccount
+            ? [{ label: ct("From"), value: accountName(sourceAccount) }]
+            : []),
+          ...(destinationAccount
+            ? [{ label: ct("To"), value: accountName(destinationAccount) }]
+            : []),
         ]
       : [
-          { label: ct("Method"), value: sourceTitleText ?? (sourceAccount ? accountName(sourceAccount) : "—") },
-          ...(categoryLabel ? [{ label: ct("Category"), value: categoryLabel }] : []),
+          {
+            label: ct("Method"),
+            value:
+              sourceTitleText ??
+              (sourceAccount ? accountName(sourceAccount) : "—"),
+          },
+          ...(categoryLabel
+            ? [{ label: ct("Category"), value: categoryLabel }]
+            : []),
         ]),
     { label: ct("Date"), value: dayLabel(t, date) },
-    ...(conversionLine ? [{ label: ct("Rate used"), value: formatRate(rate) }] : []),
+    ...(conversionLine
+      ? [{ label: ct("Rate used"), value: formatRate(rate) }]
+      : []),
     ...(note.trim() ? [{ label: ct("Note"), value: note.trim() }] : []),
   ]
 
@@ -379,11 +595,19 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
         <FlowHeader
           leading="close"
           onLeading={onClose}
-          trailing={isDraft ? <StatusPill confirmed={false}>{ct("Draft")}</StatusPill> : undefined}
+          trailing={
+            isDraft ? (
+              <StatusPill confirmed={false}>{ct("Draft")}</StatusPill>
+            ) : undefined
+          }
         />
         <div className="flex flex-col gap-1">
-          <DialogTitle className="type-title-sm text-foreground">{title}</DialogTitle>
-          <DialogDescription className="type-body text-muted-foreground">{typeSubtitle(t, type)}</DialogDescription>
+          <DialogTitle className="type-title-sm text-foreground">
+            {title}
+          </DialogTitle>
+          <DialogDescription className="type-body text-muted-foreground">
+            {typeSubtitle(t, type)}
+          </DialogDescription>
         </div>
         {types.length > 1 ? (
           <div className="-mx-1 overflow-x-auto px-1 pb-0.5">
@@ -395,7 +619,9 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
               options={types.map((option) => ({
                 value: option,
                 title: typeTitle(t, option),
-                disabled: existing !== undefined && movementKind(option) !== movementKind(initial.type),
+                disabled:
+                  existing !== undefined &&
+                  movementKind(option) !== movementKind(initial.type),
               }))}
             />
           </div>
@@ -407,22 +633,46 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
           {movesBetweenAccounts ? (
             <section className="grid gap-5 lg:grid-cols-2">
               <div className="flex flex-col gap-2">
-                <h3 className="px-1 type-heading text-foreground">{sourceQuestion(t, type)}</h3>
-                <AccountPicker accounts={sourceAccounts(type, context)} value={sourceAccount?.id} onChange={chooseSourceAccount} describe={accountRow} />
+                <h3 className="px-1 type-heading text-foreground">
+                  {sourceQuestion(t, type)}
+                </h3>
+                <AccountPicker
+                  accounts={sourceAccounts(type, context)}
+                  value={sourceAccount?.id}
+                  onChange={chooseSourceAccount}
+                  describe={accountRow}
+                />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="px-1 type-heading text-foreground">{destinationQuestion(t, type)}</h3>
-                {destinationAccounts(type, context, sourceAccount?.id).length === 0 ? (
-                  <p className="rounded-2xl bg-card px-4 py-3 type-caption text-muted-foreground">{ct("No account can receive it from this one.")}</p>
+                <h3 className="px-1 type-heading text-foreground">
+                  {destinationQuestion(t, type)}
+                </h3>
+                {destinationAccounts(type, context, sourceAccount?.id)
+                  .length === 0 ? (
+                  <p className="rounded-2xl bg-card px-4 py-3 type-caption text-muted-foreground">
+                    {ct("No account can receive it from this one.")}
+                  </p>
                 ) : (
-                  <AccountPicker accounts={destinationAccounts(type, context, sourceAccount?.id)} value={destinationId} onChange={setDestinationId} describe={accountRow} />
+                  <AccountPicker
+                    accounts={destinationAccounts(
+                      type,
+                      context,
+                      sourceAccount?.id
+                    )}
+                    value={destinationId}
+                    onChange={setDestinationId}
+                    describe={accountRow}
+                  />
                 )}
               </div>
             </section>
           ) : null}
 
           <section className="flex flex-col items-center gap-3 rounded-2xl bg-card px-4 py-6 text-center">
-            <label htmlFor="editor-amount" className="type-title-sm text-foreground">
+            <label
+              htmlFor="editor-amount"
+              className="type-title-sm text-foreground"
+            >
               {amountQuestion(t, type)}
             </label>
             <input
@@ -441,23 +691,54 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
                 if (formatted) setAmountText(formatted)
               }}
               onKeyDown={onAmountKeyDown}
-              aria-invalid={amountText.trim() !== "" && amount === undefined ? true : undefined}
-              className={cn("w-full min-w-0 bg-transparent text-center type-display tabular-nums outline-none placeholder:text-text-faint aria-invalid:text-negative", amountClass)}
+              aria-invalid={
+                amountText.trim() !== "" && amount === undefined
+                  ? true
+                  : undefined
+              }
+              className={cn(
+                "w-full min-w-0 bg-transparent text-center type-display tabular-nums outline-none placeholder:text-text-faint aria-invalid:text-negative",
+                amountClass
+              )}
             />
             {currencies.length > 1 ? (
-              <KWSegmented style="accent" aria-label={t.in("onboarding", "Currency")} value={currency} onChange={setCurrency} options={currencies.map((code) => ({ value: code, title: code }))} />
+              <KWSegmented
+                style="accent"
+                aria-label={t.in("onboarding", "Currency")}
+                value={currency}
+                onChange={setCurrency}
+                options={currencies.map((code) => ({
+                  value: code,
+                  title: code,
+                }))}
+              />
             ) : (
               <span className="type-label text-text-secondary">{currency}</span>
             )}
             {availableLabel ? (
-              <p className={cn("type-label font-normal tabular-nums", exceedsAvailable ? "text-pending" : "text-muted-foreground")}>
-                {exceedsAvailable ? ct("%@ · more than what's there", availableLabel) : kind === "expense" && sourceTitleText ? `${sourceTitleText} · ${availableLabel}` : availableLabel}
+              <p
+                className={cn(
+                  "type-label font-normal tabular-nums",
+                  exceedsAvailable ? "text-pending" : "text-muted-foreground"
+                )}
+              >
+                {exceedsAvailable
+                  ? ct("%@ · more than what's there", availableLabel)
+                  : kind === "expense" && sourceTitleText
+                    ? `${sourceTitleText} · ${availableLabel}`
+                    : availableLabel}
               </p>
             ) : null}
-            {conversionLine ? <p className="type-caption-sm text-muted-foreground tabular-nums">{conversionLine}</p> : null}
+            {conversionLine ? (
+              <p className="type-caption-sm text-muted-foreground tabular-nums">
+                {conversionLine}
+              </p>
+            ) : null}
             {showsDebited ? (
               <div className="flex w-full max-w-sm flex-col gap-1.5 text-left">
-                <FieldLabel htmlFor="editor-debited">{ct("%@ charged by the bank", principal)}</FieldLabel>
+                <FieldLabel htmlFor="editor-debited">
+                  {ct("%@ charged by the bank", principal)}
+                </FieldLabel>
                 <Input
                   id="editor-debited"
                   inputMode="decimal"
@@ -472,14 +753,20 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
                   aria-invalid={debitedInvalid ? true : undefined}
                   className={cn(KW_FIELD, "tabular-nums")}
                 />
-                {bankRateLine ? <span className="px-1 type-caption-sm text-muted-foreground tabular-nums">{bankRateLine}</span> : null}
+                {bankRateLine ? (
+                  <span className="px-1 type-caption-sm text-muted-foreground tabular-nums">
+                    {bankRateLine}
+                  </span>
+                ) : null}
               </div>
             ) : null}
           </section>
 
           {!movesBetweenAccounts ? (
             <section className="flex flex-col gap-3">
-              <h3 className="px-1 type-heading text-foreground">{categoryQuestion(t, kind)}</h3>
+              <h3 className="px-1 type-heading text-foreground">
+                {categoryQuestion(t, kind)}
+              </h3>
               <CategoryPicker
                 categories={categories}
                 usage={context.categoryUsage}
@@ -490,23 +777,48 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
                 }}
                 onCreate={() => setCreatingCategory(true)}
               />
-              <NewCategoryDialog kind={kind} open={creatingCategory} onOpenChange={setCreatingCategory} onCreated={(created) => setCategoryId(created.id)} />
+              <NewCategoryDialog
+                kind={kind}
+                open={creatingCategory}
+                onOpenChange={setCreatingCategory}
+                onCreated={(created) => setCategoryId(created.id)}
+              />
             </section>
           ) : null}
 
           {!movesBetweenAccounts ? (
             <section className="flex flex-col gap-3">
               <div className="flex flex-col gap-0.5 px-1">
-                <h3 className="type-heading text-foreground">{sourceQuestion(t, type)}</h3>
-                <p className="type-caption text-muted-foreground">{ct(kind === "income" ? "The method decides which account increases." : "The method decides which account is charged.")}</p>
+                <h3 className="type-heading text-foreground">
+                  {sourceQuestion(t, type)}
+                </h3>
+                <p className="type-caption text-muted-foreground">
+                  {ct(
+                    kind === "income"
+                      ? "The method decides which account increases."
+                      : "The method decides which account is charged."
+                  )}
+                </p>
               </div>
-              <MethodPicker groups={methodGroups(t, context, kind, currency, existing ? source : undefined)} value={source} onChange={setSource} />
+              <MethodPicker
+                groups={methodGroups(
+                  t,
+                  context,
+                  kind,
+                  currency,
+                  existing ? source : undefined
+                )}
+                value={source}
+                onChange={setSource}
+              />
             </section>
           ) : null}
 
           <section className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <FieldLabel htmlFor="editor-description">{ct("Description")}</FieldLabel>
+              <FieldLabel htmlFor="editor-description">
+                {ct("Description")}
+              </FieldLabel>
               <Input
                 id="editor-description"
                 ref={descriptionRef}
@@ -519,18 +831,40 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
             </div>
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="editor-date">{ct("Date")}</FieldLabel>
-              <Input id="editor-date" type="datetime-local" value={dateText} onChange={(event) => setDateText(event.target.value)} className={cn(KW_FIELD, "[color-scheme:dark]")} />
+              <Input
+                id="editor-date"
+                type="datetime-local"
+                value={dateText}
+                onChange={(event) => setDateText(event.target.value)}
+                className={cn(KW_FIELD, "[color-scheme:dark]")}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="editor-draft">{ct("Save as draft")}</FieldLabel>
+              <FieldLabel htmlFor="editor-draft">
+                {ct("Save as draft")}
+              </FieldLabel>
               <div className="flex h-10 items-center justify-between gap-3 rounded-xl bg-secondary px-3.5">
-                <span className="truncate type-caption text-muted-foreground">{t.in("transactions", "Drafts · they don't affect balances")}</span>
-                <KWSwitch id="editor-draft" checked={isDraft} onChange={setIsDraft} label={ct("Save as draft")} />
+                <span className="truncate type-caption text-muted-foreground">
+                  {t.in("transactions", "Drafts · they don't affect balances")}
+                </span>
+                <KWSwitch
+                  id="editor-draft"
+                  checked={isDraft}
+                  onChange={setIsDraft}
+                  label={ct("Save as draft")}
+                />
               </div>
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <FieldLabel htmlFor="editor-note">{ct("Note")}</FieldLabel>
-              <Textarea id="editor-note" value={note} onChange={(event) => setNote(event.target.value)} placeholder={ct("Add a note")} rows={2} className={KW_TEXTAREA} />
+              <Textarea
+                id="editor-note"
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder={ct("Add a note")}
+                rows={2}
+                className={KW_TEXTAREA}
+              />
             </div>
           </section>
         </div>
@@ -538,18 +872,42 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
         <aside className="flex flex-col gap-4 border-t border-divider px-5 py-6 md:overflow-y-auto md:border-t-0 md:border-l md:px-6">
           {/* The iOS receipt ticket, live: what will be saved, on the `surface` card. */}
           <div className="flex flex-col items-center gap-1 rounded-2xl bg-card px-4 pt-5 pb-2 text-center">
-            <span className="type-label text-text-secondary">{reviewTitle(t, type)}</span>
-            <span className={cn("max-w-full truncate type-amount-lg tabular-nums", amountClass)}>{formatMoney({ amount: hasAmount ? amount : new Decimal(0), currency })}</span>
+            <span className="type-label text-text-secondary">
+              {reviewTitle(t, type)}
+            </span>
+            <AnimatedNumber
+              value={formatMoney({
+                amount: hasAmount ? amount : new Decimal(0),
+                currency,
+              })}
+              className={cn(
+                "max-w-full overflow-hidden type-amount-lg",
+                amountClass
+              )}
+            />
             {/* Until a category or text gives it one, the expense has no description to show yet. */}
-            {movesBetweenAccounts || description.trim() || categoryLabel ? <span className="max-w-full truncate type-body font-semibold text-foreground">{draft.description}</span> : null}
+            {movesBetweenAccounts || description.trim() || categoryLabel ? (
+              <span className="max-w-full truncate type-body font-semibold text-foreground">
+                {draft.description}
+              </span>
+            ) : null}
             <span className="pt-1 pb-3">
-              <StatusPill confirmed={!isDraft}>{ct(isDraft ? "Draft" : "Confirmed")}</StatusPill>
+              <StatusPill confirmed={!isDraft}>
+                {ct(isDraft ? "Draft" : "Confirmed")}
+              </StatusPill>
             </span>
             <dl className="w-full divide-y divide-divider border-t border-divider text-left">
               {reviewRows.map((row) => (
-                <div key={row.label} className="flex items-baseline justify-between gap-3 py-2.5">
-                  <dt className="shrink-0 type-caption text-muted-foreground">{row.label}</dt>
-                  <dd className="min-w-0 truncate text-right type-caption text-foreground tabular-nums">{row.value}</dd>
+                <div
+                  key={row.label}
+                  className="flex items-baseline justify-between gap-3 py-2.5"
+                >
+                  <dt className="shrink-0 type-caption text-muted-foreground">
+                    {row.label}
+                  </dt>
+                  <dd className="min-w-0 truncate text-right type-caption text-foreground tabular-nums">
+                    {row.value}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -558,26 +916,69 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
           <div className="flex flex-col gap-2">
             {sourceAccount ? (
               <Party
-                caption={ct(kind === "expense" ? "Paid with" : kind === "income" ? "Into" : "From")}
-                title={movesBetweenAccounts ? accountName(sourceAccount) : (sourceTitleText ?? accountName(sourceAccount))}
+                caption={ct(
+                  kind === "expense"
+                    ? "Paid with"
+                    : kind === "income"
+                      ? "Into"
+                      : "From"
+                )}
+                title={
+                  movesBetweenAccounts
+                    ? accountName(sourceAccount)
+                    : (sourceTitleText ?? accountName(sourceAccount))
+                }
                 detail={balanceAfter(preview?.sourceAfter)}
                 thumbnail={
-                  source?.type === "card" && context.cards.find((card) => card.id === source.id)?.kind !== "transfer"
-                    ? { kind: "card", color: context.cards.find((card) => card.id === source.id)?.color }
+                  source?.type === "card" &&
+                  context.cards.find((card) => card.id === source.id)?.kind !==
+                    "transfer"
+                    ? {
+                        kind: "card",
+                        color: context.cards.find(
+                          (card) => card.id === source.id
+                        )?.color,
+                      }
                     : accountThumbnail(sourceAccount, context.cards)
                 }
               />
             ) : null}
             {movesBetweenAccounts && destinationAccount ? (
               <>
-                <KWIcon name="arrowDown" size={16} className="mx-auto text-muted-foreground" />
-                <Party caption={ct("To")} title={accountName(destinationAccount)} detail={balanceAfter(preview?.destinationAfter)} thumbnail={accountThumbnail(destinationAccount, context.cards)} />
+                <KWIcon
+                  name="arrowDown"
+                  size={16}
+                  className="mx-auto text-muted-foreground"
+                />
+                <Party
+                  caption={ct("To")}
+                  title={accountName(destinationAccount)}
+                  detail={balanceAfter(preview?.destinationAfter)}
+                  thumbnail={accountThumbnail(
+                    destinationAccount,
+                    context.cards
+                  )}
+                />
               </>
             ) : null}
           </div>
 
-          {isDraft ? <p className="rounded-xl bg-pending-tint px-3 py-2 type-caption text-pending">{t.in("web", "Saved as a draft, it doesn't affect balances until you confirm it.")}</p> : null}
-          {existing && rate.second !== rate.principal ? <p className="px-1 type-caption-sm text-muted-foreground">{t.in("web", "Edits keep the rate this transaction was logged with.")}</p> : null}
+          {isDraft ? (
+            <p className="rounded-xl bg-pending-tint px-3 py-2 type-caption text-pending">
+              {t.in(
+                "web",
+                "Saved as a draft, it doesn't affect balances until you confirm it."
+              )}
+            </p>
+          ) : null}
+          {existing && rate.second !== rate.principal ? (
+            <p className="px-1 type-caption-sm text-muted-foreground">
+              {t.in(
+                "web",
+                "Edits keep the rate this transaction was logged with."
+              )}
+            </p>
+          ) : null}
 
           <div className="mt-auto flex flex-col gap-2 pt-2">
             {error ? (
@@ -585,7 +986,13 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
                 {error}
               </p>
             ) : null}
-            <KWButton type="submit" fill disabled={!canSave} shortcut="⌘↵" className="justify-between">
+            <KWButton
+              type="submit"
+              fill
+              disabled={!canSave}
+              shortcut="⌘↵"
+              className="justify-between"
+            >
               {primaryLabel}
             </KWButton>
             <KWButton variant="plain" fill onClick={onClose}>
@@ -598,14 +1005,30 @@ export function EditorForm({ request, context, onClose }: { request: EditorReque
   )
 }
 
-function Party({ caption, title, detail, thumbnail }: { caption: string; title: string; detail?: string | undefined; thumbnail: Thumbnail }) {
+function Party({
+  caption,
+  title,
+  detail,
+  thumbnail,
+}: {
+  caption: string
+  title: string
+  detail?: string | undefined
+  thumbnail: Thumbnail
+}) {
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-card px-4 py-3">
       <MethodThumbnail thumbnail={thumbnail} />
       <div className="flex min-w-0 flex-col">
         <span className="type-caption-sm text-muted-foreground">{caption}</span>
-        <span className="truncate type-body font-semibold text-foreground">{title}</span>
-        {detail ? <span className="truncate type-caption-sm text-muted-foreground tabular-nums">{detail}</span> : null}
+        <span className="truncate type-body font-semibold text-foreground">
+          {title}
+        </span>
+        {detail ? (
+          <span className="truncate type-caption-sm text-muted-foreground tabular-nums">
+            {detail}
+          </span>
+        ) : null}
       </div>
     </div>
   )
