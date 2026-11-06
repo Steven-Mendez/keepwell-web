@@ -104,9 +104,11 @@ function TopBar() {
   const [isScrolled, setScrolled] = useState(false)
   const section = pathname.startsWith("/settings/categories")
     ? { ns: "settings" as const, title: "Categories" }
-    : ([...MAIN_NAV, RECURRING_NAV, SETTINGS_NAV]
-        .filter((item) => item.href !== "/")
-        .find((item) => pathname.startsWith(item.href)) ?? MAIN_NAV[0]!)
+    : pathname.startsWith("/design-system")
+      ? { ns: "web" as const, title: "Design system" }
+      : ([...MAIN_NAV, RECURRING_NAV, SETTINGS_NAV]
+          .filter((item) => item.href !== "/")
+          .find((item) => pathname.startsWith(item.href)) ?? MAIN_NAV[0]!)
 
   useEffect(() => {
     const update = () => setScrolled(window.scrollY > 56)
