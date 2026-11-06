@@ -11,21 +11,30 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "tokens:sync": "node scripts/sync-ios-tokens.mjs",
-    "tokens:check": "node scripts/sync-ios-tokens.mjs --check"
+    "tokens:check": "node scripts/sync-ios-tokens.mjs --check",
+    "test": "TZ=America/Managua vitest run",
+    "test:watch": "TZ=America/Managua vitest",
+    "strings:sync": "node scripts/sync-ios-strings.mjs",
+    "strings:check": "node scripts/sync-ios-strings.mjs --check",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "doctor": "REACT_DOCTOR_NO_TELEMETRY=1 react-doctor . --no-supply-chain -y"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@number-flow/react": "^0.6.2",
     "@serwist/next": "^9.5.13",
     "@shadcn/react": "^0.3.1",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",
     "cn": "^0.5.2",
     "date-fns": "^4.4.0",
+    "decimal.js": "^10.6.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.5.0",
     "lucide-react": "^1.68.0",
+    "motion": "^14.9.1",
     "next": "16.4.3",
     "react": "19.3.1",
     "react-day-picker": "^10.0.2",
@@ -46,10 +55,13 @@
     "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "fake-indexeddb": "^6.2.7",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "react-doctor": "0.9.22",
     "serwist": "^9.5.13",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

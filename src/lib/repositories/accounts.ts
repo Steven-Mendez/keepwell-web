@@ -1,3 +1,4 @@
+import { newID } from "@/lib/platform/uuid"
 import { db, accountToRow, cardToRow, rowToAccount, rowToCard } from "@/lib/db"
 import { Account, Card } from "@/lib/schema"
 
@@ -6,14 +7,19 @@ import { isAlive, softDelete, upsert } from "./shared"
 /** A record to save: without `id` it is new and gets a client-generated UUID. */
 export type Draft<T extends { id: string }> = Omit<T, "id"> & { id?: string }
 
-function withId<T extends { id: string }>(draft: Draft<T>): Draft<T> & { id: string } {
-  return { ...draft, id: draft.id ?? crypto.randomUUID() }
+function withId<T extends { id: string }>(
+  draft: Draft<T>
+): Draft<T> & { id: string } {
+  return { ...draft, id: draft.id ?? newID() }
 }
 
 export const accountRepository = {
   /** Alive accounts, oldest first. */
   async list(): Promise<Account[]> {
-    const rows = await db.accounts.orderBy("created_at").filter(isAlive).toArray()
+    const rows = await db.accounts
+      .orderBy("created_at")
+      .filter(isAlive)
+      .toArray()
     return rows.map(rowToAccount)
   },
 
