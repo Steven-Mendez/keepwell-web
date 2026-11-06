@@ -36,7 +36,7 @@ export default defineConfig({
       },
       {
         // The amount field takes focus as the editor opens, as the iOS keypad does.
-        files: ["src/components/movement-editor/editor-form.tsx"],
+        files: ["src/components/movement-editor/editor-fields.tsx"],
         rules: ["react-doctor/no-autofocus"],
       },
       {

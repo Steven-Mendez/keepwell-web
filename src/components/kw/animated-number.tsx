@@ -31,7 +31,7 @@ type Parsed = {
  * the text around one number, the number and how it was written. Anything else (the "••••" mask,
  * text with two numbers) is undefined and shown as plain text.
  */
-export function parseFormatted(text: string): Parsed | undefined {
+function parseFormatted(text: string): Parsed | undefined {
   const match = /^(\D*?)(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(\D*)$/.exec(text)
   if (!match) return undefined
   const [, prefix = "", whole = "", fraction = "", suffix = ""] = match

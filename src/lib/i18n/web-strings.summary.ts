@@ -21,12 +21,16 @@ export const WEB_STRINGS_SUMMARY: WebStrings = {
   "Income averages %@": { es: "Ingreso promedio: %@" },
   "Month by month": { es: "Mes a mes" },
   "Savings over time": { es: "Ahorro acumulado" },
-  "Running total of what you kept, month after month": { es: "Lo que fuiste guardando, sumado mes a mes" },
+  "Running total of what you kept, month after month": {
+    es: "Lo que fuiste guardando, sumado mes a mes",
+  },
   "Saved so far": { es: "Ahorrado hasta ahí" },
   New: { es: "Nueva" },
   "Before: %@": { es: "Antes: %@" },
   "Top categories over time": { es: "Tus categorías principales" },
-  "Your largest spending categories, month by month": { es: "Las categorías en que más gastas, mes a mes" },
+  "Your largest spending categories, month by month": {
+    es: "Las categorías en que más gastas, mes a mes",
+  },
   Highlights: { es: "Lo más destacado" },
   "Spending changes %@": { es: "Cambios en gastos %@" },
   "Best month": { es: "Mejor mes" },
@@ -36,7 +40,9 @@ export const WEB_STRINGS_SUMMARY: WebStrings = {
   "Grew the most": { es: "Lo que más subió" },
   "Dropped the most": { es: "Lo que más bajó" },
   "Year over year": { es: "Año contra año" },
-  "Every year you've logged, whatever range is picked above": { es: "Todos los años que registraste, sin importar el rango elegido arriba" },
+  "Every year you've logged, whatever range is picked above": {
+    es: "Todos los años que registraste, sin importar el rango elegido arriba",
+  },
   "%lld so far": { es: "%lld (en curso)" },
   Saved: { es: "Ahorrado" },
 }

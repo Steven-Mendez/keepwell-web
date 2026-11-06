@@ -5,9 +5,9 @@ import { useSyncExternalStore, type ReactNode } from "react"
 import { KWSegmented } from "@/components/kw/design"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { DomainError, currencySymbol, formatAmountInput } from "@/lib/domain"
+import { currencySymbol, formatAmountInput } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
-import type { CardColor, CardNetwork } from "@/lib/schema"
+import type { CardColor } from "@/lib/schema"
 import { cardColorName } from "@/lib/presentation/display"
 import { cn } from "@/lib/utils"
 
@@ -153,39 +153,6 @@ export function ColorSwatches({
       ))}
     </div>
   )
-}
-
-export const NETWORKS: readonly CardNetwork[] = [
-  "visa",
-  "mastercard",
-  "amex",
-  "other",
-]
-
-/** Keeps only digits, at most four. */
-export const digitsOnly = (text: string) => text.replace(/\D/g, "").slice(0, 4)
-
-/** iOS texts for the domain failures a form can hit. */
-export function domainErrorText(
-  t: Translator,
-  error: unknown,
-  fallback: string
-): string {
-  if (error instanceof DomainError) {
-    switch (error.code) {
-      case "invalidLastFour":
-        return t.in("onboarding", "Enter all 4 digits or leave it empty.")
-      case "missingName":
-        return t.in("accounts", "Write a name for the account.")
-      case "invalidAmount":
-        return t.in("addcard", "Check the balance.")
-      case "invalidExpiry":
-        return t.in("sharedpresentation", "Choose both the month and the year.")
-      default:
-        return fallback
-    }
-  }
-  return fallback
 }
 
 /** Whether the viewport matches `query`; `false` while rendering on the server. */
