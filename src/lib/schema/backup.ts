@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 import { TransactionCategory } from "./category"
-import { Account, Card, Settings, Transaction } from "./entities"
+import { Account, Card, RecurringRule, Settings, Transaction } from "./entities"
 import { IsoDateTime } from "./primitives"
 
 /**
@@ -11,8 +11,10 @@ import { IsoDateTime } from "./primitives"
  * - Decimals are exact strings, ids lowercase UUIDs, dates ISO 8601 (iOS writes milliseconds).
  * - Optional fields are omitted when empty; `null` is accepted too and means the same.
  * - A deleted record carries `deletedAt`; a default category absent from the file is not deleted.
+ * - Version 2 added `recurringRules` and a movement's `recurringId`; a version 1 file has neither and
+ *   still restores (no rules).
  */
-export const CURRENT_SCHEMA_VERSION = 1
+export const CURRENT_SCHEMA_VERSION = 2
 
 const Audited = {
   createdAt: IsoDateTime,
@@ -23,6 +25,7 @@ const Audited = {
 export const BackupAccount = Account.extend(Audited)
 export const BackupCard = Card.extend(Audited)
 export const BackupTransaction = Transaction.extend(Audited)
+export const BackupRecurringRule = RecurringRule.extend(Audited)
 export const BackupCategory = TransactionCategory.extend({
   ...Audited,
   sortIndex: z.number().int(),
@@ -41,6 +44,8 @@ const BackupFileShape = z.object({
   cards: z.array(BackupCard),
   categories: z.array(BackupCategory),
   transactions: z.array(BackupTransaction),
+  /** Missing in version 1 files. */
+  recurringRules: z.array(BackupRecurringRule).default([]),
 })
 
 /** Swift's decoder reads `null` as absent; dropping nulls first lets one schema serve both. */
@@ -62,6 +67,7 @@ export type BackupAccount = z.infer<typeof BackupAccount>
 export type BackupCard = z.infer<typeof BackupCard>
 export type BackupTransaction = z.infer<typeof BackupTransaction>
 export type BackupCategory = z.infer<typeof BackupCategory>
+export type BackupRecurringRule = z.infer<typeof BackupRecurringRule>
 export type BackupSettings = z.infer<typeof BackupSettings>
 
 export class BackupFormatError extends Error {

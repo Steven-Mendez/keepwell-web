@@ -1,4 +1,4 @@
-import type { Account, Card, CurrencySettings, Transaction, TransactionKind } from "@/lib/schema"
+import type { Account, Card, CurrencySettings, RecurringRule, Transaction, TransactionKind } from "@/lib/schema"
 import { OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "@/lib/schema"
 
 import {
@@ -252,7 +252,11 @@ export function folded(text: string): string {
   return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
 }
 
-export function subscriptionsCharged(cardId: string, transactions: readonly Transaction[]): string[] {
+/**
+ * The services charged to a card: the heuristic over its movements, then the subscription rules paid
+ * with it, each name once (folded).
+ */
+export function subscriptionsCharged(cardId: string, transactions: readonly Transaction[], rules: readonly RecurringRule[] = []): string[] {
   const months = new Map<string, Set<string>>()
   const inCategory = new Set<string>()
   const latest = new Map<string, { date: number; description: string }>()
@@ -268,10 +272,19 @@ export function subscriptionsCharged(cardId: string, transactions: readonly Tran
     const previous = latest.get(key)
     if (!previous || date.getTime() > previous.date) latest.set(key, { date: date.getTime(), description: transaction.description })
   }
-  return [...latest.entries()]
+  const charged = [...latest.entries()]
     .filter(([key]) => inCategory.has(key) || (months.get(key)?.size ?? 0) >= 2)
     .sort(([, a], [, b]) => b.date - a.date)
-    .map(([, value]) => value.description)
+  const names = new Set(charged.map(([key]) => key))
+  const fromRules: string[] = []
+  for (const rule of rules) {
+    if (!rule.isSubscription || rule.cardId !== cardId) continue
+    const key = folded(rule.name.trim())
+    if (key === "" || names.has(key)) continue
+    names.add(key)
+    fromRules.push(rule.name.trim())
+  }
+  return [...charged.map(([, value]) => value.description), ...fromRules]
 }
 
 // Scope: everything or one account (what left it and, for transfers, what arrived).

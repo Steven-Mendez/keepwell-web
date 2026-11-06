@@ -39,7 +39,8 @@ import {
 import { useT, type Translator } from "@/lib/i18n"
 import type { TransactionDisplay } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
-import type { Transaction } from "@/lib/schema"
+import type { RecurringRule, Transaction } from "@/lib/schema"
+import { frequencyText } from "@/components/recurring/recurring-format"
 import { cn } from "@/lib/utils"
 
 type Ct = (key: string, ...args: (string | number)[]) => string
@@ -109,11 +110,15 @@ function DetailCards({
   ct,
   transaction,
   display,
+  rule,
+  onOpenRule,
 }: {
   t: Translator
   ct: Ct
   transaction: Transaction
   display: TransactionDisplay
+  rule: RecurringRule | undefined
+  onOpenRule: () => void
 }) {
   return (
     <div className="flex flex-col gap-4 px-5 pb-6">
@@ -136,6 +141,13 @@ function DetailCards({
             </StatusPill>
           }
         />
+        {rule ? (
+          <KWValueRow
+            label={t.in("web", "Recurring")}
+            value={frequencyText(t, rule.frequency, rule.interval)}
+            onClick={onOpenRule}
+          />
+        ) : null}
       </KWGroupedCard>
       <RateCard ct={ct} transaction={transaction} />
       {transaction.note ? (
@@ -173,6 +185,8 @@ function DetailBody({
   onConfirm,
   onEdit,
   onDelete,
+  rule,
+  onOpenRule,
 }: {
   t: Translator
   transaction: Transaction
@@ -181,6 +195,9 @@ function DetailBody({
   onConfirm: () => void
   onEdit: () => void
   onDelete: () => void
+  /** The recurring rule that produced it, while the rule exists. */
+  rule: RecurringRule | undefined
+  onOpenRule: () => void
 }) {
   const ct: Ct = (key, ...args) => t.in("createtransaction", key, ...args)
   const style = display.style(transaction)
@@ -241,7 +258,14 @@ function DetailBody({
         />
       </div>
 
-      <DetailCards t={t} ct={ct} transaction={transaction} display={display} />
+      <DetailCards
+        t={t}
+        ct={ct}
+        transaction={transaction}
+        display={display}
+        rule={rule}
+        onOpenRule={onOpenRule}
+      />
     </>
   )
 }
@@ -290,12 +314,17 @@ export function MovementDetail() {
   const t = useT()
   const ledger = useLedger()
   const display = useTransactionDisplay(ledger)
-  const { detailId, showDetail, openEditor } = useAppActions()
+  const { detailId, showDetail, openEditor, openRuleEditor } = useAppActions()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const transaction = ledger?.transactions.find(
     (candidate) => candidate.id === detailId
   )
   const open = detailId !== undefined && transaction !== undefined
+  const rule = transaction?.recurringId
+    ? ledger?.recurringRules.find(
+        (candidate) => candidate.id === transaction.recurringId
+      )
+    : undefined
 
   async function remove() {
     if (!transaction) return
@@ -346,6 +375,12 @@ export function MovementDetail() {
                 openEditor({ mode: "edit", transaction })
               }}
               onDelete={() => setConfirmingDelete(true)}
+              rule={rule}
+              onOpenRule={() => {
+                if (!rule) return
+                showDetail(undefined)
+                openRuleEditor({ mode: "edit", ruleId: rule.id })
+              }}
             />
           ) : null}
         </SheetContent>

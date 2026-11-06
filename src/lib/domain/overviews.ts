@@ -1,4 +1,4 @@
-import type { Account, Card, CurrencySettings, Settings, Transaction, TransactionCategory } from "@/lib/schema"
+import type { Account, Card, CurrencySettings, RecurringRule, Settings, Transaction, TransactionCategory } from "@/lib/schema"
 import { DEFAULT_SETTINGS } from "@/lib/schema"
 
 import { addMonths, contains, daysInMonth, sameMonth, yearMonthContaining, type DateInterval, type YearMonth } from "./calendar"
@@ -36,17 +36,19 @@ export interface Ledger {
   /** Newest first. */
   transactions: Transaction[]
   categories: TransactionCategory[]
+  recurringRules: RecurringRule[]
 }
 
 export async function loadLedger(store: LedgerStore): Promise<Ledger> {
-  const [settings, accounts, cards, transactions, categories] = await Promise.all([
+  const [settings, accounts, cards, transactions, categories, recurringRules] = await Promise.all([
     store.loadSettings(),
     store.fetchAccounts(),
     store.fetchCards(),
     store.fetchTransactions(),
     store.fetchCategories(),
+    store.fetchRecurringRules(),
   ])
-  return { settings: settings ?? DEFAULT_SETTINGS, accounts, cards, transactions, categories: orderedCategories(categories) }
+  return { settings: settings ?? DEFAULT_SETTINGS, accounts, cards, transactions, categories: orderedCategories(categories), recurringRules }
 }
 
 const newestFirst = (a: Transaction, b: Transaction) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)
@@ -123,7 +125,7 @@ export function homeOverview(ledger: Ledger, now: Date = new Date(), recentCount
     ...(accounts.some((account) => account.kind === "credit") ? { cardDebt: { amount: cardDebt, currency: currencies.principal } } : {}),
     frequentExpenseCategoryIds: frequent,
     paymentReminderDaysBefore: ledger.settings.paymentReminderDaysBefore,
-    cardSubscriptions: new Map(cards.filter((card) => card.expiry).map((card) => [card.id, subscriptionsCharged(card.id, transactions)])),
+    cardSubscriptions: new Map(cards.filter((card) => card.expiry).map((card) => [card.id, subscriptionsCharged(card.id, transactions, ledger.recurringRules)])),
   }
 }
 
