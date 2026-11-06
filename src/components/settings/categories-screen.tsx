@@ -4,10 +4,17 @@ import { GripVerticalIcon } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
-import { KWButton, KWCircleButton, KWGroupedCard, KWLargeTitleHeader, KWSegmented } from "@/components/kw/design"
+import {
+  KWButton,
+  KWCircleButton,
+  KWGroupedCard,
+  KWLargeTitleHeader,
+  KWSegmented,
+} from "@/components/kw/design"
 import { KWIcon } from "@/components/kw/kw-icon"
 import { CategoryBadge, Page } from "@/components/kw/primitives"
 import { toast } from "@/components/ui/toast"
+import { CategoriesSkeleton } from "@/components/kw/skeletons"
 import { useLedger } from "@/hooks/use-ledger"
 import { reorderCategories, restoreDefaultCategories } from "@/lib/domain"
 import { useT } from "@/lib/i18n"
@@ -16,7 +23,10 @@ import { ledgerStore } from "@/lib/repositories"
 import { isFallbackCategory, type TransactionCategory } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
-import { CategoryEditorDialog, type EditorTarget } from "./category-editor-dialog"
+import {
+  CategoryEditorDialog,
+  type EditorTarget,
+} from "./category-editor-dialog"
 import { ConfirmDialog } from "./confirm-dialog"
 
 type Kind = "expense" | "income"
@@ -46,13 +56,20 @@ export function CategoriesScreen() {
 
   /** The whole list in its new order: this kind rearranged, the other kind where it was. */
   async function persist(order: readonly TransactionCategory[]) {
-    const fallback = listed.filter((category) => isFallbackCategory(category.id))
+    const fallback = listed.filter((category) =>
+      isFallbackCategory(category.id)
+    )
     const queue = [...order, ...fallback]
-    const ids = all.map((category) => (category.kind === kind ? (queue.shift()?.id ?? category.id) : category.id))
+    const ids = all.map((category) =>
+      category.kind === kind ? (queue.shift()?.id ?? category.id) : category.id
+    )
     try {
       await reorderCategories(ledgerStore, ids)
     } catch {
-      toast.add({ title: t.in("settings", "We couldn't save the new order. Try again."), type: "error" })
+      toast.add({
+        title: t.in("settings", "We couldn't save the new order. Try again."),
+        type: "error",
+      })
     }
   }
 
@@ -69,7 +86,13 @@ export function CategoriesScreen() {
     try {
       await restoreDefaultCategories(ledgerStore)
     } catch {
-      toast.add({ title: t.in("settings", "We couldn't restore the default categories. Try again."), type: "error" })
+      toast.add({
+        title: t.in(
+          "settings",
+          "We couldn't restore the default categories. Try again."
+        ),
+        type: "error",
+      })
     }
   }
 
@@ -80,14 +103,20 @@ export function CategoriesScreen() {
 
   return (
     <Page>
-      <Link href="/settings" className="-mb-2 inline-flex w-fit items-center gap-1 rounded-md type-label text-link outline-none hover:text-link-hover focus-visible:ring-2 focus-visible:ring-ring">
+      <Link
+        href="/settings"
+        className="-mb-2 inline-flex w-fit items-center gap-1 rounded-md type-label text-link outline-none hover:text-link-hover focus-visible:ring-2 focus-visible:ring-ring"
+      >
         <KWIcon name="chevronLeft" size={16} />
         {t.in("settings", "Settings")}
       </Link>
       <KWLargeTitleHeader
         title={t.in("settings", "Categories")}
         trailing={
-          <KWButton icon="plus" onClick={() => setEditor({ mode: "create", kind })}>
+          <KWButton
+            icon="plus"
+            onClick={() => setEditor({ mode: "create", kind })}
+          >
             {t.in("settings", "New category")}
           </KWButton>
         }
@@ -103,16 +132,20 @@ export function CategoriesScreen() {
             { value: "income", title: t.in("settings", "Income") },
           ]}
         />
-        <span className="px-1 type-caption text-muted-foreground">{t.in("web", "Drag to reorder, or use the arrows.")}</span>
+        <span className="px-1 type-caption text-muted-foreground">
+          {t.in("web", "Drag to reorder, or use the arrows.")}
+        </span>
       </div>
 
       {!ledger ? (
-        <div className="h-96 animate-pulse rounded-2xl bg-card" />
+        <CategoriesSkeleton />
       ) : (
         <KWGroupedCard>
           <ol className="flex flex-col divide-y divide-divider">
             {listed.map((category) => {
-              const index = movable.findIndex((candidate) => candidate.id === category.id)
+              const index = movable.findIndex(
+                (candidate) => candidate.id === category.id
+              )
               const isFallback = index < 0
               return (
                 <li
@@ -140,10 +173,18 @@ export function CategoriesScreen() {
                   className={cn(
                     "group flex min-h-14 items-center gap-2 px-2 transition-colors",
                     dragging === category.id && "opacity-40",
-                    over === category.id && dragging !== category.id && "bg-accent-tint",
+                    over === category.id &&
+                      dragging !== category.id &&
+                      "bg-accent-tint"
                   )}
                 >
-                  <span className={cn("cursor-grab text-text-faint", isFallback && "invisible")} aria-hidden>
+                  <span
+                    className={cn(
+                      "cursor-grab text-text-faint",
+                      isFallback && "invisible"
+                    )}
+                    aria-hidden
+                  >
                     <GripVerticalIcon className="size-4" />
                   </span>
                   <button
@@ -152,13 +193,31 @@ export function CategoriesScreen() {
                     className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50"
                   >
                     <CategoryBadge category={category} />
-                    <span className="min-w-0 flex-1 truncate type-body text-foreground">{categoryName(t, category)}</span>
-                    <KWIcon name="chevronRight" size={16} className="shrink-0 text-text-faint" />
+                    <span className="min-w-0 flex-1 truncate type-body text-foreground">
+                      {categoryName(t, category)}
+                    </span>
+                    <KWIcon
+                      name="chevronRight"
+                      size={16}
+                      className="shrink-0 text-text-faint"
+                    />
                   </button>
                   {isFallback ? null : (
-                    <span className="flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
-                      <KWCircleButton icon="arrowUp" size={32} label={t.in("settings", "Move up")} disabled={index === 0} onClick={() => move(category.id, index - 1)} />
-                      <KWCircleButton icon="arrowDown" size={32} label={t.in("settings", "Move down")} disabled={index === movable.length - 1} onClick={() => move(category.id, index + 1)} />
+                    <span className="flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
+                      <KWCircleButton
+                        icon="arrowUp"
+                        size={32}
+                        label={t.in("settings", "Move up")}
+                        disabled={index === 0}
+                        onClick={() => move(category.id, index - 1)}
+                      />
+                      <KWCircleButton
+                        icon="arrowDown"
+                        size={32}
+                        label={t.in("settings", "Move down")}
+                        disabled={index === movable.length - 1}
+                        onClick={() => move(category.id, index + 1)}
+                      />
                     </span>
                   )}
                 </li>
@@ -169,15 +228,28 @@ export function CategoriesScreen() {
       )}
 
       <div className="flex flex-col gap-2">
-        <KWButton variant="surface" size="row" fill onClick={() => setRestoreOpen(true)}>
+        <KWButton
+          variant="surface"
+          size="row"
+          fill
+          onClick={() => setRestoreOpen(true)}
+        >
           {t.in("settings", "Restore default categories")}
         </KWButton>
-        <p className="px-1 type-caption text-muted-foreground">{t.in("settings", "Deleting a category moves its movements to “%@”, which stays so they always have a place.", fallbackName)}</p>
+        <p className="px-1 type-caption text-muted-foreground">
+          {t.in(
+            "settings",
+            "Deleting a category moves its movements to “%@”, which stays so they always have a place.",
+            fallbackName
+          )}
+        </p>
       </div>
 
       {editor ? (
         <CategoryEditorDialog
-          key={editor.mode === "edit" ? editor.category.id : `new-${editor.kind}`}
+          key={
+            editor.mode === "edit" ? editor.category.id : `new-${editor.kind}`
+          }
           t={t}
           target={editor}
           fallbackName={fallbackName}
@@ -188,7 +260,10 @@ export function CategoriesScreen() {
         open={restoreOpen}
         onOpenChange={setRestoreOpen}
         title={t.in("settings", "Restore default categories?")}
-        description={t.in("settings", "Deleted defaults come back and edits to them are undone. Your own categories and movements stay.")}
+        description={t.in(
+          "settings",
+          "Deleted defaults come back and edits to them are undone. Your own categories and movements stay."
+        )}
         action={t.in("settings", "Restore")}
         onConfirm={() => void restore()}
       />
