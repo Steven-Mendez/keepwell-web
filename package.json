@@ -11,7 +11,12 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "tokens:sync": "node scripts/sync-ios-tokens.mjs",
-    "tokens:check": "node scripts/sync-ios-tokens.mjs --check"
+    "tokens:check": "node scripts/sync-ios-tokens.mjs --check",
+    "test": "TZ=America/Managua vitest run",
+    "test:watch": "TZ=America/Managua vitest",
+    "strings:sync": "node scripts/sync-ios-strings.mjs",
+    "strings:check": "node scripts/sync-ios-strings.mjs --check",
+    "check": "pnpm typecheck && pnpm lint && pnpm test"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -21,6 +26,7 @@
     "cmdk": "^1.1.1",
     "cn": "^0.5.2",
     "date-fns": "^4.4.0",
+    "decimal.js": "^10.6.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
     "embla-carousel-react": "^8.6.0",
@@ -46,10 +52,12 @@
     "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "fake-indexeddb": "^6.2.7",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "serwist": "^9.5.13",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }
