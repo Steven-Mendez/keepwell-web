@@ -1,4 +1,4 @@
-import type { Account, Card, CurrencySettings, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
+import type { Account, Card, CurrencySettings, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
 import { DEFAULT_SETTINGS } from "@/lib/schema"
 
 import { addMonths, contains, daysInMonth, sameMonth, yearMonthContaining, type DateInterval, type YearMonth } from "./calendar"
@@ -38,10 +38,12 @@ export interface Ledger {
   categories: TransactionCategory[]
   recurringRules: RecurringRule[]
   savingsGoals: SavingsGoal[]
+  loans: Loan[]
+  personalDebts: PersonalDebt[]
 }
 
 export async function loadLedger(store: LedgerStore): Promise<Ledger> {
-  const [settings, accounts, cards, transactions, categories, recurringRules, savingsGoals] = await Promise.all([
+  const [settings, accounts, cards, transactions, categories, recurringRules, savingsGoals, loans, personalDebts] = await Promise.all([
     store.loadSettings(),
     store.fetchAccounts(),
     store.fetchCards(),
@@ -49,8 +51,20 @@ export async function loadLedger(store: LedgerStore): Promise<Ledger> {
     store.fetchCategories(),
     store.fetchRecurringRules(),
     store.fetchSavingsGoals(),
+    store.fetchLoans(),
+    store.fetchPersonalDebts(),
   ])
-  return { settings: settings ?? DEFAULT_SETTINGS, accounts, cards, transactions, categories: orderedCategories(categories), recurringRules, savingsGoals }
+  return {
+    settings: settings ?? DEFAULT_SETTINGS,
+    accounts,
+    cards,
+    transactions,
+    categories: orderedCategories(categories),
+    recurringRules,
+    savingsGoals,
+    loans,
+    personalDebts,
+  }
 }
 
 const newestFirst = (a: Transaction, b: Transaction) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)

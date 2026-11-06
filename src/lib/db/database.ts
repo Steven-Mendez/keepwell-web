@@ -126,6 +126,34 @@ export interface SavingsGoalRow extends AuditColumns {
   color: string | null
 }
 
+/** A loan (iOS `LoanRecord`). Its paid installments live on the row, as they only change with it. */
+export interface LoanRow extends AuditColumns {
+  id: string
+  name: string
+  lender: string | null
+  borrowed_amount: string
+  borrowed_currency: string
+  installment_amount: string
+  installment_count: number
+  frequency: string
+  first_due_date: string
+  payments: { number: number; paid_at: string; transaction_id: string | null }[]
+}
+
+/** A personal debt (iOS `PersonalDebtRecord`), with its repayments on the row. */
+export interface PersonalDebtRow extends AuditColumns {
+  id: string
+  person: string
+  direction: string
+  amount: string
+  currency: string
+  date: string
+  note: string | null
+  repayments: { amount: string; date: string }[]
+  settled_at: string | null
+  transaction_id: string | null
+}
+
 /** A single row, like iOS `SettingsRecord`. */
 export interface SettingsRow {
   id: typeof SETTINGS_ID
@@ -143,7 +171,16 @@ export interface SettingsRow {
 
 export const SETTINGS_ID = "settings"
 
-export type SyncEntity = "account" | "card" | "category" | "transaction" | "recurringRule" | "savingsGoal" | "settings"
+export type SyncEntity =
+  | "account"
+  | "card"
+  | "category"
+  | "transaction"
+  | "recurringRule"
+  | "savingsGoal"
+  | "loan"
+  | "personalDebt"
+  | "settings"
 export type SyncOperation = "create" | "update" | "delete"
 
 /**
@@ -166,6 +203,8 @@ export class KeepwellDatabase extends Dexie {
   transactions!: EntityTable<TransactionRow, "id">
   recurring_rules!: EntityTable<RecurringRuleRow, "id">
   savings_goals!: EntityTable<SavingsGoalRow, "id">
+  loans!: EntityTable<LoanRow, "id">
+  personal_debts!: EntityTable<PersonalDebtRow, "id">
   settings!: EntityTable<SettingsRow, "id">
   sync_outbox!: EntityTable<SyncOutboxRow, "id">
 
@@ -211,6 +250,11 @@ export class KeepwellDatabase extends Dexie {
       )
     // Savings goals.
     this.version(4).stores({ savings_goals: "id, updated_at, deleted_at" })
+    // Loans and personal debts; `transaction_id` finds the debts split from a movement.
+    this.version(5).stores({
+      loans: "id, updated_at, deleted_at",
+      personal_debts: "id, transaction_id, updated_at, deleted_at",
+    })
   }
 }
 

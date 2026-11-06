@@ -1,7 +1,18 @@
 import { z } from "zod"
 
 import { TransactionCategory } from "./category"
-import { Account, Card, RecurringRule, SavingsGoal, Settings, Transaction } from "./entities"
+import {
+  Account,
+  Card,
+  LoanShape,
+  PersonalDebtShape,
+  RecurringRule,
+  SavingsGoal,
+  Settings,
+  Transaction,
+  debtRepaymentsFit,
+  loanPaymentsFit,
+} from "./entities"
 import { IsoDateTime } from "./primitives"
 
 /**
@@ -14,8 +25,9 @@ import { IsoDateTime } from "./primitives"
  * - Version 2 added `recurringRules` and a movement's `recurringId`; a version 1 file has neither and
  *   still restores (no rules).
  * - Version 3 added `savingsGoals`; older files restore with none.
+ * - Version 4 added `loans` and `personalDebts`; versions 1 to 3 restore with neither.
  */
-export const CURRENT_SCHEMA_VERSION = 3
+export const CURRENT_SCHEMA_VERSION = 4
 
 const Audited = {
   createdAt: IsoDateTime,
@@ -28,6 +40,14 @@ export const BackupCard = Card.extend(Audited)
 export const BackupTransaction = Transaction.extend(Audited)
 export const BackupRecurringRule = RecurringRule.extend(Audited)
 export const BackupSavingsGoal = SavingsGoal.extend(Audited)
+export const BackupLoan = LoanShape.extend(Audited).refine(
+  loanPaymentsFit,
+  "Payments must name distinct installments of the schedule"
+)
+export const BackupPersonalDebt = PersonalDebtShape.extend(Audited).refine(
+  debtRepaymentsFit,
+  "Repayments can't add up past the amount"
+)
 export const BackupCategory = TransactionCategory.extend({
   ...Audited,
   sortIndex: z.number().int(),
@@ -39,7 +59,10 @@ const BackupFileShape = z.object({
     .number()
     .int()
     .positive()
-    .max(CURRENT_SCHEMA_VERSION, "This backup was written by a newer version of Keepwell"),
+    .max(
+      CURRENT_SCHEMA_VERSION,
+      "This backup was written by a newer version of Keepwell"
+    ),
   exportedAt: IsoDateTime,
   settings: BackupSettings,
   accounts: z.array(BackupAccount),
@@ -50,6 +73,9 @@ const BackupFileShape = z.object({
   recurringRules: z.array(BackupRecurringRule).default([]),
   /** Missing before version 3. */
   savingsGoals: z.array(BackupSavingsGoal).default([]),
+  /** Missing before version 4. */
+  loans: z.array(BackupLoan).default([]),
+  personalDebts: z.array(BackupPersonalDebt).default([]),
 })
 
 /** Swift's decoder reads `null` as absent; dropping nulls first lets one schema serve both. */
@@ -59,7 +85,7 @@ function withoutNulls(value: unknown): unknown {
     return Object.fromEntries(
       Object.entries(value)
         .filter(([, entry]) => entry !== null)
-        .map(([key, entry]) => [key, withoutNulls(entry)]),
+        .map(([key, entry]) => [key, withoutNulls(entry)])
     )
   }
   return value
@@ -73,6 +99,8 @@ export type BackupTransaction = z.infer<typeof BackupTransaction>
 export type BackupCategory = z.infer<typeof BackupCategory>
 export type BackupRecurringRule = z.infer<typeof BackupRecurringRule>
 export type BackupSavingsGoal = z.infer<typeof BackupSavingsGoal>
+export type BackupLoan = z.infer<typeof BackupLoan>
+export type BackupPersonalDebt = z.infer<typeof BackupPersonalDebt>
 export type BackupSettings = z.infer<typeof BackupSettings>
 
 export class BackupFormatError extends Error {
@@ -80,7 +108,7 @@ export class BackupFormatError extends Error {
 
   constructor(
     message: string,
-    readonly issues: readonly z.core.$ZodIssue[] = [],
+    readonly issues: readonly z.core.$ZodIssue[] = []
   ) {
     super(message)
   }
@@ -94,12 +122,22 @@ export function parseBackupFile(text: string): BackupFile {
   } catch {
     throw new BackupFormatError("Not a Keepwell backup")
   }
-  if (json !== null && typeof json === "object" && !("schemaVersion" in json) && "version" in json) {
-    throw new BackupFormatError("This backup is from an older Keepwell for iPhone. Back up again from the latest version.")
+  if (
+    json !== null &&
+    typeof json === "object" &&
+    !("schemaVersion" in json) &&
+    "version" in json
+  ) {
+    throw new BackupFormatError(
+      "This backup is from an older Keepwell for iPhone. Back up again from the latest version."
+    )
   }
   const result = BackupFile.safeParse(json)
   if (!result.success) {
-    throw new BackupFormatError("Not a valid Keepwell backup", result.error.issues)
+    throw new BackupFormatError(
+      "Not a valid Keepwell backup",
+      result.error.issues
+    )
   }
   return result.data
 }
@@ -116,7 +154,7 @@ function sortKeys(value: unknown): unknown {
       Object.entries(value)
         .filter(([, entry]) => entry !== undefined && entry !== null)
         .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-        .map(([key, entry]) => [key, sortKeys(entry)]),
+        .map(([key, entry]) => [key, sortKeys(entry)])
     )
   }
   return value
