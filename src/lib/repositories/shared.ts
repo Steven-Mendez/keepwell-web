@@ -1,6 +1,12 @@
+import { newID } from "@/lib/platform/uuid"
 import type { EntityTable } from "dexie"
 
-import { db, type AuditColumns, type SyncEntity, type SyncOperation } from "@/lib/db"
+import {
+  db,
+  type AuditColumns,
+  type SyncEntity,
+  type SyncOperation,
+} from "@/lib/db"
 import { nowIso } from "@/lib/schema"
 
 /** Like iOS `DomainError.notFound`: a delete never succeeds silently on a missing or deleted record. */
@@ -17,9 +23,15 @@ export function isAlive(row: AuditColumns): boolean {
 }
 
 /** Must run inside the caller's `db.transaction`, so the change and its event commit together. */
-export async function enqueue(entity: SyncEntity, entityId: string, operation: SyncOperation, payload: unknown, at: string) {
+export async function enqueue(
+  entity: SyncEntity,
+  entityId: string,
+  operation: SyncOperation,
+  payload: unknown,
+  at: string
+) {
   await db.sync_outbox.add({
-    id: crypto.randomUUID(),
+    id: newID(),
     entity,
     entity_id: entityId,
     operation,
@@ -35,12 +47,17 @@ export async function enqueue(entity: SyncEntity, entityId: string, operation: S
 export async function upsert<Row extends AuditColumns & { id: string }>(
   table: EntityTable<Row, "id">,
   entity: SyncEntity,
-  columns: Omit<Row, keyof AuditColumns>,
+  columns: Omit<Row, keyof AuditColumns>
 ): Promise<Row> {
   return db.transaction("rw", table, db.sync_outbox, async () => {
     const now = nowIso()
     const existing = await table.where("id").equals(columns.id).first()
-    const row = { ...columns, created_at: existing?.created_at ?? now, updated_at: now, deleted_at: null } as Row
+    const row = {
+      ...columns,
+      created_at: existing?.created_at ?? now,
+      updated_at: now,
+      deleted_at: null,
+    } as Row
     await table.put(row)
     await enqueue(entity, row.id, existing ? "update" : "create", row, now)
     return row
@@ -51,7 +68,7 @@ export async function upsert<Row extends AuditColumns & { id: string }>(
 export async function softDelete<Row extends AuditColumns & { id: string }>(
   table: EntityTable<Row, "id">,
   entity: SyncEntity,
-  id: string,
+  id: string
 ): Promise<void> {
   await db.transaction("rw", table, db.sync_outbox, async () => {
     const existing = await table.where("id").equals(id).first()
