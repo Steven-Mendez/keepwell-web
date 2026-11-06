@@ -1,9 +1,24 @@
-import type { Account, Card, CurrencySettings, ExchangeRate, Transaction, TransactionCategory, TransactionKind, TransactionStatus } from "@/lib/schema"
+import { newID } from "@/lib/platform/uuid"
+import type {
+  Account,
+  Card,
+  CurrencySettings,
+  ExchangeRate,
+  Transaction,
+  TransactionCategory,
+  TransactionKind,
+  TransactionStatus,
+} from "@/lib/schema"
 import { OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "@/lib/schema"
 
 import { dayKey, parseDayKey } from "./calendar"
 import { Decimal, decimalText } from "./decimal"
-import { exchangeRate, normalizedCurrency, rateHasSecondCurrency, settingsRate } from "./money"
+import {
+  exchangeRate,
+  normalizedCurrency,
+  rateHasSecondCurrency,
+  settingsRate,
+} from "./money"
 import { accountDisplayName, checkAmounts, folded } from "./rules"
 import type { LedgerStore } from "./store"
 
@@ -32,10 +47,19 @@ export function escapeCsvField(field: string): string {
   return /[,"\r\n]/.test(field) ? `"${field.replaceAll('"', '""')}"` : field
 }
 
-export function exportCsv(transactions: readonly Transaction[], accounts: readonly Account[], cards: readonly Card[], categories: readonly TransactionCategory[]): string {
-  const accountNames = new Map(accounts.map((account) => [account.id, accountDisplayName(account)]))
+export function exportCsv(
+  transactions: readonly Transaction[],
+  accounts: readonly Account[],
+  cards: readonly Card[],
+  categories: readonly TransactionCategory[]
+): string {
+  const accountNames = new Map(
+    accounts.map((account) => [account.id, accountDisplayName(account)])
+  )
   const lastFour = new Map(cards.map((card) => [card.id, card.lastFour ?? ""]))
-  const categoryNames = new Map(categories.map((category) => [category.id, category.name]))
+  const categoryNames = new Map(
+    categories.map((category) => [category.id, category.name])
+  )
   const rows = [...transactions]
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
     .map((t) => [
@@ -48,13 +72,23 @@ export function exportCsv(transactions: readonly Transaction[], accounts: readon
       t.currency,
       accountNames.get(t.accountId) ?? "",
       t.cardId ? (lastFour.get(t.cardId) ?? "") : "",
-      t.destinationAccountId ? (accountNames.get(t.destinationAccountId) ?? "") : "",
-      t.actualDebitedPrincipal ? decimalText(new Decimal(t.actualDebitedPrincipal)) : "",
-      rateHasSecondCurrency(t.exchangeRate) ? decimalText(new Decimal(t.exchangeRate.rate)) : "",
+      t.destinationAccountId
+        ? (accountNames.get(t.destinationAccountId) ?? "")
+        : "",
+      t.actualDebitedPrincipal
+        ? decimalText(new Decimal(t.actualDebitedPrincipal))
+        : "",
+      rateHasSecondCurrency(t.exchangeRate)
+        ? decimalText(new Decimal(t.exchangeRate.rate))
+        : "",
       t.isShared ? "yes" : "no",
       t.note ?? "",
     ])
-  return [[...CSV_HEADER], ...rows].map((row) => row.map(escapeCsvField).join(",")).join("\n") + "\n"
+  return (
+    [[...CSV_HEADER], ...rows]
+      .map((row) => row.map(escapeCsvField).join(","))
+      .join("\n") + "\n"
+  )
 }
 
 /** RFC 4180 reading: quoted fields may hold commas, doubled quotes and line breaks. */
@@ -94,11 +128,24 @@ export function parseCsvRows(text: string): string[][] {
 }
 
 const NUMBER = /^-?[0-9]+(\.[0-9]+)?$/
-const parseNumber = (text: string | undefined) => (text !== undefined && NUMBER.test(text) ? new Decimal(text) : undefined)
+const parseNumber = (text: string | undefined) =>
+  text !== undefined && NUMBER.test(text) ? new Decimal(text) : undefined
 
 /** What makes two movements the same for de-duplication. */
-function fingerprint(t: Pick<Transaction, "date" | "amount" | "currency" | "accountId" | "kind" | "description">): string {
-  return [dayKey(new Date(t.date)), decimalText(new Decimal(t.amount)), t.currency, t.accountId, t.kind, t.description].join("|")
+function fingerprint(
+  t: Pick<
+    Transaction,
+    "date" | "amount" | "currency" | "accountId" | "kind" | "description"
+  >
+): string {
+  return [
+    dayKey(new Date(t.date)),
+    decimalText(new Decimal(t.amount)),
+    t.currency,
+    t.accountId,
+    t.kind,
+    t.description,
+  ].join("|")
 }
 
 export interface ImportSummary {
@@ -115,7 +162,11 @@ interface ImportRecords {
 }
 
 /** Reads the file "Export CSV" writes (columns in any order); each row must name an existing account. */
-export function parseCsvTransactions(csv: string, records: ImportRecords, currencies: CurrencySettings): { transactions: Transaction[]; skipped: number } {
+export function parseCsvTransactions(
+  csv: string,
+  records: ImportRecords,
+  currencies: CurrencySettings
+): { transactions: Transaction[]; skipped: number } {
   const rows = parseCsvRows(csv.replace(/^﻿/, ""))
   const header = rows[0]
   if (!header) return { transactions: [], skipped: 0 }
@@ -131,17 +182,28 @@ export function parseCsvTransactions(csv: string, records: ImportRecords, curren
   }
   const accountNamed = (name: string) => {
     const wanted = folded(name)
-    return records.accounts.find((account) => [accountDisplayName(account), account.name].some((candidate) => folded(candidate) === wanted))
+    return records.accounts.find((account) =>
+      [accountDisplayName(account), account.name].some(
+        (candidate) => folded(candidate) === wanted
+      )
+    )
   }
   const categoryId = (text: string | undefined, kind: TransactionKind) => {
     const fallback = kind === "income" ? OTHER_INCOME_ID : OTHER_EXPENSE_ID
     if (!text) return fallback
     const lower = text.toLowerCase()
-    return records.categories.find((category) => category.kind === kind && (category.id === text || category.name.toLowerCase() === lower))?.id ?? fallback
+    return (
+      records.categories.find(
+        (category) =>
+          category.kind === kind &&
+          (category.id === text || category.name.toLowerCase() === lower)
+      )?.id ?? fallback
+    )
   }
   const rateFrom = (text: string | undefined): ExchangeRate => {
     const parsed = parseNumber(text)
-    if (currencies.second === undefined || !parsed) return settingsRate(currencies)
+    if (currencies.second === undefined || !parsed)
+      return settingsRate(currencies)
     try {
       return exchangeRate(currencies.principal, currencies.second, parsed)
     } catch {
@@ -154,9 +216,13 @@ export function parseCsvTransactions(csv: string, records: ImportRecords, curren
   for (const row of rows.slice(1)) {
     if (row.every((field) => field === "")) continue
     const transaction = (() => {
-      const date = value("date", row) ? parseDayKey(value("date", row) as string) : undefined
+      const date = value("date", row)
+        ? parseDayKey(value("date", row) as string)
+        : undefined
       const amount = parseNumber(value("amount", row))
-      const account = value("account", row) ? accountNamed(value("account", row) as string) : undefined
+      const account = value("account", row)
+        ? accountNamed(value("account", row) as string)
+        : undefined
       if (!date || !amount || !account) return undefined
       const debited = parseNumber(value("debited_principal", row))
       try {
@@ -165,9 +231,20 @@ export function parseCsvTransactions(csv: string, records: ImportRecords, curren
         return undefined
       }
       const typeText = value("type", row)
-      const kind: TransactionKind = typeText === "income" || typeText === "transfer" || typeText === "expense" ? typeText : "expense"
-      const destination = value("destination_account", row) ? accountNamed(value("destination_account", row) as string) : undefined
-      if (kind === "transfer" && (!destination || destination.id === account.id)) return undefined
+      const kind: TransactionKind =
+        typeText === "income" ||
+        typeText === "transfer" ||
+        typeText === "expense"
+          ? typeText
+          : "expense"
+      const destination = value("destination_account", row)
+        ? accountNamed(value("destination_account", row) as string)
+        : undefined
+      if (
+        kind === "transfer" &&
+        (!destination || destination.id === account.id)
+      )
+        return undefined
       let currency: string
       try {
         currency = normalizedCurrency(value("currency", row) ?? "")
@@ -175,22 +252,33 @@ export function parseCsvTransactions(csv: string, records: ImportRecords, curren
         currency = account.openingBalances[0]?.currency ?? currencies.principal
       }
       const digits = value("card_last_four", row)
-      const card = digits ? records.cards.find((candidate) => candidate.accountId === account.id && candidate.lastFour === digits) : undefined
+      const card = digits
+        ? records.cards.find(
+            (candidate) =>
+              candidate.accountId === account.id &&
+              candidate.lastFour === digits
+          )
+        : undefined
       const statusText = value("status", row)
-      const status: TransactionStatus = statusText === "planned" ? "planned" : "confirmed"
+      const status: TransactionStatus =
+        statusText === "planned" ? "planned" : "confirmed"
       const note = value("note", row)
       const result: Transaction = {
-        id: crypto.randomUUID(),
+        id: newID(),
         date: date.toISOString(),
         status,
         description: value("description", row) ?? "",
         kind,
-        ...(kind === "transfer" ? {} : { categoryId: categoryId(value("category", row), kind) }),
+        ...(kind === "transfer"
+          ? {}
+          : { categoryId: categoryId(value("category", row), kind) }),
         amount: decimalText(amount),
         currency,
         accountId: account.id,
         ...(card ? { cardId: card.id } : {}),
-        ...(kind === "transfer" && destination ? { destinationAccountId: destination.id } : {}),
+        ...(kind === "transfer" && destination
+          ? { destinationAccountId: destination.id }
+          : {}),
         ...(debited ? { actualDebitedPrincipal: decimalText(debited) } : {}),
         exchangeRate: rateFrom(value("rate", row)),
         isShared: value("shared", row)?.toLowerCase() === "yes",
@@ -208,17 +296,38 @@ export function parseCsvTransactions(csv: string, records: ImportRecords, curren
   return { transactions: imported, skipped }
 }
 
-export async function importCsv(store: LedgerStore, csv: string): Promise<ImportSummary> {
-  const currencies = (await store.loadSettings())?.currencies ?? { principal: "USD", rate: "1" }
-  const [accounts, cards, transactions, categories] = await Promise.all([store.fetchAccounts(), store.fetchCards(), store.fetchTransactions(), store.fetchCategories()])
-  const parsed = parseCsvTransactions(csv, { accounts, cards, transactions, categories }, currencies)
+export async function importCsv(
+  store: LedgerStore,
+  csv: string
+): Promise<ImportSummary> {
+  const currencies = (await store.loadSettings())?.currencies ?? {
+    principal: "USD",
+    rate: "1",
+  }
+  const [accounts, cards, transactions, categories] = await Promise.all([
+    store.fetchAccounts(),
+    store.fetchCards(),
+    store.fetchTransactions(),
+    store.fetchCategories(),
+  ])
+  const parsed = parseCsvTransactions(
+    csv,
+    { accounts, cards, transactions, categories },
+    currencies
+  )
   await store.atomically(async () => {
-    for (const transaction of parsed.transactions) await store.saveTransaction(transaction)
+    for (const transaction of parsed.transactions)
+      await store.saveTransaction(transaction)
   })
   return { imported: parsed.transactions.length, skipped: parsed.skipped }
 }
 
 export async function exportCsvFrom(store: LedgerStore): Promise<string> {
-  const [accounts, cards, transactions, categories] = await Promise.all([store.fetchAccounts(), store.fetchCards(), store.fetchTransactions(), store.fetchCategories()])
+  const [accounts, cards, transactions, categories] = await Promise.all([
+    store.fetchAccounts(),
+    store.fetchCards(),
+    store.fetchTransactions(),
+    store.fetchCategories(),
+  ])
   return exportCsv(transactions, accounts, cards, categories)
 }
