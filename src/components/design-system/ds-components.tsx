@@ -79,15 +79,8 @@ export function ComponentsSection() {
   const [range, setRange] = useState<"1m" | "3m" | "6m" | "1y">("3m")
   const [filter, setFilter] = useState("todos")
   return (
-    <DocSection
-      id="componentes"
-      title="Componentes"
-      description="Las piezas con las que se arman las pantallas. Todo es interactivo: pasa el ratón o haz clic para ver sus estados."
-    >
-      <Block
-        title="Botones"
-        description="Siempre en forma de píldora. Una sola acción principal (blanca) por pantalla."
-      >
+    <DocSection id="componentes" title="Componentes">
+      <Block title="Botones">
         <Frame columns>
           {SIZES.map(({ size, px }) => (
             <div key={size} className="flex flex-col gap-4 p-5">
@@ -198,10 +191,7 @@ export function ComponentsSection() {
         </Frame>
       </Block>
 
-      <Block
-        title="Movimientos, categorías y estados"
-        description="Primero se lee la dirección del dinero (gasto, ingreso, transferencia) y después la categoría."
-      >
+      <Block title="Movimientos, categorías y estados">
         <Frame className="flex flex-col gap-6 p-5">
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             {MOVEMENTS.map((movement) => (

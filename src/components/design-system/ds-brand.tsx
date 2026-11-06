@@ -45,33 +45,20 @@ export function Wordmark({
 
 export function BrandSection() {
   return (
-    <DocSection
-      id="marca"
-      title="Logo"
-      description="Una figura: una cabeza y un arco que la sostiene, la idea de cuidar tu dinero."
-    >
+    <DocSection id="marca" title="Logo">
       <div className="grid gap-4 lg:grid-cols-3">
-        <Showcase
-          label="Icono de la app"
-          note="Degradado azul a 135°, esquina de 17/72 del lado"
-        >
+        <Showcase label="Icono de la app">
           <KWAppIconTile size={112} className="shadow-glow" />
         </Showcase>
-        <Showcase label="Símbolo" note="Para usar solo, en blanco o negro">
+        <Showcase label="Símbolo">
           <KWLogoMark size={96} className="text-foreground" />
         </Showcase>
-        <Showcase
-          label="Logotipo"
-          note="Símbolo + «keepwell» · Inter ExtraBold · siempre en minúsculas"
-        >
+        <Showcase label="Logotipo">
           <Wordmark size={44} />
         </Showcase>
       </div>
 
-      <Block
-        title="Sobre distintos fondos"
-        description="Blanco sobre oscuro o sobre el azul de marca; negro sobre fondos claros."
-      >
+      <Block title="Sobre distintos fondos">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Backdrop
             label="Negro"
@@ -94,10 +81,7 @@ export function BrandSection() {
         </div>
       </Block>
 
-      <Block
-        title="Construcción"
-        description="El símbolo se dibuja en una retícula de 72 × 72: un círculo de radio 9 y un arco de trazo 7,5 con extremos redondeados."
-      >
+      <Block title="Construcción">
         <div className="flex flex-wrap items-center gap-6 rounded-2xl bg-card p-6">
           <Construction />
           <div className="flex flex-wrap items-end gap-6">
@@ -111,10 +95,7 @@ export function BrandSection() {
         </div>
       </Block>
 
-      <Block
-        title="Archivos"
-        description="El icono de la app, listo para descargar."
-      >
+      <Block title="Archivos">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {ASSETS.map((asset) => (
             <a
@@ -159,20 +140,15 @@ export function BrandSection() {
 
 function Showcase({
   label,
-  note,
   children,
 }: {
   label: string
-  note: string
   children: React.ReactNode
 }) {
   return (
     <Panel className="items-center justify-center gap-6 py-10 text-center">
       <span className="flex h-28 items-center">{children}</span>
-      <span className="flex flex-col gap-1">
-        <span className="type-label text-foreground">{label}</span>
-        <Caption>{note}</Caption>
-      </span>
+      <span className="type-label text-foreground">{label}</span>
     </Panel>
   )
 }
