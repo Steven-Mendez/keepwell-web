@@ -6,6 +6,7 @@ import { DomainError } from "./errors"
 import { INITIAL_CURRENCIES, settingsRate, type Money } from "./money"
 import { balanceOf, checkAmounts, isConfirmed, monthlySummary } from "./rules"
 import type { LedgerStore } from "./store"
+import { tagsField } from "./tags"
 
 // Ports of the CreateTransaction feature domain (MovementType, TransactionDraft, MovementPreview,
 // CreateTransactionUseCases) and TransactionActions.swift.
@@ -88,6 +89,8 @@ export interface TransactionDraft {
   isDraft: boolean
   /** The recurring rule it belongs to; an edit keeps the one it had. */
   recurringId?: string
+  /** Normalized when saved; absent or empty means none. */
+  tags?: string[]
 }
 
 export interface TransactionContext {
@@ -171,6 +174,7 @@ export function validatedTransaction(draft: TransactionDraft, context: Transacti
     isShared: existing?.isShared ?? false,
     ...(note === "" ? {} : { note }),
     ...(recurringId === undefined ? {} : { recurringId }),
+    ...tagsField(draft.tags),
   }
 }
 
@@ -189,15 +193,27 @@ export async function saveTransaction(store: LedgerStore, draft: TransactionDraf
   const existing = context.transactions.find((transaction) => transaction.id === draft.id)
   const transaction = validatedTransaction(draft, context, existing)
   await store.saveTransaction(transaction)
-  const account = context.accounts.find((candidate) => candidate.id === transaction.accountId)
+  return savedTransactionOf(transaction, context.accounts, await store.fetchTransactions(), context.currencies.principal)
+}
+
+/**
+ * What the receipt states about a stored movement: its account's balances with every movement,
+ * and, for an expense, its category's spending that month. Also rebuilds a receipt from history.
+ */
+export function savedTransactionOf(
+  transaction: Transaction,
+  accounts: readonly Account[],
+  movements: readonly Transaction[],
+  principal: string,
+): SavedTransaction {
+  const account = accounts.find((candidate) => candidate.id === transaction.accountId)
   if (!account) throw DomainError.notFound(transaction.accountId)
-  const movements = await store.fetchTransactions()
   const newBalances = balanceOf(account, movements)
   let categoryMonthTotal: Money | undefined
   if (transaction.kind === "expense") {
-    const summary = monthlySummary(yearMonthContaining(draft.date), movements, context.currencies.principal)
+    const summary = monthlySummary(yearMonthContaining(new Date(transaction.date)), movements, principal)
     const total = summary.categories.find((entry) => entry.categoryId === transaction.categoryId)?.amount ?? ZERO
-    categoryMonthTotal = { amount: total, currency: context.currencies.principal }
+    categoryMonthTotal = { amount: total, currency: principal }
   }
   return { transaction, account, newBalances, ...(categoryMonthTotal ? { categoryMonthTotal } : {}) }
 }
@@ -301,5 +317,6 @@ export function draftFrom(transaction: Transaction): TransactionDraft {
     ...(transaction.actualDebitedPrincipal ? { actualDebitedPrincipal: new Decimal(transaction.actualDebitedPrincipal) } : {}),
     note: transaction.note ?? "",
     isDraft: transaction.status === "planned",
+    ...(transaction.tags ? { tags: [...transaction.tags] } : {}),
   }
 }

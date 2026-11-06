@@ -9,6 +9,7 @@ import { convert, settingsRate, type Money } from "./money"
 import { accountIdFor, getTransactionContext, saveTransaction, validatedTransaction, type PaymentSource, type SavedTransaction, type TransactionContext, type TransactionDraft } from "./movements"
 import { SUBSCRIPTIONS_CATEGORY_ID, checkAmounts } from "./rules"
 import type { LedgerStore } from "./store"
+import { tagsField } from "./tags"
 
 // Recurring movements and subscriptions: the shared iOS/web contract (RecurringRule, its schedule,
 // materializing what's due, and the totals the Recurring screen shows).
@@ -129,6 +130,7 @@ function occurrenceDraft(rule: RecurringRule, date: Date): TransactionDraft {
     date,
     note: rule.note ?? "",
     isDraft: !rule.autoConfirm,
+    ...(rule.tags ? { tags: [...rule.tags] } : {}),
   }
 }
 
@@ -195,6 +197,8 @@ export interface RecurringRuleDraft {
   isSubscription: boolean
   autoConfirm: boolean
   note: string
+  /** Left out keeps an edited rule's tags as they were. */
+  tags?: string[]
 }
 
 /**
@@ -245,6 +249,7 @@ export async function saveRecurringRule(store: LedgerStore, draft: RecurringRule
     autoConfirm: draft.autoConfirm,
     isPaused: existing?.isPaused ?? false,
     ...(note === "" ? {} : { note }),
+    ...tagsField(draft.tags ?? existing?.tags),
   }
   checkRecurringRule(rule, context)
   await store.saveRecurringRule(rule)
@@ -294,6 +299,7 @@ export function ruleRepeating(transaction: Transaction, frequency: RecurringFreq
     autoConfirm: false,
     isPaused: false,
     ...(transaction.note === undefined ? {} : { note: transaction.note }),
+    ...tagsField(transaction.tags),
   }
 }
 
@@ -361,6 +367,22 @@ export function upcoming(rules: readonly RecurringRule[], from: Date, days: numb
     }
   }
   return found.sort((a, b) => a.date.getTime() - b.date.getTime() || (a.rule.name < b.rule.name ? -1 : 1))
+}
+
+/**
+ * Occurrences not recorded yet, from `nextDate` through `lastDay`'s calendar day, none after the end
+ * (iOS `RecurringSchedule.pending`). Paused rules have none. The balance forecast counts these on
+ * top of the drafts already recorded, so nothing is counted twice.
+ */
+export function pendingOccurrences(rule: RecurringRule, lastDay: Date): Date[] {
+  if (rule.isPaused) return []
+  const dates: Date[] = []
+  for (let index = firstIndexOnOrAfter(rule, new Date(rule.nextDate)); ; index++) {
+    const date = occurrence(rule, index)
+    if (isAfterDay(date, lastDay) || isPastEnd(rule, date)) break
+    dates.push(date)
+  }
+  return dates
 }
 
 /** The next occurrence a rule will produce, if it ever will. */

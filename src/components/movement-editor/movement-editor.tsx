@@ -1,6 +1,7 @@
 "use client"
 
 import { useLiveQuery } from "dexie-react-hooks"
+import { useState } from "react"
 
 import { useAppActions, type EditorRequest } from "@/components/app/app-actions"
 import { KWButton, KWEmptyState } from "@/components/kw/design"
@@ -34,6 +35,8 @@ export function MovementEditor() {
 function EditorBody({ request, onClose }: { request: EditorRequest; onClose: () => void }) {
   const t = useT()
   const { openAddAccount } = useAppActions()
+  // "Log another" on the receipt remounts the form on a fresh movement.
+  const [round, setRound] = useState(0)
   // Live: a category created inside the flow, or a balance changed in another tab, shows at once.
   const context = useLiveQuery(() => getTransactionContext(ledgerStore), [])
 
@@ -71,6 +74,6 @@ function EditorBody({ request, onClose }: { request: EditorRequest; onClose: () 
     )
   }
 
-  const key = request.mode === "edit" ? `edit:${request.transaction.id}` : `create:${request.type ?? ""}:${request.accountId ?? ""}`
-  return <EditorForm key={key} request={request} context={context} onClose={onClose} />
+  const key = request.mode === "edit" ? `edit:${request.transaction.id}` : `create:${request.type ?? ""}:${request.accountId ?? ""}:${round}`
+  return <EditorForm key={key} request={request} context={context} onClose={onClose} onLogAnother={() => setRound((value) => value + 1)} />
 }

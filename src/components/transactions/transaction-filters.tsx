@@ -58,7 +58,7 @@ function SearchField({
             event.currentTarget.blur()
           }
         }}
-        placeholder={t.in("transactions", "Search merchant, note or category")}
+        placeholder={t.in("transactions", "Search merchant, note, category or #tag")}
         aria-label={t.in("transactions", "Search")}
       />
       <InputGroupAddon align="inline-end">

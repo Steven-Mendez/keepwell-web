@@ -9,6 +9,9 @@ import {
   type TransactionScope,
 } from "@/lib/domain"
 
+/** Narrows the open Transactions screen to a tag ("#boda"); `useShowTag` sends it. */
+export const SHOW_TAG_EVENT = "keepwell:show-tag"
+
 /** The list's filters as URL parameters, leaving any others in place. */
 function filtersUrl(
   filter: TransactionFilter,
@@ -20,6 +23,7 @@ function filtersUrl(
   if (scope.kind === "account") params.set("account", scope.id)
   else params.delete("account")
   params.delete("search")
+  params.delete("q")
   const query = params.toString()
   return `${window.location.pathname}${query ? `?${query}` : ""}`
 }
@@ -48,9 +52,17 @@ export function useTransactionFilters() {
     const account = params.get("account")
     if (account) setScope({ kind: "account", id: account })
     if (params.has("search")) search.current?.focus()
+    // "#boda" from a movement's tag, opened from another screen.
+    const query = params.get("q")
+    if (query) setText(query)
     const focus = () => search.current?.focus()
+    const showTag = (event: Event) => setText((event as CustomEvent<string>).detail)
     window.addEventListener(FOCUS_SEARCH_EVENT, focus)
-    return () => window.removeEventListener(FOCUS_SEARCH_EVENT, focus)
+    window.addEventListener(SHOW_TAG_EVENT, showTag)
+    return () => {
+      window.removeEventListener(FOCUS_SEARCH_EVENT, focus)
+      window.removeEventListener(SHOW_TAG_EVENT, showTag)
+    }
   }, [])
 
   // The filters live in the URL, so a reload, the back button or a shared link keep them. Written

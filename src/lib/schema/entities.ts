@@ -1,3 +1,4 @@
+import DecimalJS from "decimal.js"
 import { z } from "zod"
 
 import {
@@ -67,7 +68,17 @@ export const CardNetwork = z.enum(["visa", "mastercard", "amex", "other"])
 export type CardNetwork = z.infer<typeof CardNetwork>
 
 /** Card art palette by name. `violeta`, `coral` and `lima` are no longer offered but still stored. */
-export const CardColor = z.enum(["azul", "grafito", "platino", "verde", "violeta", "coral", "rojo", "oro", "lima"])
+export const CardColor = z.enum([
+  "azul",
+  "grafito",
+  "platino",
+  "verde",
+  "violeta",
+  "coral",
+  "rojo",
+  "oro",
+  "lima",
+])
 export type CardColor = z.infer<typeof CardColor>
 
 /** The "valid thru" printed on a plastic: month and year only. */
@@ -113,12 +124,17 @@ export const Transaction = z.object({
   /** Transfers only. */
   destinationAccountId: Id.optional(),
   /** What the bank actually charged in the principal currency, when it used its own rate. */
-  actualDebitedPrincipal: DecimalString.refine(isPositiveDecimal, "Must be greater than zero").optional(),
+  actualDebitedPrincipal: DecimalString.refine(
+    isPositiveDecimal,
+    "Must be greater than zero"
+  ).optional(),
   exchangeRate: ExchangeRate,
   isShared: z.boolean(),
   note: z.string().optional(),
   /** The recurring rule that produced it; may point at a deleted rule. */
   recurringId: Id.optional(),
+  /** Normalized tags (`normalizedTag`), each once; left out when there are none. */
+  tags: z.array(z.string()).optional(),
 })
 export type Transaction = z.infer<typeof Transaction>
 
@@ -160,8 +176,28 @@ export const RecurringRule = z.object({
   /** Paused rules produce nothing and keep `nextDate` frozen. */
   isPaused: z.boolean(),
   note: z.string().optional(),
+  /** Copied to each movement it records; left out when there are none. */
+  tags: z.array(z.string()).optional(),
 })
 export type RecurringRule = z.infer<typeof RecurringRule>
+
+export const MAX_RULE_MATCH_LENGTH = 60
+
+/**
+ * "If it says Uber → Transport" (iOS `CategorizationRule`): a new movement whose description or note
+ * contains `match` gets `categoryId` (and `tags`) when the person hasn't picked a category. Rules are
+ * ordered by the repository; the first that matches wins.
+ */
+export const CategorizationRule = z.object({
+  id: Id,
+  /** Compared without case or accents, anywhere in the description or note. */
+  match: z.string().refine((text) => text.trim() !== "", "Can't be empty"),
+  categoryId: z.string(),
+  kind: z.enum(["expense", "income"]),
+  /** Added to the movement; left out when there are none. */
+  tags: z.array(z.string()).optional(),
+})
+export type CategorizationRule = z.infer<typeof CategorizationRule>
 
 /** A goal's deadline: a month, not a day, so it reads the same in every time zone. */
 export const TargetMonth = z.object({
@@ -179,9 +215,15 @@ export const MAX_GOAL_NAME_LENGTH = 40
 export const SavingsGoal = z.object({
   id: Id,
   name: z.string(),
-  target: Money.refine((target) => isPositiveDecimal(target.amount), "Must be greater than zero"),
+  target: Money.refine(
+    (target) => isPositiveDecimal(target.amount),
+    "Must be greater than zero"
+  ),
   /** In the target's currency; never negative. */
-  saved: DecimalString.refine((value) => !value.trim().startsWith("-"), "Can't be negative"),
+  saved: DecimalString.refine(
+    (value) => !value.trim().startsWith("-"),
+    "Can't be negative"
+  ),
   targetMonth: TargetMonth.optional(),
   /** A symbol from the category symbol choices. */
   icon: z.string().optional(),
@@ -189,6 +231,107 @@ export const SavingsGoal = z.object({
   color: z.string().optional(),
 })
 export type SavingsGoal = z.infer<typeof SavingsGoal>
+
+export const LoanFrequency = z.enum(["weekly", "monthly"])
+export type LoanFrequency = z.infer<typeof LoanFrequency>
+
+export const MAX_LOAN_NAME_LENGTH = 40
+export const MAX_DEBT_NAME_LENGTH = 40
+/** Fifty years of monthly installments (iOS `Loan.installmentCountRange`). */
+export const MAX_LOAN_INSTALLMENTS = 600
+
+/** One paid installment and the movement that paid it. */
+export const LoanPayment = z.object({
+  number: z.number().int().min(1),
+  paidAt: IsoDateTime,
+  transactionId: Id.optional(),
+})
+export type LoanPayment = z.infer<typeof LoanPayment>
+
+/**
+ * A bank or personal loan paid off in equal installments, shared contract with iOS `Loan`. Paying an
+ * installment records a real expense; the loan only keeps the schedule and which installments are paid.
+ */
+export const LoanShape = z.object({
+  id: Id,
+  name: z.string(),
+  lender: z.string().optional(),
+  borrowed: Money.refine(
+    (value) => isPositiveDecimal(value.amount),
+    "Must be greater than zero"
+  ),
+  /** In `borrowed`'s currency. */
+  installmentAmount: PositiveDecimalString,
+  installmentCount: z.number().int().min(1).max(MAX_LOAN_INSTALLMENTS),
+  frequency: LoanFrequency,
+  firstDueDate: IsoDateTime,
+  /** By installment number. */
+  payments: z.array(LoanPayment),
+})
+
+/** Each payment names a distinct installment of the schedule (iOS `Loan.check`). */
+export function loanPaymentsFit(
+  loan: Pick<z.infer<typeof LoanShape>, "payments" | "installmentCount">
+): boolean {
+  const numbers = loan.payments.map((payment) => payment.number)
+  return (
+    new Set(numbers).size === numbers.length &&
+    numbers.every((number) => number <= loan.installmentCount)
+  )
+}
+
+export const Loan = LoanShape.refine(
+  loanPaymentsFit,
+  "Payments must name distinct installments of the schedule"
+)
+export type Loan = z.infer<typeof Loan>
+
+export const DebtDirection = z.enum(["theyOweMe", "iOwe"])
+export type DebtDirection = z.infer<typeof DebtDirection>
+
+export const DebtRepayment = z.object({
+  /** In the debt's currency. */
+  amount: PositiveDecimalString,
+  date: IsoDateTime,
+})
+export type DebtRepayment = z.infer<typeof DebtRepayment>
+
+/**
+ * Money lent to or borrowed from a person, shared contract with iOS `PersonalDebt`. Only tracked:
+ * it never records a movement or changes a balance.
+ */
+export const PersonalDebtShape = z.object({
+  id: Id,
+  person: z.string(),
+  direction: DebtDirection,
+  amount: Money.refine(
+    (value) => isPositiveDecimal(value.amount),
+    "Must be greater than zero"
+  ),
+  date: IsoDateTime,
+  note: z.string().optional(),
+  /** Oldest first. */
+  repayments: z.array(DebtRepayment),
+  /** By the last repayment or by hand; absent while open. */
+  settledAt: IsoDateTime.optional(),
+  /** The expense it was split from. */
+  transactionId: Id.optional(),
+})
+
+/** Repayments never add up past the amount (iOS `PersonalDebt.checkAmounts`). */
+export function debtRepaymentsFit(
+  debt: Pick<z.infer<typeof PersonalDebtShape>, "repayments" | "amount">
+): boolean {
+  return debt.repayments
+    .reduce((sum, repayment) => sum.plus(repayment.amount), new DecimalJS(0))
+    .lte(debt.amount.amount)
+}
+
+export const PersonalDebt = PersonalDebtShape.refine(
+  debtRepaymentsFit,
+  "Repayments can't add up past the amount"
+)
+export type PersonalDebt = z.infer<typeof PersonalDebt>
 
 export const UnlockMethod = z.enum(["biometrics", "passcode", "disabled"])
 export type UnlockMethod = z.infer<typeof UnlockMethod>

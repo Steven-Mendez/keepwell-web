@@ -1,9 +1,10 @@
-import type { Account, Card, CurrencySettings, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
+import type { Account, Card, CategorizationRule, CurrencySettings, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
 import { DEFAULT_SETTINGS } from "@/lib/schema"
 
 import { addMonths, contains, daysInMonth, sameMonth, yearMonthContaining, type DateInterval, type YearMonth } from "./calendar"
 import { Decimal, ZERO, dec, sum } from "./decimal"
 import { DomainError } from "./errors"
+import { balanceForecast, type BalanceForecast } from "./forecast"
 import { convert, settingsRate, zeroMoney, type Money } from "./money"
 import {
   averageMonthlyTotal,
@@ -16,15 +17,18 @@ import {
   netWorth,
   nextOccurrence,
   plannedSummary,
+  priceIncreases,
   principalAmount,
   scopeIncludes,
   subscriptionsCharged,
   type CategoryTotal,
   type MonthlySummary,
   type PlannedSummary,
+  type PriceIncrease,
   type TransactionScope,
 } from "./rules"
 import { orderedCategories, type LedgerStore } from "./store"
+import { searchedTag } from "./tags"
 
 // Ports of the feature domains that read the whole ledger: Home, Accounts, CreditCard,
 // Transactions, Summary and Settings › Payment methods.
@@ -38,10 +42,14 @@ export interface Ledger {
   categories: TransactionCategory[]
   recurringRules: RecurringRule[]
   savingsGoals: SavingsGoal[]
+  loans: Loan[]
+  personalDebts: PersonalDebt[]
+  /** In the person's order: the first that matches wins. */
+  categorizationRules: CategorizationRule[]
 }
 
 export async function loadLedger(store: LedgerStore): Promise<Ledger> {
-  const [settings, accounts, cards, transactions, categories, recurringRules, savingsGoals] = await Promise.all([
+  const [settings, accounts, cards, transactions, categories, recurringRules, savingsGoals, loans, personalDebts, categorizationRules] = await Promise.all([
     store.loadSettings(),
     store.fetchAccounts(),
     store.fetchCards(),
@@ -49,8 +57,22 @@ export async function loadLedger(store: LedgerStore): Promise<Ledger> {
     store.fetchCategories(),
     store.fetchRecurringRules(),
     store.fetchSavingsGoals(),
+    store.fetchLoans(),
+    store.fetchPersonalDebts(),
+    store.fetchCategorizationRules(),
   ])
-  return { settings: settings ?? DEFAULT_SETTINGS, accounts, cards, transactions, categories: orderedCategories(categories), recurringRules, savingsGoals }
+  return {
+    settings: settings ?? DEFAULT_SETTINGS,
+    accounts,
+    cards,
+    transactions,
+    categories: orderedCategories(categories),
+    recurringRules,
+    savingsGoals,
+    loans,
+    personalDebts,
+    categorizationRules,
+  }
 }
 
 const newestFirst = (a: Transaction, b: Transaction) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)
@@ -83,6 +105,10 @@ export interface HomeOverview {
   paymentReminderDaysBefore: number
   /** Services charged to each plastic with an expiry, by card id. */
   cardSubscriptions: Map<string, string[]>
+  /** Roughly what bank and cash accounts will hold at month end; `undefined` without any. */
+  forecast?: BalanceForecast
+  /** Subscriptions whose latest charge cost more than the one before, newest first. */
+  priceIncreases: PriceIncrease[]
 }
 
 export function homeOverview(ledger: Ledger, now: Date = new Date(), recentCount = HOME_RECENT_COUNT): HomeOverview {
@@ -128,6 +154,10 @@ export function homeOverview(ledger: Ledger, now: Date = new Date(), recentCount
     frequentExpenseCategoryIds: frequent,
     paymentReminderDaysBefore: ledger.settings.paymentReminderDaysBefore,
     cardSubscriptions: new Map(cards.filter((card) => card.expiry).map((card) => [card.id, subscriptionsCharged(card.id, transactions, ledger.recurringRules)])),
+    ...(accounts.some((account) => account.kind !== "credit")
+      ? { forecast: balanceForecast(accounts, transactions, ledger.recurringRules, currencies, now) }
+      : {}),
+    priceIncreases: priceIncreases(transactions, now),
   }
 }
 
@@ -270,12 +300,16 @@ export interface TransactionQuery {
   text: string
 }
 
-/** Narrows movements; `searchableText` is presentation (translated category, method name). */
+/**
+ * Narrows movements; `searchableText` is presentation (translated category, method name). A search
+ * like "#boda" narrows to that tag instead of the text (iOS `TransactionQuery.tag`).
+ */
 export function filterTransactions(transactions: readonly Transaction[], query: TransactionQuery, searchableText: (transaction: Transaction) => string): Transaction[] {
   const needle = folded(query.text.trim())
-  return transactions.filter(
-    (transaction) => filterMatches(query.kind, transaction) && scopeIncludes(query.scope, transaction) && (needle === "" || folded(searchableText(transaction)).includes(needle)),
-  )
+  const tag = searchedTag(query.text)
+  const matchesText = (transaction: Transaction) =>
+    tag !== undefined ? (transaction.tags ?? []).includes(tag) : needle === "" || folded(searchableText(transaction)).includes(needle)
+  return transactions.filter((transaction) => filterMatches(query.kind, transaction) && scopeIncludes(query.scope, transaction) && matchesText(transaction))
 }
 
 /** Accounts in the Accounts tab's order (credit, bank, cash), each with the card that is its face. */
