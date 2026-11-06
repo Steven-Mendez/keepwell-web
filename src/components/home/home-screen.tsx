@@ -824,14 +824,16 @@ function homeReminders(
     return holder ? cardShortName(t, holder) : accountName(account)
   }
   const reminders: Reminder[] = []
+  const cardsByID = new Map(ledger.cards.map((card) => [card.id, card]))
+  const accountsByID = new Map(
+    ledger.accounts.map((account) => [account.id, account])
+  )
   for (const transaction of overview.planned) {
     if (new Date(transaction.date).getTime() >= endOfToday) continue
-    const card = ledger.cards.find(
-      (candidate) => candidate.id === transaction.cardId
-    )
-    const account = ledger.accounts.find(
-      (candidate) => candidate.id === transaction.accountId
-    )
+    const card = transaction.cardId
+      ? cardsByID.get(transaction.cardId)
+      : undefined
+    const account = accountsByID.get(transaction.accountId)
     const method = card
       ? cardShortName(t, card)
       : account

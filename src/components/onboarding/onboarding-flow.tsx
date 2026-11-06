@@ -951,8 +951,12 @@ function AccountForm({
   const [bank, setBank] = useState(draft.bank ?? "")
   const [name, setName] = useState(draft.name)
   const [currency, setCurrency] = useState(draft.currency)
-  const [balanceText, setBalanceText] = useState(amountText(draft.balance))
-  const [secondText, setSecondText] = useState(amountText(draft.secondBalance))
+  const [balanceText, setBalanceText] = useState(() =>
+    amountText(draft.balance)
+  )
+  const [secondText, setSecondText] = useState(() =>
+    amountText(draft.secondBalance)
+  )
   const [lastFour, setLastFour] = useState(draft.lastFour ?? "")
   const [network, setNetwork] = useState<CardNetwork>(draft.network ?? "visa")
   const [debtMode, setDebtMode] = useState<DebtMode>(

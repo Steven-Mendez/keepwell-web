@@ -277,7 +277,7 @@ export function EditorForm({
   const [source, setSource] = useState(initial.source)
   const [destinationId, setDestinationId] = useState(initial.destinationId)
   const [description, setDescription] = useState(initial.description)
-  const [dateText, setDateText] = useState(localDateTime(initial.date))
+  const [dateText, setDateText] = useState(() => localDateTime(initial.date))
   const [note, setNote] = useState(initial.note)
   const [isDraft, setIsDraft] = useState(initial.isDraft)
   const [debitedText, setDebitedText] = useState(initial.debitedText)
