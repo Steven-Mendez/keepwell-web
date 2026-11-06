@@ -235,6 +235,16 @@ export function billingCycle(date: Date, cutoffDay: number | undefined): DateInt
   return { start: addDays(startCutoff, 1), end: addDays(endCutoff, 1) }
 }
 
+/**
+ * The last cutoff before `due`'s day: the statement a payment due that day settles (iOS
+ * `BillingCycle.statementCutoff`). Cutoff 20 and due day 10 pay on Nov 10 what closed on Oct 20.
+ */
+export function statementCutoff(due: Date, cutoffDay: number): Date {
+  const month = yearMonthContaining(due)
+  const candidate = cutoffIn(month, cutoffDay)
+  return candidate.getTime() < startOfDay(due).getTime() ? candidate : cutoffIn(addMonths(month, -1), cutoffDay)
+}
+
 /** The next date (today included) that falls on `day` of a month, clamped like cutoffs. */
 export function nextOccurrence(day: number, onOrAfter: Date): Date {
   const today = startOfDay(onOrAfter)
@@ -252,39 +262,122 @@ export function folded(text: string): string {
   return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
 }
 
+const isCharge = (transaction: Transaction) => transaction.kind === "expense" && isConfirmed(transaction)
+
+/** "Apple Music" and "apple music " are the same service. */
+const serviceKey = (description: string) => folded(description.trim())
+
+/**
+ * Of one card's charges, the folded descriptions that look like a service: in the Subscriptions
+ * category, or charged in two different months.
+ */
+function serviceKeys(charges: readonly Transaction[]): Set<string> {
+  const months = new Map<string, Set<string>>()
+  const inCategory = new Set<string>()
+  for (const transaction of charges) {
+    const key = serviceKey(transaction.description)
+    if (key === "") continue
+    const set = months.get(key) ?? new Set<string>()
+    set.add(monthKey(yearMonthContaining(dateOf(transaction))))
+    months.set(key, set)
+    if (transaction.categoryId === SUBSCRIPTIONS_CATEGORY_ID) inCategory.add(key)
+  }
+  return new Set([...months.entries()].filter(([key, set]) => inCategory.has(key) || set.size >= 2).map(([key]) => key))
+}
+
 /**
  * The services charged to a card: the heuristic over its movements, then the subscription rules paid
  * with it, each name once (folded).
  */
 export function subscriptionsCharged(cardId: string, transactions: readonly Transaction[], rules: readonly RecurringRule[] = []): string[] {
-  const months = new Map<string, Set<string>>()
-  const inCategory = new Set<string>()
+  const charges = transactions.filter((transaction) => transaction.cardId === cardId && isCharge(transaction))
+  const services = serviceKeys(charges)
   const latest = new Map<string, { date: number; description: string }>()
-  for (const transaction of transactions) {
-    if (transaction.cardId !== cardId || transaction.kind !== "expense" || !isConfirmed(transaction)) continue
-    const key = folded(transaction.description.trim())
-    if (key === "") continue
-    const date = dateOf(transaction)
-    const set = months.get(key) ?? new Set<string>()
-    set.add(monthKey(yearMonthContaining(date)))
-    months.set(key, set)
-    if (transaction.categoryId === SUBSCRIPTIONS_CATEGORY_ID) inCategory.add(key)
+  for (const transaction of charges) {
+    const key = serviceKey(transaction.description)
+    if (!services.has(key)) continue
+    const date = dateOf(transaction).getTime()
     const previous = latest.get(key)
-    if (!previous || date.getTime() > previous.date) latest.set(key, { date: date.getTime(), description: transaction.description })
+    if (!previous || date > previous.date) latest.set(key, { date, description: transaction.description })
   }
-  const charged = [...latest.entries()]
-    .filter(([key]) => inCategory.has(key) || (months.get(key)?.size ?? 0) >= 2)
-    .sort(([, a], [, b]) => b.date - a.date)
+  const charged = [...latest.entries()].sort(([, a], [, b]) => b.date - a.date)
   const names = new Set(charged.map(([key]) => key))
   const fromRules: string[] = []
   for (const rule of rules) {
     if (!rule.isSubscription || rule.cardId !== cardId) continue
-    const key = folded(rule.name.trim())
+    const key = serviceKey(rule.name)
     if (key === "" || names.has(key)) continue
     names.add(key)
     fromRules.push(rule.name.trim())
   }
   return [...charged.map(([, value]) => value.description), ...fromRules]
+}
+
+/** Newest first; the id breaks ties so the order never depends on how the list arrived. */
+function newerFirst(a: Transaction, b: Transaction): number {
+  const difference = dateOf(b).getTime() - dateOf(a).getTime()
+  if (difference !== 0) return difference
+  return a.id.toLowerCase() < b.id.toLowerCase() ? 1 : -1
+}
+
+/**
+ * The charges of each service, newest first (iOS `Subscriptions.chargeHistories`): movements a rule
+ * recorded grouped by that rule, and the rest grouped by card and description when
+ * `subscriptionsCharged` would recognize them as a service. Planned movements don't count.
+ */
+export function chargeHistories(transactions: readonly Transaction[]): Transaction[][] {
+  const groups = new Map<string, Transaction[]>()
+  const byCard = new Map<string, Transaction[]>()
+  const add = (map: Map<string, Transaction[]>, key: string, transaction: Transaction) => map.set(key, [...(map.get(key) ?? []), transaction])
+  for (const transaction of transactions) {
+    if (!isCharge(transaction)) continue
+    if (transaction.recurringId) add(groups, `rule-${transaction.recurringId}`, transaction)
+    else if (transaction.cardId) add(byCard, transaction.cardId, transaction)
+  }
+  for (const [cardId, charges] of byCard) {
+    const services = serviceKeys(charges)
+    for (const transaction of charges) {
+      const key = serviceKey(transaction.description)
+      if (services.has(key)) add(groups, `card-${cardId}-${key}`, transaction)
+    }
+  }
+  return [...groups.values()].map((history) => [...history].sort(newerFirst))
+}
+
+/** How recent the newest charge must be for a price increase to still be worth mentioning. */
+export const PRICE_INCREASE_RECENT_DAYS = 30
+
+/** A subscription whose newest charge cost more than the one before it (iOS `PriceIncrease`). */
+export interface PriceIncrease {
+  /** The newest charge, so each increase is told once. */
+  transactionId: string
+  /** The newest charge's description. */
+  name: string
+  previous: Money
+  current: Money
+  date: Date
+}
+
+/**
+ * Each service (`chargeHistories`) whose newest charge costs more than the one before it, in the
+ * same currency, and happened within `PRICE_INCREASE_RECENT_DAYS` of `now`. Newest first.
+ */
+export function priceIncreases(transactions: readonly Transaction[], now: Date = new Date()): PriceIncrease[] {
+  const since = addDays(startOfDay(now), -PRICE_INCREASE_RECENT_DAYS).getTime()
+  const found: PriceIncrease[] = []
+  for (const history of chargeHistories(transactions)) {
+    const [newest, previous] = history
+    if (!newest || !previous || newest.currency !== previous.currency) continue
+    if (!dec(newest.amount).gt(dec(previous.amount)) || startOfDay(dateOf(newest)).getTime() < since) continue
+    found.push({
+      transactionId: newest.id,
+      name: newest.description,
+      previous: { amount: dec(previous.amount), currency: previous.currency },
+      current: { amount: dec(newest.amount), currency: newest.currency },
+      date: dateOf(newest),
+    })
+  }
+  return found.sort((a, b) => b.date.getTime() - a.date.getTime() || (a.name < b.name ? -1 : 1))
 }
 
 // Scope: everything or one account (what left it and, for transfers, what arrived).

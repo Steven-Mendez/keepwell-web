@@ -2,6 +2,7 @@ import { newID } from "@/lib/platform/uuid"
 import type {
   Account,
   Card,
+  CategorizationRule,
   CurrencySettings,
   ExchangeRate,
   Transaction,
@@ -21,6 +22,8 @@ import {
 } from "./money"
 import { accountDisplayName, checkAmounts, folded } from "./rules"
 import type { LedgerStore } from "./store"
+import { firstMatchingRule } from "./categorization"
+import { tagsField } from "./tags"
 
 // Port of ExportTransactionsUseCase.swift and ImportTransactionsUseCase.swift. Columns and values are
 // a data format, not UI text: English, ISO dates and dot decimals whatever the language.
@@ -159,6 +162,8 @@ interface ImportRecords {
   cards: readonly Card[]
   transactions: readonly Transaction[]
   categories: readonly TransactionCategory[]
+  /** In the person's order: a row without a known category takes the first that matches. */
+  rules?: readonly CategorizationRule[]
 }
 
 /** Reads the file "Export CSV" writes (columns in any order); each row must name an existing account. */
@@ -188,17 +193,26 @@ export function parseCsvTransactions(
       )
     )
   }
-  const categoryId = (text: string | undefined, kind: TransactionKind) => {
-    const fallback = kind === "income" ? OTHER_INCOME_ID : OTHER_EXPENSE_ID
-    if (!text) return fallback
+  /** By id or stored name; `undefined` when empty or unknown, for a rule or "Other" to fill. */
+  const knownCategoryId = (text: string | undefined, kind: TransactionKind) => {
+    if (!text) return undefined
     const lower = text.toLowerCase()
-    return (
-      records.categories.find(
-        (category) =>
-          category.kind === kind &&
-          (category.id === text || category.name.toLowerCase() === lower)
-      )?.id ?? fallback
-    )
+    return records.categories.find(
+      (category) =>
+        category.kind === kind &&
+        (category.id === text || category.name.toLowerCase() === lower)
+    )?.id
+  }
+  /** A known category, else the first rule that matches (with its tags), else "Other" of the kind. */
+  const categorized = (text: string | undefined, kind: TransactionKind, description: string, note: string | undefined): { categoryId?: string; tags?: string[] } => {
+    if (kind === "transfer") return {}
+    const known = knownCategoryId(text, kind)
+    if (known) return { categoryId: known }
+    const rule = firstMatchingRule(records.rules ?? [], kind, description, note)
+    if (rule && records.categories.some((category) => category.id === rule.categoryId)) {
+      return { categoryId: rule.categoryId, ...tagsField(rule.tags) }
+    }
+    return { categoryId: kind === "income" ? OTHER_INCOME_ID : OTHER_EXPENSE_ID }
   }
   const rateFrom = (text: string | undefined): ExchangeRate => {
     const parsed = parseNumber(text)
@@ -263,15 +277,14 @@ export function parseCsvTransactions(
       const status: TransactionStatus =
         statusText === "planned" ? "planned" : "confirmed"
       const note = value("note", row)
+      const description = value("description", row) ?? ""
       const result: Transaction = {
         id: newID(),
         date: date.toISOString(),
         status,
-        description: value("description", row) ?? "",
+        description,
         kind,
-        ...(kind === "transfer"
-          ? {}
-          : { categoryId: categoryId(value("category", row), kind) }),
+        ...categorized(value("category", row), kind, description, note),
         amount: decimalText(amount),
         currency,
         accountId: account.id,
@@ -304,15 +317,16 @@ export async function importCsv(
     principal: "USD",
     rate: "1",
   }
-  const [accounts, cards, transactions, categories] = await Promise.all([
+  const [accounts, cards, transactions, categories, rules] = await Promise.all([
     store.fetchAccounts(),
     store.fetchCards(),
     store.fetchTransactions(),
     store.fetchCategories(),
+    store.fetchCategorizationRules(),
   ])
   const parsed = parseCsvTransactions(
     csv,
-    { accounts, cards, transactions, categories },
+    { accounts, cards, transactions, categories, rules },
     currencies
   )
   await store.atomically(async () => {

@@ -89,6 +89,8 @@ export interface TransactionRow extends AuditColumns {
   note: string | null
   /** The rule that produced it. Rows written before version 2 lack the column until the upgrade fills it. */
   recurring_id: string | null
+  /** Normalized tags, empty when none. Added in version 5, whose upgrade fills older rows. */
+  tags: string[]
 }
 
 /** A recurring movement or subscription (iOS `RecurringRuleRecord`). */
@@ -111,6 +113,18 @@ export interface RecurringRuleRow extends AuditColumns {
   auto_confirm: boolean
   is_paused: boolean
   note: string | null
+  /** Copied to each movement; empty when none. Added in version 5. */
+  tags: string[]
+}
+
+/** A categorization rule (iOS `CategorizationRuleRecord`); `sort_index` is the person's order. */
+export interface CategorizationRuleRow extends AuditColumns {
+  id: string
+  match: string
+  category_id: string
+  kind: "expense" | "income"
+  tags: string[]
+  sort_index: number
 }
 
 /** A savings goal (iOS `SavingsGoalRecord`). */
@@ -124,6 +138,34 @@ export interface SavingsGoalRow extends AuditColumns {
   target_year: number | null
   icon: string | null
   color: string | null
+}
+
+/** A loan (iOS `LoanRecord`). Its paid installments live on the row, as they only change with it. */
+export interface LoanRow extends AuditColumns {
+  id: string
+  name: string
+  lender: string | null
+  borrowed_amount: string
+  borrowed_currency: string
+  installment_amount: string
+  installment_count: number
+  frequency: string
+  first_due_date: string
+  payments: { number: number; paid_at: string; transaction_id: string | null }[]
+}
+
+/** A personal debt (iOS `PersonalDebtRecord`), with its repayments on the row. */
+export interface PersonalDebtRow extends AuditColumns {
+  id: string
+  person: string
+  direction: string
+  amount: string
+  currency: string
+  date: string
+  note: string | null
+  repayments: { amount: string; date: string }[]
+  settled_at: string | null
+  transaction_id: string | null
 }
 
 /** A single row, like iOS `SettingsRecord`. */
@@ -143,7 +185,17 @@ export interface SettingsRow {
 
 export const SETTINGS_ID = "settings"
 
-export type SyncEntity = "account" | "card" | "category" | "transaction" | "recurringRule" | "savingsGoal" | "settings"
+export type SyncEntity =
+  | "account"
+  | "card"
+  | "category"
+  | "transaction"
+  | "recurringRule"
+  | "savingsGoal"
+  | "loan"
+  | "personalDebt"
+  | "categorizationRule"
+  | "settings"
 export type SyncOperation = "create" | "update" | "delete"
 
 /**
@@ -166,6 +218,9 @@ export class KeepwellDatabase extends Dexie {
   transactions!: EntityTable<TransactionRow, "id">
   recurring_rules!: EntityTable<RecurringRuleRow, "id">
   savings_goals!: EntityTable<SavingsGoalRow, "id">
+  loans!: EntityTable<LoanRow, "id">
+  personal_debts!: EntityTable<PersonalDebtRow, "id">
+  categorization_rules!: EntityTable<CategorizationRuleRow, "id">
   settings!: EntityTable<SettingsRow, "id">
   sync_outbox!: EntityTable<SyncOutboxRow, "id">
 
@@ -211,6 +266,28 @@ export class KeepwellDatabase extends Dexie {
       )
     // Savings goals.
     this.version(4).stores({ savings_goals: "id, updated_at, deleted_at" })
+    // Loans and personal debts (`transaction_id` finds the debts split from a movement), categorization
+    // rules in the person's order, and tags on movements and recurring rules, empty on older rows.
+    this.version(5)
+      .stores({
+        loans: "id, updated_at, deleted_at",
+        personal_debts: "id, transaction_id, updated_at, deleted_at",
+        categorization_rules: "id, sort_index, updated_at, deleted_at",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table<TransactionRow, string>("transactions")
+          .toCollection()
+          .modify((row) => {
+            if (row.tags === undefined) row.tags = []
+          })
+        await tx
+          .table<RecurringRuleRow, string>("recurring_rules")
+          .toCollection()
+          .modify((row) => {
+            if (row.tags === undefined) row.tags = []
+          })
+      })
   }
 }
 

@@ -126,7 +126,7 @@ describe("Savings goal use cases", () => {
 })
 
 describe("Savings goals through IndexedDB and the backup", () => {
-  it("exports version 3 with goals and restores them; older files restore with none", async () => {
+  it("exports the current version with goals and restores them; older files restore with none", async () => {
     await settingsRepository.save({ ...DEFAULT_SETTINGS, currencies: { principal: "NIO", rate: "1" }, hasCompletedOnboarding: true })
     await savingsGoalRepository.save(goal({ saved: "2500.5", icon: "airplane", color: "blue" }))
     const { targetMonth: _, ...undated } = goal({ id: "00000000-0000-0000-0000-00000000a002", name: "Emergency" })
@@ -135,7 +135,7 @@ describe("Savings goals through IndexedDB and the backup", () => {
 
     const text = await backupRepository.export()
     const file = parseBackupFile(text)
-    expect(file.schemaVersion).toBe(3)
+    expect(file.schemaVersion).toBe(4)
     expect(file.savingsGoals).toHaveLength(2)
     expect(file.savingsGoals[0]).toMatchObject({ name: "Trip", saved: "2500.5", targetMonth: { month: 12, year: 2026 }, icon: "airplane" })
     const json = JSON.parse(text) as { savingsGoals: Record<string, unknown>[] }

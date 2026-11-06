@@ -10,10 +10,12 @@ import {
   CategorySection,
   DetailsSection,
   MethodSection,
+  TagsSection,
   TransferAccountsSection,
 } from "./editor-fields"
 import { typeSubtitle, typeTitle } from "./editor-model"
 import { EditorReview } from "./editor-review"
+import { SavedReceipt } from "./saved-receipt"
 import { typeOptions } from "./editor-state"
 import { FlowHeader, StatusPill } from "./flow-parts"
 import {
@@ -26,14 +28,28 @@ export function EditorForm({
   request,
   context,
   onClose,
+  onLogAnother,
 }: {
   request: EditorRequest
   context: TransactionContext
   onClose: () => void
+  /** Starts a fresh movement of the same kind from the receipt. */
+  onLogAnother: () => void
 }) {
   const { t, ct } = useCreateTransactionT()
   const editor = useMovementEditor(request, context, onClose)
   const { movesBetweenAccounts } = editor.form
+
+  if (editor.saved) {
+    return (
+      <SavedReceipt
+        saved={editor.saved}
+        context={context}
+        onLogAnother={onLogAnother}
+        onClose={onClose}
+      />
+    )
+  }
 
   return (
     <form
@@ -73,6 +89,7 @@ export function EditorForm({
           {!movesBetweenAccounts ? <CategorySection editor={editor} /> : null}
           {!movesBetweenAccounts ? <MethodSection editor={editor} /> : null}
           <DetailsSection editor={editor} />
+          {!movesBetweenAccounts ? <TagsSection editor={editor} /> : null}
         </div>
 
         <EditorReview editor={editor} onClose={onClose} />

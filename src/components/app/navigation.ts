@@ -1,4 +1,4 @@
-import { ChartColumnIcon, HouseIcon, ListIcon, PiggyBankIcon, RepeatIcon, SettingsIcon, WalletCardsIcon, type LucideIcon } from "lucide-react"
+import { ChartColumnIcon, HandCoinsIcon, HouseIcon, ListIcon, PiggyBankIcon, RepeatIcon, SettingsIcon, WalletCardsIcon, type LucideIcon } from "lucide-react"
 
 import type { KWIconName } from "@/components/kw/kw-icon-data"
 import type { Namespace } from "@/lib/i18n"
@@ -29,8 +29,11 @@ export const RECURRING_NAV: NavItem = { title: "Recurring", ns: "web", href: "/r
 /** Savings goals: pushed from Home on iOS, like Recurring; on the web a section of the sidebar. */
 export const GOALS_NAV: NavItem = { title: "Goals", ns: "goals", href: "/goals", icon: PiggyBankIcon, kwIcon: "wallet", key: "g" }
 
+/** Loans and personal debts: pushed from Home on iOS, like Goals; on the web a section of the sidebar. */
+export const DEBTS_NAV: NavItem = { title: "Debts", ns: "debts", href: "/debts", icon: HandCoinsIcon, kwIcon: "cash", key: "d" }
+
 /** The sections after the tabs, in the sidebar and in "G then a letter". */
-export const SECTION_NAV: readonly NavItem[] = [RECURRING_NAV, GOALS_NAV]
+export const SECTION_NAV: readonly NavItem[] = [RECURRING_NAV, GOALS_NAV, DEBTS_NAV]
 
 /** Reached from home on iOS; on a wide screen it sits at the foot of the sidebar. */
 export const SETTINGS_NAV: NavItem = { title: "Settings", ns: "settings", href: "/settings", icon: SettingsIcon, kwIcon: "settings", key: "," }

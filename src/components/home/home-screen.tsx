@@ -50,7 +50,9 @@ import { ledgerStore } from "@/lib/repositories"
 import type { Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
+import { ForecastSection } from "./home-forecast"
 import { homeReminders, type Reminder } from "./home-reminders"
+import { DebtsSection } from "./home-debts"
 import { GoalsSection } from "./home-goals"
 import { UpcomingSection } from "./home-upcoming"
 
@@ -163,9 +165,19 @@ export function HomeScreen() {
               hasCredit={hasCredit}
             />
 
+            {overview.forecast ? (
+              <ForecastSection
+                t={t}
+                forecast={overview.forecast}
+                hidden={hidden}
+              />
+            ) : null}
+
             <UpcomingSection t={t} ledger={ledger} now={now} hidden={hidden} />
 
             <GoalsSection t={t} ledger={ledger} now={now} hidden={hidden} />
+
+            <DebtsSection t={t} ledger={ledger} now={now} hidden={hidden} />
 
             <AccountsSection
               t={t}

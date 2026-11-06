@@ -495,6 +495,9 @@
   "Category": {
    "es": "Categoría"
   },
+  "Category from rule: %@": {
+   "es": "Categoría por regla: %@"
+  },
   "Check the amount.": {
    "es": "Revisa el monto."
   },
@@ -710,6 +713,9 @@
   },
   "Straight into the account": {
    "es": "Directo a la cuenta"
+  },
+  "Tags": {
+   "es": "Etiquetas"
   },
   "Take cash out of a bank account": {
    "es": "Saca efectivo de una cuenta bancaria"
@@ -931,6 +937,308 @@
    "es": "Datos de la tarjeta"
   }
  },
+ "debts": {
+  "%@ left": {
+   "es": "Faltan %@"
+  },
+  "%@ left of %@": {
+   "es": "Faltan %1$@ de %2$@"
+  },
+  "%@ owes you": {
+   "es": "%@ te debe"
+  },
+  "%lld of %lld paid · %@ left": {
+   "es": "%1$lld de %2$lld pagadas · faltan %3$@"
+  },
+  "Add": {
+   "es": "Agregar"
+  },
+  "Add a loan to follow its installments, or write down money you lent or borrowed.": {
+   "es": "Agrega un préstamo para seguir sus cuotas, o anota dinero que prestaste o que te prestaron."
+  },
+  "Add loan": {
+   "es": "Agregar préstamo"
+  },
+  "Add person": {
+   "es": "Agregar persona"
+  },
+  "Amount": {
+   "es": "Monto"
+  },
+  "Amount borrowed": {
+   "es": "Monto prestado"
+  },
+  "Amount paid back": {
+   "es": "Monto abonado"
+  },
+  "Amounts have to be greater than zero.": {
+   "es": "Los montos tienen que ser mayores que cero."
+  },
+  "Borrowed %@": {
+   "es": "Préstamo de %@"
+  },
+  "Borrowed %@ from %@": {
+   "es": "Préstamo de %1$@ con %2$@"
+  },
+  "Cancel": {
+   "es": "Cancelar"
+  },
+  "Category": {
+   "es": "Categoría"
+  },
+  "Choose": {
+   "es": "Elegir"
+  },
+  "Currency": {
+   "es": "Moneda"
+  },
+  "Date": {
+   "es": "Fecha"
+  },
+  "Debts": {
+   "es": "Deudas"
+  },
+  "Delete": {
+   "es": "Eliminar"
+  },
+  "Delete debt": {
+   "es": "Eliminar deuda"
+  },
+  "Delete loan": {
+   "es": "Eliminar préstamo"
+  },
+  "Delete this debt?": {
+   "es": "¿Eliminar esta deuda?"
+  },
+  "Delete this loan?": {
+   "es": "¿Eliminar este préstamo?"
+  },
+  "Due": {
+   "es": "Pendiente"
+  },
+  "Each person gets a debt that owes you their share. Your movement doesn't change.": {
+   "es": "A cada persona se le anota una deuda por su parte. Tu movimiento no cambia."
+  },
+  "Edit": {
+   "es": "Editar"
+  },
+  "Edit debt": {
+   "es": "Editar deuda"
+  },
+  "Edit loan": {
+   "es": "Editar préstamo"
+  },
+  "Enter between 1 and 600 installments.": {
+   "es": "Escribe entre 1 y 600 cuotas."
+  },
+  "First installment": {
+   "es": "Primera cuota"
+  },
+  "Give the loan a name.": {
+   "es": "Ponle un nombre al préstamo."
+  },
+  "Hide amounts": {
+   "es": "Ocultar montos"
+  },
+  "I borrowed money": {
+   "es": "Me prestaron dinero"
+  },
+  "I lent money": {
+   "es": "Presté dinero"
+  },
+  "I owe": {
+   "es": "Debo"
+  },
+  "Installment": {
+   "es": "Cuota"
+  },
+  "It can't be less than what was already paid back.": {
+   "es": "No puede ser menos de lo que ya se abonó."
+  },
+  "Juan": {
+   "es": "Juan"
+  },
+  "Lender": {
+   "es": "Prestamista"
+  },
+  "Loans": {
+   "es": "Préstamos"
+  },
+  "Mark %lld/%lld unpaid?": {
+   "es": "¿Marcar %1$lld/%2$lld como no pagada?"
+  },
+  "Mark as settled": {
+   "es": "Marcar como saldada"
+  },
+  "Mark unpaid": {
+   "es": "Marcar como no pagada"
+  },
+  "Monthly": {
+   "es": "Mensual"
+  },
+  "Motorbike, mortgage…": {
+   "es": "Moto, hipoteca…"
+  },
+  "Name": {
+   "es": "Nombre"
+  },
+  "New debt": {
+   "es": "Nueva deuda"
+  },
+  "New loan": {
+   "es": "Nuevo préstamo"
+  },
+  "Next: %@ on %@ · %@": {
+   "es": "Próxima: %1$@ el %2$@ · %3$@"
+  },
+  "No debts yet": {
+   "es": "Aún no tienes deudas"
+  },
+  "Note": {
+   "es": "Nota"
+  },
+  "Nothing": {
+   "es": "Nada"
+  },
+  "Number of installments": {
+   "es": "Número de cuotas"
+  },
+  "Only tracked here: it doesn't record a movement or change your balances.": {
+   "es": "Solo se anota aquí: no registra un movimiento ni cambia tus saldos."
+  },
+  "Optional": {
+   "es": "Opcional"
+  },
+  "Overdue: %@ on %@ · %@": {
+   "es": "Atrasada: %1$@ el %2$@ · %3$@"
+  },
+  "Owed to you": {
+   "es": "Te deben"
+  },
+  "Owes you": {
+   "es": "Te debe"
+  },
+  "Paid": {
+   "es": "Pagada"
+  },
+  "Paid off": {
+   "es": "Pagado"
+  },
+  "Paid on": {
+   "es": "Pagada el"
+  },
+  "Pay %lld/%lld · %@": {
+   "es": "Pagar %1$lld/%2$lld · %3$@"
+  },
+  "Pay from": {
+   "es": "Pagar con"
+  },
+  "People": {
+   "es": "Personas"
+  },
+  "Person": {
+   "es": "Persona"
+  },
+  "Personal debts are only tracked here: they don't record movements or change your balances.": {
+   "es": "Las deudas personales solo se anotan aquí: no registran movimientos ni cambian tus saldos."
+  },
+  "Record repayment": {
+   "es": "Registrar abono"
+  },
+  "Records a confirmed expense from the account or card you pick.": {
+   "es": "Registra un gasto confirmado desde la cuenta o tarjeta que elijas."
+  },
+  "Remove": {
+   "es": "Quitar"
+  },
+  "Reopen": {
+   "es": "Reabrir"
+  },
+  "Repayments": {
+   "es": "Abonos"
+  },
+  "Save": {
+   "es": "Guardar"
+  },
+  "Schedule": {
+   "es": "Calendario de cuotas"
+  },
+  "Settled": {
+   "es": "Saldada"
+  },
+  "Settled on %@": {
+   "es": "Saldada el %@"
+  },
+  "Show amounts": {
+   "es": "Mostrar montos"
+  },
+  "Split": {
+   "es": "Dividir"
+  },
+  "Split equally": {
+   "es": "Dividir en partes iguales"
+  },
+  "Split the expense": {
+   "es": "Dividir el gasto"
+  },
+  "That's more than what's left.": {
+   "es": "Es más de lo que falta."
+  },
+  "The expense it recorded is deleted, so balances go back to before you paid it.": {
+   "es": "Se elimina el gasto que registró, así que los saldos vuelven a como estaban antes de pagarla."
+  },
+  "The installments you already paid stay as movements.": {
+   "es": "Las cuotas que ya pagaste se quedan como movimientos."
+  },
+  "The shares add up to more than the expense.": {
+   "es": "Las partes suman más que el gasto."
+  },
+  "There are more installments paid than that.": {
+   "es": "Ya hay más cuotas pagadas que esas."
+  },
+  "They owe me": {
+   "es": "Me deben"
+  },
+  "Touch and hold a paid installment to mark it unpaid.": {
+   "es": "Mantén presionada una cuota pagada para marcarla como no pagada."
+  },
+  "We couldn't load your debts.": {
+   "es": "No pudimos cargar tus deudas."
+  },
+  "We couldn't mark it unpaid. Try again.": {
+   "es": "No pudimos marcarla como no pagada. Intenta de nuevo."
+  },
+  "We couldn't record the payment. Try again.": {
+   "es": "No pudimos registrar el pago. Intenta de nuevo."
+  },
+  "We couldn't save the debt. Try again.": {
+   "es": "No pudimos guardar la deuda. Intenta de nuevo."
+  },
+  "We couldn't save the loan. Try again.": {
+   "es": "No pudimos guardar el préstamo. Intenta de nuevo."
+  },
+  "We couldn't split the expense. Try again.": {
+   "es": "No pudimos dividir el gasto. Intenta de nuevo."
+  },
+  "Weekly": {
+   "es": "Semanal"
+  },
+  "Write who it's with.": {
+   "es": "Escribe con quién es."
+  },
+  "You owe": {
+   "es": "Debes"
+  },
+  "You owe %@": {
+   "es": "Le debes a %@"
+  },
+  "You'll pay %@ in total": {
+   "es": "Pagarás %@ en total"
+  },
+  "Your share: %@": {
+   "es": "Tu parte: %@"
+  }
+ },
  "goals": {
   "%@ of %@": {
    "es": "%@ de %@"
@@ -1066,11 +1374,27 @@
   "%@ went over its budget": {
    "es": "%@ superó su presupuesto"
   },
+  "%@ went up in price": {
+   "es": "%@ subió de precio"
+  },
   "%@ · %@ from %@. Has it been paid?": {
    "es": "%@ · %@ desde %@. ¿Ya se pagó?"
   },
+  "%@ · %lld/%lld on %@ · %@": {
+   "es": "%1$@ · %2$lld/%3$lld el %4$@ · %5$@"
+  },
   "%@%% saved": {
    "es": "%@%% ahorrado"
+  },
+  "%@: installment in %lld days": {
+   "en": {
+    "one": "%@: installment in %lld day",
+    "other": "%@: installment in %lld days"
+   },
+   "es": {
+    "one": "%@: cuota en %lld día",
+    "other": "%@: cuota en %lld días"
+   }
   },
   "%@: payment in %lld days": {
    "en": {
@@ -1105,17 +1429,29 @@
     "other": "%lld tarjetas"
    }
   },
+  "Available today": {
+   "es": "Disponible hoy"
+  },
+  "Card payments": {
+   "es": "Pagos de tarjetas"
+  },
   "Cards (debt)": {
    "es": "Tarjetas (deuda)"
   },
   "Confirm": {
    "es": "Confirmar"
   },
+  "Debts": {
+   "es": "Deudas"
+  },
   "Draft for today": {
    "es": "Borrador para hoy"
   },
   "Drafts · %lld": {
    "es": "Borradores · %lld"
+  },
+  "End of month": {
+   "es": "A fin de mes"
   },
   "Expense": {
    "es": "Gasto"
@@ -1153,6 +1489,9 @@
   "Income": {
    "es": "Ingresos"
   },
+  "Installment %lld of %lld · %@": {
+   "es": "Cuota %1$lld de %2$lld · %3$@"
+  },
   "Log quickly": {
    "es": "Anotar rápido"
   },
@@ -1171,17 +1510,32 @@
   "Net worth · %@": {
    "es": "Patrimonio neto · %@"
   },
+  "No debts yet": {
+   "es": "Aún no tienes deudas"
+  },
   "No goals yet": {
    "es": "Aún no tienes metas"
   },
   "No transactions yet": {
    "es": "Todavía no hay movimientos"
   },
+  "Now %@, before %@.": {
+   "es": "Ahora %@, antes %@."
+  },
+  "Owed to you": {
+   "es": "Te deben"
+  },
   "Pay before day %lld so it doesn't generate interest.": {
    "es": "Paga antes del día %lld para que no genere intereses."
   },
   "Pay card": {
    "es": "Pagar tarjeta"
+  },
+  "Planned expenses": {
+   "es": "Gastos previstos"
+  },
+  "Planned income": {
+   "es": "Ingresos previstos"
   },
   "Recent": {
    "es": "Recientes"
@@ -1219,8 +1573,17 @@
   "Update it wherever it's saved before it stops working.": {
    "es": "Actualízala donde la tengas guardada antes de que deje de funcionar."
   },
+  "Usual spending": {
+   "es": "Gasto habitual"
+  },
   "We couldn't confirm it. Try again.": {
    "es": "No pudimos confirmarlo. Inténtalo de nuevo."
+  },
+  "What your bank and cash accounts would hold, counting what's planned and your usual spending.": {
+   "es": "Lo que tendrían tus cuentas y tu efectivo, contando lo previsto y tu gasto habitual."
+  },
+  "You owe": {
+   "es": "Debes"
   },
   "action.income": {
    "en": "Income",
@@ -1238,6 +1601,9 @@
     "one": "gastado · %lld borrador",
     "other": "gastado · %lld borradores"
    }
+  },
+  "≈ %@": {
+   "es": "≈ %@"
   },
   "≈ %@ · rate %@": {
    "es": "≈ %@ · tasa %@"
@@ -1834,6 +2200,16 @@
     "other": "%lld días"
    }
   },
+  "%lld movements updated.": {
+   "en": {
+    "one": "%lld movement updated.",
+    "other": "%lld movements updated."
+   },
+   "es": {
+    "one": "%lld movimiento actualizado.",
+    "other": "%lld movimientos actualizados."
+   }
+  },
   "%lld rows skipped": {
    "en": {
     "one": "%lld row skipped",
@@ -1860,6 +2236,12 @@
   "App language": {
    "es": "Idioma de la app"
   },
+  "Apply": {
+   "es": "Aplicar"
+  },
+  "Apply to past movements": {
+   "es": "Aplicar a movimientos anteriores"
+  },
   "Ask again after": {
    "es": "Pedirlo al volver después de"
   },
@@ -1872,14 +2254,26 @@
   "Bank transfer": {
    "es": "Transferencia bancaria"
   },
+  "Capitals and accents don't matter.": {
+   "es": "No importan las mayúsculas ni las tildes."
+  },
   "Categories": {
    "es": "Categorías"
+  },
+  "Category": {
+   "es": "Categoría"
   },
   "Change passcode": {
    "es": "Cambiar código"
   },
   "Charged straight to the account": {
    "es": "Se cobra directo de la cuenta"
+  },
+  "Choose": {
+   "es": "Elegir"
+  },
+  "Create rule": {
+   "es": "Crear regla"
   },
   "Credit": {
    "es": "Crédito"
@@ -1896,6 +2290,9 @@
   "Debit": {
    "es": "Débito"
   },
+  "Delete": {
+   "es": "Eliminar"
+  },
   "Delete all my data": {
    "es": "Eliminar todos mis datos"
   },
@@ -1904,6 +2301,15 @@
   },
   "Delete everything": {
    "es": "Eliminar todo"
+  },
+  "Delete rule": {
+   "es": "Eliminar regla"
+  },
+  "Delete this rule?": {
+   "es": "¿Eliminar esta regla?"
+  },
+  "Deleted category": {
+   "es": "Categoría eliminada"
   },
   "Deleted defaults come back and edits to them are undone. Your own categories and movements stay.": {
    "es": "Vuelven las predeterminadas que eliminaste y se deshacen sus cambios. Tus categorías y movimientos se quedan como están."
@@ -1916,6 +2322,9 @@
   },
   "Done": {
    "es": "Listo"
+  },
+  "Edit rule": {
+   "es": "Editar regla"
   },
   "Expense categories": {
    "es": "Categorías de gasto"
@@ -1934,6 +2343,9 @@
   },
   "Hide amounts when leaving": {
    "es": "Ocultar montos al salir"
+  },
+  "If the description or note contains": {
+   "es": "Si la descripción o la nota contiene"
   },
   "Immediately": {
    "es": "De inmediato"
@@ -1977,11 +2389,24 @@
   "Manual · default 1": {
    "es": "Manual · por defecto 1"
   },
+  "Move %lld movements to %@?": {
+   "en": {
+    "one": "Move %lld movement to %@?",
+    "other": "Move %lld movements to %@?"
+   },
+   "es": {
+    "one": "¿Mover %lld movimiento a %@?",
+    "other": "¿Mover %lld movimientos a %@?"
+   }
+  },
   "Move down": {
    "es": "Bajar"
   },
   "Move up": {
    "es": "Subir"
+  },
+  "Movements it already categorized stay as they are.": {
+   "es": "Los movimientos que ya categorizó no cambian."
   },
   "Net worth, summaries and new movements will be in %@, and the rate is turned around. Past movements keep the rate they were logged with.": {
    "es": "El patrimonio, los resúmenes y los movimientos nuevos estarán en %@, y la tasa se invierte. Los movimientos anteriores conservan la tasa con la que se anotaron."
@@ -1989,14 +2414,29 @@
   "New category": {
    "es": "Nueva categoría"
   },
+  "New movements take the category of the first rule that matches, unless you pick one. Past ones stay as they are.": {
+   "es": "Los movimientos nuevos toman la categoría de la primera regla que coincida, salvo que elijas una. Los anteriores no cambian."
+  },
+  "New rule": {
+   "es": "Nueva regla"
+  },
   "No lock": {
    "es": "Sin bloqueo"
+  },
+  "No past movements to change.": {
+   "es": "No hay movimientos anteriores que cambiar."
+  },
+  "No rules yet": {
+   "es": "Aún no tienes reglas"
   },
   "Off: your data stays only on this iPhone.": {
    "es": "Apagado: tus datos quedan solo en este iPhone."
   },
   "On ›": {
    "es": "Activado ›"
+  },
+  "Only movements without a category or in “Other” that match change.": {
+   "es": "Solo cambian los movimientos que coinciden y no tienen categoría o están en “Otros”."
   },
   "Organization": {
    "es": "Organización"
@@ -2041,6 +2481,12 @@
     "other": "Respaldo del %@ restaurado · %lld movimientos"
    }
   },
+  "Rules": {
+   "es": "Reglas"
+  },
+  "Save": {
+   "es": "Guardar"
+  },
   "Second currency": {
    "es": "Segunda moneda"
   },
@@ -2062,6 +2508,15 @@
   "Syncs on its own while you have iCloud on this iPhone.": {
    "es": "Se sincroniza solo mientras tengas iCloud en este iPhone."
   },
+  "Tags to add": {
+   "es": "Etiquetas para agregar"
+  },
+  "Teach Keepwell that “Uber” is Transport, and new movements that say so get it on their own.": {
+   "es": "Enséñale a Keepwell que “Uber” es Transporte, y los movimientos nuevos que lo digan lo tendrán solos."
+  },
+  "Text to look for": {
+   "es": "Texto a buscar"
+  },
   "That file isn't a Keepwell backup, so nothing was changed.": {
    "es": "Ese archivo no es un respaldo de Keepwell, así que no cambió nada."
   },
@@ -2077,6 +2532,9 @@
   "Turn off the Keepwell passcode?": {
    "es": "¿Desactivar el código de Keepwell?"
   },
+  "Uber": {
+   "es": "Uber"
+  },
   "Unlock the app with": {
    "es": "Desbloquear la app con"
   },
@@ -2089,6 +2547,9 @@
   "We couldn't create the file. Try again.": {
    "es": "No pudimos crear el archivo. Inténtalo de nuevo."
   },
+  "We couldn't delete the rule. Try again.": {
+   "es": "No pudimos eliminar la regla. Inténtalo de nuevo."
+  },
   "We couldn't delete your data. Try again.": {
    "es": "No pudimos eliminar tus datos. Inténtalo de nuevo."
   },
@@ -2100,6 +2561,12 @@
   },
   "We couldn't load your payment methods.": {
    "es": "No pudimos cargar tus medios de pago."
+  },
+  "We couldn't load your rules.": {
+   "es": "No pudimos cargar tus reglas."
+  },
+  "We couldn't look at your movements. Try again.": {
+   "es": "No pudimos revisar tus movimientos. Inténtalo de nuevo."
   },
   "We couldn't read that file.": {
    "es": "No pudimos leer ese archivo."
@@ -2119,6 +2586,12 @@
   "We couldn't save the new order. Try again.": {
    "es": "No pudimos guardar el nuevo orden. Inténtalo de nuevo."
   },
+  "We couldn't save the rule. Try again.": {
+   "es": "No pudimos guardar la regla. Inténtalo de nuevo."
+  },
+  "We couldn't update your movements. Try again.": {
+   "es": "No pudimos actualizar tus movimientos. Inténtalo de nuevo."
+  },
   "We use Face ID or Touch ID, whichever your iPhone has": {
    "es": "Usamos Face ID o Touch ID según tu iPhone"
   },
@@ -2133,6 +2606,9 @@
   },
   "iCloud backup": {
    "es": "Respaldo en iCloud"
+  },
+  "“%@” → %@": {
+   "es": "“%1$@” → %2$@"
   }
  },
  "sharedpresentation": {
@@ -2141,6 +2617,15 @@
   },
   "Account name": {
    "es": "Nombre de la cuenta"
+  },
+  "Add": {
+   "es": "Agregar"
+  },
+  "Add a tag": {
+   "es": "Agregar etiqueta"
+  },
+  "Adds the tag": {
+   "es": "Agrega la etiqueta"
   },
   "Amber": {
    "es": "Ámbar"
@@ -2358,6 +2843,9 @@
   "Refunds": {
    "es": "Reembolsos"
   },
+  "Remove %@": {
+   "es": "Quitar %@"
+  },
   "Rental": {
    "es": "Alquiler"
   },
@@ -2442,6 +2930,9 @@
   "%@ over": {
    "es": "%@ por encima"
   },
+  "%@ since %@": {
+   "es": "%1$@ desde %2$@"
+  },
   "%@ total: %@": {
    "es": "Total de %1$@: %2$@"
   },
@@ -2473,6 +2964,12 @@
   },
   "Amount": {
    "es": "Monto"
+  },
+  "At the end of each month": {
+   "es": "Al cierre de cada mes"
+  },
+  "At the end of each month, at today's rate": {
+   "es": "Al cierre de cada mes, con la tasa de hoy"
   },
   "Average %@ / month": {
    "es": "Promedio %@ / mes"
@@ -2523,8 +3020,14 @@
   "Month": {
    "es": "Mes"
   },
+  "Net worth": {
+   "es": "Patrimonio neto"
+  },
   "Next month": {
    "es": "Mes siguiente"
+  },
+  "No change since %@": {
+   "es": "Sin cambios desde %@"
   },
   "No income": {
    "es": "Sin ingresos"
@@ -2621,6 +3124,9 @@
   }
  },
  "transactions": {
+  "%@ · All time": {
+   "es": "%@ · Desde siempre"
+  },
   "Accounts: %@": {
    "es": "Cuentas: %@"
   },
@@ -2696,14 +3202,20 @@
   "Search": {
    "es": "Buscar"
   },
-  "Search merchant, note or category": {
-   "es": "Buscar comercio, nota o categoría"
+  "Search merchant, note, category or #tag": {
+   "es": "Buscar comercio, nota, categoría o #etiqueta"
+  },
+  "Show %@": {
+   "es": "Ver %@"
   },
   "Show all accounts": {
    "es": "Mostrar todas las cuentas"
   },
   "Show movements from": {
    "es": "Ver movimientos de"
+  },
+  "Split": {
+   "es": "Dividir"
   },
   "Transactions": {
    "es": "Movimientos"

@@ -76,7 +76,7 @@ export function useRuleEditor(
   onClose: () => void
 ) {
   const [seed] = useState(() => (rule ? seedFrom(rule, context) : undefined))
-  const editor = useMovementEditor({ mode: "create" }, context, onClose, seed)
+  const editor = useMovementEditor({ mode: "create" }, context, onClose, seed, false)
   const [frequency, setFrequency] = useState<RecurringFrequency>(
     rule?.frequency ?? "monthly"
   )

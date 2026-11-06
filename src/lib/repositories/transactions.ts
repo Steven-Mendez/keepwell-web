@@ -1,5 +1,6 @@
 import { newID } from "@/lib/platform/uuid"
 import { db, rowToTransaction, transactionToRow } from "@/lib/db"
+import { tagsField } from "@/lib/domain/tags"
 import { Transaction } from "@/lib/schema"
 
 import type { Draft } from "./accounts"
@@ -30,7 +31,8 @@ export const transactionRepository = {
 
   /** Validates the iOS rules (positive amount and bank charge, known currencies) before writing. */
   async save(draft: Draft<Transaction>): Promise<Transaction> {
-    const transaction = Transaction.parse({ ...draft, id: draft.id ?? newID() })
+    const { tags, ...parsed } = Transaction.parse({ ...draft, id: draft.id ?? newID() })
+    const transaction: Transaction = { ...parsed, ...tagsField(tags) }
     await upsert(db.transactions, "transaction", transactionToRow(transaction))
     return transaction
   },

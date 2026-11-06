@@ -57,7 +57,7 @@ describe("Backup through IndexedDB", () => {
     expect(created).toHaveLength(1)
 
     const exported = JSON.parse(await backupRepository.export()) as BackupFile
-    expect(exported.schemaVersion).toBe(3)
+    expect(exported.schemaVersion).toBe(4)
     expect(exported.recurringRules).toHaveLength(1)
     expect(exported.recurringRules[0]).toMatchObject({ id: rule.id, nextDate: date(2026, 11, 2, 9).toISOString() })
     const produced = exported.transactions.find((transaction) => transaction.recurringId === rule.id)
