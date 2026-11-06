@@ -2,7 +2,10 @@
 
 import { transactionAmountClass } from "@/components/kw/design-styles"
 import type { Transaction } from "@/lib/schema"
-import type { TransactionDisplay } from "@/lib/presentation/display"
+import type {
+  TransactionDisplay,
+  TransactionStyle,
+} from "@/lib/presentation/display"
 import { cn } from "@/lib/utils"
 
 import { KWTransactionIcon } from "./design"
@@ -37,95 +40,34 @@ export function TransactionRow({
   className?: string | undefined
 }) {
   const style = display.style(transaction)
-  const secondary = display.secondaryAmount(transaction)
   const content = (
     <>
       <KWTransactionIcon style={style} />
-      <span className="flex min-w-0 flex-1 flex-col text-left">
-        {/* KWTransactionRow: title 15/600, subtitle caption muted, amount 15/700, the second amount faint. */}
-        <span className="truncate type-body font-semibold text-foreground">
-          {transaction.description}
-        </span>
-        <span
-          className={cn(
-            "truncate type-caption text-muted-foreground",
-            columns && "lg:hidden"
-          )}
-        >
-          {[display.subtitle(transaction), dateLabel]
-            .filter(Boolean)
-            .join(" · ")}
-        </span>
-        {columns && transaction.note ? (
-          <span className="hidden truncate type-caption text-text-faint lg:block">
-            {transaction.note}
-          </span>
-        ) : null}
-      </span>
+      <TransactionText
+        transaction={transaction}
+        display={display}
+        dateLabel={dateLabel}
+        columns={columns}
+      />
       {columns ? (
-        <>
-          <span className="hidden w-44 shrink-0 items-center gap-2 lg:flex">
-            {transaction.kind === "transfer" ? (
-              <span className="truncate type-caption text-text-secondary">
-                {display.subtitle(transaction)}
-              </span>
-            ) : (
-              <>
-                <CategoryBadge
-                  category={display.category(transaction)}
-                  size="xs"
-                />
-                <span className="truncate type-caption text-text-secondary">
-                  {display.categoryName(transaction)}
-                </span>
-              </>
-            )}
-          </span>
-          <span className="hidden w-44 shrink-0 truncate type-caption text-muted-foreground xl:block">
-            {transaction.kind === "transfer"
-              ? ""
-              : display.methodName(transaction)}
-          </span>
-        </>
+        <TransactionColumns transaction={transaction} display={display} />
       ) : null}
-      <span
-        className={cn("flex shrink-0 flex-col items-end", columns && "lg:w-36")}
-      >
-        <span
-          className={cn(
-            "type-body font-bold tabular-nums",
-            transactionAmountClass(style)
-          )}
-        >
-          {display.amount(transaction)}
-        </span>
-        {secondary ? (
-          <span className="type-caption-sm text-text-faint tabular-nums">
-            {secondary}
-          </span>
-        ) : null}
-      </span>
+      <TransactionAmounts
+        transaction={transaction}
+        display={display}
+        style={style}
+        columns={columns}
+      />
     </>
   )
-  const className = cn(
-    // A full-width row of a grouped card (KWGroupedCard + dividers), not a floating pill.
-    "flex w-full items-center gap-3 px-4 py-3 outline-none",
-    onSelect &&
-      "cursor-pointer press-row hover:bg-secondary/50 focus-visible:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-inset",
-    isSelected && "bg-secondary/80 hover:bg-secondary/80"
-  )
-  const row = onSelect ? (
-    <button
-      type="button"
-      data-movement-row=""
-      className={className}
-      onClick={() => onSelect(transaction)}
-      aria-current={isSelected ? "true" : undefined}
+  const row = (
+    <RowShell
+      transaction={transaction}
+      onSelect={onSelect}
+      isSelected={isSelected}
     >
       {content}
-    </button>
-  ) : (
-    <div className={className}>{content}</div>
+    </RowShell>
   )
   // An action of its own (Confirm) sits beside the row, never inside its button.
   if (!trailing) return <ListItem className={extraClassName}>{row}</ListItem>
@@ -136,5 +78,128 @@ export function TransactionRow({
         {trailing}
       </div>
     </ListItem>
+  )
+}
+
+type RowParts = { transaction: Transaction; display: TransactionDisplay }
+
+/** Description, subtitle and (in the desktop table) the note. */
+function TransactionText({
+  transaction,
+  display,
+  dateLabel,
+  columns,
+}: RowParts & { dateLabel: string | undefined; columns: boolean }) {
+  return (
+    <span className="flex min-w-0 flex-1 flex-col text-left">
+      {/* KWTransactionRow: title 15/600, subtitle caption muted, amount 15/700, the second amount faint. */}
+      <span className="truncate type-body font-semibold text-foreground">
+        {transaction.description}
+      </span>
+      <span
+        className={cn(
+          "truncate type-caption text-muted-foreground",
+          columns && "lg:hidden"
+        )}
+      >
+        {[display.subtitle(transaction), dateLabel].filter(Boolean).join(" · ")}
+      </span>
+      {columns && transaction.note ? (
+        <span className="hidden truncate type-caption text-text-faint lg:block">
+          {transaction.note}
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
+/** The desktop table's category and account columns; a transfer shows its route instead of a category. */
+function TransactionColumns({ transaction, display }: RowParts) {
+  const isTransfer = transaction.kind === "transfer"
+  return (
+    <>
+      <span className="hidden w-44 shrink-0 items-center gap-2 lg:flex">
+        {isTransfer ? (
+          <span className="truncate type-caption text-text-secondary">
+            {display.subtitle(transaction)}
+          </span>
+        ) : (
+          <>
+            <CategoryBadge category={display.category(transaction)} size="xs" />
+            <span className="truncate type-caption text-text-secondary">
+              {display.categoryName(transaction)}
+            </span>
+          </>
+        )}
+      </span>
+      <span className="hidden w-44 shrink-0 truncate type-caption text-muted-foreground xl:block">
+        {isTransfer ? "" : display.methodName(transaction)}
+      </span>
+    </>
+  )
+}
+
+/** Both amounts in the kind's color, the second one faint. */
+function TransactionAmounts({
+  transaction,
+  display,
+  style,
+  columns,
+}: RowParts & {
+  style: TransactionStyle
+  columns: boolean
+}) {
+  const secondary = display.secondaryAmount(transaction)
+  return (
+    <span
+      className={cn("flex shrink-0 flex-col items-end", columns && "lg:w-36")}
+    >
+      <span
+        className={cn(
+          "type-body font-bold tabular-nums",
+          transactionAmountClass(style)
+        )}
+      >
+        {display.amount(transaction)}
+      </span>
+      {secondary ? (
+        <span className="type-caption-sm text-text-faint tabular-nums">
+          {secondary}
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
+/** A button when the row opens the movement, a plain row otherwise. */
+function RowShell({
+  transaction,
+  onSelect,
+  isSelected,
+  children,
+}: {
+  transaction: Transaction
+  onSelect: ((transaction: Transaction) => void) | undefined
+  isSelected: boolean | undefined
+  children: React.ReactNode
+}) {
+  const className = cn(
+    // A full-width row of a grouped card (KWGroupedCard + dividers), not a floating pill.
+    "flex w-full items-center gap-3 px-4 py-3 outline-none",
+    onSelect &&
+      "cursor-pointer press-row hover:bg-secondary/50 focus-visible:bg-secondary/50 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-inset",
+    isSelected && "bg-secondary/80 hover:bg-secondary/80"
+  )
+  if (!onSelect) return <div className={className}>{children}</div>
+  return (
+    <button
+      type="button"
+      data-movement-row=""
+      className={className}
+      onClick={() => onSelect(transaction)}
+      aria-current={isSelected ? "true" : undefined}
+    >
+      {children}
+    </button>
   )
 }
