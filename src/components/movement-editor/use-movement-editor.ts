@@ -15,6 +15,7 @@ import {
   saveRepeatingTransaction,
   saveTransaction,
   type MovementType,
+  type SavedTransaction,
   type TransactionContext,
 } from "@/lib/domain"
 import { useT } from "@/lib/i18n"
@@ -68,6 +69,8 @@ export function useMovementEditor(
   const [saving, setSaving] = useState(false)
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [repeat, setRepeat] = useState<RepeatChoice>("none")
+  // A new movement ends on its receipt (iOS SavedView); an edit just closes.
+  const [saved, setSaved] = useState<SavedTransaction>()
 
   const update = (patch: Partial<EditorFields>) =>
     setFields((current) => ({ ...current, ...patch }))
@@ -118,9 +121,14 @@ export function useMovementEditor(
     setError(undefined)
     try {
       const draft = { ...form.draft, id: existing?.id ?? newID() }
-      if (!existing && repeat !== "none")
-        await saveRepeatingTransaction(ledgerStore, draft, repeat)
-      else await saveTransaction(ledgerStore, draft)
+      const result =
+        !existing && repeat !== "none"
+          ? await saveRepeatingTransaction(ledgerStore, draft, repeat)
+          : await saveTransaction(ledgerStore, draft)
+      if (!existing) {
+        setSaved(result)
+        return
+      }
       toast.add({
         title: ct("Saved"),
         description: `${form.draft.description} · ${formatMoney({ amount: form.draft.amount, currency: fields.currency })}`,
@@ -173,6 +181,7 @@ export function useMovementEditor(
     setCreatingCategory,
     repeat,
     setRepeat,
+    saved,
     changeType,
     chooseSourceAccount,
     save,

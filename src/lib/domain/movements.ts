@@ -189,15 +189,27 @@ export async function saveTransaction(store: LedgerStore, draft: TransactionDraf
   const existing = context.transactions.find((transaction) => transaction.id === draft.id)
   const transaction = validatedTransaction(draft, context, existing)
   await store.saveTransaction(transaction)
-  const account = context.accounts.find((candidate) => candidate.id === transaction.accountId)
+  return savedTransactionOf(transaction, context.accounts, await store.fetchTransactions(), context.currencies.principal)
+}
+
+/**
+ * What the receipt states about a stored movement: its account's balances with every movement,
+ * and, for an expense, its category's spending that month. Also rebuilds a receipt from history.
+ */
+export function savedTransactionOf(
+  transaction: Transaction,
+  accounts: readonly Account[],
+  movements: readonly Transaction[],
+  principal: string,
+): SavedTransaction {
+  const account = accounts.find((candidate) => candidate.id === transaction.accountId)
   if (!account) throw DomainError.notFound(transaction.accountId)
-  const movements = await store.fetchTransactions()
   const newBalances = balanceOf(account, movements)
   let categoryMonthTotal: Money | undefined
   if (transaction.kind === "expense") {
-    const summary = monthlySummary(yearMonthContaining(draft.date), movements, context.currencies.principal)
+    const summary = monthlySummary(yearMonthContaining(new Date(transaction.date)), movements, principal)
     const total = summary.categories.find((entry) => entry.categoryId === transaction.categoryId)?.amount ?? ZERO
-    categoryMonthTotal = { amount: total, currency: context.currencies.principal }
+    categoryMonthTotal = { amount: total, currency: principal }
   }
   return { transaction, account, newBalances, ...(categoryMonthTotal ? { categoryMonthTotal } : {}) }
 }

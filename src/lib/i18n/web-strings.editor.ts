@@ -13,4 +13,6 @@ export const WEB_STRINGS_EDITOR: WebStrings = {
     es: "Al editar se mantiene la tasa con la que se registró el movimiento.",
   },
   Time: { es: "Hora" },
+  "Download image": { es: "Descargar imagen" },
+  Receipt: { es: "Comprobante" },
 }
