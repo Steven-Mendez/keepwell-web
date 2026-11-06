@@ -18,16 +18,21 @@ describe("IndexedDB upgrade from version 1", () => {
       settings: "id",
       sync_outbox: "id, created_at, entity, entity_id",
     })
+    await v1.table("categories").add({ id: "groceries", name: "Groceries", kind: "expense", sort_index: 0, deleted_at: null })
     await v1.table("transactions").add({ id: "t1", date: "2026-10-01T12:00:00.000Z", account_id: "a1", amount: "10", deleted_at: null })
     v1.close()
 
     const upgraded = new KeepwellDatabase()
     await upgraded.open()
-    expect(upgraded.verno).toBe(2)
+    expect(upgraded.verno).toBe(3)
     const row = await upgraded.transactions.get("t1")
     expect(row?.amount).toBe("10")
     expect(row?.recurring_id).toBeNull()
     expect(await upgraded.recurring_rules.count()).toBe(0)
+    // Version 3: categories start without a monthly budget.
+    const category = await upgraded.categories.get("groceries")
+    expect(category?.budget_amount).toBeNull()
+    expect(category?.budget_currency).toBeNull()
     upgraded.close()
   })
 })

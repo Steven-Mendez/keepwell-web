@@ -59,6 +59,7 @@ export function AmountInput({
   currency,
   invalid,
   autoFocus,
+  placeholder = "0.00",
 }: {
   id: string
   value: string
@@ -66,6 +67,7 @@ export function AmountInput({
   currency: string
   invalid?: boolean
   autoFocus?: boolean
+  placeholder?: string
 }) {
   return (
     <div className="relative">
@@ -80,7 +82,7 @@ export function AmountInput({
         value={value}
         aria-invalid={invalid || undefined}
         autoFocus={autoFocus}
-        placeholder="0.00"
+        placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         onBlur={() => {
           const formatted = formatAmountInput(value)

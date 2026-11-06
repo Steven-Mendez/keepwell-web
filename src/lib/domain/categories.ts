@@ -1,6 +1,7 @@
-import type { TransactionCategory, TransactionKind } from "@/lib/schema"
+import type { Money as StoredMoney, TransactionCategory, TransactionKind } from "@/lib/schema"
 import { OTHER_EXPENSE_ID, OTHER_INCOME_ID, isFallbackCategory, newCustomCategoryId, orderedCategories, shippedCategory } from "@/lib/schema"
 
+import { dec, decimalText } from "./decimal"
 import { DomainError } from "./errors"
 import { folded } from "./rules"
 import type { LedgerStore } from "./store"
@@ -17,6 +18,8 @@ export interface CategoryDraft {
   kind: TransactionKind
   icon?: string
   color?: string
+  /** Expense categories only; absent means no budget. */
+  monthlyBudget?: StoredMoney
 }
 
 export function otherCategoryId(kind: TransactionKind): string {
@@ -52,6 +55,7 @@ export async function saveCategory(store: LedgerStore, draft: CategoryDraft): Pr
   if (existing.some((other) => other.id !== draft.id && other.kind === kind && folded(other.name) === wanted)) {
     throw DomainError.duplicateCategoryName(name)
   }
+  const monthlyBudget = kind === "expense" ? budgetOf(draft.monthlyBudget) : undefined
   const category: TransactionCategory = {
     id: draft.id ?? newCustomCategoryId(),
     name,
@@ -59,9 +63,18 @@ export async function saveCategory(store: LedgerStore, draft: CategoryDraft): Pr
     ...(draft.icon === undefined ? {} : { icon: draft.icon }),
     ...(draft.color === undefined ? {} : { color: draft.color }),
     isRenamed,
+    ...(monthlyBudget === undefined ? {} : { monthlyBudget }),
   }
   await store.saveCategory(category)
   return category
+}
+
+/** Income has no budget, so one sent for it is dropped; a zero or negative one is refused. */
+function budgetOf(budget: StoredMoney | undefined): StoredMoney | undefined {
+  if (budget === undefined) return undefined
+  const amount = dec(budget.amount)
+  if (amount.lte(0)) throw DomainError.invalidAmount()
+  return { amount: decimalText(amount), currency: budget.currency }
 }
 
 /** Deletes a category; its movements and recurring rules move to "Other" of the same kind. */
