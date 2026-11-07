@@ -5,6 +5,7 @@ import { useState } from "react"
 import { KWButton } from "@/components/kw/design"
 import { toast } from "@/components/ui/toast"
 import { useAccount } from "@/hooks/use-account"
+import { useSync } from "@/hooks/use-sync"
 import { deleteAccount, signInWithApple, signOut, signOutEverywhere } from "@/lib/api/account"
 import { ApiError } from "@/lib/api/client"
 import type { Translator } from "@/lib/i18n"
@@ -20,6 +21,8 @@ export function AccountSection({ t }: { t: Translator }) {
   const { state, refresh } = useAccount()
   const [busy, setBusy] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const canSync = state.status === "signed-in" && state.me.capabilities.includes("cloud_sync")
+  const { status: sync, rejected } = useSync(canSync)
   if (state.status === "unavailable") return null
 
   const run = async (work: () => Promise<void>) => {
@@ -43,6 +46,28 @@ export function AccountSection({ t }: { t: Translator }) {
               {t.in("web", "Sign out")}
             </KWButton>
           </SettingsRow>
+          <SettingsRow
+            label={t.in("web", "Sync")}
+            description={
+              !canSync || sync?.state === "needs_plan"
+                ? t.in("web", "Sync isn't included in your plan. Everything keeps working in this browser.")
+                : sync?.state === "offline"
+                  ? t.in("web", "Offline. Changes sync when you're back online.")
+                  : sync?.state === "error"
+                    ? t.in("web", "Couldn't sync. Keepwell will try again.")
+                    : sync?.state === "syncing"
+                      ? t.in("web", "Syncing…")
+                      : state.me.early_access.includes("cloud_sync")
+                        ? t.in("web", "Sync included during early access.")
+                        : t.in("web", "Up to date.")
+            }
+          />
+          {rejected.length > 0 ? (
+            <SettingsRow
+              label={t.in("web", "Changes the server refused")}
+              description={t.in("web", "%@ changes couldn't sync and stay only in this browser.", String(rejected.length))}
+            />
+          ) : null}
           <SettingsRow label={t.in("web", "Sign out on all devices")}>
             <KWButton variant="secondary" size="small" disabled={busy} onClick={() => run(signOutEverywhere)}>
               {t.in("web", "Sign out everywhere")}

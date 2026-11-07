@@ -6,8 +6,14 @@ export interface AccountUser {
   email: string
 }
 
+export type Capability = "cloud_sync" | "mcp"
+
 export interface Me {
   user: AccountUser
+  plan: "free" | "supporter" | "pro" | "grandfathered"
+  capabilities: Capability[]
+  /** Capabilities that come only from early access ("included during early access"). */
+  early_access: Capability[]
 }
 
 /** The signed-in person, or `null` when there is no session. */

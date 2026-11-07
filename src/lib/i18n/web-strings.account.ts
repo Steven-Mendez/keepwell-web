@@ -22,4 +22,15 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
     {
       es: "Se cierra tu sesión en todos lados al instante y tus datos sincronizados se borran de los servidores de Keepwell. Las copias de seguridad los conservan hasta 35 días más. Lo que hay en este navegador se queda aquí.",
     },
+  Sync: { es: "Sincronización" },
+  "Sync isn't included in your plan. Everything keeps working in this browser.": {
+    es: "La sincronización no está incluida en tu plan. Todo sigue funcionando en este navegador.",
+  },
+  "Offline. Changes sync when you're back online.": { es: "Sin conexión. Los cambios se sincronizan al volver a estar en línea." },
+  "Couldn't sync. Keepwell will try again.": { es: "No se pudo sincronizar. Keepwell lo intentará de nuevo." },
+  "Syncing…": { es: "Sincronizando…" },
+  "Sync included during early access.": { es: "Sincronización incluida en el acceso anticipado." },
+  "Up to date.": { es: "Al día." },
+  "Changes the server refused": { es: "Cambios que el servidor rechazó" },
+  "%@ changes couldn't sync and stay only in this browser.": { es: "%@ cambios no se pudieron sincronizar y se quedan solo en este navegador." },
 }
