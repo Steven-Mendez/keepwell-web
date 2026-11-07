@@ -34,3 +34,13 @@ describe("shared sync events", () => {
     expect(validateSyncEvent(c.event).ok).toBe(false)
   })
 })
+
+describe("shared wire columns", () => {
+  it("matches schema/sync.ts", async () => {
+    const { SYNC_WIRE } = await import("@/lib/schema")
+    const columns = JSON.parse(readFileSync(join(__dirname, "../../src/lib/fixtures/wire-columns.json"), "utf8")).entities as Record<string, Record<string, unknown>>
+    for (const [entity, wire] of Object.entries(SYNC_WIRE)) {
+      expect(Object.keys(columns[entity]!).sort(), entity).toEqual(Object.keys(wire.shape).sort())
+    }
+  })
+})
