@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 
 import { KWButton } from "@/components/kw/design"
 import { signInWithApple } from "@/lib/api/account"
+import { passkeysSupported, signInWithPasskey } from "@/lib/api/passkeys"
 import { ApiError } from "@/lib/api/client"
 import {
   answerConsent,
@@ -58,6 +59,20 @@ export function ConnectSignIn() {
       >
         {t.in("web", "Sign in with Apple")}
       </KWButton>
+      {passkeysSupported() ? (
+        <KWButton
+          variant="secondary"
+          onClick={() =>
+            // After a passkey sign-in Better Auth resumes the authorization on its own.
+            void signInWithPasskey(oauthQuery()).then(
+              () => window.location.reload(),
+              () => setError(t.in("web", "Couldn't reach Keepwell. Try again."))
+            )
+          }
+        >
+          {t.in("web", "Use a passkey")}
+        </KWButton>
+      ) : null}
       {error ? <p className="type-caption text-destructive">{error}</p> : null}
     </Frame>
   )

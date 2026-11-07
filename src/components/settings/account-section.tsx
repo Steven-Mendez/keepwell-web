@@ -13,6 +13,7 @@ import {
   signOutEverywhere,
 } from "@/lib/api/account"
 import { ApiError } from "@/lib/api/client"
+import { addPasskey, passkeysSupported, signInWithPasskey } from "@/lib/api/passkeys"
 import type { Translator } from "@/lib/i18n"
 
 import { ConfirmDialog } from "./confirm-dialog"
@@ -106,6 +107,24 @@ export function AccountSection({ t }: { t: Translator }) {
                 )}
               />
             ) : null}
+            {passkeysSupported() ? (
+              <SettingsRow
+                label={t.in("web", "Passkey")}
+                description={t.in(
+                  "web",
+                  "Sign in with Face ID, Touch ID or your device's lock instead of Apple."
+                )}
+              >
+                <KWButton
+                  variant="secondary"
+                  size="small"
+                  disabled={busy}
+                  onClick={() => run(() => addPasskey("Keepwell"))}
+                >
+                  {t.in("web", "Add a passkey")}
+                </KWButton>
+              </SettingsRow>
+            ) : null}
             <SettingsRow label={t.in("web", "Sign out on all devices")}>
               <KWButton
                 variant="secondary"
@@ -161,6 +180,16 @@ export function AccountSection({ t }: { t: Translator }) {
             >
               {t.in("web", "Sign in with Apple")}
             </KWButton>
+            {passkeysSupported() ? (
+              <KWButton
+                size="small"
+                variant="secondary"
+                disabled={busy || state.status === "loading"}
+                onClick={() => run(() => signInWithPasskey())}
+              >
+                {t.in("web", "Use a passkey")}
+              </KWButton>
+            ) : null}
           </SettingsRow>
         )}
       </SettingsSection>

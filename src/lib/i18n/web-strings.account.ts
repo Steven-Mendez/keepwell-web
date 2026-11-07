@@ -99,4 +99,10 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "Couldn't save the change. Try again.": {
     es: "No se pudo guardar el cambio. Inténtalo de nuevo.",
   },
+  Passkey: { es: "Passkey" },
+  "Sign in with Face ID, Touch ID or your device's lock instead of Apple.": {
+    es: "Inicia sesión con Face ID, Touch ID o el bloqueo de tu dispositivo en vez de Apple.",
+  },
+  "Add a passkey": { es: "Añadir una passkey" },
+  "Use a passkey": { es: "Usar una passkey" },
 }
