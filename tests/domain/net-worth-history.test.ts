@@ -3,12 +3,13 @@
 import { describe, expect, it } from "vitest"
 
 import { monthKey, netWorthChange, netWorthHistory } from "@/lib/domain"
-import type { Account, AccountKind, CurrencySettings, Transaction, TransactionKind } from "@/lib/schema"
+import type { Account, AccountKind, CurrencySettings, ExchangeRate, Transaction, TransactionKind } from "@/lib/schema"
 
 import { date, transaction } from "./fixtures"
 
 describe("Net worth history", () => {
-  // Today is Nov 6 2026, in America/Managua like the iOS fixture; 36.5 NIO per USD.
+  // Today is Nov 6 2026, in America/Managua like the iOS fixture; 36.5 NIO per USD, and October's
+  // last confirmed movement was recorded at 36 NIO per USD.
   const now = date(2026, 11, 6)
   const rate = { principal: "USD", second: "NIO", rate: "36.5" }
   const settings: CurrencySettings = { principal: "USD", second: "NIO", rate: "36.5" }
@@ -27,7 +28,7 @@ describe("Net worth history", () => {
     kind: TransactionKind,
     amount: string,
     on: Date,
-    options: { currency?: string; from?: string; to?: string; planned?: boolean } = {},
+    options: { currency?: string; from?: string; to?: string; planned?: boolean; rate?: ExchangeRate } = {},
   ): Transaction =>
     transaction({
       kind,
@@ -37,8 +38,9 @@ describe("Net worth history", () => {
       account: options.from ?? IDs.bank,
       ...(options.to ? { destination: options.to } : {}),
       status: options.planned ? "planned" : "confirmed",
-      rate,
+      rate: options.rate ?? rate,
     })
+  const usdNio = (value: string): ExchangeRate => ({ principal: "USD", second: "NIO", rate: value })
 
   const accounts = [
     account(IDs.bank, "deposit", "1000", "USD", date(2026, 7, 15, 0)),
@@ -54,21 +56,23 @@ describe("Net worth history", () => {
     // The last hour of September still belongs to September.
     movement("expense", "80", date(2026, 9, 30, 23)),
     movement("transfer", "100", date(2026, 10, 1, 0), { to: IDs.visa }),
-    movement("expense", "365", date(2026, 10, 12), { currency: "NIO", from: IDs.wallet }),
-    movement("expense", "1000", date(2026, 10, 20), { planned: true }),
+    // October's rate: its last confirmed movement's. The planned one after it doesn't count.
+    movement("expense", "365", date(2026, 10, 12), { currency: "NIO", from: IDs.wallet, rate: usdNio("36") }),
+    movement("expense", "1000", date(2026, 10, 20), { planned: true, rate: usdNio("40") }),
     movement("expense", "100", date(2026, 11, 2), { currency: "NIO", from: IDs.wallet }),
     movement("income", "200", date(2026, 11, 3)),
-    // Later today counts; later this month doesn't yet.
-    movement("expense", "10", date(2026, 11, 6, 20)),
-    movement("expense", "50", date(2026, 11, 20)),
+    // Later today counts; later this month doesn't yet. A single-currency rate is skipped, so
+    // November takes November 3's.
+    movement("expense", "10", date(2026, 11, 6, 20), { rate: { principal: "USD", second: "USD", rate: "1" } }),
+    movement("expense", "50", date(2026, 11, 20), { rate: usdNio("40") }),
   ]
 
-  it("values each month end at today's rate", () => {
+  it("values each month end at its rate", () => {
     const points = netWorthHistory(accounts, transactions, settings, now)
     // Months before July, when the first account opened, are left out.
     expect(points.map((point) => monthKey(point.month))).toEqual(["2026-07", "2026-08", "2026-09", "2026-10", "2026-11"])
     expect(points.every((point) => point.total.currency === "USD")).toBe(true)
-    expect(points.map((point) => point.total.amount.toDecimalPlaces(2).toFixed(2))).toEqual(["1500.00", "1200.00", "800.00", "890.00", "1077.26"])
+    expect(points.map((point) => point.total.amount.toDecimalPlaces(2).toFixed(2))).toEqual(["1500.00", "1200.00", "800.00", "891.25", "1077.26"])
     expect(netWorthChange(points)?.toDecimalPlaces(2).toFixed(2)).toBe("-422.74")
   })
 
@@ -80,6 +84,11 @@ describe("Net worth history", () => {
     expect(points.every((point) => point.total.amount.eq(100))).toBe(true)
     expect(netWorthChange(points)?.toNumber()).toBe(0)
     expect(netWorthChange(points.slice(0, 1))).toBeUndefined()
+  })
+
+  it("falls back to today's rate without movements", () => {
+    const points = netWorthHistory([account(IDs.wallet, "cash", "3650", "NIO", date(2026, 10, 1, 0))], [], settings, now)
+    expect(points.map((point) => point.total.amount.toFixed(2))).toEqual(["100.00", "100.00"])
   })
 
   it("has no months without accounts", () => {

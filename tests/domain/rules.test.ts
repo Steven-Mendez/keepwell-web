@@ -445,7 +445,7 @@ describe("Money and exchange rate", () => {
 
 describe("Entities", () => {
   it("default categories match the handoff", () => {
-    expect(DEFAULT_EXPENSE_CATEGORIES).toHaveLength(22)
+    expect(DEFAULT_EXPENSE_CATEGORIES).toHaveLength(23)
     expect(DEFAULT_INCOME_CATEGORIES).toHaveLength(9)
     expect(new Set(DEFAULT_CATEGORIES.map((c) => c.id)).size).toBe(DEFAULT_CATEGORIES.length)
   })
