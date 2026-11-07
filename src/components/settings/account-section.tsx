@@ -5,10 +5,11 @@ import { useState } from "react"
 import { KWButton } from "@/components/kw/design"
 import { toast } from "@/components/ui/toast"
 import { useAccount } from "@/hooks/use-account"
-import { signInWithApple, signOut, signOutEverywhere } from "@/lib/api/account"
+import { deleteAccount, signInWithApple, signOut, signOutEverywhere } from "@/lib/api/account"
 import { ApiError } from "@/lib/api/client"
 import type { Translator } from "@/lib/i18n"
 
+import { ConfirmDialog } from "./confirm-dialog"
 import { SettingsRow, SettingsSection } from "./settings-rows"
 
 /**
@@ -18,6 +19,7 @@ import { SettingsRow, SettingsSection } from "./settings-rows"
 export function AccountSection({ t }: { t: Translator }) {
   const { state, refresh } = useAccount()
   const [busy, setBusy] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   if (state.status === "unavailable") return null
 
   const run = async (work: () => Promise<void>) => {
@@ -46,6 +48,20 @@ export function AccountSection({ t }: { t: Translator }) {
               {t.in("web", "Sign out everywhere")}
             </KWButton>
           </SettingsRow>
+          <SettingsRow label={t.in("web", "Delete account")} description={t.in("web", "Erases your account and its synced data from Keepwell's servers.")}>
+            <KWButton variant="destructive" size="small" disabled={busy} onClick={() => setConfirmingDelete(true)}>
+              {t.in("web", "Delete account")}
+            </KWButton>
+          </SettingsRow>
+          <ConfirmDialog
+            open={confirmingDelete}
+            onOpenChange={setConfirmingDelete}
+            title={t.in("web", "Delete your Keepwell account?")}
+            description={t.in("web", "You're signed out everywhere at once and your synced data is erased from Keepwell's servers. Backups keep it up to 35 more days. What's in this browser stays here.")}
+            action={t.in("web", "Delete account")}
+            destructive
+            onConfirm={() => run(async () => void (await deleteAccount()))}
+          />
         </>
       ) : (
         <SettingsRow label={t.in("web", "Keepwell account")} description={state.status === "error" ? t.in("web", "Couldn't reach Keepwell. Try again.") : undefined}>

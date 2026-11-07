@@ -41,4 +41,12 @@ export async function signOutEverywhere(): Promise<void> {
   await api("/api/auth/revoke-sessions", { method: "POST", body: "{}" })
 }
 
+/**
+ * Deletes the Keepwell account: sessions end at once and the server erases the data in the
+ * background. Backups keep it up to `backups_retained_days` more. Data in this browser stays.
+ */
+export async function deleteAccount(): Promise<{ backups_retained_days: number }> {
+  return api("/me", { method: "DELETE" })
+}
+
 export const hasApi = API_URL !== undefined
