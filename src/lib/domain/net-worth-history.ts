@@ -23,8 +23,10 @@ export interface NetWorthPoint {
  *   movements dated later this month are not counted yet.
  * - An account adds its balance (`balanceOf`, confirmed movements dated up to then) only once its
  *   opening day has come; before that it contributes nothing.
- * - Every month converts at today's settings rate (`netWorth`): the app keeps no history of rates,
- *   so only the balances move, not the rate.
+ * - Each month converts at the rate it had then: the one stored by the latest confirmed movement
+ *   dated before its cutoff whose rate is between today's principal and second currencies
+ *   (`rateBefore`). Without such a movement it falls back to today's settings rate, which is also
+ *   what months in a single currency use.
  * - Months before the first account opened are left out; without accounts there are none.
  */
 export function netWorthHistory(
@@ -50,9 +52,30 @@ export function netWorthHistory(
     const balances = accounts
       .filter((account) => startOfDay(new Date(account.openingDate)).getTime() < cutoff)
       .flatMap((account) => balanceOf(account, movements))
-    points.push({ month, total: netWorth(balances, settings) })
+    points.push({ month, total: netWorth(balances, { ...settings, rate: rateBefore(movements, settings) }) })
   }
   return points
+}
+
+/**
+ * The rate stored by the latest of `movements` (already confirmed and dated before the cutoff) that
+ * converts between today's two currencies; today's settings rate when none does. A rate for another
+ * pair (single-currency, or from before the currencies were changed) says nothing about this one.
+ * The first of equally dated movements wins, as on iOS.
+ */
+function rateBefore(movements: readonly Transaction[], settings: CurrencySettings): string {
+  if (settings.second === undefined) return settings.rate
+  let latest: Transaction | undefined
+  let latestTime = -Infinity
+  for (const movement of movements) {
+    const rate = movement.exchangeRate
+    if (rate.principal !== settings.principal || rate.second !== settings.second) continue
+    const time = new Date(movement.date).getTime()
+    if (time <= latestTime) continue
+    latest = movement
+    latestTime = time
+  }
+  return latest?.exchangeRate.rate ?? settings.rate
 }
 
 /** The latest month against the first one shown; `undefined` with fewer than two months. */

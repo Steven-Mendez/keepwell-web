@@ -103,10 +103,10 @@ describe("CSV", () => {
     const sample = sampleData()
     const csv = exportCsv(sample.transactions, sample.accounts, sample.cards, DEFAULT_CATEGORIES)
     const rows = parseCsvRows(csv)
-    expect(rows[0]).toEqual(["date", "status", "type", "description", "category", "amount", "currency", "account", "card_last_four", "destination_account", "debited_principal", "rate", "shared", "note"])
+    expect(rows[0]).toEqual(["date", "status", "type", "description", "category", "amount", "currency", "account", "card_last_four", "destination_account", "debited_principal", "rate", "shared", "note", "tags"])
     expect(rows).toHaveLength(sample.transactions.length + 1)
     const withdrawal = rows.find((row) => row[3] === "Cardless withdrawal")!
-    expect(withdrawal).toEqual(["2026-10-04", "confirmed", "transfer", "Cardless withdrawal", "", "1200", "NIO", "Bank One Savings", "", "Wallet", "33.15", "36.6243", "no", ""])
+    expect(withdrawal).toEqual(["2026-10-04", "confirmed", "transfer", "Cardless withdrawal", "", "1200", "NIO", "Bank One Savings", "", "Wallet", "33.15", "36.6243", "no", "", ""])
     expect(rows[1]?.[0]).toBe("2026-09-08")
   })
 

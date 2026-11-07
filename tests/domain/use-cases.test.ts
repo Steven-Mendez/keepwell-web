@@ -86,7 +86,7 @@ describe("Category actions", () => {
     const tips = { id: "custom-tips", name: "Tips", kind: "income" as const, isRenamed: false }
     const ordered = orderedCategories([tips, ...[...DEFAULT_CATEGORIES].reverse(), boat])
     const expense = ordered.filter((c) => c.kind === "expense").map((c) => c.id)
-    expect(expense[0]).toBe("donations")
+    expect(expense[0]).toBe("loan-payments")
     expect(expense.slice(-2)).toEqual(["custom-boat", OTHER_EXPENSE_ID])
     expect(ordered.find((c) => c.kind === "income")).toEqual(tips)
     expect(ordered.filter((c) => c.kind === "income").at(-1)?.id).toBe(OTHER_INCOME_ID)
