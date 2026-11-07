@@ -16,13 +16,15 @@ import { Input } from "@/components/ui/input"
 import {
   dec,
   equalShare,
-  formatAmount,
-  formatNumber,
-  parseAmount,
   splitTransaction,
   ZERO,
   Decimal,
 } from "@/lib/domain"
+import {
+  formatAmount,
+  formatNumber,
+  parseAmount,
+} from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { newID } from "@/lib/platform/uuid"
 import { ledgerStore } from "@/lib/repositories"

@@ -13,12 +13,14 @@ import { Input } from "@/components/ui/input"
 import {
   decimalText,
   deleteSavingsGoal,
-  formatNumber,
   isDomainError,
-  parseAmount,
   saveSavingsGoal,
   yearMonthContaining,
 } from "@/lib/domain"
+import {
+  formatNumber,
+  parseAmount,
+} from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { CATEGORY_COLOR_KEYS } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"

@@ -22,13 +22,15 @@ import { toast } from "@/components/ui/toast"
 import { SettingsSkeleton } from "@/components/kw/skeletons"
 import { useLedger, usePreferredName } from "@/hooks/use-ledger"
 import {
-  PREFERRED_NAME_MAX_LENGTH,
   compareExpiry,
-  normalizedPreferredName,
   paymentMethodGroups,
-  updateSettings,
   type Ledger,
 } from "@/lib/domain"
+import {
+  PREFERRED_NAME_MAX_LENGTH,
+  normalizedPreferredName,
+  updateSettings,
+} from "@/lib/domain/onboarding"
 import { useI18n, type Translator } from "@/lib/i18n"
 import {
   accountName,

@@ -1,4 +1,4 @@
-import type { TransactionCategory } from "@/lib/schema"
+import type { TransactionCategory } from "../schema"
 
 import { Decimal, ZERO, dec } from "./decimal"
 import type { MonthlySummary } from "./rules"

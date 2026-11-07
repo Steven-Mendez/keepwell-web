@@ -1,5 +1,5 @@
-import type { Account, Card, CategorizationRule, CurrencySettings, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
-import { DEFAULT_SETTINGS } from "@/lib/schema"
+import type { Account, Card, CategorizationRule, CurrencySettings, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "../schema"
+import { DEFAULT_SETTINGS } from "../schema"
 
 import { addMonths, contains, daysInMonth, sameMonth, yearMonthContaining, type DateInterval, type YearMonth } from "./calendar"
 import { Decimal, ZERO, dec, sum } from "./decimal"

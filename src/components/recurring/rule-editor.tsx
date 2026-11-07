@@ -41,11 +41,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { useLedger, useTransactionDisplay } from "@/hooks/use-ledger"
 import {
   Decimal,
-  formatMoney,
   getTransactionContext,
   type Ledger,
   type TransactionContext,
 } from "@/lib/domain"
+import { formatMoney } from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
 import { accountName, dayLabel } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"

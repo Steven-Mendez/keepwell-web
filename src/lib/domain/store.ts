@@ -1,5 +1,5 @@
-import type { Account, Card, CategorizationRule, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "@/lib/schema"
-import { DEFAULT_CATEGORIES, isFallbackCategory, orderedCategories, shippedCategory } from "@/lib/schema"
+import type { Account, Card, CategorizationRule, Loan, PersonalDebt, RecurringRule, SavingsGoal, Settings, Transaction, TransactionCategory } from "../schema"
+import { DEFAULT_CATEGORIES, isFallbackCategory, orderedCategories, shippedCategory } from "../schema"
 
 import { DomainError } from "./errors"
 

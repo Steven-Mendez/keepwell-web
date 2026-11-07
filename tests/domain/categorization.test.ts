@@ -9,15 +9,12 @@ import {
   InMemoryStore,
   applyRuleToPast,
   applyingRule,
-  exportCsv,
   firstMatchingRule,
   getTransactionContext,
-  importCsv,
   mergeTags,
   normalizedTag,
   normalizedTags,
   occurrenceTransaction,
-  parseCsvRows,
   pastMatchCount,
   pastMatches,
   reorderCategorizationRules,
@@ -29,6 +26,11 @@ import {
   tagUsage,
   validatedRule,
 } from "@/lib/domain"
+import {
+  exportCsv,
+  importCsv,
+  parseCsvRows,
+} from "@/lib/domain/csv"
 import {
   backupRepository,
   categorizationRuleRepository,

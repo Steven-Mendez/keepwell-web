@@ -15,7 +15,6 @@ import {
   availableMovementTypes,
   balanceOf,
   cardExpiry,
-  completeOnboarding,
   confirmPlannedTransaction,
   convert,
   convertsCurrency,
@@ -32,12 +31,10 @@ import {
   keeperOf,
   lastUsedSource,
   loadLedger,
-  makeOnboardingAccount,
   movementKind,
   movementTypeOf,
   netWorth,
   normalizeBankCards,
-  onboardingDisplayName,
   previewMovement,
   renameAccount,
   reorderCategories,
@@ -56,9 +53,14 @@ import {
   currencySettings,
   draftFrom,
   type CreditCardDraft,
-  type OnboardingAccountDraft,
   type TransactionDraft,
 } from "@/lib/domain"
+import {
+  completeOnboarding,
+  makeOnboardingAccount,
+  onboardingDisplayName,
+  type OnboardingAccountDraft,
+} from "@/lib/domain/onboarding"
 import type { Account } from "@/lib/schema"
 import { DEFAULT_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES, OTHER_EXPENSE_ID, OTHER_INCOME_ID, orderedCategories } from "@/lib/schema"
 

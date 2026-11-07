@@ -5,21 +5,25 @@ import { describe, expect, it } from "vitest"
 import {
   categoryBreakdown,
   cashFlowOutcome,
-  escapeCsvField,
-  exportCsv,
-  formatAmount,
-  formatAmountInput,
-  formatNumber,
-  importCsv,
   paceComparisonDay,
   pacePreviousBySameDay,
   paceSpentSoFar,
-  parseAmount,
-  parseCsvRows,
-  signedAmount,
   spendingPace,
   summaryReport,
 } from "@/lib/domain"
+import {
+  formatAmount,
+  formatAmountInput,
+  formatNumber,
+  parseAmount,
+  signedAmount,
+} from "@/lib/domain/format"
+import {
+  escapeCsvField,
+  exportCsv,
+  importCsv,
+  parseCsvRows,
+} from "@/lib/domain/csv"
 import { DEFAULT_CATEGORIES } from "@/lib/schema"
 
 import { IDs, d, date, referenceDate, sampleData, sampleStore, transaction } from "./fixtures"

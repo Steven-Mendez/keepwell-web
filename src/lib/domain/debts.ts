@@ -1,4 +1,4 @@
-import { newID } from "@/lib/platform/uuid"
+import { newID } from "../schema/id"
 import {
   MAX_DEBT_NAME_LENGTH,
   MAX_LOAN_INSTALLMENTS,
@@ -8,7 +8,7 @@ import {
   type LoanFrequency,
   type LoanPayment,
   type PersonalDebt,
-} from "@/lib/schema"
+} from "../schema"
 
 import { startOfDay } from "./calendar"
 import { Decimal, ZERO, dec, decimalText } from "./decimal"

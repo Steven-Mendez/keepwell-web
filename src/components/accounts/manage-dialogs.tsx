@@ -28,13 +28,15 @@ import { toast } from "@/components/ui/toast"
 import {
   cardExpiry,
   deleteAccount,
-  formatNumber,
-  parseAmount,
   renameAccount,
   setCardDetails,
   setCardNumber,
   updateCreditTerms,
 } from "@/lib/domain"
+import {
+  formatNumber,
+  parseAmount,
+} from "@/lib/domain/format"
 import { useT } from "@/lib/i18n"
 import type { Account, Card, CardNetwork } from "@/lib/schema"
 import { networkName } from "@/lib/presentation/display"

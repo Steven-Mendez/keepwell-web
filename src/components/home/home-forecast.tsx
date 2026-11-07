@@ -7,10 +7,10 @@ import {
   forecastPlannedExpenses,
   forecastPlannedIncome,
   forecastTotal,
-  formatAmount,
   type BalanceForecast,
   type Decimal,
 } from "@/lib/domain"
+import { formatAmount } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 

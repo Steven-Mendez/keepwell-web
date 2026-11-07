@@ -1,6 +1,6 @@
-import { newID } from "@/lib/platform/uuid"
-import type { CurrencySettings, RecurringFrequency, RecurringRule, Transaction } from "@/lib/schema"
-import { MAX_RECURRING_INTERVAL } from "@/lib/schema"
+import { newID } from "../schema/id"
+import type { CurrencySettings, RecurringFrequency, RecurringRule, Transaction } from "../schema"
+import { MAX_RECURRING_INTERVAL } from "../schema"
 
 import { addDays, dayKey, startOfDay } from "./calendar"
 import { Decimal, ZERO, dec, decimalText } from "./decimal"
