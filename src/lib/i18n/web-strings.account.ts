@@ -28,9 +28,9 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
       es: "Se cierra tu sesión en todos lados al instante y tus datos sincronizados se borran de los servidores de Keepwell. Las copias de seguridad los conservan hasta 35 días más. Lo que hay en este navegador se queda aquí.",
     },
   Sync: { es: "Sincronización" },
-  "Sync isn't included in your plan. Everything keeps working in this browser.":
+  "Sync isn't included in your plan. Get it with the coffee in Keepwell for iPhone; everything keeps working in this browser.":
     {
-      es: "La sincronización no está incluida en tu plan. Todo sigue funcionando en este navegador.",
+      es: "La sincronización no está incluida en tu plan. Consíguela con el café en Keepwell para iPhone; todo sigue funcionando en este navegador.",
     },
   "Offline. Changes sync when you're back online.": {
     es: "Sin conexión. Los cambios se sincronizan al volver a estar en línea.",
@@ -105,4 +105,13 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   },
   "Add a passkey": { es: "Añadir una passkey" },
   "Use a passkey": { es: "Usar una passkey" },
+  "That invitation is not valid. It may have expired or been used.": {
+    es: "Esa invitación no es válida. Puede que haya caducado o ya se haya usado.",
+  },
+  "Have an invitation?": { es: "¿Tienes una invitación?" },
+  "New accounts need one. Enter it, then sign in with Apple.": {
+    es: "Las cuentas nuevas la necesitan. Escríbela y luego inicia sesión con Apple.",
+  },
+  "Invitation code": { es: "Código de invitación" },
+  "Continue with Apple": { es: "Continuar con Apple" },
 }

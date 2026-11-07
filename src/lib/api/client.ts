@@ -35,7 +35,10 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const text = await res.text()
   const body = text ? (JSON.parse(text) as unknown) : undefined
   if (!res.ok) {
-    const error = (body as Partial<ApiErrorBody> | undefined)?.error
+    // Our routes answer { error: { code } }; Better Auth (/api/auth) answers { code } at the top.
+    const error =
+      (body as Partial<ApiErrorBody> | undefined)?.error ??
+      ((body as { code?: string } | undefined)?.code ? (body as { code: string; message: string; details?: unknown }) : undefined)
     throw new ApiError(res.status, error?.code ?? "http_error", error?.message ?? res.statusText, (body as ApiErrorBody | undefined)?.request_id, error?.details)
   }
   return body as T

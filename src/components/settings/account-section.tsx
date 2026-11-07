@@ -6,7 +6,9 @@ import { KWButton } from "@/components/kw/design"
 import { toast } from "@/components/ui/toast"
 import { useAccount } from "@/hooks/use-account"
 import { useSync } from "@/hooks/use-sync"
+import { Input } from "@/components/ui/input"
 import {
+  claimInvitation,
   deleteAccount,
   signInWithApple,
   signOut,
@@ -28,6 +30,7 @@ export function AccountSection({ t }: { t: Translator }) {
   const { state, refresh } = useAccount()
   const [busy, setBusy] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [invitation, setInvitation] = useState("")
   const canSync =
     state.status === "signed-in" && state.me.capabilities.includes("cloud_sync")
   const { status: sync, rejected } = useSync(canSync)
@@ -43,7 +46,12 @@ export function AccountSection({ t }: { t: Translator }) {
         title:
           error instanceof ApiError && error.code === "NOT_INVITED"
             ? t.in("web", "Keepwell accounts are invite-only for now.")
-            : t.in("web", "Couldn't reach Keepwell. Try again."),
+            : error instanceof ApiError && error.code === "invitation_not_found"
+              ? t.in(
+                  "web",
+                  "That invitation is not valid. It may have expired or been used."
+                )
+              : t.in("web", "Couldn't reach Keepwell. Try again."),
         type: "error",
       })
     } finally {
@@ -81,7 +89,7 @@ export function AccountSection({ t }: { t: Translator }) {
                 !canSync || sync?.state === "needs_plan"
                   ? t.in(
                       "web",
-                      "Sync isn't included in your plan. Everything keeps working in this browser."
+                      "Sync isn't included in your plan. Get it with the coffee in Keepwell for iPhone; everything keeps working in this browser."
                     )
                   : sync?.state === "offline"
                     ? t.in(
@@ -192,6 +200,38 @@ export function AccountSection({ t }: { t: Translator }) {
             ) : null}
           </SettingsRow>
         )}
+        {state.status !== "signed-in" ? (
+          <SettingsRow
+            label={t.in("web", "Have an invitation?")}
+            description={t.in(
+              "web",
+              "New accounts need one. Enter it, then sign in with Apple."
+            )}
+          >
+            <Input
+              value={invitation}
+              onChange={(event) => setInvitation(event.target.value)}
+              placeholder="XXXXX-XXXXX-XXXXX-XXXXX"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              aria-label={t.in("web", "Invitation code")}
+              className="w-56 font-mono"
+            />
+            <KWButton
+              size="small"
+              disabled={busy || invitation.trim().length === 0}
+              onClick={() =>
+                run(async () => {
+                  await claimInvitation(invitation)
+                  await signInWithApple(window.location.href)
+                })
+              }
+            >
+              {t.in("web", "Continue with Apple")}
+            </KWButton>
+          </SettingsRow>
+        ) : null}
       </SettingsSection>
       {state.status === "signed-in" && state.me.capabilities.includes("mcp") ? (
         <ConnectedAppsSection t={t} />

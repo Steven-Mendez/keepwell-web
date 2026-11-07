@@ -39,6 +39,14 @@ export async function signInWithApple(returnTo: string, oauthQuery?: string): Pr
   window.location.assign(url)
 }
 
+/**
+ * Checks an invitation and has the API keep it in a short-lived cookie, which Apple's redirect then
+ * brings back to the API. The code is used up only when the account is created.
+ */
+export async function claimInvitation(code: string): Promise<void> {
+  await api<void>("/invitations/claim", { method: "POST", body: JSON.stringify({ code }) })
+}
+
 export async function signOut(): Promise<void> {
   await api("/api/auth/sign-out", { method: "POST", body: "{}" })
 }
