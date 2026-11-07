@@ -14,6 +14,7 @@ import {
   type Ledger,
 } from "@/lib/domain"
 import type { KWIconName } from "@/components/kw/kw-icon-data"
+import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import type { Translator } from "@/lib/i18n"
 import {
   accountName,
@@ -38,13 +39,23 @@ export interface Reminder {
  * statements closing today, subscriptions renewing tomorrow and plastics expiring this month. Budgets
  * warn from 80% of the month's limit and again once it's spent, and subscriptions whose latest charge
  * cost more than the one before say so.
+ *
+ * With balances hidden every amount in a reminder is masked; the reminder itself stays, like the
+ * budget and price alerts on iOS, since knowing something is due isn't the sensitive part.
  */
 export function homeReminders(
   t: Translator,
   ledger: Ledger,
   overview: HomeOverview,
-  now: Date
+  now: Date,
+  hidden: boolean
 ): Reminder[] {
+  const amount = (
+    value: Parameters<typeof formatAmount>[0],
+    currency: string
+  ) => (hidden ? BALANCE_MASK : formatAmount(value, currency))
+  const money = (value: Parameters<typeof formatMoney>[0]) =>
+    hidden ? BALANCE_MASK : formatMoney(value)
   const today = startOfDay(now).getTime()
   const endOfToday = today + 86_400_000
   const display = (account: Account) => {
@@ -78,7 +89,7 @@ export function homeReminders(
         "home",
         "%@ · %@ from %@. Has it been paid?",
         transaction.description,
-        formatAmount(transaction.amount, transaction.currency),
+        amount(transaction.amount, transaction.currency),
         method
       ),
       action: {
@@ -147,7 +158,7 @@ export function homeReminders(
         "Installment %lld of %lld · %@",
         next.number,
         loan.installmentCount,
-        formatAmount(loan.installmentAmount, loan.borrowed.currency)
+        amount(loan.installmentAmount, loan.borrowed.currency)
       ),
     })
   }
@@ -171,12 +182,7 @@ export function homeReminders(
       icon: "subscription",
       tone: "accent",
       title: t.in("web", "%@ renews tomorrow", rule.name),
-      body: t.in(
-        "web",
-        "%@ on %@",
-        formatAmount(rule.amount, rule.currency),
-        method
-      ),
+      body: t.in("web", "%@ on %@", amount(rule.amount, rule.currency), method),
     })
   }
   const thisMonth = yearMonthContaining(now)
@@ -203,7 +209,7 @@ export function homeReminders(
             ),
     })
   }
-  reminders.push(...budgetReminders(t, ledger, now))
+  reminders.push(...budgetReminders(t, ledger, now, hidden))
   for (const increase of overview.priceIncreases) {
     reminders.push({
       id: `price-${increase.transactionId}`,
@@ -213,15 +219,20 @@ export function homeReminders(
       body: t.in(
         "home",
         "Now %@, before %@.",
-        formatMoney(increase.current),
-        formatMoney(increase.previous)
+        money(increase.current),
+        money(increase.previous)
       ),
     })
   }
   return reminders
 }
 
-function budgetReminders(t: Translator, ledger: Ledger, now: Date): Reminder[] {
+function budgetReminders(
+  t: Translator,
+  ledger: Ledger,
+  now: Date,
+  hidden: boolean
+): Reminder[] {
   const currency = ledger.settings.currencies.principal
   const summary = monthlySummary(
     yearMonthContaining(now),
@@ -250,8 +261,8 @@ function budgetReminders(t: Translator, ledger: Ledger, now: Date): Reminder[] {
         body: t.in(
           "home",
           "%@ spent of %@ this month.",
-          formatAmount(status.spent, currency),
-          formatAmount(status.budget, currency)
+          hidden ? BALANCE_MASK : formatAmount(status.spent, currency),
+          hidden ? BALANCE_MASK : formatAmount(status.budget, currency)
         ),
       } satisfies Reminder
     })

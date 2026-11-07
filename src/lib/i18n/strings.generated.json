@@ -453,6 +453,9 @@
   "Allow access to Photos": {
    "es": "Permite el acceso a Fotos"
   },
+  "Always use %@ for “%@”?": {
+   "es": "¿Usar siempre %1$@ para “%2$@”?"
+  },
   "Amount %@": {
    "es": "Monto %@"
   },
@@ -516,6 +519,9 @@
   "Continue": {
    "es": "Continuar"
   },
+  "Create rule": {
+   "es": "Crear regla"
+  },
   "Credit cards": {
    "es": "Tarjetas de crédito"
   },
@@ -542,6 +548,12 @@
   },
   "Edit amount": {
    "es": "Editar monto"
+  },
+  "Edit transaction": {
+   "es": "Editar movimiento"
+  },
+  "Edits keep the rate this transaction was logged with.": {
+   "es": "Al editar se mantiene la tasa con la que se registró el movimiento."
   },
   "Expense": {
    "es": "Gasto"
@@ -642,6 +654,9 @@
   "Review": {
    "es": "Revisar"
   },
+  "Rule saved": {
+   "es": "Regla guardada"
+  },
   "Salary, a refund, money you received": {
    "es": "Salario, un reembolso, dinero que recibiste"
   },
@@ -650,6 +665,9 @@
   },
   "Save card payment": {
    "es": "Guardar pago de tarjeta"
+  },
+  "Save changes": {
+   "es": "Guardar cambios"
   },
   "Save expense": {
    "es": "Guardar gasto"
@@ -763,6 +781,9 @@
   "Used yesterday": {
    "es": "Usado ayer"
   },
+  "We couldn't load this movement.": {
+   "es": "No pudimos cargar este movimiento."
+  },
   "We couldn't load your accounts.": {
    "es": "No pudimos cargar tus cuentas."
   },
@@ -771,6 +792,9 @@
   },
   "We couldn't save the movement. Try again.": {
    "es": "No pudimos guardar el movimiento. Intenta de nuevo."
+  },
+  "We couldn't save the rule. Try again.": {
+   "es": "No pudimos guardar la regla. Inténtalo de nuevo."
   },
   "What are you recording?": {
    "es": "¿Qué vas a registrar?"
@@ -2792,6 +2816,9 @@
   "Lime": {
    "es": "Lima"
   },
+  "Loan payments": {
+   "es": "Pagos de préstamos"
+  },
   "Monthly budget": {
    "es": "Presupuesto mensual"
   },
@@ -2968,8 +2995,8 @@
   "At the end of each month": {
    "es": "Al cierre de cada mes"
   },
-  "At the end of each month, at today's rate": {
-   "es": "Al cierre de cada mes, con la tasa de hoy"
+  "At the end of each month, at that month's rate": {
+   "es": "Al cierre de cada mes, con la tasa de ese mes"
   },
   "Average %@ / month": {
    "es": "Promedio %@ / mes"
@@ -3145,8 +3172,14 @@
   "Bank account": {
    "es": "Cuenta bancaria"
   },
+  "Bank rate": {
+   "es": "Tasa del banco"
+  },
   "Cash": {
    "es": "Efectivo"
+  },
+  "Category": {
+   "es": "Categoría"
   },
   "Choose which account to show": {
    "es": "Elige qué cuenta mostrar"
@@ -3157,11 +3190,17 @@
   "Confirm": {
    "es": "Confirmar"
   },
+  "Confirmed": {
+   "es": "Confirmado"
+  },
   "Credit card": {
    "es": "Tarjeta de crédito"
   },
   "Current debt": {
    "es": "Deuda actual"
+  },
+  "Date": {
+   "es": "Fecha"
   },
   "Delete": {
    "es": "Eliminar"
@@ -3169,17 +3208,29 @@
   "Delete this transaction?": {
    "es": "¿Eliminar este movimiento?"
   },
+  "Draft": {
+   "es": "Borrador"
+  },
   "Drafts": {
    "es": "Borradores"
   },
   "Drafts · they don't affect balances": {
    "es": "Borradores · no afectan saldos"
   },
+  "Edit": {
+   "es": "Editar"
+  },
   "Expenses": {
    "es": "Gastos"
   },
+  "From": {
+   "es": "Desde"
+  },
   "Income": {
    "es": "Ingresos"
+  },
+  "Into": {
+   "es": "Hacia"
   },
   "Log transaction": {
    "es": "Anotar movimiento"
@@ -3196,8 +3247,26 @@
   "No transactions yet": {
    "es": "Todavía no hay movimientos"
   },
+  "Note": {
+   "es": "Nota"
+  },
   "Nothing matches. Try another word or filter.": {
    "es": "Nada coincide. Prueba otra palabra u otro filtro."
+  },
+  "Paid with": {
+   "es": "Pagado con"
+  },
+  "Rate used": {
+   "es": "Tasa usada"
+  },
+  "Receipt": {
+   "es": "Comprobante"
+  },
+  "Reference": {
+   "es": "Referencia"
+  },
+  "Repeats": {
+   "es": "Se repite"
   },
   "Search": {
    "es": "Buscar"
@@ -3217,14 +3286,44 @@
   "Split": {
    "es": "Dividir"
   },
+  "Status": {
+   "es": "Estado"
+  },
+  "Tags": {
+   "es": "Etiquetas"
+  },
+  "To": {
+   "es": "Hacia"
+  },
+  "Transaction details": {
+   "es": "Detalle del movimiento"
+  },
   "Transactions": {
    "es": "Movimientos"
   },
   "Transfers": {
    "es": "Transferencias"
   },
+  "Type": {
+   "es": "Tipo"
+  },
+  "We couldn't load this movement.": {
+   "es": "No pudimos cargar este movimiento."
+  },
   "We couldn't save the change. Try again.": {
    "es": "No pudimos guardar el cambio. Inténtalo de nuevo."
+  },
+  "kind.expense": {
+   "en": "Expense",
+   "es": "Gasto"
+  },
+  "kind.income": {
+   "en": "Income",
+   "es": "Ingreso"
+  },
+  "kind.transfer": {
+   "en": "Transfer",
+   "es": "Transferencia"
   }
  },
  "widgets": {

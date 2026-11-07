@@ -34,8 +34,10 @@ import type { Translator } from "@/lib/i18n"
 import { categoryName } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
 import {
+  LOAN_PAYMENTS_ID,
   MAX_LOAN_INSTALLMENTS,
   MAX_LOAN_NAME_LENGTH,
+  OTHER_EXPENSE_ID,
   orderedCategories,
   type CurrencySettings,
   type Loan,
@@ -374,8 +376,12 @@ export function LoanDialog({
   const [methodKey, setMethodKey] = useState(
     () => lastUsedMethod(ledger, methods) ?? methods[0]?.key ?? ""
   )
-  // "Other" until the person picks: there's no loan category every installment belongs in.
-  const [categoryId, setCategoryId] = useState("other-expense")
+  // "Loan payments" until the person picks, or "Other" once they deleted it.
+  const [categoryId, setCategoryId] = useState(() =>
+    expenseCategories.some((category) => category.id === LOAN_PAYMENTS_ID)
+      ? LOAN_PAYMENTS_ID
+      : OTHER_EXPENSE_ID
+  )
   const [paidOn, setPaidOn] = useState(() => new Date())
   const [isPaying, setPaying] = useState(false)
   const [failed, setFailed] = useState(false)

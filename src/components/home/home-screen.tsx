@@ -92,7 +92,7 @@ export function HomeScreen() {
   if (!ledger || !overview || !display) return <HomeSkeleton />
 
   const hasCredit = ledger.accounts.some((account) => account.kind === "credit")
-  const reminders = homeReminders(t, ledger, overview, now)
+  const reminders = homeReminders(t, ledger, overview, now, hidden)
   const recent = ledger.transactions
     .filter((transaction) => transaction.status === "confirmed")
     .slice(0, 8)

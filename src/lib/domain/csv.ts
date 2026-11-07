@@ -23,7 +23,7 @@ import {
 import { accountDisplayName, checkAmounts, folded } from "./rules"
 import type { LedgerStore } from "./store"
 import { firstMatchingRule } from "./categorization"
-import { tagsField } from "./tags"
+import { mergeTags, parsedCsvTags, tagsCsvField, tagsField } from "./tags"
 
 // Port of ExportTransactionsUseCase.swift and ImportTransactionsUseCase.swift. Columns and values are
 // a data format, not UI text: English, ISO dates and dot decimals whatever the language.
@@ -43,6 +43,7 @@ export const CSV_HEADER = [
   "rate",
   "shared",
   "note",
+  "tags",
 ] as const
 
 /** RFC 4180: quote fields with commas, quotes or line breaks, doubling inner quotes. */
@@ -86,6 +87,7 @@ export function exportCsv(
         : "",
       t.isShared ? "yes" : "no",
       t.note ?? "",
+      tagsCsvField(t.tags ?? []),
     ])
   return (
     [[...CSV_HEADER], ...rows]
@@ -166,7 +168,10 @@ interface ImportRecords {
   rules?: readonly CategorizationRule[]
 }
 
-/** Reads the file "Export CSV" writes (columns in any order); each row must name an existing account. */
+/**
+ * Reads the file "Export CSV" writes (columns in any order; files from before the `tags` column still
+ * import, without tags); each row must name an existing account.
+ */
 export function parseCsvTransactions(
   csv: string,
   records: ImportRecords,
@@ -203,16 +208,19 @@ export function parseCsvTransactions(
         (category.id === text || category.name.toLowerCase() === lower)
     )?.id
   }
-  /** A known category, else the first rule that matches (with its tags), else "Other" of the kind. */
-  const categorized = (text: string | undefined, kind: TransactionKind, description: string, note: string | undefined): { categoryId?: string; tags?: string[] } => {
-    if (kind === "transfer") return {}
+  /**
+   * A known category, else the first rule that matches (its tags after the file's), else "Other" of
+   * the kind. The file's own tags stay either way.
+   */
+  const categorized = (text: string | undefined, kind: TransactionKind, description: string, note: string | undefined, tags: readonly string[]): { categoryId?: string; tags?: string[] } => {
+    if (kind === "transfer") return tagsField(tags)
     const known = knownCategoryId(text, kind)
-    if (known) return { categoryId: known }
+    if (known) return { categoryId: known, ...tagsField(tags) }
     const rule = firstMatchingRule(records.rules ?? [], kind, description, note)
     if (rule && records.categories.some((category) => category.id === rule.categoryId)) {
-      return { categoryId: rule.categoryId, ...tagsField(rule.tags) }
+      return { categoryId: rule.categoryId, ...tagsField(mergeTags(tags, rule.tags ?? [])) }
     }
-    return { categoryId: kind === "income" ? OTHER_INCOME_ID : OTHER_EXPENSE_ID }
+    return { categoryId: kind === "income" ? OTHER_INCOME_ID : OTHER_EXPENSE_ID, ...tagsField(tags) }
   }
   const rateFrom = (text: string | undefined): ExchangeRate => {
     const parsed = parseNumber(text)
@@ -284,7 +292,7 @@ export function parseCsvTransactions(
         status,
         description,
         kind,
-        ...categorized(value("category", row), kind, description, note),
+        ...categorized(value("category", row), kind, description, note, parsedCsvTags(value("tags", row) ?? "")),
         amount: decimalText(amount),
         currency,
         accountId: account.id,
