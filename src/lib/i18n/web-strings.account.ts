@@ -90,4 +90,13 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "They lose access right away and would have to be connected again.": {
     es: "Pierden el acceso de inmediato y habría que volver a conectarlos.",
   },
+  "Recorded by Claude": { es: "Registrado por Claude" },
+  "Proposed by Claude": { es: "Propuesto por Claude" },
+  Discard: { es: "Descartar" },
+  Weekly: { es: "Semanal" },
+  Monthly: { es: "Mensual" },
+  Yearly: { es: "Anual" },
+  "Couldn't save the change. Try again.": {
+    es: "No se pudo guardar el cambio. Inténtalo de nuevo.",
+  },
 }
