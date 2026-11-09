@@ -30,11 +30,11 @@ export async function fetchMe(): Promise<Me | null> {
  * Starts Sign in with Apple through the API (Better Auth's redirect flow). Apple posts back to the
  * API, which sets the shared session cookie and sends the browser to `returnTo`.
  */
-export async function signInWithApple(returnTo: string, oauthQuery?: string): Promise<void> {
+export async function signInWithApple(returnTo: string, oauthQuery?: string, errorURL: string = returnTo): Promise<void> {
   const { url } = await api<{ url: string; redirect: boolean }>("/api/auth/sign-in/social", {
     method: "POST",
     // From /connect: the signed authorization request, so Better Auth resumes it after sign-in.
-    body: JSON.stringify({ provider: "apple", callbackURL: returnTo, errorCallbackURL: returnTo, ...(oauthQuery ? { oauth_query: oauthQuery } : {}) }),
+    body: JSON.stringify({ provider: "apple", callbackURL: returnTo, errorCallbackURL: errorURL, ...(oauthQuery ? { oauth_query: oauthQuery } : {}) }),
   })
   window.location.assign(url)
 }

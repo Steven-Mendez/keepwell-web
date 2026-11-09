@@ -37,8 +37,21 @@ export async function enqueue(entity: SyncEntity, entityId: string, operation: S
     entity_id: entityId,
     operation,
     payload: toWire(entity, row),
-    created_at: at,
+    created_at: nextEventStamp(at),
   })
+}
+
+let lastEventStamp = ""
+
+/**
+ * The outbox is pushed in `created_at` order, and a parent and its child (a debt and its first
+ * repayment) are enqueued in the same millisecond. Equal stamps would order by the random event id,
+ * so the child could reach the server first. Each event gets a stamp after the previous one.
+ */
+export function nextEventStamp(at: string): string {
+  const stamp = at > lastEventStamp ? at : new Date(Date.parse(lastEventStamp) + 1).toISOString()
+  lastEventStamp = stamp
+  return stamp
 }
 
 /**
