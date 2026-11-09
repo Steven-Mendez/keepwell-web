@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import type { ReactNode } from "react"
 
 import { KWAppIconTile } from "@/components/kw/kw-icon"
@@ -291,15 +292,33 @@ const CONTENT: Record<"en" | "es", { title: string; lead: string; updated: strin
 
 export function PrivacyPolicy() {
   const t = useT()
-  const lang = t.locale.startsWith("es") ? "es" : "en"
+  // ?lang=es|en picks the language explicitly (App Store Connect keeps one URL per listing language);
+  // otherwise it follows the app's language.
+  const requested = useSearchParams().get("lang")
+  const lang = requested === "es" || requested === "en" ? requested : t.locale.startsWith("es") ? "es" : "en"
   const page = CONTENT[lang]
   return (
     <main className="min-h-svh bg-background px-4 py-12">
-      <article className="mx-auto flex max-w-2xl flex-col gap-8">
+      <article lang={lang} className="mx-auto flex max-w-2xl flex-col gap-8">
         <header className="flex flex-col gap-4">
-          <Link href="/" aria-label="Keepwell">
-            <KWAppIconTile size={44} />
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link href="/" aria-label="Keepwell">
+              <KWAppIconTile size={44} />
+            </Link>
+            <nav aria-label="Language" className="type-caption flex gap-3">
+              {(["en", "es"] as const).map((code) => (
+                <Link
+                  key={code}
+                  href={`/privacy?lang=${code}`}
+                  lang={code}
+                  aria-current={code === lang ? "page" : undefined}
+                  className={code === lang ? "font-semibold text-foreground" : "text-muted-foreground hover:underline"}
+                >
+                  {code === "en" ? "English" : "Español"}
+                </Link>
+              ))}
+            </nav>
+          </div>
           <h1 className="type-title">{page.title}</h1>
           <p className="type-body text-muted-foreground">{page.lead}</p>
           <p className="type-caption text-muted-foreground">
