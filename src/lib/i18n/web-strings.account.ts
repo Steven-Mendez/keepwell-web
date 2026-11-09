@@ -133,4 +133,5 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
     es: "Esa passkey no corresponde a ninguna cuenta de Keepwell. Continúa con Apple.",
   },
   "Couldn't complete that. Try again.": { es: "No se pudo completar. Inténtalo de nuevo." },
+  "Privacy Policy": { es: "Política de privacidad" },
 }
