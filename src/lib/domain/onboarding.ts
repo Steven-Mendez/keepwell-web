@@ -1,5 +1,5 @@
-import type { Account, Card, CardNetwork, CurrencySettings, DebtMode, Settings, UnlockMethod } from "@/lib/schema"
-import { DEFAULT_SETTINGS } from "@/lib/schema"
+import type { Account, Card, CardNetwork, CurrencySettings, DebtMode, Settings, UnlockMethod } from "../schema"
+import { DEFAULT_SETTINGS } from "../schema"
 
 import { debitCardFor, makeCard, makeCreditTerms } from "./accounts"
 import type { Decimal, DecimalValue } from "./decimal"

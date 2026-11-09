@@ -21,15 +21,17 @@ import {
   decimalText,
   deleteLoan,
   unpayLoanInstallment,
-  formatAmount,
-  formatNumber,
   isDomainError,
-  parseAmount,
   payLoanInstallment,
   saveLoan,
   type Ledger,
   type LoanProgress,
 } from "@/lib/domain"
+import {
+  formatAmount,
+  formatNumber,
+  parseAmount,
+} from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { categoryName } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"

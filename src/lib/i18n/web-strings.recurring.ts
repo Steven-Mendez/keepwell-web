@@ -1,8 +1,8 @@
 import type { WebStrings } from "./web-strings"
 
 /**
- * Recurring movements and subscriptions. iOS adds the same feature to its catalogs; until
- * `pnpm strings:sync` brings them, the web keeps them here, keyed by the English text.
+ * Recurring movements and subscriptions. iOS adds the same feature to its catalogs; until they are
+ * copied into strings.json, the web keeps them here, keyed by the English text.
  */
 export const WEB_STRINGS_RECURRING: WebStrings = {
   Recurring: { es: "Recurrentes" },

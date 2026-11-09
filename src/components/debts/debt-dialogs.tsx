@@ -24,15 +24,17 @@ import {
   decimalText,
   debtRemaining,
   deletePersonalDebt,
-  formatAmount,
-  formatNumber,
   isDomainError,
-  parseAmount,
   reopenPersonalDebt,
   repayPersonalDebt,
   savePersonalDebt,
   settlePersonalDebt,
 } from "@/lib/domain"
+import {
+  formatAmount,
+  formatNumber,
+  parseAmount,
+} from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
 import {

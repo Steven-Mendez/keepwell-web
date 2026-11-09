@@ -1,5 +1,5 @@
-import { newID } from "@/lib/platform/uuid"
-import { MAX_GOAL_NAME_LENGTH, type SavingsGoal, type TargetMonth } from "@/lib/schema"
+import { newID } from "../schema/id"
+import { MAX_GOAL_NAME_LENGTH, type SavingsGoal, type TargetMonth } from "../schema"
 
 import { compareMonths, yearMonthContaining, type YearMonth } from "./calendar"
 import { Decimal, ZERO, dec, decimalText } from "./decimal"

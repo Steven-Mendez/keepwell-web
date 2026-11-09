@@ -4,4 +4,4 @@ node_modules/
 .turbo/
 coverage/
 pnpm-lock.yaml
-.pnpm-store/src/lib/i18n/strings.generated.json
+.pnpm-store

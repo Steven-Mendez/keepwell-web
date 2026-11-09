@@ -1,4 +1,4 @@
-import { newID } from "@/lib/platform/uuid"
+import { newID } from "../schema/id"
 import type {
   Account,
   AccountKind,
@@ -8,7 +8,7 @@ import type {
   CreditTerms,
   DebtMode,
   Transaction,
-} from "@/lib/schema"
+} from "../schema"
 
 import type { Decimal } from "./decimal"
 import { DomainError } from "./errors"

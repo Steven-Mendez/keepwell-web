@@ -1,6 +1,6 @@
-import { newID } from "@/lib/platform/uuid"
-import type { CategorizationRule, Transaction, TransactionCategory, TransactionKind } from "@/lib/schema"
-import { MAX_RULE_MATCH_LENGTH, OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "@/lib/schema"
+import { newID } from "../schema/id"
+import type { CategorizationRule, Transaction, TransactionCategory, TransactionKind } from "../schema"
+import { MAX_RULE_MATCH_LENGTH, OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "../schema"
 
 import { DomainError } from "./errors"
 import { folded } from "./rules"

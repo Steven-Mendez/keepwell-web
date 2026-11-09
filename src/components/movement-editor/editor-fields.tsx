@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { TagEditor } from "@/components/kw/tag-editor"
 import { KWSegmented } from "@/components/kw/design"
 import { Textarea } from "@/components/ui/textarea"
-import { formatAmountInput } from "@/lib/domain"
+import { formatAmountInput } from "@/lib/domain/format"
 import { cn } from "@/lib/utils"
 
 import {

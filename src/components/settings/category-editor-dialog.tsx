@@ -18,13 +18,15 @@ import {
   MAX_CATEGORY_NAME_LENGTH,
   decimalText,
   deleteCategory,
-  formatNumber,
   isDomainError,
-  parseAmount,
   saveCategory,
   translatesById,
   type CategoryDraft,
 } from "@/lib/domain"
+import {
+  formatNumber,
+  parseAmount,
+} from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import {
   CATEGORY_COLOR_KEYS,

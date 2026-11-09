@@ -11,8 +11,6 @@ import { toast } from "@/components/ui/toast"
 import {
   fetchCategorizationRules,
   firstMatchingRule,
-  formatAmountInput,
-  formatMoney,
   isDomainError,
   movementKind,
   previewMovement,
@@ -24,6 +22,10 @@ import {
   type SavedTransaction,
   type TransactionContext,
 } from "@/lib/domain"
+import {
+  formatAmountInput,
+  formatMoney,
+} from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
 import { categoryName } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"

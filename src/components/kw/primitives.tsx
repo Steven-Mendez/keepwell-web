@@ -18,7 +18,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { formatMoney, type Money, type Sign } from "@/lib/domain"
+import { type Money } from "@/lib/domain"
+import { formatMoney, type Sign } from "@/lib/domain/format"
 import type {
   CardColor,
   CardKind,

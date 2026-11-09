@@ -1,5 +1,5 @@
-import type { Account, Card, CurrencySettings, RecurringRule, Transaction, TransactionKind } from "@/lib/schema"
-import { OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "@/lib/schema"
+import type { Account, Card, CurrencySettings, RecurringRule, Transaction, TransactionKind } from "../schema"
+import { OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "../schema"
 
 import {
   addDays,

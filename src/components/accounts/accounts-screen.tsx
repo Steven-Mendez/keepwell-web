@@ -28,11 +28,13 @@ import {
 } from "@/hooks/use-ledger"
 import {
   accountsOverview,
-  formatMoney,
-  joinedMoney,
   type AccountsOverview,
   type Ledger,
 } from "@/lib/domain"
+import {
+  formatMoney,
+  joinedMoney,
+} from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
 import { accountName, cardKindLabel } from "@/lib/presentation/display"
 import { DURATION, EASE_OUT_IOS } from "@/lib/motion"

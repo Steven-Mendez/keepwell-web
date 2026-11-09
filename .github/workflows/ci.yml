@@ -1,0 +1,52 @@
+# Stages 1–3 of the pipeline: lint and types, tests, and a production build. Vercel handles
+# previews, production and rollback. Actions are pinned by SHA, same as keepwell-api and keepwell-ios.
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, staging, main]
+  push:
+    branches: [develop, staging, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, types, tests and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Fails in about a minute, before spending time on the build.
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - name: shared domain still copies cleanly into keepwell-api
+        run: pnpm shared:check
+
+      # Incremental builds: keyed by the lockfile and the sources, falling back to the lockfile only.
+      - name: Cache .next/cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', 'public/**', 'next.config.ts') }}
+          restore-keys: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+
+      - name: Production build (next build + serwist)
+        run: pnpm build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+

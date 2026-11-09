@@ -35,10 +35,12 @@ import {
   bankRate,
   confirmPlannedTransaction,
   deleteTransaction,
-  formatNumber,
-  formatRate,
   rateHasSecondCurrency,
 } from "@/lib/domain"
+import {
+  formatNumber,
+  formatRate,
+} from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
 import type { TransactionDisplay } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"

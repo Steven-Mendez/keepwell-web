@@ -5,6 +5,7 @@ import type {
   CategorizationRule,
   Loan,
   PersonalDebt,
+  RecordSource,
   RecurringRule,
   SavingsGoal,
   Settings,
@@ -17,7 +18,9 @@ import type {
   CardRow,
   CategorizationRuleRow,
   CategoryRow,
+  LoanPaymentRow,
   LoanRow,
+  PersonalDebtRepaymentRow,
   PersonalDebtRow,
   RecurringRuleRow,
   SavingsGoalRow,
@@ -25,11 +28,12 @@ import type {
   TransactionRow,
 } from "./database"
 import { SETTINGS_ID } from "./database"
+import { legacyRepaymentId, loanPaymentId } from "@/lib/schema/id"
 
 // Domain ⇄ row, like the iOS records' `update(from:)` / `toDomain()`. Audit columns are left to the
 // repositories, which own when a record was created, changed or deleted.
 
-type Columns<Row> = Omit<Row, "created_at" | "updated_at" | "deleted_at">
+export type Columns<Row> = Omit<Row, "created_at" | "updated_at" | "deleted_at">
 
 /** Absent optionals: `undefined` in the domain, `null` in a row. */
 function orNull<T>(value: T | undefined): T | null {
@@ -161,6 +165,7 @@ export function transactionToRow(transaction: Transaction): Columns<TransactionR
     note: orNull(transaction.note),
     recurring_id: orNull(transaction.recurringId),
     tags: normalizedTags(transaction.tags ?? []),
+    source: transaction.source ?? "app",
   }
 }
 
@@ -188,6 +193,7 @@ export function rowToTransaction(row: TransactionRow): Transaction {
     ...present("note", row.note),
     ...present("recurringId", row.recurring_id ?? null),
     ...tagsOf(row.tags),
+    ...sourceOf(row.source),
   }
 }
 
@@ -212,6 +218,7 @@ export function recurringRuleToRow(rule: RecurringRule): Columns<RecurringRuleRo
     is_paused: rule.isPaused,
     note: orNull(rule.note),
     tags: normalizedTags(rule.tags ?? []),
+    source: rule.source ?? "app",
   }
 }
 
@@ -236,7 +243,13 @@ export function rowToRecurringRule(row: RecurringRuleRow): RecurringRule {
     isPaused: row.is_paused,
     ...present("note", row.note),
     ...tagsOf(row.tags),
+    ...sourceOf(row.source),
   }
+}
+
+/** `{ source: "mcp" }` for what an MCP client created; the default `app` is left out. */
+function sourceOf(source: RecordSource | undefined): { source?: "mcp" } {
+  return source === "mcp" ? { source } : {}
 }
 
 export function categorizationRuleToRow(rule: CategorizationRule, sortIndex: number): Columns<CategorizationRuleRow> {
@@ -299,15 +312,21 @@ export function loanToRow(loan: Loan): Columns<LoanRow> {
     installment_count: loan.installmentCount,
     frequency: loan.frequency,
     first_due_date: loan.firstDueDate,
-    payments: loan.payments.map((payment) => ({
-      number: payment.number,
-      paid_at: payment.paidAt,
-      transaction_id: orNull(payment.transactionId),
-    })),
   }
 }
 
-export function rowToLoan(row: LoanRow): Loan {
+/** A loan's paid installments as rows. A payment without an id gets the installment's own. */
+export function loanPaymentsToRows(loan: Loan): Columns<LoanPaymentRow>[] {
+  return loan.payments.map((payment) => ({
+    id: payment.id ?? loanPaymentId(loan.id, payment.number),
+    loan_id: loan.id,
+    number: payment.number,
+    paid_at: payment.paidAt,
+    transaction_id: orNull(payment.transactionId),
+  }))
+}
+
+export function rowToLoan(row: LoanRow, payments: LoanPaymentRow[]): Loan {
   return {
     id: row.id,
     name: row.name,
@@ -317,11 +336,15 @@ export function rowToLoan(row: LoanRow): Loan {
     installmentCount: row.installment_count,
     frequency: row.frequency as Loan["frequency"],
     firstDueDate: row.first_due_date,
-    payments: row.payments.map((payment) => ({
-      number: payment.number,
-      paidAt: payment.paid_at,
-      ...present("transactionId", payment.transaction_id),
-    })),
+    payments: payments
+      .filter((payment) => payment.loan_id === row.id && payment.deleted_at === null)
+      .sort((a, b) => a.number - b.number)
+      .map((payment) => ({
+        id: payment.id,
+        number: payment.number,
+        paidAt: payment.paid_at,
+        ...present("transactionId", payment.transaction_id),
+      })),
   }
 }
 
@@ -334,13 +357,22 @@ export function personalDebtToRow(debt: PersonalDebt): Columns<PersonalDebtRow> 
     currency: debt.amount.currency,
     date: debt.date,
     note: orNull(debt.note),
-    repayments: debt.repayments.map((repayment) => ({ amount: repayment.amount, date: repayment.date })),
     settled_at: orNull(debt.settledAt),
     transaction_id: orNull(debt.transactionId),
   }
 }
 
-export function rowToPersonalDebt(row: PersonalDebtRow): PersonalDebt {
+/** A debt's repayments as rows. One without an id gets a stable one from what it is. */
+export function repaymentsToRows(debt: PersonalDebt): Columns<PersonalDebtRepaymentRow>[] {
+  return debt.repayments.map((repayment, index) => ({
+    id: repayment.id ?? legacyRepaymentId(debt.id, index, repayment.date, repayment.amount),
+    debt_id: debt.id,
+    amount: repayment.amount,
+    date: repayment.date,
+  }))
+}
+
+export function rowToPersonalDebt(row: PersonalDebtRow, repayments: PersonalDebtRepaymentRow[]): PersonalDebt {
   return {
     id: row.id,
     person: row.person,
@@ -348,13 +380,16 @@ export function rowToPersonalDebt(row: PersonalDebtRow): PersonalDebt {
     amount: { amount: row.amount, currency: row.currency },
     date: row.date,
     ...present("note", row.note),
-    repayments: row.repayments.map((repayment) => ({ amount: repayment.amount, date: repayment.date })),
+    repayments: repayments
+      .filter((repayment) => repayment.debt_id === row.id && repayment.deleted_at === null)
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.created_at < b.created_at ? -1 : 1))
+      .map((repayment) => ({ id: repayment.id, amount: repayment.amount, date: repayment.date })),
     ...present("settledAt", row.settled_at),
     ...present("transactionId", row.transaction_id),
   }
 }
 
-export function settingsToRow(settings: Settings, updatedAt: string): SettingsRow {
+export function settingsToRow(settings: Settings, updatedAt: string, createdAt: string = updatedAt): SettingsRow {
   return {
     id: SETTINGS_ID,
     principal: settings.currencies.principal,
@@ -366,7 +401,9 @@ export function settingsToRow(settings: Settings, updatedAt: string): SettingsRo
     is_icloud_backup_enabled: settings.isICloudBackupEnabled,
     payment_reminder_days_before: settings.paymentReminderDaysBefore,
     has_completed_onboarding: settings.hasCompletedOnboarding,
+    created_at: createdAt,
     updated_at: updatedAt,
+    deleted_at: null,
   }
 }
 

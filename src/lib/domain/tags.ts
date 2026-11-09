@@ -1,4 +1,4 @@
-import type { Transaction } from "@/lib/schema"
+import type { Transaction } from "../schema"
 
 // Port of iOS `Tags` (Packages/Domain/Sources/Domain/Entities/Tags.swift): labels a movement carries
 // besides its category ("#viaje-mexico", "#boda"), stored normalized so both apps keep the same tag.
