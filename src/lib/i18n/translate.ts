@@ -1,9 +1,9 @@
-import catalog from "./strings.generated.json"
+import catalog from "./strings.json"
 import { WEB_STRINGS } from "./web-strings"
 
 /**
- * The iOS string catalogs (`pnpm strings:sync`), keyed by the English source text exactly as iOS
- * writes it. English is the source language; Spanish is the first translation. `%@` and `%lld` take
+ * The texts of the iOS string catalogs, copied by hand and keyed by the English source text exactly
+ * as iOS writes it. English is the source language; Spanish is the first translation. `%@` and `%lld` take
  * arguments in order; a plural entry picks its form from the first number.
  */
 export type Locale = "en" | "es"

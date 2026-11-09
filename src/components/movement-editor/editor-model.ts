@@ -4,7 +4,6 @@ import {
   accountIdFor,
   allowsDestination,
   allowsSource,
-  formatMoney,
   movementKind,
   sourceKey,
   startOfDay,
@@ -13,6 +12,7 @@ import {
   type PaymentSource,
   type TransactionContext,
 } from "@/lib/domain"
+import { formatMoney } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { accountName, cardNumber, debitTitle, methodTitle, networkName } from "@/lib/presentation/display"
 

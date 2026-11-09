@@ -1,4 +1,4 @@
-import { newID } from "@/lib/platform/uuid"
+import { loanPaymentId, newID } from "../schema/id"
 import {
   MAX_DEBT_NAME_LENGTH,
   MAX_LOAN_INSTALLMENTS,
@@ -8,7 +8,7 @@ import {
   type LoanFrequency,
   type LoanPayment,
   type PersonalDebt,
-} from "@/lib/schema"
+} from "../schema"
 
 import { startOfDay } from "./calendar"
 import { Decimal, ZERO, dec, decimalText } from "./decimal"
@@ -353,6 +353,7 @@ export async function payLoanInstallment(
       payments: [
         ...loan.payments,
         {
+          id: loanPaymentId(loan.id, number),
           number,
           paidAt: payment.date.toISOString(),
           transactionId: saved.transaction.id,
@@ -483,7 +484,7 @@ export async function repayPersonalDebt(
     ...debt,
     repayments: [
       ...debt.repayments,
-      { amount: decimalText(amount), date: day.toISOString() },
+      { id: newID(), amount: decimalText(amount), date: day.toISOString() },
     ],
     ...(amount.eq(remaining) ? { settledAt: day.toISOString() } : {}),
   }

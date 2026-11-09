@@ -12,7 +12,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { formatAmountInput, type OnboardingAccountDraft } from "@/lib/domain"
+import { formatAmountInput } from "@/lib/domain/format"
+import { type OnboardingAccountDraft } from "@/lib/domain/onboarding"
 import { useT, type Translator } from "@/lib/i18n"
 import type { CardNetwork, DebtMode } from "@/lib/schema"
 

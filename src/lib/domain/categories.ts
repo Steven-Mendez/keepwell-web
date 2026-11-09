@@ -1,5 +1,5 @@
-import type { Money as StoredMoney, TransactionCategory, TransactionKind } from "@/lib/schema"
-import { OTHER_EXPENSE_ID, OTHER_INCOME_ID, isFallbackCategory, newCustomCategoryId, orderedCategories, shippedCategory } from "@/lib/schema"
+import type { Money as StoredMoney, TransactionCategory, TransactionKind } from "../schema"
+import { OTHER_EXPENSE_ID, OTHER_INCOME_ID, isFallbackCategory, newCustomCategoryId, orderedCategories, shippedCategory } from "../schema"
 
 import { dec, decimalText } from "./decimal"
 import { DomainError } from "./errors"

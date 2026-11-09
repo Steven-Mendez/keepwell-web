@@ -8,7 +8,8 @@ import { KWSection } from "@/components/kw/design"
 import { SpringFill } from "@/components/kw/motion"
 import { CategoryBadge } from "@/components/kw/primitives"
 import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
-import { formatAmount, orderedGoals, savingsGoalProgress, type Ledger } from "@/lib/domain"
+import { orderedGoals, savingsGoalProgress, type Ledger } from "@/lib/domain"
+import { formatAmount } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 
 /**

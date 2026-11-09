@@ -16,14 +16,16 @@ import { useLedger, useTransactionDisplay } from "@/hooks/use-ledger"
 import {
   balanceOf,
   filterTransactions,
-  formatMoney,
-  joinedMoney,
   netWorth,
   scopeOptions,
   searchedTag,
   type Ledger,
   type TransactionScope,
 } from "@/lib/domain"
+import {
+  formatMoney,
+  joinedMoney,
+} from "@/lib/domain/format"
 import { tagLabel } from "@/components/kw/tag-editor"
 import { useT, type Translator } from "@/lib/i18n"
 import type { Account } from "@/lib/schema"

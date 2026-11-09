@@ -1,4 +1,4 @@
-import type { Account, CurrencySettings, RecurringRule, Transaction } from "@/lib/schema"
+import type { Account, CurrencySettings, RecurringRule, Transaction } from "../schema"
 
 import { addDays, addMonths, daysInMonth, monthInterval, startOfDay, yearMonthContaining, type YearMonth } from "./calendar"
 import { Decimal, ZERO, dec, sum } from "./decimal"

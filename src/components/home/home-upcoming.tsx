@@ -8,7 +8,8 @@ import { transactionAmountClass } from "@/components/kw/design-styles"
 import { CategoryBadge } from "@/components/kw/primitives"
 import { nextDateText } from "@/components/recurring/recurring-format"
 import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
-import { formatAmount, upcoming, type Ledger } from "@/lib/domain"
+import { upcoming, type Ledger } from "@/lib/domain"
+import { formatAmount } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 
 /** Occurrences shown on Home: the next three within a week. */

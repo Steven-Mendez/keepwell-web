@@ -29,14 +29,18 @@ import { toast } from "@/components/ui/toast"
 import {
   Decimal,
   ZERO,
-  completeOnboarding,
   currencySettings,
+} from "@/lib/domain"
+import {
   formatAmount,
+  parseAmount,
+} from "@/lib/domain/format"
+import {
+  completeOnboarding,
   normalizedPreferredName,
   onboardingDisplayName,
-  parseAmount,
   type OnboardingAccountDraft,
-} from "@/lib/domain"
+} from "@/lib/domain/onboarding"
 import { useT } from "@/lib/i18n"
 import { backupRepository, ledgerStore, profileStore } from "@/lib/repositories"
 import type { CardNetwork, DebtMode } from "@/lib/schema"

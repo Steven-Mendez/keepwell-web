@@ -1,4 +1,4 @@
-import { newID } from "@/lib/platform/uuid"
+import { newID } from "../schema/id"
 import type {
   Account,
   Card,
@@ -9,8 +9,8 @@ import type {
   TransactionCategory,
   TransactionKind,
   TransactionStatus,
-} from "@/lib/schema"
-import { OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "@/lib/schema"
+} from "../schema"
+import { OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "../schema"
 
 import { dayKey, parseDayKey } from "./calendar"
 import { Decimal, decimalText } from "./decimal"

@@ -1,5 +1,5 @@
-import type { CurrencySettings, ExchangeRate, Money as StoredMoney } from "@/lib/schema"
-import { isISOCurrency } from "@/lib/schema"
+import type { CurrencySettings, ExchangeRate, Money as StoredMoney } from "../schema"
+import { isISOCurrency } from "../schema"
 
 import { type DecimalValue, Decimal, ONE, ZERO, dec, decimalText, rounded } from "./decimal"
 import { DomainError } from "./errors"

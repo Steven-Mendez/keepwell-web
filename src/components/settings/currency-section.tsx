@@ -8,13 +8,17 @@ import { CurrencyPicker } from "@/components/kw/pickers"
 import { toast } from "@/components/ui/toast"
 import {
   currencySettings,
+  type Ledger,
+} from "@/lib/domain"
+import {
   formatNumber,
   parseAmount,
+} from "@/lib/domain/format"
+import {
   setRate,
   swapCurrencies,
   updateSettings,
-  type Ledger,
-} from "@/lib/domain"
+} from "@/lib/domain/onboarding"
 import type { Translator } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
 import type { Settings } from "@/lib/schema"

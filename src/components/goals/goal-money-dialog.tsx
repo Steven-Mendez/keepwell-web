@@ -9,10 +9,12 @@ import {
   addToSavingsGoal,
   dec,
   decimalText,
-  formatAmount,
-  parseAmount,
   withdrawFromSavingsGoal,
 } from "@/lib/domain"
+import {
+  formatAmount,
+  parseAmount,
+} from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
 import type { SavingsGoal } from "@/lib/schema"

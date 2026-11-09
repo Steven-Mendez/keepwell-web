@@ -1,4 +1,5 @@
-import { formatAmount, type SavingsGoalProgress } from "@/lib/domain"
+import { type SavingsGoalProgress } from "@/lib/domain"
+import { formatAmount } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import type { SavingsGoal, TargetMonth, TransactionCategory } from "@/lib/schema"
 

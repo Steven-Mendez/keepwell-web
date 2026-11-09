@@ -20,7 +20,8 @@ import { Input } from "@/components/ui/input"
 import { OptionSelect } from "@/components/kw/pickers"
 import { toast } from "@/components/ui/toast"
 import { useLedger, usePreferredName } from "@/hooks/use-ledger"
-import { ZERO, addAccount, addCreditCard, parseAmount } from "@/lib/domain"
+import { ZERO, addAccount, addCreditCard } from "@/lib/domain"
+import { parseAmount } from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
 import type {
   CardColor,

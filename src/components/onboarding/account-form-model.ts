@@ -1,10 +1,12 @@
 import {
   Decimal,
   ZERO,
+} from "@/lib/domain"
+import {
   formatAmountInput,
   parseAmount,
-  type OnboardingAccountDraft,
-} from "@/lib/domain"
+} from "@/lib/domain/format"
+import { type OnboardingAccountDraft } from "@/lib/domain/onboarding"
 import type { Translator } from "@/lib/i18n"
 import type { CardNetwork, DebtMode } from "@/lib/schema"
 

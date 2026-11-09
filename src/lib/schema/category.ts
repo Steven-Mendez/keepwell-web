@@ -1,4 +1,4 @@
-import { newID } from "@/lib/platform/uuid"
+import { newID } from "./id"
 import { z } from "zod"
 
 import { Money } from "./entities"

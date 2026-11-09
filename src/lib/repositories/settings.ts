@@ -1,6 +1,8 @@
 import { db, rowToSettings, settingsToRow, SETTINGS_ID } from "@/lib/db"
 import { Settings, nowIso } from "@/lib/schema"
 
+import { LOCAL_SETTINGS_COLUMNS } from "@/lib/db"
+
 import { enqueue } from "./shared"
 
 export const settingsRepository = {
@@ -14,9 +16,13 @@ export const settingsRepository = {
     const settings = Settings.parse(input)
     await db.transaction("rw", db.settings, db.sync_outbox, async () => {
       const existing = await db.settings.get(SETTINGS_ID)
-      const row = settingsToRow(settings, nowIso())
-      await db.settings.put(row)
-      await enqueue("settings", SETTINGS_ID, existing ? "update" : "create", row, row.updated_at)
+      const now = nowIso()
+      const row = settingsToRow(settings, now, existing?.created_at ?? now)
+      // A change to this device's own preferences (unlock, relock, hiding amounts) doesn't sync.
+      const synced = (r: typeof row) => Object.entries(r).filter(([key]) => !["created_at", "updated_at", ...LOCAL_SETTINGS_COLUMNS].includes(key)).map(([k, v]) => `${k}=${String(v)}`).join("|")
+      const syncedChanged = !existing || synced(existing) !== synced(row)
+      await db.settings.put(syncedChanged ? row : { ...row, updated_at: existing.updated_at })
+      if (syncedChanged) await enqueue("settings", SETTINGS_ID, existing ? "update" : "create", row, now)
     })
     return settings
   },
