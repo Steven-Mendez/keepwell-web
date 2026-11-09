@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from "vitest"
 
 import { db } from "@/lib/db"
 import { loanRepository, personalDebtRepository, settingsRepository } from "@/lib/repositories"
-import { applyRemote, NotFoundError, softDelete, upsert } from "@/lib/repositories/shared"
+import { applyRemote, NotFoundError, softDelete, upsert, nextEventStamp } from "@/lib/repositories/shared"
 import { DEFAULT_SETTINGS, loanPaymentId, parseSyncPayload, SYNC_WIRE, type Loan } from "@/lib/schema"
 import { getClientId } from "@/lib/sync/client-id"
 
@@ -62,6 +62,14 @@ describe("sync-ready repositories", () => {
     const error = await upsert(db.loans, "loan", loanToRow(loan)).catch((e: unknown) => e)
     // Dexie rethrows errors from inside a transaction as its own type, keeping the name.
     expect((error as Error).name).toBe(new NotFoundError("x").name)
+  })
+
+  it("orders events saved in the same millisecond as they were enqueued, parents first", () => {
+    const at = "2026-11-09T12:00:00.000Z"
+    const first = nextEventStamp(at)
+    const second = nextEventStamp(at)
+    expect(second > first).toBe(true)
+    expect(nextEventStamp("2030-01-01T00:00:00.000Z")).toBe("2030-01-01T00:00:00.000Z")
   })
 
   it("applies remote rows without writing the outbox, the server's row wins, tombstones are final", async () => {
