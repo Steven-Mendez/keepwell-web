@@ -4,6 +4,8 @@ import { defaultCache } from "@serwist/next/worker"
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist"
 import { NetworkOnly, Serwist } from "serwist"
 
+import { isApiPath } from "@/lib/api/proxied-paths"
+
 // The app shell is precached at build time and every route is served from cache when offline. Data
 // never goes through the service worker: it lives in IndexedDB, so the app works fully offline.
 declare global {
@@ -22,7 +24,11 @@ const serwist = new Serwist({
   navigationPreload: true,
   // The Keepwell API (and anything else on another origin) is never cached: answers there carry a
   // session and change with every sync. It must come first, before defaultCache's cross-origin rule.
-  runtimeCaching: [{ matcher: ({ sameOrigin }) => !sameOrigin, handler: new NetworkOnly() }, ...defaultCache],
+  // Same goes for the API's paths when this deployment proxies them (src/lib/api/proxied-paths.ts).
+  runtimeCaching: [
+    { matcher: ({ sameOrigin, url }) => !sameOrigin || isApiPath(url.pathname), handler: new NetworkOnly() },
+    ...defaultCache,
+  ],
   fallbacks: {
     entries: [
       {
