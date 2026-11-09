@@ -11,7 +11,7 @@ import {
   signOut,
   signOutEverywhere,
 } from "@/lib/api/account"
-import { ApiError } from "@/lib/api/client"
+import { accountErrorCode, describeAccountError } from "@/lib/api/account-errors"
 import { addPasskey, passkeysSupported } from "@/lib/api/passkeys"
 import type { Translator } from "@/lib/i18n"
 
@@ -39,15 +39,11 @@ export function AccountSection({ t }: { t: Translator }) {
       refresh()
     } catch (error) {
       toast.add({
-        title:
-          error instanceof ApiError && error.code === "NOT_INVITED"
-            ? t.in("web", "Keepwell accounts are invite-only for now.")
-            : error instanceof ApiError && error.code === "invitation_not_found"
-              ? t.in(
-                  "web",
-                  "That invitation is not valid. It may have expired or been used."
-                )
-              : t.in("web", "Couldn't reach Keepwell. Try again."),
+        title: describeAccountError(
+          accountErrorCode(error),
+          t,
+          t.in("web", "Couldn't complete that. Try again.")
+        ).message,
         type: "error",
       })
     } finally {
