@@ -1,13 +1,15 @@
 import {
   cashFlowOutcome,
-  formatAmount,
-  formatNumber,
   savingsRate,
   type Decimal,
   type MonthlySummary,
-  type Sign,
   type YearMonth,
 } from "@/lib/domain"
+import {
+  formatAmount,
+  formatNumber,
+  type Sign,
+} from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 
 /** Formatting the summary shares (iOS SummaryViewModel's money/percent/monthName helpers). */

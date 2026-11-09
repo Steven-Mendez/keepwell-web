@@ -7,9 +7,6 @@ import {
   accountCurrencies,
   bankRate,
   Decimal,
-  formatMoney,
-  formatNumber,
-  joinedMoney,
   movementTypeOf,
   rateHasSecondCurrency,
   share,
@@ -17,6 +14,11 @@ import {
   type SavedTransaction,
   type TransactionContext,
 } from "@/lib/domain"
+import {
+  formatMoney,
+  formatNumber,
+  joinedMoney,
+} from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { accountName, categoryNameById } from "@/lib/presentation/display"
 

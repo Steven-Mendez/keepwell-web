@@ -6,6 +6,7 @@ import type {
   TransactionDisplay,
   TransactionStyle,
 } from "@/lib/presentation/display"
+import { useT } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
 import { KWTransactionIcon } from "./design"
@@ -84,6 +85,8 @@ export function TransactionRow({
 
 type RowParts = { transaction: Transaction; display: TransactionDisplay }
 
+
+
 /** Description, subtitle and (in the desktop table) the note. */
 function TransactionText({
   transaction,
@@ -91,6 +94,9 @@ function TransactionText({
   dateLabel,
   columns,
 }: RowParts & { dateLabel: string | undefined; columns: boolean }) {
+  const t = useT()
+  // Movements an assistant recorded say so, confirmed or not (`source = mcp`).
+  const recordedBy = transaction.source === "mcp" ? t.in("web", "Recorded by Claude") : undefined
   return (
     <span className="flex min-w-0 flex-1 flex-col text-left">
       {/* KWTransactionRow: title 15/600, subtitle caption muted, amount 15/700, the second amount faint. */}
@@ -103,7 +109,7 @@ function TransactionText({
           columns && "lg:hidden"
         )}
       >
-        {[display.subtitle(transaction), dateLabel, tagLine(transaction.tags)].filter(Boolean).join(" · ")}
+        {[recordedBy, display.subtitle(transaction), dateLabel, tagLine(transaction.tags)].filter(Boolean).join(" · ")}
       </span>
       {columns && (transaction.note || transaction.tags?.length) ? (
         <span className="hidden truncate type-caption text-text-faint lg:block">

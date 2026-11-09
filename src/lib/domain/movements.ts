@@ -1,4 +1,4 @@
-import type { Account, Card, CurrencySettings, ExchangeRate, Transaction, TransactionCategory, TransactionKind } from "@/lib/schema"
+import type { Account, Card, CurrencySettings, ExchangeRate, Transaction, TransactionCategory, TransactionKind } from "../schema"
 
 import { Decimal, ZERO, decimalText } from "./decimal"
 import { yearMonthContaining } from "./calendar"

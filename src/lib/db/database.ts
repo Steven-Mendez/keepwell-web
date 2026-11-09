@@ -1,12 +1,18 @@
 import { Dexie, type EntityTable } from "dexie"
 
+import { legacyRepaymentId, loanPaymentId } from "@/lib/schema/id"
+
+import { rebuildOutbox } from "./outbox-rebuild"
+
 import type {
   AccountKind,
   CardColor,
   CardKind,
   CardNetwork,
   DebtMode,
+  RecordSource,
   RecurringFrequency,
+  SyncEntity,
   TransactionKind,
   TransactionStatus,
   UnlockMethod,
@@ -91,6 +97,8 @@ export interface TransactionRow extends AuditColumns {
   recurring_id: string | null
   /** Normalized tags, empty when none. Added in version 5, whose upgrade fills older rows. */
   tags: string[]
+  /** `mcp` when an MCP client recorded it. Added in version 6 (older rows become `app`); never changes. */
+  source: RecordSource
 }
 
 /** A recurring movement or subscription (iOS `RecurringRuleRecord`). */
@@ -115,6 +123,7 @@ export interface RecurringRuleRow extends AuditColumns {
   note: string | null
   /** Copied to each movement; empty when none. Added in version 5. */
   tags: string[]
+  source: RecordSource
 }
 
 /** A categorization rule (iOS `CategorizationRuleRecord`); `sort_index` is the person's order. */
@@ -140,7 +149,7 @@ export interface SavingsGoalRow extends AuditColumns {
   color: string | null
 }
 
-/** A loan (iOS `LoanRecord`). Its paid installments live on the row, as they only change with it. */
+/** A loan (iOS `LoanRecord`). Its paid installments are rows of `loan_payments` since version 6. */
 export interface LoanRow extends AuditColumns {
   id: string
   name: string
@@ -151,10 +160,22 @@ export interface LoanRow extends AuditColumns {
   installment_count: number
   frequency: string
   first_due_date: string
-  payments: { number: number; paid_at: string; transaction_id: string | null }[]
 }
 
-/** A personal debt (iOS `PersonalDebtRecord`), with its repayments on the row. */
+/**
+ * One paid installment, its own row so two devices can each record a payment without one write
+ * replacing the other. `id` is `loanPaymentId(loan_id, number)`: the same installment paid on two
+ * devices is one row.
+ */
+export interface LoanPaymentRow extends AuditColumns {
+  id: string
+  loan_id: string
+  number: number
+  paid_at: string
+  transaction_id: string | null
+}
+
+/** A personal debt (iOS `PersonalDebtRecord`). Its repayments are rows of `personal_debt_repayments`. */
 export interface PersonalDebtRow extends AuditColumns {
   id: string
   person: string
@@ -163,12 +184,21 @@ export interface PersonalDebtRow extends AuditColumns {
   currency: string
   date: string
   note: string | null
-  repayments: { amount: string; date: string }[]
   settled_at: string | null
   transaction_id: string | null
 }
 
-/** A single row, like iOS `SettingsRecord`. */
+export interface PersonalDebtRepaymentRow extends AuditColumns {
+  id: string
+  debt_id: string
+  amount: string
+  date: string
+}
+
+/**
+ * A single row, like iOS `SettingsRecord`. Only the currencies, reminder days and onboarding flag
+ * sync (`SettingsWire`); unlock, relock, hiding amounts and the iCloud switch are this device's.
+ */
 export interface SettingsRow {
   id: typeof SETTINGS_ID
   principal: string
@@ -180,22 +210,21 @@ export interface SettingsRow {
   is_icloud_backup_enabled: boolean
   payment_reminder_days_before: number
   has_completed_onboarding: boolean
+  /** Added in version 6, with `deleted_at`, so settings follow the same sync rules as every row. */
+  created_at: string
   updated_at: string
+  deleted_at: string | null
+}
+
+/** Small key/value facts about this installation, such as its sync `client_id`. */
+export interface MetaRow {
+  key: string
+  value: string
 }
 
 export const SETTINGS_ID = "settings"
 
-export type SyncEntity =
-  | "account"
-  | "card"
-  | "category"
-  | "transaction"
-  | "recurringRule"
-  | "savingsGoal"
-  | "loan"
-  | "personalDebt"
-  | "categorizationRule"
-  | "settings"
+export type { SyncEntity }
 export type SyncOperation = "create" | "update" | "delete"
 
 /**
@@ -219,7 +248,10 @@ export class KeepwellDatabase extends Dexie {
   recurring_rules!: EntityTable<RecurringRuleRow, "id">
   savings_goals!: EntityTable<SavingsGoalRow, "id">
   loans!: EntityTable<LoanRow, "id">
+  loan_payments!: EntityTable<LoanPaymentRow, "id">
   personal_debts!: EntityTable<PersonalDebtRow, "id">
+  personal_debt_repayments!: EntityTable<PersonalDebtRepaymentRow, "id">
+  meta!: EntityTable<MetaRow, "key">
   categorization_rules!: EntityTable<CategorizationRuleRow, "id">
   settings!: EntityTable<SettingsRow, "id">
   sync_outbox!: EntityTable<SyncOutboxRow, "id">
@@ -287,6 +319,70 @@ export class KeepwellDatabase extends Dexie {
           .modify((row) => {
             if (row.tags === undefined) row.tags = []
           })
+      })
+    // Sync-ready rows (ADR 0005): loan payments and debt repayments become rows with their own ids,
+    // movements and rules carry `source`, settings get the audit columns, and `meta` holds this
+    // installation's `client_id`. The outbox is rebuilt from the current rows in the wire format,
+    // so the first push uploads exactly today's state, never events in an older shape.
+    this.version(6)
+      .stores({
+        loan_payments: "id, loan_id, updated_at, deleted_at",
+        personal_debt_repayments: "id, debt_id, updated_at, deleted_at",
+        meta: "key",
+      })
+      .upgrade(async (tx) => {
+        const now = new Date().toISOString()
+        const loans = tx.table("loans")
+        await loans.toCollection().each(async (loan: LoanRow & { payments?: { number: number; paid_at: string; transaction_id: string | null }[] }) => {
+          for (const payment of loan.payments ?? []) {
+            await tx.table("loan_payments").put({
+              id: loanPaymentId(loan.id, payment.number),
+              loan_id: loan.id,
+              number: payment.number,
+              paid_at: payment.paid_at,
+              transaction_id: payment.transaction_id,
+              created_at: loan.created_at,
+              updated_at: loan.updated_at,
+              deleted_at: loan.deleted_at,
+            } satisfies LoanPaymentRow)
+          }
+        })
+        await loans.toCollection().modify((loan: { payments?: unknown }) => {
+          delete loan.payments
+        })
+        const debts = tx.table("personal_debts")
+        await debts.toCollection().each(async (debt: PersonalDebtRow & { repayments?: { amount: string; date: string }[] }) => {
+          for (const [index, repayment] of (debt.repayments ?? []).entries()) {
+            await tx.table("personal_debt_repayments").put({
+              id: legacyRepaymentId(debt.id, index, repayment.date, repayment.amount),
+              debt_id: debt.id,
+              amount: repayment.amount,
+              date: repayment.date,
+              created_at: debt.created_at,
+              updated_at: debt.updated_at,
+              deleted_at: debt.deleted_at,
+            } satisfies PersonalDebtRepaymentRow)
+          }
+        })
+        await debts.toCollection().modify((debt: { repayments?: unknown }) => {
+          delete debt.repayments
+        })
+        for (const table of ["transactions", "recurring_rules"]) {
+          await tx
+            .table(table)
+            .toCollection()
+            .modify((row: { source?: RecordSource }) => {
+              row.source ??= "app"
+            })
+        }
+        await tx
+          .table("settings")
+          .toCollection()
+          .modify((row: SettingsRow) => {
+            row.created_at ??= row.updated_at ?? now
+            row.deleted_at ??= null
+          })
+        await rebuildOutbox(tx, now)
       })
   }
 }

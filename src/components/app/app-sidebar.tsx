@@ -32,11 +32,13 @@ import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
 import { useLedger, usePreferredName } from "@/hooks/use-ledger"
 import {
   accountsOverview,
-  formatMoney,
-  joinedMoney,
   type Ledger,
   type Money,
 } from "@/lib/domain"
+import {
+  formatMoney,
+  joinedMoney,
+} from "@/lib/domain/format"
 import type { CardColor } from "@/lib/schema"
 import { useT } from "@/lib/i18n"
 import { accountName } from "@/lib/presentation/display"

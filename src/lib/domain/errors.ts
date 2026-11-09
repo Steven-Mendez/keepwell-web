@@ -1,4 +1,4 @@
-import type { TransactionKind } from "@/lib/schema"
+import type { TransactionKind } from "../schema"
 
 /**
  * The closed set of failures use cases raise, mirroring iOS `DomainError`. Messages are diagnostics;

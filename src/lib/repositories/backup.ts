@@ -1,4 +1,4 @@
-import { newID } from "@/lib/platform/uuid"
+import { Dexie } from "dexie"
 import {
   accountToRow,
   cardToRow,
@@ -6,8 +6,11 @@ import {
   rowToCategorizationRule,
   categoryToRow,
   db,
+  loanPaymentsToRows,
   loanToRow,
   personalDebtToRow,
+  rebuildOutbox,
+  repaymentsToRows,
   recurringRuleToRow,
   rowToLoan,
   rowToPersonalDebt,
@@ -23,8 +26,6 @@ import {
   transactionToRow,
   SETTINGS_ID,
   type AuditColumns,
-  type SyncEntity,
-  type SyncOutboxRow,
 } from "@/lib/db"
 import {
   CURRENT_SCHEMA_VERSION,
@@ -80,7 +81,9 @@ const allTables = () => [
   db.recurring_rules,
   db.savings_goals,
   db.loans,
+  db.loan_payments,
   db.personal_debts,
+  db.personal_debt_repayments,
   db.categorization_rules,
   db.settings,
   db.sync_outbox,
@@ -95,6 +98,7 @@ export const backupRepository = {
       async (): Promise<BackupFile> => {
         const settings = await db.settings.get(SETTINGS_ID)
         if (!settings) throw new NothingToBackUpError()
+        const [loanPayments, repayments] = await Promise.all([db.loan_payments.toArray(), db.personal_debt_repayments.toArray()])
         const [accounts, cards, categories, transactions, recurringRules, savingsGoals, loans, personalDebts, categorizationRules] = await Promise.all([
           db.accounts.orderBy("created_at").toArray(),
           db.cards.orderBy("created_at").toArray(),
@@ -138,10 +142,10 @@ export const backupRepository = {
               a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0
             )
             .map((row) => ({ ...rowToSavingsGoal(row), ...audit(row) })),
-          loans: loans.sort(byCreation).map((row) => ({ ...rowToLoan(row), ...audit(row) })),
+          loans: loans.sort(byCreation).map((row) => ({ ...rowToLoan(row, loanPayments), ...audit(row) })),
           personalDebts: personalDebts
             .sort(byCreation)
-            .map((row) => ({ ...rowToPersonalDebt(row), ...audit(row) })),
+            .map((row) => ({ ...rowToPersonalDebt(row, repayments), ...audit(row) })),
           categorizationRules: categorizationRules.map((row, index) => ({
             ...rowToCategorizationRule(row),
             sortIndex: index,
@@ -205,46 +209,16 @@ export const backupRepository = {
       ...columns(record),
     }))
 
+    // Payments and repayments take their parent's audit dates: the file keeps them on the parent.
+    const loanPayments = file.loans.flatMap((record) => loanPaymentsToRows(record).map((row) => ({ ...row, ...columns(record) })))
+    const repayments = file.personalDebts.flatMap((record) => repaymentsToRows(record).map((row) => ({ ...row, ...columns(record) })))
+
     const categorizationRules = [...file.categorizationRules]
       .sort((a, b) => a.sortIndex - b.sortIndex)
       .map((record, index) => ({
         ...categorizationRuleToRow(record, index),
         ...columns(record),
       }))
-
-    const events: SyncOutboxRow[] = []
-    const record = (
-      entity: SyncEntity,
-      rows: ReadonlyArray<AuditColumns & { id: string }>
-    ) => {
-      for (const row of rows) {
-        events.push({
-          id: newID(),
-          entity,
-          entity_id: row.id,
-          operation: row.deleted_at === null ? "update" : "delete",
-          payload: row,
-          created_at: now,
-        })
-      }
-    }
-    record("account", accounts)
-    record("card", cards)
-    record("category", categories)
-    record("transaction", transactions)
-    record("recurringRule", recurringRules)
-    record("savingsGoal", savingsGoals)
-    record("loan", loans)
-    record("personalDebt", personalDebts)
-    record("categorizationRule", categorizationRules)
-    events.push({
-      id: newID(),
-      entity: "settings",
-      entity_id: SETTINGS_ID,
-      operation: "update",
-      payload: settings,
-      created_at: now,
-    })
 
     await db.transaction("rw", allTables(), async () => {
       await Promise.all(allTables().map((table) => table.clear()))
@@ -256,9 +230,12 @@ export const backupRepository = {
       await db.recurring_rules.bulkPut(recurringRules)
       await db.savings_goals.bulkPut(savingsGoals)
       await db.loans.bulkPut(loans)
+      await db.loan_payments.bulkPut(loanPayments)
       await db.personal_debts.bulkPut(personalDebts)
+      await db.personal_debt_repayments.bulkPut(repayments)
       await db.categorization_rules.bulkPut(categorizationRules)
-      await db.sync_outbox.bulkAdd(events)
+      // The restore supersedes whatever was pending: one event per restored row, in the wire format.
+      await rebuildOutbox(Dexie.currentTransaction!, now)
     })
 
     return {

@@ -22,13 +22,15 @@ import { toast } from "@/components/ui/toast"
 import { SettingsSkeleton } from "@/components/kw/skeletons"
 import { useLedger, usePreferredName } from "@/hooks/use-ledger"
 import {
-  PREFERRED_NAME_MAX_LENGTH,
   compareExpiry,
-  normalizedPreferredName,
   paymentMethodGroups,
-  updateSettings,
   type Ledger,
 } from "@/lib/domain"
+import {
+  PREFERRED_NAME_MAX_LENGTH,
+  normalizedPreferredName,
+  updateSettings,
+} from "@/lib/domain/onboarding"
 import { useI18n, type Translator } from "@/lib/i18n"
 import {
   accountName,
@@ -39,6 +41,7 @@ import {
 import { ledgerStore, profileStore } from "@/lib/repositories"
 import type { Card } from "@/lib/schema"
 
+import { AccountSection } from "./account-section"
 import { CurrencySection } from "./currency-section"
 import { DataSection } from "./data-section"
 import {
@@ -64,6 +67,7 @@ export function SettingsScreen() {
       ) : (
         <div className="grid items-start gap-8 lg:grid-cols-2">
           <div className="flex flex-col gap-8">
+            <AccountSection t={t} />
             <ProfileSection t={t} />
             <LanguageSection />
             <CurrencySection t={t} ledger={ledger} />

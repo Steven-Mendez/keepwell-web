@@ -1,4 +1,5 @@
-import { ZERO, parseAmount, type CreditCardDraft } from "@/lib/domain"
+import { ZERO, type CreditCardDraft } from "@/lib/domain"
+import { parseAmount } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import type { CardColor, CardNetwork, DebtMode } from "@/lib/schema"
 

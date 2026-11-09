@@ -20,13 +20,15 @@ import { SkeletonList } from "@/components/kw/skeletons"
 import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
 import { useLedger } from "@/hooks/use-ledger"
 import {
-  formatAmount,
-  formatMoney,
   isFinished,
   nextOccurrenceOf,
   recurringOverview,
   type Ledger,
 } from "@/lib/domain"
+import {
+  formatAmount,
+  formatMoney,
+} from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
 import type { RecurringRule } from "@/lib/schema"
 import { cn } from "@/lib/utils"

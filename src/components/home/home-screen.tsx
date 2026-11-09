@@ -26,10 +26,7 @@ import {
 } from "@/hooks/use-ledger"
 import {
   confirmPlannedTransaction,
-  formatAmount,
-  formatMoney,
-  formatNumber,
-  formatRate,
+  deleteTransaction,
   homeOverview,
   roundedHalfUp,
   savingsRate,
@@ -38,6 +35,12 @@ import {
   type HomeOverview,
   type Ledger,
 } from "@/lib/domain"
+import {
+  formatAmount,
+  formatMoney,
+  formatNumber,
+  formatRate,
+} from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
 import {
   accountName,
@@ -47,6 +50,8 @@ import {
   type TransactionDisplay,
 } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
+
+import { AssistantRulesSection } from "./home-assistant"
 import type { Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
@@ -132,6 +137,8 @@ export function HomeScreen() {
               now={now}
               onSelect={onSelect}
             />
+
+            {ledger ? <AssistantRulesSection t={t} ledger={ledger} /> : null}
 
             {overview.planned.length > 0 ? (
               <DraftsSection
@@ -415,15 +422,32 @@ function DraftsSection({
                 confirming.has(transaction.id) ? "animate-row-out" : undefined
               }
               trailing={
-                <KWButton
-                  size="mini"
-                  disabled={confirming.has(transaction.id)}
-                  onClick={() =>
-                    onConfirm(transaction.id, transaction.description)
-                  }
-                >
-                  {t.in("home", "Confirm")}
-                </KWButton>
+                <>
+                  {/* An assistant's movement can also be thrown away: it never happened. */}
+                  {transaction.source === "mcp" ? (
+                    <KWButton
+                      size="mini"
+                      variant="secondary"
+                      disabled={confirming.has(transaction.id)}
+                      onClick={() =>
+                        void deleteTransaction(ledgerStore, transaction.id).catch(() =>
+                          toast.add({ title: t.in("web", "Couldn't save the change. Try again."), type: "error" })
+                        )
+                      }
+                    >
+                      {t.in("web", "Discard")}
+                    </KWButton>
+                  ) : null}
+                  <KWButton
+                    size="mini"
+                    disabled={confirming.has(transaction.id)}
+                    onClick={() =>
+                      onConfirm(transaction.id, transaction.description)
+                    }
+                  >
+                    {t.in("home", "Confirm")}
+                  </KWButton>
+                </>
               }
             />
           ))}

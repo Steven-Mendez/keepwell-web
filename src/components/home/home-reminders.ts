@@ -3,8 +3,6 @@ import {
   budgetStatuses,
   compareMonths,
   confirmPlannedTransaction,
-  formatAmount,
-  formatMoney,
   monthlySummary,
   nextOccurrence,
   startOfDay,
@@ -13,6 +11,10 @@ import {
   type HomeOverview,
   type Ledger,
 } from "@/lib/domain"
+import {
+  formatAmount,
+  formatMoney,
+} from "@/lib/domain/format"
 import type { KWIconName } from "@/components/kw/kw-icon-data"
 import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import type { Translator } from "@/lib/i18n"

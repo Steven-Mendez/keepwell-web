@@ -1,4 +1,4 @@
-import type { ExchangeRate } from "@/lib/schema"
+import type { ExchangeRate } from "../schema"
 
 import { type DecimalValue, Decimal, roundedHalfUp } from "./decimal"
 import type { Money } from "./money"

@@ -15,8 +15,6 @@ import {
   dec,
   deleteRecurringRule,
   firstNextDate,
-  formatMoney,
-  formatNumber,
   isDomainError,
   movementTypeOf,
   occurrencesFrom,
@@ -26,6 +24,10 @@ import {
   sourceOf,
   type TransactionContext,
 } from "@/lib/domain"
+import {
+  formatMoney,
+  formatNumber,
+} from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
 import {

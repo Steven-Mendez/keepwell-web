@@ -2,12 +2,12 @@ import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import {
   dayKey,
   debtRemaining,
-  formatAmount,
   parseDayKey,
   type LoanProgress,
   type Money,
   type PaymentSource,
 } from "@/lib/domain"
+import { formatAmount } from "@/lib/domain/format"
 import type { Ledger } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { accountName, methodTitle } from "@/lib/presentation/display"

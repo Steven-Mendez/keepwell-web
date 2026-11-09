@@ -19,10 +19,9 @@ pnpm typecheck
 pnpm lint
 pnpm test         # Vitest: the iOS domain tests, ported, plus string coverage
 pnpm tokens:check # design tokens still match keepwell-ios
-pnpm strings:check # texts still match the iOS string catalogs
 ```
 
-`keepwell-ios` must sit next to this folder for `tokens:*` and `strings:*`.
+`keepwell-ios` must sit next to this folder for `tokens:*`.
 
 ## Where things live
 
@@ -31,8 +30,8 @@ pnpm strings:check # texts still match the iOS string catalogs
   formatting). Pure functions and use cases over a `LedgerStore`; `tests/domain` ports the iOS tests.
 - `src/lib/repositories`, `src/lib/db`: IndexedDB through Dexie, with audit columns, tombstones and a
   sync outbox; `ledgerStore` implements the domain contract.
-- `src/lib/i18n`: `strings.generated.json` comes from the iOS `Localizable.xcstrings` catalogs
-  (`pnpm strings:sync`); `web-strings*.ts` holds the few desktop-only texts, in English and Spanish.
+- `src/lib/i18n`: `strings.json` holds the texts of the iOS `Localizable.xcstrings` catalogs, copied
+  by hand when iOS adds or changes one; `web-strings*.ts` holds the few desktop-only texts, in English and Spanish.
 - `src/app/tokens.css`: generated from the iOS DesignSystem (`pnpm tokens:sync`). The iOS type scale is
   available as `type-*` utilities (`type-title`, `type-label`, …).
 - `src/components`: screens by feature on shadcn components (`ui/`, untouched) and Keepwell wrappers

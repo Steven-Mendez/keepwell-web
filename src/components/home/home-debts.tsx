@@ -6,11 +6,11 @@ import { KWSection } from "@/components/kw/design"
 import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import {
   debtTotals,
-  formatAmount,
   orderedLoans,
   type Ledger,
   type Money,
 } from "@/lib/domain"
+import { formatAmount } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 

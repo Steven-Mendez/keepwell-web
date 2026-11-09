@@ -1,6 +1,7 @@
 import type { Account, Card, CardColor, CardKind, CardNetwork, Transaction, TransactionCategory, TransactionKind } from "@/lib/schema"
 import { LOAN_PAYMENTS_ID, OTHER_EXPENSE_ID, OTHER_INCOME_ID } from "@/lib/schema"
-import { accountDisplayName, amountIn, formatAmount, isConfirmed, rateHasSecondCurrency, translatesById } from "@/lib/domain"
+import { accountDisplayName, amountIn, isConfirmed, rateHasSecondCurrency, translatesById } from "@/lib/domain"
+import { formatAmount } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 
 // Ports of SharedPresentation (CategoryDisplay, CardDisplay, TransactionDisplay): how categories,
