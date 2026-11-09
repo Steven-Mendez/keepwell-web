@@ -176,6 +176,12 @@ export function LoginScreen() {
         >
           {t.in("web", "Not now")}
         </Link>
+        <Link
+          href="/privacy"
+          className="type-caption-sm text-muted-foreground underline-offset-4 hover:underline"
+        >
+          {t.in("web", "Privacy Policy")}
+        </Link>
       </div>
     </main>
   )
