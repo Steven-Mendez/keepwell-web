@@ -41,7 +41,7 @@ export const SETTINGS_NAV: NavItem = { title: "Settings", ns: "settings", href: 
 export const ONBOARDING_PATH = "/welcome"
 
 /** Routes drawn as full pages of their own, without the sidebar, top bar or tab bar. */
-export const STANDALONE_PATHS: readonly string[] = ["/design-system", "/connect"]
+export const STANDALONE_PATHS: readonly string[] = ["/design-system", "/connect", "/login"]
 
 export function isStandalonePath(pathname: string): boolean {
   return STANDALONE_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
