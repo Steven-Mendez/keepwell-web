@@ -125,4 +125,12 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "Sync this browser with Keepwell for iPhone.": { es: "Sincroniza este navegador con Keepwell para iPhone." },
   "Sign in": { es: "Iniciar sesión" },
   "Not now": { es: "Ahora no" },
+  "No passkey was used. If you don't have one yet, continue with Apple and add it in Settings.": {
+    es: "No se usó ninguna passkey. Si aún no tienes una, continúa con Apple y añádela en Ajustes.",
+  },
+  "This device already has a Keepwell passkey.": { es: "Este dispositivo ya tiene una passkey de Keepwell." },
+  "That passkey doesn't belong to a Keepwell account. Continue with Apple instead.": {
+    es: "Esa passkey no corresponde a ninguna cuenta de Keepwell. Continúa con Apple.",
+  },
+  "Couldn't complete that. Try again.": { es: "No se pudo completar. Inténtalo de nuevo." },
 }

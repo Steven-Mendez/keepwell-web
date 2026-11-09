@@ -9,76 +9,12 @@ import { KWAppIconTile } from "@/components/kw/kw-icon"
 import { Input } from "@/components/ui/input"
 import { useAccount } from "@/hooks/use-account"
 import { claimInvitation, signInWithApple } from "@/lib/api/account"
-import { ApiError } from "@/lib/api/client"
+import { accountErrorCode, describeAccountError } from "@/lib/api/account-errors"
 import { passkeysSupported, signInWithPasskey } from "@/lib/api/passkeys"
-import { useT, type Translator } from "@/lib/i18n"
+import { useT } from "@/lib/i18n"
 
 /** Where a signed-in person goes, and where Apple sends them back on success. */
 const AFTER_SIGN_IN = "/settings"
-
-/**
- * Turns a sign-in error code into a sentence and whether the invitation field should open. Codes
- * come from the API (`NOT_INVITED`, `INVALID_INVITATION`), from Better Auth's callback
- * (`state_mismatch`, …) through `?error=`, or from our own calls.
- */
-export function describeSignInError(
-  code: string,
-  t: Translator
-): { message: string; needsInvitation: boolean } {
-  switch (code.toUpperCase()) {
-    case "NOT_INVITED":
-      return {
-        message: t.in(
-          "web",
-          "Keepwell accounts are invite-only for now. If you have an invitation, enter it below."
-        ),
-        needsInvitation: true,
-      }
-    case "INVALID_INVITATION":
-    case "INVITATION_NOT_FOUND":
-      return {
-        message: t.in(
-          "web",
-          "That invitation is not valid. It may have expired or been used."
-        ),
-        needsInvitation: true,
-      }
-    case "ACCESS_DENIED":
-    case "USER_CANCELLED":
-      return {
-        message: t.in("web", "Sign-in was cancelled."),
-        needsInvitation: false,
-      }
-    case "STATE_MISMATCH":
-    case "STATE_NOT_FOUND":
-    case "PLEASE_RESTART_THE_PROCESS":
-      return {
-        message: t.in(
-          "web",
-          "Sign-in took too long or was interrupted. Try again."
-        ),
-        needsInvitation: false,
-      }
-    case "NETWORK":
-      return {
-        message: t.in(
-          "web",
-          "Couldn't reach Keepwell. Check your connection and try again."
-        ),
-        needsInvitation: false,
-      }
-    default:
-      return {
-        message: t.in("web", "Couldn't sign in. Try again."),
-        needsInvitation: false,
-      }
-  }
-}
-
-function errorCode(error: unknown): string {
-  if (error instanceof ApiError) return error.code
-  return "NETWORK"
-}
 
 const noSubscription = () => () => {}
 
@@ -116,7 +52,7 @@ export function LoginScreen() {
   // Apple's callback comes back here with ?error= when it fails.
   const callbackCode = useSearchParams().get("error")
   const shown =
-    failure ?? (callbackCode ? describeSignInError(callbackCode, t) : undefined)
+    failure ?? (callbackCode ? describeAccountError(callbackCode, t) : undefined)
   const error = shown?.message
   const showInvitation = invitationOpened || Boolean(shown?.needsInvitation)
 
@@ -130,7 +66,7 @@ export function LoginScreen() {
     try {
       await work()
     } catch (caught) {
-      setFailure(describeSignInError(errorCode(caught), t))
+      setFailure(describeAccountError(accountErrorCode(caught), t))
       setBusy(false)
     }
   }
