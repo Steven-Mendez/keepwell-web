@@ -389,7 +389,9 @@ export function KWSectionHeader({
   return (
     <div
       className={cn(
-        "flex items-baseline justify-between gap-2 px-1",
+        // No inset of its own: the title starts on the card's edge and the page gutter, as iOS's
+        // KWSectionHeader does, instead of 4 px in, which matched neither the card nor its rows.
+        "flex items-baseline justify-between gap-2",
         className
       )}
     >

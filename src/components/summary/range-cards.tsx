@@ -312,7 +312,7 @@ export function MonthlyFlowCard({ t, f, report, className }: CardProps) {
   } satisfies ChartConfig
 
   return (
-    <Surface className={cn("flex min-h-0 flex-col gap-3 p-5", className)}>
+    <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <CardHeader
         title={t.in("web", "Month by month")}
         caption={
@@ -469,7 +469,7 @@ export function SavingsCard({ t, f, report, className }: CardProps) {
   } satisfies ChartConfig
 
   return (
-    <Surface className={cn("flex min-h-0 flex-col gap-3 p-5", className)}>
+    <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <CardHeader
         title={t.in("web", "Savings over time")}
         caption={
@@ -722,7 +722,7 @@ export function CategoriesCard({
   const text = MODE_TEXT[mode](t)
 
   return (
-    <Surface className={cn("flex min-h-0 flex-col gap-4 p-5", className)}>
+    <Surface className={cn("flex min-h-0 flex-col gap-4 p-4", className)}>
       <CardHeader
         title={t.in("summary", "By category")}
         caption={
@@ -844,7 +844,7 @@ export function CategoryTrendsCard({
   )
 
   return (
-    <Surface className={cn("flex min-h-0 flex-col gap-3 p-5", className)}>
+    <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <CardHeader
         title={t.in("web", "Top categories over time")}
         caption={t.in(
@@ -993,7 +993,7 @@ export function HighlightsCard({
   }
 
   return (
-    <Surface className={cn("flex min-h-0 flex-col gap-3 p-5", className)}>
+    <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <CardHeader
         title={t.in("web", "Highlights")}
         caption={
@@ -1071,7 +1071,7 @@ export function YearsCard({
   } satisfies ChartConfig
 
   return (
-    <Surface className={cn("flex min-h-0 flex-col gap-3 p-5", className)}>
+    <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <CardHeader
         title={t.in("web", "Year over year")}
         caption={t.in(

@@ -69,7 +69,8 @@ function TotalsStrip({
 function ColumnHeader({ t }: { t: Translator }) {
   return (
     <div
-      className="mb-4 hidden items-center gap-3 px-5 type-caption text-text-faint lg:flex"
+      // px-4: TransactionRow's inset, so each column title starts over its column.
+      className="mb-4 hidden items-center gap-3 px-4 type-caption text-text-faint lg:flex"
       aria-hidden
     >
       <span className="w-10 shrink-0" />
@@ -105,11 +106,10 @@ function DayGroup({
   return (
     <section className="flex flex-col gap-2 pb-4">
       {/* Day headers stay pinned under the top bar while their movements scroll (Monarch). */}
-      <div className="sticky top-16 z-[5] -mx-1 flex items-baseline justify-between gap-2 bg-background/85 px-2 py-1.5 backdrop-blur-xl">
-        <KWSectionHeader
-          title={dayLabel(t, new Date(transactions[0]!.date))}
-          className="px-0"
-        />
+      {/* -mx-1 px-1: the blur reaches a little past the card while the title and the day's net sit
+          on its edges, as every section header does. */}
+      <div className="sticky top-16 z-[5] -mx-1 flex items-baseline justify-between gap-2 bg-background/85 px-1 py-1.5 backdrop-blur-xl">
+        <KWSectionHeader title={dayLabel(t, new Date(transactions[0]!.date))} />
         {net && !net.isZero() ? (
           <span
             className={cn(

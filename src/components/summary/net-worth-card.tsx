@@ -80,7 +80,7 @@ export function NetWorthCard({
   }))
 
   return (
-    <Surface className={cn("flex flex-col gap-3 p-5", className)}>
+    <Surface className={cn("flex flex-col gap-3 p-4", className)}>
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
         <div className="flex min-w-0 flex-col">
           <h2 className="type-heading">{t.in("summary", "Net worth")}</h2>

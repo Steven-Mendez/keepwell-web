@@ -14,7 +14,7 @@ import {
 import { AnimatedNumber } from "@/components/kw/animated-number"
 import { AnimatedList, SpringFill } from "@/components/kw/motion"
 import { KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
-import { CategoryBadge, Page } from "@/components/kw/primitives"
+import { CategoryBadge, Page, PAGE_COLUMN } from "@/components/kw/primitives"
 import { TransactionRow } from "@/components/kw/transaction-row"
 import { toast } from "@/components/ui/toast"
 import { HomeSkeleton } from "@/components/kw/skeletons"
@@ -552,7 +552,7 @@ function QuickLog({
         categories.length === 0 && "hidden lg:flex"
       )}
     >
-      <div className="flex flex-col gap-3 rounded-2xl bg-card p-3">
+      <div className="flex flex-col gap-3 rounded-2xl bg-card p-4">
         <div className="hidden grid-cols-4 gap-1 lg:grid">
           <KWActionButton
             icon="plus"
@@ -672,7 +672,7 @@ function Hero({
           net worth           | this month (glass panel)
         From xl the month panel runs the full width beside the balance and lays out horizontally.
       */}
-      <div className="mx-auto grid w-full max-w-[1400px] justify-items-center gap-5 px-(--gutter) pt-6 pb-10 text-center md:px-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:justify-items-stretch lg:gap-x-6 lg:gap-y-4 lg:pt-4 lg:pb-6 lg:text-left">
+      <div className={cn(PAGE_COLUMN, "grid justify-items-center gap-5 pt-6 pb-10 text-center lg:grid-cols-[minmax(0,1fr)_22rem] lg:justify-items-stretch lg:gap-x-6 lg:gap-y-4 lg:pt-4 lg:pb-6 lg:text-left")}>
         <div className="flex flex-col gap-0.5 lg:col-start-1 lg:row-start-1 lg:self-center">
           <p className="type-caption text-brand-foreground">
             {now.toLocaleDateString(t.locale, {

@@ -149,7 +149,7 @@ export function KeyboardShortcuts() {
 
   return (
     <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t.in("web", "Keyboard shortcuts")}</DialogTitle>
         </DialogHeader>
@@ -157,7 +157,7 @@ export function KeyboardShortcuts() {
           {rows.map(([keys, label]) => (
             <li
               key={keys.join("+") + label}
-              className="flex items-center justify-between gap-4 rounded-md px-1 py-1.5"
+              className="flex items-center justify-between gap-4 py-1.5"
             >
               <span className="type-body">{label}</span>
               <KbdGroup>

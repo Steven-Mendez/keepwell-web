@@ -48,7 +48,7 @@ export function ForecastSection({
   ]
   return (
     <KWSection title={t.in("home", "End of month")}>
-      <div className="flex flex-col gap-3 rounded-2xl bg-card p-[18px]">
+      <div className="flex flex-col gap-3 rounded-2xl bg-card p-4">
         <div className="flex flex-col gap-1">
           <AnimatedNumber
             value={

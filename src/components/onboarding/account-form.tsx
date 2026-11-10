@@ -189,7 +189,7 @@ export function AccountForm({
 }
 
 function FieldError({ text }: { text: string }) {
-  return <p className="px-1 type-caption text-negative">{text}</p>
+  return <p className="type-caption text-negative">{text}</p>
 }
 
 /** Bank and account name, for bank accounts and cards (cash has neither). */

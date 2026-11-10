@@ -51,13 +51,21 @@ export function SavedReceipt({
           className="mx-auto w-full max-w-[400px]"
         />
       </div>
-      <div className="mx-auto flex w-full max-w-[400px] gap-2.5 px-5 pt-3 pb-6">
-        <KWButton variant="surface" fill onClick={onLogAnother}>
-          {ct("Log another")}
-        </KWButton>
-        <KWButton fill autoFocus onClick={onClose}>
-          {ct("Done")}
-        </KWButton>
+      {/* The gutter outside the 400 px column, as around the ticket, so the buttons span exactly the
+          ticket's width (inside it they sat 20 px in, and two w-full buttons overflowed it). */}
+      <div className="px-5 pt-3 pb-6 md:px-6">
+        <div className="mx-auto flex w-full max-w-[400px] gap-2.5">
+          <KWButton
+            variant="surface"
+            className="min-w-0 flex-1"
+            onClick={onLogAnother}
+          >
+            {ct("Log another")}
+          </KWButton>
+          <KWButton className="min-w-0 flex-1" autoFocus onClick={onClose}>
+            {ct("Done")}
+          </KWButton>
+        </div>
       </div>
     </div>
   )

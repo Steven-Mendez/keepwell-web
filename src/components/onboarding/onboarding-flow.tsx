@@ -733,14 +733,14 @@ function CurrenciesStep(props: {
                   {props.second}
                 </span>
               </div>
-              <p className="px-1 type-caption text-muted-foreground">
+              <p className="type-caption text-muted-foreground">
                 {t.in(
                   "onboarding",
                   "It defaults to 1. Change it whenever you want; each transaction keeps the rate from when you logged it."
                 )}
               </p>
               {rateInvalid ? (
-                <p className="px-1 type-caption text-negative">
+                <p className="type-caption text-negative">
                   {t.in(
                     "settings",
                     "The rate has to be a number greater than zero."

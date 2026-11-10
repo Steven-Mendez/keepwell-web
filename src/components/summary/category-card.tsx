@@ -180,7 +180,7 @@ export function CategoryCard({
   const month = selected ? f.month(selected.month, "long", false) : ""
 
   return (
-    <Surface className={cn("flex min-h-0 flex-col gap-4 p-5", className)}>
+    <Surface className={cn("flex min-h-0 flex-col gap-4 p-4", className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col">
           <h2 className="type-heading">{t.in("summary", "By category")}</h2>

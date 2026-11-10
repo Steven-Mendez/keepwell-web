@@ -473,7 +473,7 @@ function RuleSummary({
       </div>
 
       <section className="flex flex-col gap-2">
-        <h3 className="px-1 type-label text-muted-foreground">
+        <h3 className="type-label text-muted-foreground">
           {t.in("web", "Next dates")}
         </h3>
         <ol className="flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card">
@@ -504,7 +504,7 @@ function RuleSummary({
 
       {rule && display ? (
         <section className="flex flex-col gap-2">
-          <h3 className="px-1 type-label text-muted-foreground">
+          <h3 className="type-label text-muted-foreground">
             {t.in("web", "Movements it created")}
           </h3>
           <div className="flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card">
@@ -532,7 +532,7 @@ function RuleSummary({
 
       <div className="mt-auto flex flex-col gap-2 pt-2">
         {editor.error ? (
-          <p role="alert" className="px-1 type-caption text-negative">
+          <p role="alert" className="type-caption text-negative">
             {editor.error}
           </p>
         ) : null}

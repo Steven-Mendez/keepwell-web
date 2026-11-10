@@ -99,7 +99,7 @@ export function PaceCard({
   const previousLegend = f.month(pace.previousMonth)
 
   return (
-    <Surface className={cn("flex min-h-0 flex-col gap-3 p-5", className)}>
+    <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
         <div className="flex min-w-0 flex-col">
           <div className="flex flex-wrap items-baseline gap-x-3">

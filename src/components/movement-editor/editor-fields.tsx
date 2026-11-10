@@ -44,7 +44,7 @@ export function TransferAccountsSection({ editor }: SectionProps) {
   return (
     <section className="grid gap-5 lg:grid-cols-2">
       <div className="flex flex-col gap-2">
-        <h3 className="px-1 type-heading text-foreground">
+        <h3 className="type-heading text-foreground">
           {sourceQuestion(t, fields.type)}
         </h3>
         <AccountPicker
@@ -55,7 +55,7 @@ export function TransferAccountsSection({ editor }: SectionProps) {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <h3 className="px-1 type-heading text-foreground">
+        <h3 className="type-heading text-foreground">
           {destinationQuestion(t, fields.type)}
         </h3>
         {destinations.length === 0 ? (
@@ -171,7 +171,7 @@ function DebitedField({ editor }: SectionProps) {
         className={cn(KW_FIELD, "tabular-nums")}
       />
       {review.bankRateLine ? (
-        <span className="px-1 type-caption-sm text-muted-foreground tabular-nums">
+        <span className="type-caption-sm text-muted-foreground tabular-nums">
           {review.bankRateLine}
         </span>
       ) : null}
@@ -185,7 +185,7 @@ export function CategorySection({ editor }: SectionProps) {
   const { context, fields, form } = editor
   return (
     <section className="flex flex-col gap-3">
-      <h3 className="px-1 type-heading text-foreground">
+      <h3 className="type-heading text-foreground">
         {categoryQuestion(t, form.kind)}
       </h3>
       <CategoryPicker
@@ -205,7 +205,7 @@ export function CategorySection({ editor }: SectionProps) {
         onCreated={(created) => editor.pickCategory(created.id)}
       />
       {editor.ruleHint ? (
-        <p className="px-1 type-caption text-muted-foreground" aria-live="polite">
+        <p className="type-caption text-muted-foreground" aria-live="polite">
           {editor.ruleHint}
         </p>
       ) : null}
@@ -219,7 +219,7 @@ export function MethodSection({ editor }: SectionProps) {
   const { context, fields, form } = editor
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex flex-col gap-0.5 px-1">
+      <div className="flex flex-col gap-0.5">
         <h3 className="type-heading text-foreground">
           {sourceQuestion(t, fields.type)}
         </h3>

@@ -100,7 +100,7 @@ export function RecurringScreen() {
         </KWGroupedCard>
       ) : (
         <>
-          <section className="flex flex-col gap-1 rounded-[var(--radius-surface)] bg-card px-5 py-5">
+          <section className="flex flex-col gap-1 rounded-[var(--radius-surface)] bg-card p-4">
             <span className="type-label text-text-secondary">
               {t.in("web", "Subscriptions per month")}
             </span>
