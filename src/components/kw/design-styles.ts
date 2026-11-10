@@ -13,8 +13,8 @@ export type KWButtonSize =
   "large" | "regular" | "row" | "text" | "medium" | "small" | "mini"
 
 const BUTTON_VARIANTS: Record<KWButtonVariant, string> = {
-  // White fill, black label: the main action of a screen.
-  primary: "bg-white text-black hover:bg-white/90",
+  // White on black in dark mode, white on the brand blue in light: the main action of a screen.
+  primary: "bg-primary text-primary-foreground hover:bg-primary/90",
   secondary: "bg-secondary text-foreground hover:bg-secondary/80",
   surface: "bg-card text-foreground hover:bg-secondary",
   destructive: "bg-card text-negative hover:bg-negative-tint",

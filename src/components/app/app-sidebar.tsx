@@ -80,7 +80,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
             onClick={close}
             className="flex items-center gap-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <KWLockup height={28} className="text-foreground" />
+            <KWLockup height={28} className="text-logo" />
           </Link>
           {/* The toggle lives here while the sidebar is open, so pages don't spend a bar on it (Linear, Copilot). */}
           {isMobile ? null : (

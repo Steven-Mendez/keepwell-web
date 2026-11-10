@@ -172,7 +172,7 @@ export function WalletStack({
                     className={cn(
                       "block rounded-[var(--radius-card)] transition-shadow duration-(--duration-fast)",
                       isSelected &&
-                        "ring-2 ring-white/70 ring-offset-2 ring-offset-background"
+                        "ring-2 ring-foreground/70 ring-offset-2 ring-offset-background"
                     )}
                   >
                     {card.art}
