@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next"
 
-/** Installable, standalone and dark like the iOS app (black background, brand-blue icon). */
+/**
+ * Installable and standalone like the iOS app. A manifest takes one splash color, not one per
+ * appearance, so the launch splash keeps the original black; the page follows the system after it.
+ */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",

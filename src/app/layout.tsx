@@ -33,8 +33,12 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
-  colorScheme: "dark",
+  // The browser chrome matches the page background (Surface.bg) in each appearance.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F2F3F7" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+  colorScheme: "light dark",
   viewportFit: "cover",
 }
 
@@ -44,12 +48,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    // Dark only, like iOS (`preferredColorScheme(.dark)`).
+    // Light or dark with the system appearance, like iOS; tokens.css switches the palette.
     <html
       lang="en"
       suppressHydrationWarning
       className={cn(
-        "dark antialiased",
+        "antialiased",
         fontMono.variable,
         "font-sans",
         inter.variable

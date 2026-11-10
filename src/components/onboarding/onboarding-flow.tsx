@@ -163,7 +163,7 @@ export function OnboardingFlow() {
         <div className="flex w-full max-w-xl flex-col gap-8">
           {step === "done" ? (
             <div className="flex items-center gap-2.5">
-              <KWLockup height={28} className="text-foreground" />
+              <KWLockup height={28} className="text-logo" />
             </div>
           ) : (
             <FlowHeader
@@ -281,7 +281,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
           aria-hidden
         />
         <div className="relative flex items-center gap-2.5">
-          <KWLockup height={28} className="text-foreground" />
+          <KWLockup height={28} className="text-logo" />
         </div>
         <div className="relative flex flex-1 flex-col justify-center gap-8 py-10 lg:max-w-md">
           <Heading

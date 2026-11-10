@@ -123,7 +123,7 @@ export function NewCategoryDialog({
                     onClick={() => setIcon(symbol)}
                     className={cn(
                       "flex aspect-square items-center justify-center rounded-xl transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      icon === symbol ? "bg-white text-black" : "text-text-secondary hover:bg-secondary hover:text-foreground",
+                      icon === symbol ? "bg-primary text-primary-foreground" : "text-text-secondary hover:bg-secondary hover:text-foreground",
                     )}
                   >
                     <Icon className="size-4" />

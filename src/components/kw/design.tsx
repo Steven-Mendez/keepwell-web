@@ -51,7 +51,7 @@ function ButtonContent({
           className={cn(
             "rounded-md px-1.5 type-micro",
             variant === "primary"
-              ? "bg-black/8 text-black/55"
+              ? "bg-primary-foreground/10 text-primary-foreground/70"
               : "bg-secondary text-muted-foreground"
           )}
         >
@@ -150,9 +150,9 @@ export function KWCircleButton({
             className={cn(
               "inline-flex shrink-0 press items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40",
               variant === "white"
-                ? "bg-white text-black hover:bg-white/90"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
                 : variant === "translucent"
-                  ? "bg-white/14 text-foreground hover:bg-white/20"
+                  ? "bg-foreground/14 text-foreground hover:bg-foreground/20"
                   : "bg-card text-foreground hover:bg-secondary",
               className
             )}
@@ -196,9 +196,11 @@ export function KWActionButton({
 } & Omit<ComponentProps<"button">, "children">) {
   const circle = {
     neutral: "bg-secondary text-foreground group-hover/action:bg-secondary/70",
-    prominent: "bg-white text-black group-hover/action:bg-white/90",
-    translucent: "bg-white/18 text-foreground group-hover/action:bg-white/24",
-    active: "bg-link text-black",
+    prominent:
+      "bg-primary text-primary-foreground group-hover/action:bg-primary/90",
+    translucent:
+      "bg-foreground/18 text-foreground group-hover/action:bg-foreground/24",
+    active: "bg-link text-primary-foreground",
   }[variant]
   return (
     <button
@@ -277,15 +279,16 @@ export function KWSegmented<T extends string>({
                   : "h-6 px-3 type-caption font-semibold",
               selected
                 ? style === "accent"
-                  ? "text-foreground"
-                  : "text-black"
+                  ? // White in both modes: the light accent is deep enough for it.
+                    "text-white"
+                  : "text-primary-foreground"
                 : "text-text-secondary hover:text-foreground"
             )}
           >
             {selected ? (
               <SelectionPill
                 layoutId={pillId}
-                className={style === "accent" ? "bg-ring" : "bg-white"}
+                className={style === "accent" ? "bg-ring" : "bg-primary"}
               />
             ) : null}
             {option.title}
@@ -314,10 +317,10 @@ export function KWChip({
   const slides = pillId !== undefined && variant === "filled"
   const look = {
     filled: selected
-      ? cn("text-black", !slides && "bg-white")
+      ? cn("text-primary-foreground", !slides && "bg-primary")
       : "bg-card text-text-secondary hover:text-foreground",
     outlined: selected
-      ? "bg-white text-black ring-1 ring-white"
+      ? "bg-primary text-primary-foreground ring-1 ring-primary"
       : "bg-card text-text-secondary ring-1 ring-border ring-inset hover:text-foreground",
     extra: selected
       ? "bg-extra-tint text-extra ring-1 ring-extra"
@@ -335,7 +338,7 @@ export function KWChip({
       {...props}
     >
       {slides && selected ? (
-        <SelectionPill layoutId={pillId} className="bg-white" />
+        <SelectionPill layoutId={pillId} className="bg-primary" />
       ) : null}
       {children}
     </button>
