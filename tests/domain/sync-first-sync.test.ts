@@ -8,7 +8,7 @@ import { categoryRepository, eraseAllData } from "@/lib/repositories"
 import type { SyncEntity } from "@/lib/schema"
 import { ChoiceNeeded, keepBrowserData, pendingChoice, statusAfter, syncOnce, takeAccountData } from "@/lib/sync/engine"
 import { EMPTY_COUNTS, firstSyncDecision } from "@/lib/sync/first-sync"
-import { restoreFromAccount } from "@/lib/sync/restore"
+import { restoreFromAccount, restoreFromAccountResult } from "@/lib/sync/restore"
 import type { PulledChange, PushResult, SyncTransport } from "@/lib/sync/transport"
 
 type Row = PulledChange["row"]
@@ -152,7 +152,7 @@ describe("first sync decision", () => {
     expect(await db.transactions.count()).toBe(5)
   })
 
-  it("starts a download that stopped halfway again instead of asking", async () => {
+  it("a download that stops halfway changes nothing, and what's entered afterwards is never wiped", async () => {
     const server = new FakeServer()
     cloudLedger(server, "Bank")
     for (let i = 0; i < 3; i++) server.write("transaction", { ...category(`t${i}`, "x", 3), kind: "expense" } as Row)
@@ -160,7 +160,7 @@ describe("first sync decision", () => {
     const flaky: SyncTransport = {
       push: server.push.bind(server),
       pull: server.pull.bind(server),
-      // Fails once, after the accounts came down: the probe passes, the download stops halfway.
+      // Fails once, after the probe passed: the download stops halfway.
       snapshot: (entity) => {
         if (entity === "transaction" && server.calls.snapshot > 12 && !failed) {
           failed = true
@@ -169,11 +169,25 @@ describe("first sync decision", () => {
         return server.snapshot(entity)
       },
     }
+    await categoryRepository.ensureDefaults()
     await expect(syncOnce(flaky, { userId: USER })).rejects.toThrow("offline")
-    expect(await db.accounts.count()).toBe(1)
-    await syncOnce(flaky, { userId: USER })
-    expect(await pendingChoice()).toBeUndefined()
-    expect(await db.transactions.count()).toBe(3)
+    expect(await db.accounts.count()).toBe(0)
+    expect(await db.meta.get("sync_cursor")).toBeUndefined()
+
+    // The person onboards and enters data; the next round must not wipe it.
+    await db.accounts.put(account("local-Wallet", "Wallet"))
+    await expect(syncOnce(flaky, { userId: USER })).rejects.toBeInstanceOf(ChoiceNeeded)
+    expect((await db.accounts.toArray()).map((row) => row.name)).toEqual(["Wallet"])
+  })
+
+  it("ignores a leftover download marker from an older install instead of wiping", async () => {
+    const server = new FakeServer()
+    await localLedger("Wallet")
+    await db.meta.put({ key: "sync_downloading", value: "1" })
+    await syncOnce(server, { userId: USER })
+    expect((await db.accounts.toArray()).map((row) => row.name)).toEqual(["Wallet"])
+    expect(server.live("account").map((row) => row.name)).toEqual(["Wallet"])
+    expect(await db.meta.get("sync_downloading")).toBeUndefined()
   })
 
   it("never asks on later syncs", async () => {
@@ -203,7 +217,7 @@ describe("resolving the first sync", () => {
     await syncOnce(server, { userId: USER }).catch(() => undefined)
     await db.meta.put({ key: "client_id", value: "browser" })
 
-    await takeAccountData()
+    expect(await takeAccountData(server, USER)).toBe(true)
     await syncOnce(server, { userId: USER })
 
     expect((await db.accounts.toArray()).map((row) => row.name)).toEqual(["Bank"])
@@ -216,6 +230,33 @@ describe("resolving the first sync", () => {
     expect(await pendingChoice()).toBeUndefined()
   })
 
+  it("“Use your account's data” offline leaves this browser's data and the choice alone", async () => {
+    const server = new FakeServer()
+    cloudLedger(server, "Bank")
+    await localLedger("Wallet")
+    await syncOnce(server, { userId: USER }).catch(() => undefined)
+    const offline: SyncTransport = { push: () => Promise.reject(new TypeError("offline")), pull: () => Promise.reject(new TypeError("offline")), snapshot: () => Promise.reject(new TypeError("offline")) }
+    await expect(takeAccountData(offline, USER)).rejects.toThrow("offline")
+    expect((await db.accounts.toArray()).map((row) => row.name)).toEqual(["Wallet"])
+    expect(await pendingChoice()).toMatchObject({ userId: USER })
+    expect(await db.meta.get("sync_cursor")).toBeUndefined()
+  })
+
+  it("a choice made for another account is dropped, not applied to the signed-in one", async () => {
+    const server = new FakeServer()
+    cloudLedger(server, "Bank")
+    await localLedger("Wallet")
+    await syncOnce(server, { userId: USER }).catch(() => undefined)
+    expect(await takeAccountData(server, "user-2")).toBe(false)
+    expect(await keepBrowserData(server, "user-2")).toBe(false)
+    expect(await pendingChoice()).toBeUndefined()
+    expect((await db.accounts.toArray()).map((row) => row.name)).toEqual(["Wallet"])
+    expect(server.live("account").map((row) => row.name)).toEqual(["Bank"])
+    // The next round decides again for the account now signed in.
+    await expect(syncOnce(server, { userId: "user-2" })).rejects.toBeInstanceOf(ChoiceNeeded)
+    expect((await pendingChoice())?.userId).toBe("user-2")
+  })
+
   it("“Keep this browser's data” deletes the account's rows through the push and makes this browser's win", async () => {
     const server = new FakeServer()
     cloudLedger(server, "Bank", "Savings")
@@ -225,7 +266,7 @@ describe("resolving the first sync", () => {
     await db.categories.update("housing", { name: "Rent (here)", updated_at: at(5) })
     await syncOnce(server, { userId: USER }).catch(() => undefined)
 
-    await keepBrowserData(server)
+    expect(await keepBrowserData(server, USER)).toBe(true)
     await syncOnce(server, { userId: USER })
 
     expect(server.live("account").map((row) => row.name)).toEqual(["Wallet"])
@@ -256,6 +297,20 @@ describe("Delete all my data", () => {
   })
 })
 
+describe("Delete all my data, signed in", () => {
+  it("signs out and erases; if signing out fails nothing is erased", async () => {
+    await localLedger("Wallet")
+    let signedOut = 0
+    await expect(eraseAllData({ signOut: () => Promise.reject(new Error("offline")) })).rejects.toThrow("offline")
+    expect(await db.accounts.count()).toBe(1)
+    await eraseAllData({ signOut: async () => void signedOut++ })
+    expect(signedOut).toBe(1)
+    expect(await db.accounts.count()).toBe(0)
+    // Signed out, the account's copy can't come straight back: nothing syncs without a user.
+    expect(await db.meta.get("sync_cursor")).toBeUndefined()
+  })
+})
+
 describe("signing in on the welcome", () => {
   const me = { user: { id: USER, name: "Ana", email: "ana@example.com" }, capabilities: ["cloud_sync" as const] }
 
@@ -265,6 +320,22 @@ describe("signing in on the welcome", () => {
     await categoryRepository.ensureDefaults()
     expect(await restoreFromAccount(me, server)).toBe(true)
     expect((await db.accounts.toArray()).map((row) => row.name)).toEqual(["Bank"])
+  })
+
+  it("completes onboarding when the account has data but its flag came down false", async () => {
+    const server = new FakeServer()
+    cloudLedger(server, "Bank")
+    server.write("settings", { ...settings("EUR"), has_completed_onboarding: false, updated_at: at(9) })
+    await categoryRepository.ensureDefaults()
+    expect(await restoreFromAccount(me, server)).toBe(true)
+    expect((await db.settings.get(SETTINGS_ID))?.has_completed_onboarding).toBe(true)
+    expect(await db.sync_outbox.where("entity").equals("settings").count()).toBe(1)
+  })
+
+  it("a failed restore isn't the same as an empty account", async () => {
+    const offline: SyncTransport = { push: () => Promise.reject(new TypeError("offline")), pull: () => Promise.reject(new TypeError("offline")), snapshot: () => Promise.reject(new TypeError("offline")) }
+    expect(await restoreFromAccountResult(me, offline)).toBe("failed")
+    expect(await restoreFromAccountResult(me, new FakeServer())).toBe("no-data")
   })
 
   it("keeps onboarding for an account without data, even with finished settings from another device", async () => {

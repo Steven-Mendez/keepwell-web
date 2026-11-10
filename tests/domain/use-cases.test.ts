@@ -490,6 +490,14 @@ describe("Overviews", () => {
     expect(home.recent[0]?.date).toBe(newest)
   })
 
+  it("home reports the currencies its net worth leaves out", async () => {
+    const ledger = await loadLedger(sampleStore())
+    expect(homeOverview(ledger, referenceDate).netWorthExcluded).toEqual([])
+    const [first, ...rest] = ledger.accounts
+    const withEuro = { ...ledger, accounts: [{ ...first!, openingBalances: [...first!.openingBalances, { amount: "7", currency: "EUR" }] }, ...rest] }
+    expect(homeOverview(withEuro, referenceDate).netWorthExcluded).toEqual(["EUR"])
+  })
+
   it("home lists deposits before cash and leaves cards out", async () => {
     const home = homeOverview(await loadLedger(sampleStore()), referenceDate)
     expect(home.balances.map((line) => line.account.kind)).toEqual(["deposit", "deposit", "cash"])

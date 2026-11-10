@@ -1,4 +1,4 @@
-import { db, SYNC_TABLES, toWire } from "@/lib/db"
+import { db, LOCAL_SETTINGS_COLUMNS, SYNC_TABLES, toWire } from "@/lib/db"
 import { applyRemote } from "@/lib/repositories/shared"
 import { SYNC_ENTITIES, type SyncEntity } from "@/lib/schema"
 import { newID } from "@/lib/schema/id"
@@ -9,6 +9,14 @@ import { ApiError, type PulledChange, type PushResult, type SyncTransport } from
 
 // The web's sync loop (ADR 0005 in keepwell-api): push the outbox, then pull. The outbox already
 // holds every local change, written in the same transaction as the change itself.
+//
+// Things this design accepts on purpose (the same on iOS):
+// - A snapshot download is atomic: the whole snapshot is fetched into memory and then written in one
+//   transaction (`downloadAccount`), so an interrupted download changes nothing here.
+// - An id the account already deleted can't be revived by "Keep this browser's data": a delete always
+//   wins over a live row (ADR 0005), so a local row with that id stays deleted in the account.
+// - Switching accounts on one browser treats unsent changes as this browser's data: the new account
+//   starts with a first sync, which prompts when the new account has data and uploads when it's empty.
 
 const CURSOR = "sync_cursor"
 const REJECTED = "sync_rejected"
@@ -17,7 +25,7 @@ const LAST_SYNC = "sync_last_at"
 const SYNC_USER = "sync_user"
 /** A first sync found data on both sides and waits for the person (`PendingChoice` as JSON). */
 const CHOICE = "sync_choice"
-/** This browser's data was cleared for the account's and the download hasn't finished yet. */
+/** Older installs left this key behind while a download was under way; it is only ever deleted now. */
 const DOWNLOADING = "sync_downloading"
 /** Everything about the sync with one account; `client_id` is this browser's and stays. */
 const ACCOUNT_SYNC_KEYS = [CURSOR, REJECTED, LAST_SYNC, CHOICE, DOWNLOADING]
@@ -143,16 +151,34 @@ async function followUser(userId: string | undefined) {
 const syncedTables = (withSettings: boolean) => SYNC_ENTITIES.filter((entity) => withSettings || entity !== "settings").map((entity) => db.table(SYNC_TABLES[entity]))
 
 /**
- * Empties this browser's synced data and the outbox so the next round downloads the account's.
- * Settings stay until the account's arrive (a browser is never left without them); this device's
- * own things (client id, unlock and relock, hiding amounts, language, name) are untouched.
+ * Replaces this browser's synced data with the account's, all or nothing: the whole snapshot is
+ * fetched first (a failure changes nothing), then one transaction empties the synced tables and the
+ * outbox, writes every row and sets the cursor. The account's settings replace this browser's when
+ * it has any, except this device's own columns (unlock, relock, hiding amounts); with none, the
+ * local ones stay. The client id, language and name are untouched.
  */
-async function clearForDownload() {
-  await db.transaction("rw", [...syncedTables(false), db.sync_outbox, db.meta], async () => {
+async function downloadAccount(transport: SyncTransport, userId?: string) {
+  const { rows, serverSeq } = await cloudRows(transport, SYNC_ENTITIES)
+  await db.transaction("rw", [...syncedTables(true), db.sync_outbox, db.meta], async () => {
     for (const table of syncedTables(false)) await table.clear()
     await db.sync_outbox.clear()
-    await db.meta.bulkDelete(ACCOUNT_SYNC_KEYS)
-    await setMeta(DOWNLOADING, "1")
+    for (const entity of SYNC_ENTITIES) {
+      const table = db.table(SYNC_TABLES[entity])
+      const list = rows.get(entity) ?? []
+      if (entity !== "settings") {
+        await table.bulkPut(list)
+        continue
+      }
+      const incoming = list[list.length - 1]
+      if (!incoming) continue
+      const existing = (await table.get(incoming.id)) as Record<string, unknown> | undefined
+      const local = Object.fromEntries(LOCAL_SETTINGS_COLUMNS.map((column) => [column, existing?.[column]]).filter(([, value]) => value !== undefined))
+      const defaults = { unlock_method: "biometrics", relock_after_seconds: 60, hides_amounts_in_app_switcher: true, is_icloud_backup_enabled: true }
+      await table.put({ ...defaults, ...local, ...incoming })
+    }
+    await db.meta.bulkDelete([REJECTED, CHOICE, LAST_SYNC, DOWNLOADING])
+    await setMeta(CURSOR, String(serverSeq))
+    if (userId) await setMeta(SYNC_USER, userId)
   })
 }
 
@@ -175,8 +201,9 @@ async function enqueueEverything() {
  * data syncs on its own; both sides with data pause sync until the person chooses (`ChoiceNeeded`).
  */
 async function beginFirstSync(transport: SyncTransport, userId: string | undefined) {
-  // A download that stopped halfway starts again: what came down so far is the account's, not ours.
-  if (await meta(DOWNLOADING)) return clearForDownload()
+  // Older installs may carry a leftover marker of a download that stopped halfway. Nothing was wiped
+  // for it any more: downloads are atomic now, so what's here is this browser's.
+  await db.meta.delete(DOWNLOADING)
   const waiting = await pendingChoice()
   if (waiting) throw new ChoiceNeeded(waiting)
   const local = await localCounts()
@@ -188,7 +215,7 @@ async function beginFirstSync(transport: SyncTransport, userId: string | undefin
     throw new ChoiceNeeded(choice)
   }
   // Only the account has data: nothing this browser seeded (default categories) may overwrite it.
-  if (decision === "download") await clearForDownload()
+  if (decision === "download") await downloadAccount(transport, userId)
   // Otherwise every local row goes up, also rows an earlier account already took from the outbox.
   else await enqueueEverything()
 }
@@ -204,9 +231,31 @@ function exclusive<T>(work: () => Promise<T>): Promise<T> {
   return run
 }
 
-/** "Use your account's data": this browser's data is replaced by the account's on the next round. */
-export function takeAccountData(): Promise<void> {
-  return exclusive(clearForDownload)
+/**
+ * Drops a pending choice made for another account than the one signed in now (the next round
+ * decides again, through `followUser`). True when a choice is pending and is this account's to resolve.
+ */
+async function choiceIsFor(userId: string | undefined): Promise<boolean> {
+  const choice = await pendingChoice()
+  if (!choice) return false
+  if (choice.userId && userId !== undefined && choice.userId !== userId) {
+    await db.meta.delete(CHOICE)
+    return false
+  }
+  return true
+}
+
+/**
+ * "Use your account's data": this browser's data is replaced by the account's, atomically. If the
+ * account can't be read nothing changes and the choice stays pending. `userId` is the account signed
+ * in now; with no pending choice, or one made for another account (dropped), nothing happens (`false`).
+ */
+export function takeAccountData(transport: SyncTransport, userId?: string): Promise<boolean> {
+  return exclusive(async () => {
+    if (!(await choiceIsFor(userId))) return false
+    await downloadAccount(transport, userId ?? (await pendingChoice())?.userId ?? undefined)
+    return true
+  })
 }
 
 /** A moment after `at` and not before now, so a row sent to replace the account's is the newest. */
@@ -221,8 +270,12 @@ function laterThan(at: string, now: number): string {
  * always applies over a live row; otherwise the later `updated_at` wins). Other devices get the
  * deletions on their next pull. Sync goes on from the snapshot read here.
  */
-export function keepBrowserData(transport: SyncTransport): Promise<void> {
-  return exclusive(() => replaceAccountData(transport))
+export function keepBrowserData(transport: SyncTransport, userId?: string): Promise<boolean> {
+  return exclusive(async () => {
+    if (!(await choiceIsFor(userId))) return false
+    await replaceAccountData(transport)
+    return true
+  })
 }
 
 async function replaceAccountData(transport: SyncTransport): Promise<void> {

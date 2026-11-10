@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 import { toast } from "@/components/ui/toast"
 import { exportCsvFrom, importCsv } from "@/lib/domain/csv"
 import type { Translator } from "@/lib/i18n"
+import { signOut } from "@/lib/api/account"
 import { requestPersistentStorage, type StoragePersistence } from "@/lib/platform/persistent-storage"
 import { eraseAllData, ledgerStore } from "@/lib/repositories"
 
@@ -109,15 +110,18 @@ export function DataSection({ t, syncRows }: { t: Translator; syncRows?: ReactNo
 }
 
 /** "Delete all my data" (iOS puts it apart, as a destructive row): this browser only, then the welcome. */
-export function EraseDataRow({ t }: { t: Translator }) {
+export function EraseDataRow({ t, signedIn = false, onSignedOut }: { t: Translator; signedIn?: boolean; onSignedOut?: () => void }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
 
   async function erase() {
     try {
-      await eraseAllData()
+      await eraseAllData(signedIn ? { signOut } : {})
+      if (signedIn) onSignedOut?.()
       router.replace("/welcome")
     } catch {
+      // Sign-out may have gone through before the erase failed: let Settings show the signed-out state.
+      if (signedIn) onSignedOut?.()
       toast.add({ title: t.in("settings", "We couldn't delete your data. Try again."), type: "error" })
     }
   }
@@ -129,7 +133,11 @@ export function EraseDataRow({ t }: { t: Translator }) {
         open={open}
         onOpenChange={setOpen}
         title={t.in("settings", "Delete all your data?")}
-        description={t.in("web", "Your accounts, cards and transactions are deleted from this browser. This can't be undone.")}
+        description={
+          signedIn
+            ? `${t.in("web", "Your accounts, cards and transactions are deleted from this browser. This can't be undone.")} ${t.in("web", "Your Keepwell account keeps its copy; to erase it too, delete your account.")} ${t.in("web", "You'll be signed out on this browser.")}`
+            : t.in("web", "Your accounts, cards and transactions are deleted from this browser. This can't be undone.")
+        }
         action={t.in("settings", "Delete everything")}
         destructive
         onConfirm={() => void erase()}

@@ -100,7 +100,7 @@ export function SettingsScreen() {
             {me ? <SecuritySection t={t} action={action} /> : null}
             {me?.capabilities.includes("mcp") ? <ConnectedAppsSection t={t} /> : null}
             <AboutSection t={t} />
-            <EndSection t={t} signedIn={me !== undefined} action={action} />
+            <EndSection t={t} signedIn={me !== undefined} action={action} onSignedOut={refresh} />
           </div>
         </div>
       )}
@@ -236,7 +236,7 @@ function AboutSection({ t }: { t: Translator }) {
 }
 
 /** What ends or erases something, together and last: sign out, delete the account, erase this browser. */
-function EndSection({ t, signedIn, action }: { t: Translator; signedIn: boolean; action: AccountRun }) {
+function EndSection({ t, signedIn, action, onSignedOut }: { t: Translator; signedIn: boolean; action: AccountRun; onSignedOut: () => void }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   return (
     <SettingsSection footnote={signedIn ? t.in("web", "Signing out or deleting the account keeps what's in this browser.") : undefined}>
@@ -262,7 +262,7 @@ function EndSection({ t, signedIn, action }: { t: Translator; signedIn: boolean;
           />
         </>
       ) : null}
-      <EraseDataRow t={t} />
+      <EraseDataRow t={t} signedIn={signedIn} onSignedOut={onSignedOut} />
     </SettingsSection>
   )
 }
