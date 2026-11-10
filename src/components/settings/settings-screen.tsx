@@ -1,63 +1,85 @@
 "use client"
 
-import { useState } from "react"
+import { BotIcon, InfoIcon, KeyboardIcon, LanguagesIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
+import { useEffect, useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
-import {
-  KWGroupedCard,
-  KWLargeTitleHeader,
-  KWSectionHeader,
-} from "@/components/kw/design"
-import { KWMiniCard } from "@/components/kw/kw-icon"
+import { KWGroupedCard, KWLargeTitleHeader, KWSectionHeader } from "@/components/kw/design"
+import { KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
+import type { KWIconName } from "@/components/kw/kw-icon-data"
 import { OptionSelect } from "@/components/kw/pickers"
 import { Page } from "@/components/kw/primitives"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { SettingsSkeleton } from "@/components/kw/skeletons"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/toast"
-import { SettingsSkeleton } from "@/components/kw/skeletons"
+import { useAccount } from "@/hooks/use-account"
 import { useLedger, usePreferredName } from "@/hooks/use-ledger"
-import {
-  compareExpiry,
-  paymentMethodGroups,
-  type Ledger,
-} from "@/lib/domain"
-import {
-  PREFERRED_NAME_MAX_LENGTH,
-  normalizedPreferredName,
-  updateSettings,
-} from "@/lib/domain/onboarding"
+import { useSync } from "@/hooks/use-sync"
+import { deleteAccount, signOut } from "@/lib/api/account"
+import { compareExpiry, paymentMethodGroups, type Ledger } from "@/lib/domain"
+import { PREFERRED_NAME_MAX_LENGTH, normalizedPreferredName, updateSettings } from "@/lib/domain/onboarding"
 import { useI18n, type Translator } from "@/lib/i18n"
-import {
-  accountName,
-  cardKindLabel,
-  expiryText,
-  methodTitle,
-} from "@/lib/presentation/display"
+import { accountName, cardKindLabel, expiryText, methodTitle } from "@/lib/presentation/display"
 import { ledgerStore, profileStore } from "@/lib/repositories"
 import type { Card } from "@/lib/schema"
+import { cn } from "@/lib/utils"
 
-import { AccountSection } from "./account-section"
+import packageJson from "../../../package.json"
+
+import { AccountHeader, canSync, SecuritySection, SyncRows, useAccountAction, type AccountRun } from "./account-section"
+import { ConfirmDialog } from "./confirm-dialog"
+import { ConnectedAppsSection } from "./connected-apps-section"
 import { CurrencySection } from "./currency-section"
-import { DataSection } from "./data-section"
-import {
-  SETTINGS_INPUT,
-  SettingsLinkRow,
-  SettingsRow,
-  SettingsSection,
-} from "./settings-rows"
+import { DataSection, EraseDataRow } from "./data-section"
+import { SETTINGS_INPUT, SettingsLinkRow, SettingsRow, SettingsSection, type SettingsIcon } from "./settings-rows"
+
+const APP_VERSION = packageJson.version
 
 /** iOS SettingsViewModel.reminderOptions. */
 const REMINDER_OPTIONS = [1, 2, 3, 5, 7] as const
 
-/** iOS Settings, laid out for a wide screen: preferences on the left, organization and data on the right. */
+/** The sections, in the order iOS shows them; the list on wide screens jumps to each. */
+type SectionId = "preferences" | "money" | "organization" | "data" | "security" | "assistants" | "about"
+
+function sectionTitles(t: Translator): Record<SectionId, string> {
+  return {
+    preferences: t.in("web", "Profile & preferences"),
+    money: t.in("web", "Money"),
+    organization: t.in("settings", "Organization"),
+    data: t.in("web", "Data & sync"),
+    security: t.in("web", "Security"),
+    assistants: t.in("web", "Connected assistants"),
+    about: t.in("web", "About"),
+  }
+}
+
+const SECTION_ICONS: Record<SectionId, SettingsIcon> = {
+  preferences: "person",
+  money: "cash",
+  organization: "list",
+  data: "cloud",
+  security: <ShieldCheckIcon strokeWidth={2} />,
+  assistants: <BotIcon strokeWidth={2} />,
+  about: <InfoIcon strokeWidth={2} />,
+}
+
+/**
+ * Settings, as one narrow column of grouped sections (Mobbin: Base, Wise): who you are and whether
+ * the data syncs at the top, then preferences, money, organization, data and sync, security,
+ * assistants and about, with the actions that end or erase something together at the bottom. Wide
+ * screens add a list of the sections on the left (Copilot Money, Monarch).
+ */
 export function SettingsScreen() {
   const { t } = useI18n()
   const ledger = useLedger()
+  const preferredName = usePreferredName()
+  const { state, refresh } = useAccount()
+  const me = state.status === "signed-in" ? state.me : undefined
+  const { status: sync, rejected } = useSync(canSync(me) ? me?.user.id : undefined)
+  const action = useAccountAction(t, refresh)
+
+  const sections: SectionId[] = ["preferences", "money", "organization", "data", ...(me ? (["security"] as const) : []), ...(me?.capabilities.includes("mcp") ? (["assistants"] as const) : []), "about"]
 
   return (
     <Page>
@@ -65,18 +87,20 @@ export function SettingsScreen() {
       {!ledger ? (
         <SettingsSkeleton />
       ) : (
-        <div className="grid items-start gap-8 lg:grid-cols-2">
-          <div className="flex flex-col gap-8">
-            <AccountSection t={t} />
-            <ProfileSection t={t} />
-            <LanguageSection />
-            <CurrencySection t={t} ledger={ledger} />
-            <CardsSection t={t} ledger={ledger} />
-          </div>
-          <div className="flex flex-col gap-8">
+        <div className="grid items-start gap-8 lg:grid-cols-[13rem_minmax(0,42rem)] lg:gap-12">
+          <SectionNav t={t} sections={sections} />
+          <div className="flex min-w-0 flex-col gap-8">
+            <AccountHeader t={t} state={state} sync={sync} preferredName={preferredName} />
+            <PreferencesSection t={t} />
+            <CurrencySection t={t} ledger={ledger}>
+              <ReminderRow t={t} ledger={ledger} />
+            </CurrencySection>
             <OrganizationSection t={t} ledger={ledger} />
-            <DataSection t={t} />
-            <ShortcutsSection t={t} />
+            <DataSection t={t} syncRows={me ? <SyncRows t={t} me={me} sync={sync} rejected={rejected} /> : undefined} />
+            {me ? <SecuritySection t={t} action={action} /> : null}
+            {me?.capabilities.includes("mcp") ? <ConnectedAppsSection t={t} /> : null}
+            <AboutSection t={t} />
+            <EndSection t={t} signedIn={me !== undefined} action={action} />
           </div>
         </div>
       )}
@@ -84,8 +108,63 @@ export function SettingsScreen() {
   )
 }
 
-function ProfileSection({ t }: { t: Translator }) {
+/** The sections on the left of a wide screen, the one in view marked. */
+function SectionNav({ t, sections }: { t: Translator; sections: SectionId[] }) {
+  const titles = sectionTitles(t)
+  const [current, setCurrent] = useState<SectionId>(sections[0] ?? "preferences")
+  const key = sections.join()
+
+  useEffect(() => {
+    const visible = new Map<string, number>()
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) visible.set(entry.target.id, entry.isIntersecting ? entry.boundingClientRect.top : Infinity)
+        const top = [...visible].filter(([, y]) => y !== Infinity).sort((a, b) => a[1] - b[1])[0]
+        if (top) setCurrent(top[0] as SectionId)
+      },
+      { rootMargin: "-80px 0px -55% 0px" }
+    )
+    const ids = key.split(",")
+    for (const id of ids) {
+      const element = document.getElementById(id)
+      if (element) observer.observe(element)
+    }
+    // The last sections never reach the top: at the end of the page, the last one is current.
+    const onScroll = () => {
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) setCurrent(ids[ids.length - 1] as SectionId)
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      observer.disconnect()
+      window.removeEventListener("scroll", onScroll)
+    }
+  }, [key])
+
+  return (
+    <nav aria-label={t.in("settings", "Settings")} className="sticky top-24 hidden flex-col gap-0.5 lg:flex">
+      {sections.map((id) => (
+        <a
+          key={id}
+          href={`#${id}`}
+          aria-current={current === id ? "true" : undefined}
+          onClick={() => setCurrent(id)}
+          className={cn(
+            "flex h-10 items-center gap-3 rounded-xl px-3 type-label outline-none transition-colors hover:bg-card focus-visible:ring-2 focus-visible:ring-ring",
+            current === id ? "bg-card text-foreground" : "text-muted-foreground"
+          )}
+        >
+          <span className="flex size-5 items-center justify-center [&_svg]:size-4">{typeof SECTION_ICONS[id] === "string" ? <KWIcon name={SECTION_ICONS[id] as KWIconName} size={16} /> : SECTION_ICONS[id]}</span>
+          {titles[id]}
+        </a>
+      ))}
+    </nav>
+  )
+}
+
+function PreferencesSection({ t }: { t: Translator }) {
   const stored = usePreferredName()
+  const { locale, setLocale, isOverridden } = useI18n()
+  const { setShortcutsOpen } = useAppActions()
   const [text, setText] = useState<string>()
   const commit = () => {
     if (text === undefined) return
@@ -93,16 +172,13 @@ function ProfileSection({ t }: { t: Translator }) {
     setText(undefined)
   }
   return (
-    <SettingsSection title={t.in("onboarding", "Your name")}>
-      <SettingsRow
-        label={t.in("settings", "Your name")}
-        htmlFor="preferred-name"
-      >
+    <SettingsSection id="preferences" title={sectionTitles(t).preferences}>
+      <SettingsRow icon="person" label={t.in("settings", "Your name")} description={t.in("settings", "For the greeting")} htmlFor="preferred-name" wide>
         <Input
           id="preferred-name"
-          className={`w-56 ${SETTINGS_INPUT}`}
+          className={`w-full sm:w-56 ${SETTINGS_INPUT}`}
           maxLength={PREFERRED_NAME_MAX_LENGTH}
-          placeholder={t.in("settings", "For the greeting")}
+          placeholder={t.in("settings", "Your name")}
           value={text ?? stored ?? ""}
           onChange={(event) => setText(event.target.value)}
           onBlur={commit}
@@ -111,28 +187,12 @@ function ProfileSection({ t }: { t: Translator }) {
           }}
         />
       </SettingsRow>
-    </SettingsSection>
-  )
-}
-
-function LanguageSection() {
-  const { t, locale, setLocale, isOverridden } = useI18n()
-  return (
-    <SettingsSection
-      title={t.in("settings", "Language")}
-      footnote={t.in(
-        "web",
-        "Keepwell uses your browser's language. To use another one only here, choose it below."
-      )}
-    >
-      <SettingsRow label={t.in("settings", "App language")} htmlFor="language">
+      <SettingsRow icon={<LanguagesIcon strokeWidth={2} />} label={t.in("settings", "App language")} description={t.in("web", "Your browser's, unless you choose another one here.")} htmlFor="language" wide>
         <OptionSelect
           id="language"
-          className="w-56"
+          className="w-full sm:w-56"
           value={isOverridden ? locale : "auto"}
-          onChange={(value) =>
-            setLocale(value === "en" || value === "es" ? value : undefined)
-          }
+          onChange={(value) => setLocale(value === "en" || value === "es" ? value : undefined)}
           options={[
             { value: "auto", label: t.in("web", "Follow the browser") },
             { value: "en", label: "English" },
@@ -140,42 +200,69 @@ function LanguageSection() {
           ]}
         />
       </SettingsRow>
+      <SettingsLinkRow icon={<KeyboardIcon strokeWidth={2} />} label={t.in("web", "Keyboard shortcuts")} value="?" onClick={() => setShortcutsOpen(true)} />
     </SettingsSection>
   )
 }
 
-function CardsSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
+function ReminderRow({ t, ledger }: { t: Translator; ledger: Ledger }) {
   return (
-    <SettingsSection title={t.in("settings", "Credit cards")}>
-      <SettingsRow
-        label={t.in("settings", "Remind me to pay")}
-        htmlFor="reminder"
-      >
-        <OptionSelect
-          id="reminder"
-          className="w-40"
-          value={String(ledger.settings.paymentReminderDaysBefore)}
-          onChange={(value) => {
-            const days = Number(value)
-            updateSettings(ledgerStore, (settings) => ({
-              ...settings,
-              paymentReminderDaysBefore: days,
-            })).catch(() =>
-              toast.add({
-                title: t.in(
-                  "settings",
-                  "We couldn't save the change. Try again."
-                ),
-                type: "error",
-              })
-            )
-          }}
-          options={REMINDER_OPTIONS.map((days) => ({
-            value: String(days),
-            label: t.in("settings", "%lld days", days),
-          }))}
-        />
+    <SettingsRow icon="creditCard" label={t.in("settings", "Remind me to pay")} description={t.in("settings", "Credit cards")} htmlFor="reminder" wide>
+      <OptionSelect
+        id="reminder"
+        className="w-full sm:w-40"
+        value={String(ledger.settings.paymentReminderDaysBefore)}
+        onChange={(value) => {
+          const days = Number(value)
+          updateSettings(ledgerStore, (settings) => ({ ...settings, paymentReminderDaysBefore: days })).catch(() =>
+            toast.add({ title: t.in("settings", "We couldn't save the change. Try again."), type: "error" })
+          )
+        }}
+        options={REMINDER_OPTIONS.map((days) => ({ value: String(days), label: t.in("settings", "%lld days", days) }))}
+      />
+    </SettingsRow>
+  )
+}
+
+function AboutSection({ t }: { t: Translator }) {
+  return (
+    <SettingsSection id="about" title={sectionTitles(t).about}>
+      <SettingsLinkRow icon={<ShieldCheckIcon strokeWidth={2} />} label={t.in("web", "Privacy Policy")} href="/privacy" />
+      <SettingsRow icon={<InfoIcon strokeWidth={2} />} label={t.in("web", "Version")}>
+        <span className="type-body text-text-secondary tabular-nums">{APP_VERSION}</span>
       </SettingsRow>
+    </SettingsSection>
+  )
+}
+
+/** What ends or erases something, together and last: sign out, delete the account, erase this browser. */
+function EndSection({ t, signedIn, action }: { t: Translator; signedIn: boolean; action: AccountRun }) {
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  return (
+    <SettingsSection footnote={signedIn ? t.in("web", "Signing out or deleting the account keeps what's in this browser.") : undefined}>
+      {signedIn ? (
+        <>
+          <SettingsLinkRow icon={<LogOutIcon strokeWidth={2} />} tone="destructive" label={t.in("web", "Sign out")} disabled={action.busy} onClick={() => void action.run(signOut)} />
+          <SettingsLinkRow
+            icon="personOff"
+            tone="destructive"
+            label={t.in("web", "Delete account")}
+            description={t.in("web", "Erases your account and its synced data from Keepwell's servers.")}
+            disabled={action.busy}
+            onClick={() => setConfirmingDelete(true)}
+          />
+          <ConfirmDialog
+            open={confirmingDelete}
+            onOpenChange={setConfirmingDelete}
+            title={t.in("web", "Delete your Keepwell account?")}
+            description={t.in("web", "You're signed out everywhere at once and your synced data is erased from Keepwell's servers. Backups keep it up to 35 more days. What's in this browser stays here.")}
+            action={t.in("web", "Delete account")}
+            destructive
+            onConfirm={() => void action.run(deleteAccount)}
+          />
+        </>
+      ) : null}
+      <EraseDataRow t={t} />
     </SettingsSection>
   )
 }
@@ -190,23 +277,27 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
   ).length
   const groups = paymentMethodGroups(ledger.accounts, ledger.cards)
   return (
-    <SettingsSection title={t.in("settings", "Organization")}>
+    <SettingsSection id="organization" title={t.in("settings", "Organization")}>
       <SettingsLinkRow
+        icon="arrowUpRight"
         label={t.in("settings", "Expense categories")}
         value={expense}
         href="/settings/categories#expense"
       />
       <SettingsLinkRow
+        icon="arrowDownLeft"
         label={t.in("settings", "Income categories")}
         value={income}
         href="/settings/categories#income"
       />
       <SettingsLinkRow
+        icon="creditCard"
         label={t.in("settings", "Payment methods")}
         value={ledger.cards.length}
         onClick={() => setMethodsOpen(true)}
       />
       <SettingsLinkRow
+        icon="bolt"
         label={t.in("settings", "Rules")}
         value={ledger.categorizationRules.length}
         href="/settings/rules"
@@ -278,17 +369,4 @@ function plasticSubtitle(t: Translator, card: Card): string {
     return t.in("settings", "%@ · expired %@", base, expiryText(card.expiry))
   if (order === 0) return t.in("settings", "%@ · expires this month", base)
   return t.in("settings", "%@ · valid thru %@", base, expiryText(card.expiry))
-}
-
-function ShortcutsSection({ t }: { t: Translator }) {
-  const { setShortcutsOpen } = useAppActions()
-  return (
-    <SettingsSection title={t.in("web", "Keyboard shortcuts")}>
-      <SettingsLinkRow
-        label={t.in("web", "Show shortcuts")}
-        value="?"
-        onClick={() => setShortcutsOpen(true)}
-      />
-    </SettingsSection>
-  )
 }

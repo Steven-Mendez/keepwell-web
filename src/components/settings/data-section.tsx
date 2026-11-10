@@ -1,16 +1,16 @@
 "use client"
 
+import { HardDriveIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 
-import { KWButton } from "@/components/kw/design"
-import { KWIcon } from "@/components/kw/kw-icon"
 import { toast } from "@/components/ui/toast"
 import { exportCsvFrom, importCsv } from "@/lib/domain/csv"
 import type { Translator } from "@/lib/i18n"
 import { requestPersistentStorage, type StoragePersistence } from "@/lib/platform/persistent-storage"
 import { eraseAllData, ledgerStore } from "@/lib/repositories"
 
+import { StatusPill } from "./account-section"
 import { ConfirmDialog } from "./confirm-dialog"
 import { SettingsLinkRow, SettingsRow, SettingsSection } from "./settings-rows"
 
@@ -47,46 +47,71 @@ function useFilePicker(accept: string, onFile: (file: File) => void) {
   return { open: () => input.current?.click(), element }
 }
 
+/** Downloads a CSV of every movement. */
+async function exportCsv(t: Translator) {
+  try {
+    download(await exportCsvFrom(ledgerStore), `Keepwell-${today()}.csv`, "text/csv;charset=utf-8")
+  } catch {
+    toast.add({ title: t.in("settings", "We couldn't create the file. Try again."), type: "error" })
+  }
+}
+
+async function importCsvFile(t: Translator, file: File) {
+  let text: string
+  try {
+    text = await file.text()
+  } catch {
+    toast.add({ title: t.in("settings", "We couldn't read that file. Export it again as CSV (UTF-8)."), type: "error" })
+    return
+  }
+  try {
+    const result = await importCsv(ledgerStore, text)
+    toast.add({
+      title: t.in("settings", "%lld transactions imported", result.imported),
+      ...(result.skipped > 0 ? { description: t.in("settings", "%lld rows skipped", result.skipped) } : {}),
+      type: result.imported > 0 ? "success" : "info",
+    })
+  } catch {
+    toast.add({ title: t.in("settings", "We couldn't import the file. Try again."), type: "error" })
+  }
+}
+
 /**
- * CSV in and out, the one way to keep a copy or move movements by hand, and "Delete all my data"
- * (iOS SettingsSections `data`). The data lives in this browser, so its storage status sits here too.
+ * "Data & sync": the account's sync (when signed in), CSV in and out (the one way to keep a copy or
+ * move movements by hand) and the browser's storage status, since the data lives here.
  */
-export function DataSection({ t }: { t: Translator }) {
-  const router = useRouter()
-  const [eraseOpen, setEraseOpen] = useState(false)
+export function DataSection({ t, syncRows }: { t: Translator; syncRows?: ReactNode }) {
   const [persistence, setPersistence] = useState<StoragePersistence>()
 
   useEffect(() => {
     requestPersistentStorage().then(setPersistence, () => setPersistence("unsupported"))
   }, [])
 
-  async function exportCsv() {
-    try {
-      download(await exportCsvFrom(ledgerStore), `Keepwell-${today()}.csv`, "text/csv;charset=utf-8")
-    } catch {
-      toast.add({ title: t.in("settings", "We couldn't create the file. Try again."), type: "error" })
-    }
-  }
+  const csvPicker = useFilePicker("text/csv,.csv", (file) => void importCsvFile(t, file))
 
-  async function importCsvFile(file: File) {
-    let text: string
-    try {
-      text = await file.text()
-    } catch {
-      toast.add({ title: t.in("settings", "We couldn't read that file. Export it again as CSV (UTF-8)."), type: "error" })
-      return
-    }
-    try {
-      const result = await importCsv(ledgerStore, text)
-      toast.add({
-        title: t.in("settings", "%lld transactions imported", result.imported),
-        ...(result.skipped > 0 ? { description: t.in("settings", "%lld rows skipped", result.skipped) } : {}),
-        type: result.imported > 0 ? "success" : "info",
-      })
-    } catch {
-      toast.add({ title: t.in("settings", "We couldn't import the file. Try again."), type: "error" })
-    }
-  }
+  return (
+    <SettingsSection id="data" title={t.in("web", "Data & sync")} footnote={t.in("web", "Your data lives in this browser. Export a CSV now and then to keep a copy.")}>
+      {syncRows}
+      <SettingsLinkRow icon="share" label={t.in("settings", "Export CSV")} description={t.in("web", "Every movement, in a file for a spreadsheet.")} onClick={() => void exportCsv(t)} />
+      <SettingsLinkRow icon="download" label={t.in("settings", "Import CSV")} description={t.in("web", "Adds movements from a CSV file.")} onClick={csvPicker.open} />
+      {csvPicker.element}
+      <SettingsRow icon={<HardDriveIcon strokeWidth={2} />} label={t.in("web", "Storage")} description={t.in("web", "Stored in this browser")}>
+        {persistence === "persisted" ? (
+          <StatusPill tone="positive">{t.in("web", "Kept by the browser")}</StatusPill>
+        ) : persistence === "best-effort" ? (
+          <StatusPill tone="pending">{t.in("web", "May be cleared")}</StatusPill>
+        ) : (
+          <StatusPill tone="neutral">{persistence ? "—" : "…"}</StatusPill>
+        )}
+      </SettingsRow>
+    </SettingsSection>
+  )
+}
+
+/** "Delete all my data" (iOS puts it apart, as a destructive row): this browser only, then the welcome. */
+export function EraseDataRow({ t }: { t: Translator }) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
 
   async function erase() {
     try {
@@ -97,40 +122,12 @@ export function DataSection({ t }: { t: Translator }) {
     }
   }
 
-  const csvPicker = useFilePicker("text/csv,.csv", (file) => void importCsvFile(file))
-
   return (
     <>
-      <SettingsSection title={t.in("settings", "Data")}>
-        <SettingsLinkRow label={t.in("settings", "Export CSV")} onClick={() => void exportCsv()} />
-        <SettingsLinkRow label={t.in("settings", "Import CSV")} onClick={csvPicker.open} />
-        {csvPicker.element}
-      </SettingsSection>
-
-      <SettingsSection title={t.in("web", "On this device")} footnote={t.in("web", "Your data lives in this browser. Export a CSV now and then to keep a copy.")}>
-        <SettingsRow label={t.in("web", "Storage")} description={t.in("web", "Stored in this browser")}>
-          {persistence === "persisted" ? (
-            <StatusPill tone="positive">{t.in("web", "Kept by the browser")}</StatusPill>
-          ) : persistence === "best-effort" ? (
-            <StatusPill tone="pending">{t.in("web", "May be cleared")}</StatusPill>
-          ) : (
-            <StatusPill tone="neutral">{persistence ? "—" : "…"}</StatusPill>
-          )}
-        </SettingsRow>
-      </SettingsSection>
-
-      {/* iOS puts "Delete all my data" apart, as a full-width destructive row button. */}
-      <div className="flex flex-col gap-2">
-        <KWButton variant="destructive" size="row" fill onClick={() => setEraseOpen(true)}>
-          <KWIcon name="trash" size={18} />
-          {t.in("settings", "Delete all my data")}
-        </KWButton>
-        <p className="px-1 type-caption text-muted-foreground">{t.in("web", "Deletes the data in this browser.")}</p>
-      </div>
-
+      <SettingsLinkRow icon="trash" tone="destructive" label={t.in("settings", "Delete all my data")} description={t.in("web", "Deletes the data in this browser.")} onClick={() => setOpen(true)} />
       <ConfirmDialog
-        open={eraseOpen}
-        onOpenChange={setEraseOpen}
+        open={open}
+        onOpenChange={setOpen}
         title={t.in("settings", "Delete all your data?")}
         description={t.in("web", "Your accounts, cards and transactions are deleted from this browser. This can't be undone.")}
         action={t.in("settings", "Delete everything")}
@@ -139,10 +136,4 @@ export function DataSection({ t }: { t: Translator }) {
       />
     </>
   )
-}
-
-/** A state pill on its 14 % tint, as iOS shows state next to a value. */
-function StatusPill({ tone, children }: { tone: "positive" | "pending" | "neutral"; children: React.ReactNode }) {
-  const look = { positive: "bg-positive-tint text-positive", pending: "bg-pending-tint text-pending", neutral: "bg-secondary text-muted-foreground" }[tone]
-  return <span className={`inline-flex h-6 items-center rounded-full px-2.5 type-caption font-semibold ${look}`}>{children}</span>
 }

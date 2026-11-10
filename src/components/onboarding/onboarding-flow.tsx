@@ -16,10 +16,7 @@ import {
 import { SignInOptions } from "@/components/login/sign-in-options"
 import { Spinner } from "@/components/ui/spinner"
 import { useAccount } from "@/hooks/use-account"
-import { useSync } from "@/hooks/use-sync"
-import type { Me } from "@/lib/api/account"
-import { settingsRepository } from "@/lib/repositories"
-import { syncOnce } from "@/lib/sync/engine"
+import { restoreFromAccount } from "@/lib/sync/restore"
 import { httpTransport } from "@/lib/sync/transport"
 
 import {
@@ -95,21 +92,6 @@ function regionCurrency(): string {
 }
 
 /**
- * Pulls a signed-in account's data into this browser. `true` when it brought finished settings, so
- * there is nothing left to set up. Offline or a server error isn't fatal: setup by hand still
- * works and syncs later.
- */
-async function restoreFromAccount(me: Me): Promise<boolean> {
-  if (me.capabilities.includes("cloud_sync")) {
-    try {
-      await syncOnce(httpTransport)
-    } catch {}
-  }
-  const settings = await settingsRepository.load()
-  return settings?.hasCompletedOnboarding ?? false
-}
-
-/**
  * Onboarding (iOS OnboardingFlowView). The welcome asks first for an existing Keepwell account: one
  * that already has data brings it down and onboarding ends (AppShell sees the finished settings and
  * leaves for "/"). A new or empty account, or none at all ("Use without an account", everything in
@@ -122,29 +104,36 @@ export function OnboardingFlow() {
   const router = useRouter()
   const { state: account, refresh: refreshAccount } = useAccount()
   const me = account.status === "signed-in" ? account.me : undefined
-  const canSync = me?.capabilities.includes("cloud_sync") ?? false
   const [step, setStep] = useState<Step>("welcome")
   // The account whose data was already looked for (and had nothing finished to bring back).
   const [restoredUser, setRestoredUser] = useState<string>()
   const restoring = me !== undefined && restoredUser !== me.user.id
   const restoredFor = useRef<string>(undefined)
-  // Once past the welcome, what the setup saves syncs up as it's written (the restore ran first).
-  useSync(canSync && step !== "welcome")
+  const [name, setName] = useState("")
+  // Nothing syncs during the setup: the account's settings (finished on another device) would end
+  // it halfway. Once it's saved, AppShell's sync uploads the result.
 
   // Signed in on the welcome (a passkey here, or back from Apple): look for the account's data once.
   useEffect(() => {
     if (step !== "welcome" || !me || restoredFor.current === me.user.id) return
     restoredFor.current = me.user.id
     const userId = me.user.id
-    void restoreFromAccount(me).then((restored) => {
-      // Finished settings came down: AppShell takes over and opens Home.
-      if (restored) return
+    // The greeting's name: the first one of the account's ("Ana" from "Ana López").
+    const accountName = normalizedPreferredName(me.user.name.trim().split(/\s+/)[0])
+    void restoreFromAccount(me, httpTransport).then((restored) => {
+      // The account's data came down: AppShell takes over and opens Home. The greeting's name is
+      // this device's, so it starts from the account's here too.
+      if (restored) {
+        if (accountName && !profileStore.preferredName()) profileStore.setPreferredName(accountName)
+        return
+      }
       setRestoredUser(userId)
+      // The setup runs in full, starting from the account's name when it has one.
+      if (accountName) setName((current) => current || accountName)
       setStep("name")
     })
   }, [step, me])
 
-  const [name, setName] = useState("")
   const [principal, setPrincipal] = useState(regionCurrency)
   const [usesTwo, setUsesTwo] = useState(false)
   const [second, setSecond] = useState(

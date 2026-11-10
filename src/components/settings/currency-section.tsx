@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { ArrowLeftRightIcon, CoinsIcon, PercentIcon } from "lucide-react"
+import { useState, type ReactNode } from "react"
 
 import { KWButton } from "@/components/kw/design"
 import { Input } from "@/components/ui/input"
@@ -142,8 +143,10 @@ function MainCurrencyRow({
 }) {
   return (
     <SettingsRow
+      icon="cash"
       label={t.in("settings", "Main currency")}
       htmlFor="main-currency"
+      wide={canChange}
       {...(canChange
         ? {}
         : {
@@ -156,7 +159,7 @@ function MainCurrencyRow({
       {canChange ? (
         <CurrencyPicker
           id="main-currency"
-          className="w-64"
+          className="w-full sm:w-64"
           value={currencies.principal}
           exclude={currencies.second}
           onChange={(code) =>
@@ -191,10 +194,10 @@ function SecondCurrencyPicker({
   onChanged: () => void
 }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex w-full items-center gap-1">
       <CurrencyPicker
         id="second-currency"
-        className="w-64"
+        className="w-full sm:w-64"
         value={currencies.second}
         exclude={currencies.principal}
         onChange={(code) => {
@@ -243,8 +246,10 @@ function SecondCurrencyRow({
 }) {
   return (
     <SettingsRow
+      icon={<CoinsIcon strokeWidth={2} />}
       label={t.in("settings", "Second currency")}
       htmlFor="second-currency"
+      wide={canChange}
       {...(canChange
         ? {}
         : {
@@ -290,9 +295,11 @@ function RateAndSwapRows({
   return (
     <>
       <SettingsRow
+        icon={<PercentIcon strokeWidth={2} />}
         label={t.in("settings", "Rate")}
         description={rate.rateError ?? t.in("settings", "Manual · default 1")}
         htmlFor="rate"
+        wide
       >
         <span className="type-label text-muted-foreground">
           1 {principal} =
@@ -313,6 +320,7 @@ function RateAndSwapRows({
         <span className="type-label">{second}</span>
       </SettingsRow>
       <SettingsLinkRow
+        icon={<ArrowLeftRightIcon strokeWidth={2} />}
         label={t.in("settings", "Make %@ the main currency", second)}
         tone="link"
         onClick={() => setSwapOpen(true)}
@@ -344,9 +352,12 @@ function RateAndSwapRows({
 export function CurrencySection({
   t,
   ledger,
+  children,
 }: {
   t: Translator
   ledger: Ledger
+  /** More money rows after the currencies (the payment reminder). */
+  children?: ReactNode
 }) {
   const currencies = ledger.settings.currencies
   const save = settingsSaver(t)
@@ -358,7 +369,8 @@ export function CurrencySection({
 
   return (
     <SettingsSection
-      title={t.in("settings", "Currency")}
+      id="money"
+      title={t.in("web", "Money")}
       footnote={
         currencies.second
           ? t.in(
@@ -390,6 +402,7 @@ export function CurrencySection({
           save={save}
         />
       ) : null}
+      {children}
     </SettingsSection>
   )
 }

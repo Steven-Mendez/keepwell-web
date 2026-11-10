@@ -7,25 +7,46 @@ import { SyncScheduler } from "@/lib/sync/scheduler"
 import { httpTransport } from "@/lib/sync/transport"
 
 let scheduler: SyncScheduler | undefined
+/** Mounted hooks that want sync; when the last one goes (onboarding, signed out) sync pauses. */
+let holders = 0
 
-/** One scheduler per tab, started once the account has `cloud_sync`. */
-export function useSync(enabled: boolean): { status: SyncStatus | undefined; rejected: RejectedEvent[] } {
+/** The tab's one scheduler, created (not started) on first use. */
+export function syncScheduler(): SyncScheduler {
+  scheduler ??= new SyncScheduler(httpTransport)
+  return scheduler
+}
+
+let started = false
+
+/**
+ * Keeps sync running while mounted for `userId` (a signed-in account with `cloud_sync`), and
+ * returns its status. `undefined` neither starts it nor reports anything.
+ */
+export function useSync(userId: string | undefined): { status: SyncStatus | undefined; rejected: RejectedEvent[] } {
   const [status, setStatus] = useState<SyncStatus>()
   const [rejected, setRejected] = useState<RejectedEvent[]>([])
 
   useEffect(() => {
-    if (!enabled) return
-    if (!scheduler) {
-      scheduler = new SyncScheduler(httpTransport)
-      scheduler.start()
+    if (!userId) return
+    const sync = syncScheduler()
+    sync.setUser(userId)
+    holders++
+    if (!started) {
+      started = true
+      sync.start()
     } else {
-      scheduler.resume()
+      sync.resume()
     }
-    return scheduler.subscribe((next) => {
+    const unsubscribe = sync.subscribe((next) => {
       setStatus(next)
       if (next.state === "idle") void rejectedEvents().then(setRejected)
     })
-  }, [enabled])
+    return () => {
+      unsubscribe()
+      holders--
+      if (holders === 0) sync.pause()
+    }
+  }, [userId])
 
-  return { status, rejected }
+  return { status: userId ? status : undefined, rejected }
 }

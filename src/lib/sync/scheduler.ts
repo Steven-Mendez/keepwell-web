@@ -10,7 +10,8 @@ const MAX_BACKOFF_MS = 5 * 60_000
 /**
  * When to sync: on start, when the network or the tab comes back, a moment after each local change,
  * and every minute while open. One round at a time. Errors back off exponentially; `needs_plan` and
- * a lost session stop the loop until `resume()` (after GET /me changes or the person signs in).
+ * a lost session stop the loop until `resume()` (after GET /me changes or the person signs in), and a
+ * first sync with data on both sides until the person chooses (`needs_choice`).
  */
 export class SyncScheduler {
   private status: SyncStatus = { state: "idle", lastSyncAt: null, pending: 0 }
@@ -21,8 +22,14 @@ export class SyncScheduler {
   private failures = 0
   private halted = false
   private cleanup: (() => void)[] = []
+  private userId: string | undefined
 
   constructor(private readonly transport: SyncTransport) {}
+
+  /** The signed-in account, so a different one starts over with a first sync. */
+  setUser(userId: string | undefined) {
+    this.userId = userId
+  }
 
   start() {
     const soon = () => this.schedule(DEBOUNCE_MS)
@@ -45,6 +52,27 @@ export class SyncScheduler {
   stop() {
     for (const undo of this.cleanup) undo()
     clearTimeout(this.timer)
+  }
+
+  /** Nothing runs until `resume()`: no screen that wants sync is open (onboarding, signed out). */
+  pause() {
+    this.halted = true
+    clearTimeout(this.timer)
+  }
+
+  /** The latest status, for a screen that opens after it was published. */
+  current(): SyncStatus {
+    return this.status
+  }
+
+  /** Runs a round now, even after `needs_choice` or `needs_plan`, and resolves when it ends. */
+  async runNow(): Promise<SyncStatus> {
+    this.halted = false
+    this.failures = 0
+    clearTimeout(this.timer)
+    while (this.running) await new Promise((resolve) => setTimeout(resolve, 50))
+    await this.run()
+    return this.status
   }
 
   resume() {
@@ -79,7 +107,7 @@ export class SyncScheduler {
     this.publish({ state: "syncing" })
     let error: unknown
     try {
-      await syncOnce(this.transport)
+      await syncOnce(this.transport, this.userId ? { userId: this.userId } : {})
       this.failures = 0
     } catch (caught) {
       error = caught
@@ -87,7 +115,7 @@ export class SyncScheduler {
     const status = await statusAfter(error)
     this.running = false
     this.publish(status)
-    if (status.state === "needs_plan" || status.state === "signed_out") {
+    if (status.state === "needs_plan" || status.state === "signed_out" || status.state === "needs_choice") {
       this.halted = true
       return
     }

@@ -252,14 +252,11 @@ export function AccountsSkeleton() {
 /** Settings: preferences on the left, organization and data on the right. */
 export function SettingsSkeleton() {
   return (
-    <div className="grid items-start gap-8 lg:grid-cols-2" aria-busy>
+    <div className="grid items-start gap-8 lg:grid-cols-[13rem_minmax(0,42rem)] lg:gap-12" aria-busy>
+      <div className="hidden lg:block" />
       <div className="flex flex-col gap-8">
-        <SkeletonGroup rows={2} />
         <SkeletonGroup rows={1} />
         <SkeletonGroup rows={3} />
-      </div>
-      <div className="flex flex-col gap-8">
-        <SkeletonGroup rows={2} />
         <SkeletonGroup rows={3} />
       </div>
     </div>

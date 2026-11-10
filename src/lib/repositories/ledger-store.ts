@@ -10,7 +10,10 @@ import { savingsGoalRepository } from "./savings-goals"
 import { settingsRepository } from "./settings"
 import { transactionRepository } from "./transactions"
 
-const allTables = () => [db.accounts, db.cards, db.categories, db.transactions, db.recurring_rules, db.savings_goals, db.loans, db.personal_debts, db.categorization_rules, db.settings, db.sync_outbox]
+const allTables = () => [db.accounts, db.cards, db.categories, db.transactions, db.recurring_rules, db.savings_goals, db.loans, db.loan_payments, db.personal_debts, db.personal_debt_repayments, db.categorization_rules, db.settings, db.sync_outbox]
+
+/** What `meta` keeps through "Delete all my data": this browser's sync identity and its account. */
+const KEPT_META = ["client_id", "sync_user"]
 
 /** The domain's storage contract over IndexedDB: every write goes through the repositories (audit + outbox). */
 export const ledgerStore: LedgerStore = {
@@ -81,10 +84,15 @@ export const profileStore: ProfileStore = {
   },
 }
 
-/** "Delete all my data": every table on this device, then the shipped categories again. */
+/**
+ * "Delete all my data": every table on this device, then the shipped categories again. The sync
+ * cursor goes too, so a signed-in browser starts over with a first sync (and gets the account's
+ * data back) instead of following on from data it no longer has.
+ */
 export async function eraseAllData(): Promise<void> {
-  await db.transaction("rw", allTables(), async () => {
+  await db.transaction("rw", [...allTables(), db.meta], async () => {
     await Promise.all(allTables().map((table) => table.clear()))
+    await db.meta.where("key").noneOf(KEPT_META).delete()
   })
   profileStore.setPreferredName(undefined)
   await categoryRepository.ensureDefaults()
