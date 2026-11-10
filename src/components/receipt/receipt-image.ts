@@ -1,3 +1,4 @@
+import { KW_LOCKUP } from "@/components/kw/kw-brand"
 import { KW_ICONS } from "@/components/kw/kw-icon-data"
 
 import type { Receipt } from "./receipt-model"
@@ -122,25 +123,29 @@ function drawIcon(
   ctx.restore()
 }
 
-function drawLogoMark(
+/** The white lockup, as iOS's KWWordmark draws it: `height` tall, its top-left at (x, y). */
+function drawLockup(
   ctx: Ctx,
   x: number,
   y: number,
-  size: number,
+  height: number,
   color: string
 ) {
+  const [minX, minY, , viewHeight] = KW_LOCKUP.box
+  const scale = height / viewHeight
   ctx.save()
   ctx.translate(x, y)
-  ctx.scale(size / 72, size / 72)
+  ctx.scale(scale, scale)
+  ctx.translate(-minX, -minY)
   ctx.fillStyle = color
-  ctx.strokeStyle = color
-  ctx.beginPath()
-  ctx.arc(36, 21, 9, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.lineWidth = 7.5
-  ctx.lineCap = "round"
-  ctx.stroke(new Path2D("M15 34v7a21 21 0 0 0 42 0v-7"))
+  ctx.fill(new Path2D(KW_LOCKUP.d))
   ctx.restore()
+}
+
+/** The lockup's width at `height`. */
+function lockupWidth(height: number) {
+  const [, , width, viewHeight] = KW_LOCKUP.box
+  return (height * width) / viewHeight
 }
 
 /** Every weight the image uses, loaded before measuring, or the first draw falls back to another font. */
@@ -283,15 +288,14 @@ function layout(
   gradient.addColorStop(1, colors.b700)
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, WIDTH, totalHeight)
-  const wordStyle: TextStyle = { size: 24, weight: 800, tracking: -2 }
-  setFont(ctx, family, wordStyle)
-  const wordWidth = ctx.measureText("keepwell").width
-  const markSize = 26
-  const left = center - (markSize + 10 + wordWidth) / 2
-  drawLogoMark(ctx, left, wordmarkTop + 2, markSize, "#FFFFFF")
-  ctx.fillStyle = "#FFFFFF"
-  ctx.textAlign = "left"
-  ctx.fillText("keepwell", left + markSize + 10, wordmarkTop + 23)
+  const lockupHeight = 26
+  drawLockup(
+    ctx,
+    center - lockupWidth(lockupHeight) / 2,
+    wordmarkTop + 2,
+    lockupHeight,
+    "#FFFFFF"
+  )
 
   // The ticket.
   ticketPath(ctx, ticketX, ticketTop, ticketWidth, ticketBottom - ticketTop)
