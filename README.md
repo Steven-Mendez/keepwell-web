@@ -1,8 +1,9 @@
 # Keepwell for the web
 
 The desktop (and phone-width) version of Keepwell, with the same features, rules and texts as the iOS
-app. Your data lives in this browser (IndexedDB), works offline as an installable PWA, and moves to
-and from the iPhone with the shared `.json` backup.
+app. Your data lives in this browser (IndexedDB) and works offline as an installable PWA. An optional
+Keepwell account (invite-only) syncs it with the iPhone; without one it stays in this browser, and CSV
+export and import are the manual way to keep or move a copy.
 
 ## Run it
 

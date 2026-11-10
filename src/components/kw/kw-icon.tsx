@@ -1,6 +1,7 @@
 import type { CardColor } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
+import { KW_LOCKUP, KW_SYMBOL } from "./kw-brand"
 import { KW_ICONS, KW_ROUND_JOINS, type KWIconName } from "./kw-icon-data"
 
 /**
@@ -35,25 +36,37 @@ export function KWIcon({ name, size = 20, strokeWidth = 2, className }: { name: 
   )
 }
 
-/** KWLogoMark: the keepwell figure, head and cupped arc, from the brand's 72×72 artwork. */
+/** KWLogoMark: the Keepwell symbol in one color (`currentColor`), from the designer's artwork. */
 export function KWLogoMark({ size = 24, className }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 72 72" fill="none" className={className} aria-hidden>
-      <circle cx="36" cy="21" r="9" fill="currentColor" />
-      <path d="M15 34v7a21 21 0 0 0 42 0v-7" stroke="currentColor" strokeWidth="7.5" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox={KW_SYMBOL.viewBox} className={className} aria-hidden>
+      <path d={KW_SYMBOL.d} fill="currentColor" />
     </svg>
   )
 }
 
-/** KWAppIconTile at sidebar scale: the mark on the brand gradient, with the top highlight. */
+/** KWLockup: symbol and "KEEPWELL" in one color (`currentColor`); `height` sets its size. */
+export function KWLockup({ height = 32, className }: { height?: number; className?: string }) {
+  const [, , width, viewHeight] = KW_LOCKUP.box
+  return (
+    <svg width={(height * width) / viewHeight} height={height} viewBox={KW_LOCKUP.viewBox} className={className} role="img" aria-label="Keepwell">
+      <path d={KW_LOCKUP.d} fill="currentColor" />
+    </svg>
+  )
+}
+
+/** KWAppIconTile: the app icon in miniature, the white symbol on the icon's blue gradient. */
 export function KWAppIconTile({ size = 32, className }: { size?: number; className?: string }) {
   return (
     <span
       className={cn("relative inline-flex shrink-0 items-center justify-center overflow-hidden text-white", className)}
-      style={{ width: size, height: size, borderRadius: size * (17 / 72), backgroundImage: "linear-gradient(135deg, var(--brand-500), var(--brand-700))" }}
+      style={{ width: size, height: size, borderRadius: size * (17 / 72), backgroundImage: "linear-gradient(180deg, var(--brand-500), var(--brand-700))" }}
     >
       <span className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/30 to-transparent to-50%" aria-hidden />
-      <KWLogoMark size={size * (44 / 72)} className="relative" />
+      {/* Placed as on the icon: 52% of the tile wide, slightly above center. */}
+      <span className="relative inline-flex" style={{ transform: `translateY(${-size * (2.5 / 72)}px)` }}>
+        <KWLogoMark size={size * (40 / 72)} />
+      </span>
     </span>
   )
 }

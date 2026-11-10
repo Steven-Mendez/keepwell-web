@@ -290,7 +290,7 @@ export function IconChoices({
               aria-label={symbol}
               className={cn(
                 "flex aspect-square items-center justify-center rounded-xl bg-secondary/60 text-text-secondary transition-colors outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring",
-                icon === symbol && "bg-white text-black hover:bg-white"
+                icon === symbol && "bg-primary text-primary-foreground hover:bg-primary"
               )}
             >
               {createElement(symbolIcon(symbol), {

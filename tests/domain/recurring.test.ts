@@ -1,5 +1,5 @@
 // Recurring movements and subscriptions: the schedule, materializing what's due, pause and resume,
-// totals and the backup file (shared contract with keepwell-ios).
+// and totals (shared contract with keepwell-ios).
 import { describe, expect, it } from "vitest"
 
 import {
@@ -26,7 +26,7 @@ import {
   upcoming,
   type RecurringRuleDraft,
 } from "@/lib/domain"
-import { BackupFile, CURRENT_SCHEMA_VERSION, DEFAULT_SETTINGS, parseBackupFile, serializeBackupFile, type RecurringRule } from "@/lib/schema"
+import { DEFAULT_SETTINGS, type RecurringRule } from "@/lib/schema"
 
 import { IDs, d, date, sampleStore, single, transaction } from "./fixtures"
 
@@ -333,54 +333,7 @@ describe("Recurring rule actions", () => {
   })
 })
 
-describe("Backup file version 2", () => {
-  const audit = { createdAt: "2026-10-01T12:00:00.000Z", updatedAt: "2026-10-02T12:00:00.000Z" }
-  const settings = { ...DEFAULT_SETTINGS, currencies: { principal: "USD", rate: "1" }, hasCompletedOnboarding: true, updatedAt: audit.updatedAt }
-
-  it("writes the current schema version", () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe(4)
-  })
-
-  it("round-trips recurring rules and a movement's recurringId", () => {
-    const movement = { ...transaction({ amount: "10", account: IDs.mastercard, card: IDs.mastercardHolder, category: "subscriptions", rate: single("USD") }), id: "00000000-0000-0000-0000-0000000000f1", recurringId: RULE_ID, ...audit }
-    const file: BackupFile = {
-      schemaVersion: 2,
-      exportedAt: audit.updatedAt,
-      settings,
-      accounts: [],
-      cards: [],
-      categories: [],
-      transactions: [movement],
-      recurringRules: [
-        { ...rule({ endDate: date(2027, 1, 31).toISOString(), note: "Family plan" }), ...audit },
-        { ...rule({ id: "00000000-0000-0000-0000-00000000e002", name: "Old", isPaused: true }), ...audit, deletedAt: audit.updatedAt },
-      ],
-      savingsGoals: [],
-      loans: [],
-      personalDebts: [],
-      categorizationRules: [],
-    }
-    const text = serializeBackupFile(file)
-    const parsed = parseBackupFile(text)
-    expect(parsed).toEqual(file)
-    expect(serializeBackupFile(parsed)).toBe(text)
-    const json = JSON.parse(text) as { recurringRules: Record<string, unknown>[]; transactions: Record<string, unknown>[] }
-    expect(Object.keys(json.recurringRules[0]!)).toEqual([...Object.keys(json.recurringRules[0]!)].sort())
-    expect(json.recurringRules[1]).not.toHaveProperty("note")
-    expect(json.transactions[0]!.recurringId).toBe(RULE_ID)
-  })
-
-  it("a version 1 file still restores, with no rules", () => {
-    const v1 = JSON.stringify({ schemaVersion: 1, exportedAt: audit.updatedAt, settings, accounts: [], cards: [], categories: [], transactions: [{ ...transaction({ amount: "3", rate: single("USD") }), ...audit, note: null }] })
-    const parsed = parseBackupFile(v1)
-    expect(parsed.recurringRules).toEqual([])
-    expect(parsed.transactions[0]?.recurringId).toBeUndefined()
-  })
-
-  it("rejects a file from a newer version", () => {
-    expect(() => parseBackupFile(JSON.stringify({ schemaVersion: 5, exportedAt: audit.updatedAt, settings, accounts: [], cards: [], categories: [], transactions: [], recurringRules: [] }))).toThrow("Not a valid Keepwell backup")
-  })
-
+describe("Recurring rules in memory", () => {
   it("an InMemoryStore starts with no rules", async () => {
     expect(await new InMemoryStore().fetchRecurringRules()).toEqual([])
   })

@@ -661,7 +661,9 @@ function Hero({
   children: React.ReactNode
 }) {
   return (
-    <section className="mt-[calc(var(--topbar-h)*-1)] bg-[linear-gradient(to_bottom,var(--brand-600)_0%,var(--brand-900)_55%,var(--background)_100%)] pt-(--topbar-h)">
+    // A brand moment: `dark` draws it with the dark palette in both appearances. In dark mode the
+    // blue melts into the black page; on the light page it ends as a blue panel instead.
+    <section className="dark mt-[calc(var(--topbar-h)*-1)] rounded-b-(--radius-surface) bg-linear-to-b from-brand-600 to-brand-700 pt-(--topbar-h) text-foreground dark:rounded-none dark:bg-[linear-gradient(to_bottom,var(--brand-600)_0%,var(--brand-900)_55%,var(--background)_100%)]">
       {/*
         Phones keep iOS's centered hero. From lg it becomes a two-row desktop header that shares the
         page's columns (1fr | 22rem), so nothing on the gradient is empty space (Mobbin: Copilot,

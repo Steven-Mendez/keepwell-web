@@ -74,7 +74,7 @@ export function HomeSkeleton() {
   return (
     <div className="flex flex-col" aria-busy>
       {/* The hero keeps its brand gradient; only the words in it wait. */}
-      <section className="mt-[calc(var(--topbar-h)*-1)] bg-[linear-gradient(to_bottom,var(--brand-600)_0%,var(--brand-900)_55%,var(--background)_100%)] pt-(--topbar-h)">
+      <section className="dark mt-[calc(var(--topbar-h)*-1)] rounded-b-(--radius-surface) bg-linear-to-b from-brand-600 to-brand-700 pt-(--topbar-h) text-foreground dark:rounded-none dark:bg-[linear-gradient(to_bottom,var(--brand-600)_0%,var(--brand-900)_55%,var(--background)_100%)]">
         <div className="mx-auto grid w-full max-w-[1400px] justify-items-center gap-5 px-(--gutter) pt-6 pb-10 md:px-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end lg:justify-items-stretch lg:gap-x-6 lg:gap-y-4 lg:pt-4 lg:pb-6">
           <div className="flex flex-col items-center gap-2 lg:col-start-1 lg:row-start-1 lg:items-start lg:self-center">
             <Skeleton className="h-3.5 w-36 bg-white/15" />

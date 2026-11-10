@@ -146,7 +146,7 @@ export function ColorSwatches({
           onClick={() => onChange(color)}
           className={cn(
             "size-8 rounded-full ring-offset-2 ring-offset-card transition outline-none hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring",
-            color === value ? "ring-2 ring-white" : "ring-1 ring-white/10"
+            color === value ? "ring-2 ring-foreground" : "ring-1 ring-foreground/10"
           )}
           style={{
             backgroundImage: `linear-gradient(135deg, var(--card-art-${color}-from), var(--card-art-${color}-to))`,
