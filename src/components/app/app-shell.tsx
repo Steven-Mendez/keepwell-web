@@ -25,6 +25,7 @@ import { AppActionsProvider, useAppActions } from "./app-actions"
 import { AppSidebar } from "./app-sidebar"
 import { CommandPalette } from "./command-palette"
 import { KeyboardShortcuts } from "./keyboard-shortcuts"
+import { SyncHost } from "./sync-host"
 import {
   MAIN_NAV,
   ONBOARDING_PATH,
@@ -87,6 +88,7 @@ function AppShellGate({ children }: { children: ReactNode }) {
       <AddAccountDialog />
       <CommandPalette />
       <KeyboardShortcuts />
+      <SyncHost />
     </AppActionsProvider>
   )
 }

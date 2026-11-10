@@ -1,5 +1,6 @@
 "use client"
 
+import { BotIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { KWButton } from "@/components/kw/design"
@@ -8,7 +9,7 @@ import { connectedClients, disconnectAll, revokeClient, type ConnectedClient } f
 import type { Translator } from "@/lib/i18n"
 
 import { ConfirmDialog } from "./confirm-dialog"
-import { SettingsRow, SettingsSection } from "./settings-rows"
+import { SettingsLinkRow, SettingsRow, SettingsSection } from "./settings-rows"
 
 /** Assistants connected through MCP (Claude and others), each revocable, and a switch for all at once. */
 export function ConnectedAppsSection({ t }: { t: Translator }) {
@@ -38,15 +39,17 @@ export function ConnectedAppsSection({ t }: { t: Translator }) {
 
   return (
     <SettingsSection
+      id="assistants"
       title={t.in("web", "Connected assistants")}
       footnote={t.in("web", "Assistants like Claude can read your data and record movements you then confirm here.")}
     >
       {clients === undefined ? null : clients.length === 0 ? (
-        <SettingsRow label={t.in("web", "None connected")} />
+        <SettingsRow icon={<BotIcon strokeWidth={2} />} label={t.in("web", "None connected")} />
       ) : (
         clients.map((client) => (
           <SettingsRow
             key={client.client_id}
+            icon={<BotIcon strokeWidth={2} />}
             label={client.name ?? client.client_id}
             description={client.scopes.includes("write") ? t.in("web", "Can read and record") : t.in("web", "Can read")}
           >
@@ -56,11 +59,7 @@ export function ConnectedAppsSection({ t }: { t: Translator }) {
           </SettingsRow>
         ))
       )}
-      <SettingsRow label={t.in("web", "Disconnect everything")} description={t.in("web", "Every assistant loses access at once.")}>
-        <KWButton variant="destructive" size="small" onClick={() => setConfirmingAll(true)}>
-          {t.in("web", "Disconnect all")}
-        </KWButton>
-      </SettingsRow>
+      <SettingsLinkRow icon="close" tone="destructive" label={t.in("web", "Disconnect everything")} description={t.in("web", "Every assistant loses access at once.")} onClick={() => setConfirmingAll(true)} />
       <ConfirmDialog
         open={confirmingAll}
         onOpenChange={setConfirmingAll}

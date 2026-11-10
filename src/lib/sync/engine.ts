@@ -1,9 +1,11 @@
-import { db, SYNC_TABLES } from "@/lib/db"
+import { db, SYNC_TABLES, toWire } from "@/lib/db"
 import { applyRemote } from "@/lib/repositories/shared"
 import { SYNC_ENTITIES, type SyncEntity } from "@/lib/schema"
+import { newID } from "@/lib/schema/id"
 
 import { getClientId } from "./client-id"
-import { ApiError, type PushResult, type SyncTransport } from "./transport"
+import { EMPTY_COUNTS, firstSyncDecision, USER_DATA_ENTITIES, type DataCounts, type PendingChoice } from "./first-sync"
+import { ApiError, type PulledChange, type PushResult, type SyncTransport } from "./transport"
 
 // The web's sync loop (ADR 0005 in keepwell-api): push the outbox, then pull. The outbox already
 // holds every local change, written in the same transaction as the change itself.
@@ -11,6 +13,14 @@ import { ApiError, type PushResult, type SyncTransport } from "./transport"
 const CURSOR = "sync_cursor"
 const REJECTED = "sync_rejected"
 const LAST_SYNC = "sync_last_at"
+/** The account this browser syncs with; another account starts over with a first sync. */
+const SYNC_USER = "sync_user"
+/** A first sync found data on both sides and waits for the person (`PendingChoice` as JSON). */
+const CHOICE = "sync_choice"
+/** This browser's data was cleared for the account's and the download hasn't finished yet. */
+const DOWNLOADING = "sync_downloading"
+/** Everything about the sync with one account; `client_id` is this browser's and stays. */
+const ACCOUNT_SYNC_KEYS = [CURSOR, REJECTED, LAST_SYNC, CHOICE, DOWNLOADING]
 const PUSH_BATCH = 200
 const MAX_REJECTED_KEPT = 50
 
@@ -22,6 +32,17 @@ export type SyncStatus =
   | { state: "signed_out" }
   | { state: "offline"; pending: number }
   | { state: "error"; message: string; requestId?: string }
+  /** First sync with data on both sides: paused (nothing pushed or pulled) until the person chooses. */
+  | { state: "needs_choice"; choice: PendingChoice }
+
+/** Thrown by `syncOnce` while a first sync waits for the person to keep one side. */
+export class ChoiceNeeded extends Error {
+  override readonly name = "ChoiceNeeded"
+
+  constructor(readonly choice: PendingChoice) {
+    super("Choose which data to keep")
+  }
+}
 
 export interface RejectedEvent {
   event_id: string
@@ -60,8 +81,199 @@ export async function pendingCount(): Promise<number> {
   return db.sync_outbox.count()
 }
 
-/** One full round: push everything pending, then pull until caught up. Throws ApiError as is. */
-export async function syncOnce(transport: SyncTransport): Promise<{ pushed: number; pulled: number }> {
+type Row = PulledChange["row"]
+
+const SNAPSHOT_ORDER: readonly SyncEntity[] = ["settings", ...SYNC_ENTITIES.filter((entity) => entity !== "settings")]
+
+/** Every row the account holds for each entity (tombstones too), and the sequence they reflect. */
+async function cloudRows(transport: SyncTransport, entities: readonly SyncEntity[]): Promise<{ rows: Map<SyncEntity, Row[]>; serverSeq: number }> {
+  const rows = new Map<SyncEntity, Row[]>()
+  let serverSeq = Infinity
+  for (const entity of entities) {
+    const list: Row[] = []
+    let after = ""
+    for (;;) {
+      const page = await transport.snapshot(entity, after)
+      serverSeq = Math.min(serverSeq, page.server_seq)
+      list.push(...page.rows)
+      if (!page.next_after) break
+      after = page.next_after
+    }
+    rows.set(entity, list)
+  }
+  return { rows, serverSeq: serverSeq === Infinity ? 0 : serverSeq }
+}
+
+/** The person's data in this browser: live rows per entity. */
+export async function localCounts(): Promise<DataCounts> {
+  const counts = { ...EMPTY_COUNTS }
+  for (const entity of USER_DATA_ENTITIES) {
+    counts[entity] = await db.table<{ deleted_at: string | null }>(SYNC_TABLES[entity]).filter((row) => row.deleted_at === null).count()
+  }
+  return counts
+}
+
+/** The person's data in the account, read from the snapshot without applying anything. */
+export async function cloudCounts(transport: SyncTransport): Promise<DataCounts> {
+  const { rows } = await cloudRows(transport, USER_DATA_ENTITIES)
+  const counts = { ...EMPTY_COUNTS }
+  for (const entity of USER_DATA_ENTITIES) counts[entity] = (rows.get(entity) ?? []).filter((row) => row.deleted_at === null).length
+  return counts
+}
+
+export async function pendingChoice(): Promise<PendingChoice | undefined> {
+  const text = await meta(CHOICE)
+  return text ? (JSON.parse(text) as PendingChoice) : undefined
+}
+
+/**
+ * Follows the signed-in account. A browser that synced before this was recorded keeps its cursor
+ * (it can only have been this account); another account than the recorded one starts over.
+ */
+async function followUser(userId: string | undefined) {
+  if (!userId) return
+  const stored = await meta(SYNC_USER)
+  if (stored === userId) return
+  await db.transaction("rw", db.meta, async () => {
+    if (stored !== undefined) await db.meta.bulkDelete(ACCOUNT_SYNC_KEYS)
+    await setMeta(SYNC_USER, userId)
+  })
+}
+
+const syncedTables = (withSettings: boolean) => SYNC_ENTITIES.filter((entity) => withSettings || entity !== "settings").map((entity) => db.table(SYNC_TABLES[entity]))
+
+/**
+ * Empties this browser's synced data and the outbox so the next round downloads the account's.
+ * Settings stay until the account's arrive (a browser is never left without them); this device's
+ * own things (client id, unlock and relock, hiding amounts, language, name) are untouched.
+ */
+async function clearForDownload() {
+  await db.transaction("rw", [...syncedTables(false), db.sync_outbox, db.meta], async () => {
+    for (const table of syncedTables(false)) await table.clear()
+    await db.sync_outbox.clear()
+    await db.meta.bulkDelete(ACCOUNT_SYNC_KEYS)
+    await setMeta(DOWNLOADING, "1")
+  })
+}
+
+/** One outbox event per stored row, so all of this browser's data goes up (parents first). */
+async function enqueueEverything() {
+  await db.transaction("rw", [...syncedTables(true), db.sync_outbox], async () => {
+    await db.sync_outbox.clear()
+    const base = Date.now()
+    let sequence = 0
+    for (const entity of SYNC_ENTITIES) {
+      for (const row of (await db.table(SYNC_TABLES[entity]).toArray()) as Row[]) {
+        await db.sync_outbox.add({ id: newID(), entity, entity_id: row.id, operation: row.deleted_at ? "delete" : "create", payload: toWire(entity, row), created_at: new Date(base + sequence++).toISOString() })
+      }
+    }
+  })
+}
+
+/**
+ * Decides the first sync with an account (no cursor yet) before anything moves: only one side with
+ * data syncs on its own; both sides with data pause sync until the person chooses (`ChoiceNeeded`).
+ */
+async function beginFirstSync(transport: SyncTransport, userId: string | undefined) {
+  // A download that stopped halfway starts again: what came down so far is the account's, not ours.
+  if (await meta(DOWNLOADING)) return clearForDownload()
+  const waiting = await pendingChoice()
+  if (waiting) throw new ChoiceNeeded(waiting)
+  const local = await localCounts()
+  const cloud = await cloudCounts(transport)
+  const decision = firstSyncDecision(local, cloud)
+  if (decision === "choose") {
+    const choice: PendingChoice = { userId: userId ?? null, local, cloud }
+    await setMeta(CHOICE, JSON.stringify(choice))
+    throw new ChoiceNeeded(choice)
+  }
+  // Only the account has data: nothing this browser seeded (default categories) may overwrite it.
+  if (decision === "download") await clearForDownload()
+  // Otherwise every local row goes up, also rows an earlier account already took from the outbox.
+  else await enqueueEverything()
+}
+
+/**
+ * One sync at a time per tab, whoever starts it (the scheduler, the welcome's restore, the choice):
+ * two first syncs at once would each see the other's half-downloaded rows as this browser's data.
+ */
+let queue: Promise<unknown> = Promise.resolve()
+function exclusive<T>(work: () => Promise<T>): Promise<T> {
+  const run = queue.then(work, work)
+  queue = run.catch(() => undefined)
+  return run
+}
+
+/** "Use your account's data": this browser's data is replaced by the account's on the next round. */
+export function takeAccountData(): Promise<void> {
+  return exclusive(clearForDownload)
+}
+
+/** A moment after `at` and not before now, so a row sent to replace the account's is the newest. */
+function laterThan(at: string, now: number): string {
+  return new Date(Math.max(now, Date.parse(at) + 1)).toISOString()
+}
+
+/**
+ * "Keep this browser's data": the account ends up holding exactly what is here. Through the normal
+ * push: a delete for every live row of the account that this browser doesn't have alive, and every
+ * local row sent again, stamped after the account's version of it so it wins (ADR 0005: a delete
+ * always applies over a live row; otherwise the later `updated_at` wins). Other devices get the
+ * deletions on their next pull. Sync goes on from the snapshot read here.
+ */
+export function keepBrowserData(transport: SyncTransport): Promise<void> {
+  return exclusive(() => replaceAccountData(transport))
+}
+
+async function replaceAccountData(transport: SyncTransport): Promise<void> {
+  const choice = await pendingChoice()
+  const { rows: cloud, serverSeq } = await cloudRows(transport, SYNC_ENTITIES)
+  await db.transaction("rw", [...syncedTables(true), db.sync_outbox, db.meta], async () => {
+    await db.sync_outbox.clear()
+    const now = Date.now()
+    let sequence = 0
+    const add = (entity: SyncEntity, row: Row, operation: "create" | "update" | "delete") =>
+      db.sync_outbox.add({ id: newID(), entity, entity_id: row.id, operation, payload: toWire(entity, row), created_at: new Date(now + sequence++).toISOString() })
+    for (const entity of SYNC_ENTITIES) {
+      const table = db.table(SYNC_TABLES[entity])
+      const theirs = new Map((cloud.get(entity) ?? []).map((row) => [row.id, row]))
+      const local = (await table.toArray()) as Row[]
+      const here = new Set(local.map((row) => row.id))
+      for (const row of local) {
+        const remote = theirs.get(row.id)
+        if (row.deleted_at) {
+          await add(entity, row, "delete")
+          continue
+        }
+        const sent = remote ? { ...row, updated_at: laterThan(remote.updated_at, now) } : row
+        if (sent !== row) await table.put(sent)
+        await add(entity, sent, remote ? "update" : "create")
+      }
+      // The settings row is never deleted: this browser's replaces the account's above.
+      if (entity === "settings") continue
+      for (const remote of theirs.values()) {
+        if (remote.deleted_at || here.has(remote.id)) continue
+        const at = laterThan(remote.updated_at, now)
+        await add(entity, { ...remote, updated_at: at, deleted_at: at }, "delete")
+      }
+    }
+    await db.meta.bulkDelete([REJECTED, CHOICE])
+    await setMeta(CURSOR, String(serverSeq))
+    if (choice?.userId) await setMeta(SYNC_USER, choice.userId)
+  })
+}
+
+/**
+ * One full round: push everything pending, then pull until caught up. Throws ApiError as is, and
+ * `ChoiceNeeded` while a first sync waits for the person. `userId` is the signed-in account.
+ */
+export function syncOnce(transport: SyncTransport, options: { userId?: string } = {}): Promise<{ pushed: number; pulled: number }> {
+  return exclusive(() => syncRound(transport, options))
+}
+
+async function syncRound(transport: SyncTransport, options: { userId?: string }): Promise<{ pushed: number; pulled: number }> {
+  await followUser(options.userId)
+  if ((await meta(CURSOR)) === undefined) await beginFirstSync(transport, options.userId)
   const clientId = await getClientId()
   let pushed = 0
   for (;;) {
@@ -93,7 +305,8 @@ export async function syncOnce(transport: SyncTransport): Promise<{ pushed: numb
   if (cursorText === undefined) {
     // A new installation (or one that lost its cursor): load today's state, then follow from there.
     let serverSeq = Infinity
-    for (const entity of SYNC_ENTITIES) {
+    // Settings first: movements in the account's currencies must never meet this browser's.
+    for (const entity of SNAPSHOT_ORDER) {
       let after = ""
       for (;;) {
         const page = await transport.snapshot(entity, after)
@@ -109,6 +322,7 @@ export async function syncOnce(transport: SyncTransport): Promise<{ pushed: numb
     // The lowest sequence any page reflected: changes after it are pulled again, which is harmless.
     cursorText = String(serverSeq === Infinity ? 0 : serverSeq)
     await setMeta(CURSOR, cursorText)
+    await db.meta.delete(DOWNLOADING)
   }
 
   let cursor = Number(cursorText)
@@ -139,6 +353,7 @@ async function settle(entity: SyncEntity, entityId: string, result: PushResult) 
 
 /** Status for the UI, from an error the loop got (or none). */
 export async function statusAfter(error: unknown): Promise<SyncStatus> {
+  if (error instanceof ChoiceNeeded) return { state: "needs_choice", choice: error.choice }
   if (error === undefined) return { state: "idle", lastSyncAt: (await meta(LAST_SYNC)) ?? null, pending: await pendingCount() }
   if (error instanceof ApiError) {
     if (error.status === 403 && error.code === "needs_plan") return { state: "needs_plan" }

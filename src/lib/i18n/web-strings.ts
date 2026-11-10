@@ -75,6 +75,7 @@ export const WEB_STRINGS_CORE: WebStrings = {
   OK: { es: "OK" },
 }
 
+import { WEB_STRINGS_SYNC } from "./web-strings.sync"
 import { WEB_STRINGS_ACCOUNT } from "./web-strings.account"
 import { WEB_STRINGS_ACCOUNTS } from "./web-strings.accounts"
 import { WEB_STRINGS_DEBTS } from "./web-strings.debts"
@@ -94,4 +95,5 @@ export const WEB_STRINGS: WebStrings = {
   ...WEB_STRINGS_DEBTS,
   ...WEB_STRINGS_RULES,
   ...WEB_STRINGS_ACCOUNT,
+  ...WEB_STRINGS_SYNC,
 }
