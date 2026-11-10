@@ -1,7 +1,9 @@
+import { useId } from "react"
+
 import type { CardColor } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
-import { KW_LOCKUP, KW_SYMBOL } from "./kw-brand"
+import { KW_LOCKUP, KW_LOCKUP_COLOR, KW_SYMBOL } from "./kw-brand"
 import { KW_ICONS, KW_ROUND_JOINS, type KWIconName } from "./kw-icon-data"
 
 /**
@@ -55,16 +57,45 @@ export function KWLockup({ height = 32, className }: { height?: number; classNam
   )
 }
 
+/**
+ * KWLogo: the logo as the designer drew it for each surface, `height` tall: the full-color lockup
+ * (LOGO-06) on light, the white one (LOGO-05) on dark, following `dark:` like the rest of the app.
+ */
+export function KWLogo({ height = 32, className }: { height?: number; className?: string }) {
+  // Gradient ids must be unique per instance: the sidebar and onboarding can both be on the page.
+  const id = useId()
+  const [, , width, viewHeight] = KW_LOCKUP_COLOR.box
+  return (
+    <span className={cn("inline-flex shrink-0", className)}>
+      <svg width={(height * width) / viewHeight} height={height} viewBox={KW_LOCKUP_COLOR.viewBox} className="dark:hidden" role="img" aria-label="Keepwell">
+        <defs>
+          {KW_LOCKUP_COLOR.gradients.map((g, index) => (
+            <linearGradient key={index} id={`${id}-${index}`} x1={g.x1} y1={g.y1} x2={g.x2} y2={g.y2} gradientUnits="userSpaceOnUse">
+              {g.stops.map(([offset, color]) => (
+                <stop key={offset} offset={offset} stopColor={color} />
+              ))}
+            </linearGradient>
+          ))}
+        </defs>
+        {KW_LOCKUP_COLOR.paths.map((p, index) => (
+          <path key={index} d={p.d} fill={`url(#${id}-${p.fill})`} {...("stroke" in p ? { stroke: `url(#${id}-${p.stroke})`, strokeMiterlimit: 10 } : {})} />
+        ))}
+      </svg>
+      <KWLockup height={height} className="hidden text-white dark:block" />
+    </span>
+  )
+}
+
 /** KWAppIconTile: the app icon in miniature, the white symbol on the icon's blue gradient. */
 export function KWAppIconTile({ size = 32, className }: { size?: number; className?: string }) {
   return (
     <span
       className={cn("relative inline-flex shrink-0 items-center justify-center overflow-hidden text-white", className)}
-      style={{ width: size, height: size, borderRadius: size * (17 / 72), backgroundImage: "linear-gradient(180deg, var(--brand-500), var(--brand-700))" }}
+      // The designer's icon gradient (KEEPWELL LOGO-02), as in public/icon.svg.
+      style={{ width: size, height: size, borderRadius: size * (17 / 72), backgroundImage: "linear-gradient(180deg, #4a74ff -7.6%, #233f91 93.3%)" }}
     >
-      <span className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/30 to-transparent to-50%" aria-hidden />
-      {/* Placed as on the icon: 52% of the tile wide, slightly above center. */}
-      <span className="relative inline-flex" style={{ transform: `translateY(${-size * (2.5 / 72)}px)` }}>
+      {/* Placed as on the designer's icon: 52% of the tile wide, a touch left of and above center. */}
+      <span className="relative inline-flex" style={{ transform: `translate(${-size * (0.85 / 72)}px, ${-size * (2.5 / 72)}px)` }}>
         <KWLogoMark size={size * (40 / 72)} />
       </span>
     </span>

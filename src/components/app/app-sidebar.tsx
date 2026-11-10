@@ -8,7 +8,7 @@ import type { ComponentProps, ReactNode } from "react"
 import { AnimatedNumber } from "@/components/kw/animated-number"
 import { SelectionPill } from "@/components/kw/motion"
 import { KWCircleButton } from "@/components/kw/design"
-import { KWIcon, KWLockup } from "@/components/kw/kw-icon"
+import { KWIcon, KWLogo } from "@/components/kw/kw-icon"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -102,7 +102,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
               ROW_INSET
             )}
           >
-            <KWLockup height={28} className="text-logo" />
+            <KWLogo height={28} />
           </Link>
           {/* The toggle lives here while the sidebar is open, so pages don't spend a bar on it (Linear, Copilot). */}
           {isMobile ? null : (
