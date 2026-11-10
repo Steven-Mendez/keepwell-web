@@ -498,6 +498,15 @@ describe("Overviews", () => {
     expect(home.month.month).toEqual(yearMonthContaining(referenceDate))
   })
 
+  it("net worth leaves out balances in a currency the settings no longer convert", async () => {
+    const sample = sampleData()
+    sample.settings.currencies = { principal: "USD", rate: "1" }
+    const ledger = await loadLedger(sampleStore(sample))
+    const home = homeOverview(ledger, referenceDate)
+    const usd = ledger.accounts.flatMap((account) => balanceOf(account, ledger.transactions)).filter((balance) => balance.currency === "USD")
+    expect(home.netWorth.amount.toFixed()).toBe(usd.reduce((total, balance) => total.plus(balance.amount), d(0)).toFixed())
+  })
+
   it("card debt is the cards' total in principal", async () => {
     const sample = sampleData()
     const home = homeOverview(await loadLedger(sampleStore(sample)), referenceDate)

@@ -303,8 +303,8 @@ describe("Net worth (rule 6)", () => {
     expect(rounded(inSecondCurrency(total, settings)!.amount, 0).toFixed()).toBe("408634")
   })
 
-  it("an unknown currency throws", () => {
-    expectDomainError(() => netWorth([m(1, "EUR")], currencySettings("USD", "NIO", 36)), "currencyMismatch")
+  it("a currency the settings don't convert is left out", () => {
+    expect(netWorth([m(1, "EUR"), m(5, "USD")], currencySettings("USD", "NIO", 36))).toEqual(m(5, "USD"))
   })
 
   it("a single currency has no second total", () => {
