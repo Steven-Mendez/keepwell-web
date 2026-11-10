@@ -28,7 +28,7 @@ import {
   KWTransactionIcon,
   KWValueRow,
 } from "@/components/kw/design"
-import { KWIcon, KWLockup, KWMiniCard } from "@/components/kw/kw-icon"
+import { KWIcon, KWLogo, KWMiniCard } from "@/components/kw/kw-icon"
 import type { KWIconName } from "@/components/kw/kw-icon-data"
 import { CurrencyPicker } from "@/components/kw/pickers"
 import { CardArt } from "@/components/kw/primitives"
@@ -238,7 +238,7 @@ export function OnboardingFlow() {
         <div className="flex w-full max-w-xl flex-col gap-8">
           {step === "done" ? (
             <div className="flex items-center gap-2.5">
-              <KWLockup height={28} className="text-logo" />
+              <KWLogo height={28} />
             </div>
           ) : (
             <FlowHeader
@@ -379,7 +379,7 @@ function WelcomeScreen({
           aria-hidden
         />
         <div className="relative flex items-center gap-2.5">
-          <KWLockup height={28} className="text-logo" />
+          <KWLogo height={28} />
         </div>
         <div className="relative flex flex-1 flex-col justify-center gap-8 py-10 lg:max-w-md">
           <Heading
