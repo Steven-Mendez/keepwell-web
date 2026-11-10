@@ -37,14 +37,17 @@ import { cn } from "@/lib/utils"
 // Keepwell's look on top of shadcn: wrappers in the spirit of the iOS DesignSystem (KWScreen,
 // KWSurfaceCard, KWTransactionRow, KWCardArt), built from the generated tokens.
 
+/**
+ * The page column: one width and gutter for a page's content and for the chrome above it (the top
+ * bar), so the bar's buttons end where the content does at every window width.
+ */
+export const PAGE_COLUMN = "mx-auto w-full max-w-[1400px] px-(--gutter) md:px-8"
+
 /** A page's content column with the desktop gutters. */
 export function Page({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cn(
-        "mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-(--gutter) py-6 md:px-8 md:py-8",
-        className
-      )}
+      className={cn(PAGE_COLUMN, "flex flex-col gap-6 py-6 md:py-8", className)}
       {...props}
     />
   )

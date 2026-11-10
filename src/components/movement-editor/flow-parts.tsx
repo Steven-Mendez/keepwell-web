@@ -32,7 +32,7 @@ export function FieldLabel({
   return (
     <label
       htmlFor={htmlFor}
-      className={cn("px-1 type-caption text-muted-foreground", className)}
+      className={cn("type-caption text-muted-foreground", className)}
     >
       {children}
     </label>

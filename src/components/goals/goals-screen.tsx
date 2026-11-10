@@ -139,7 +139,7 @@ function GoalCard({
   const status = goalStatus(t, goal, progress, money)
   const percent = Math.round(Math.min(progress.fraction.toNumber(), 1) * 100)
   return (
-    <Surface className="flex h-full flex-col gap-4 p-5">
+    <Surface className="flex h-full flex-col gap-4 p-4">
       <button
         type="button"
         onClick={onEdit}

@@ -51,7 +51,7 @@ export function EditorReview({
         </p>
       ) : null}
       {existing && form.rate.second !== form.rate.principal ? (
-        <p className="px-1 type-caption-sm text-muted-foreground">
+        <p className="type-caption-sm text-muted-foreground">
           {t.in("web", "Edits keep the rate this transaction was logged with.")}
         </p>
       ) : null}
@@ -142,7 +142,7 @@ function RepeatField({ editor }: ReviewProps) {
         onChange={editor.setRepeat}
       />
       {editor.repeat === "none" ? null : (
-        <p className="px-1 type-caption-sm text-muted-foreground">
+        <p className="type-caption-sm text-muted-foreground">
           {t.in(
             "web",
             "The next ones wait as drafts on their date for you to confirm."
@@ -202,7 +202,7 @@ function EditorActions({
   return (
     <div className="mt-auto flex flex-col gap-2 pt-2">
       {editor.error ? (
-        <p role="alert" className="px-1 type-caption text-negative">
+        <p role="alert" className="type-caption text-negative">
           {editor.error}
         </p>
       ) : null}

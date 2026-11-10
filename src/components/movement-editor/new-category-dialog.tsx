@@ -107,9 +107,9 @@ export function NewCategoryDialog({
               />
             </div>
           </div>
-          {error ? <p className="px-1 type-caption text-negative">{error}</p> : null}
+          {error ? <p className="type-caption text-negative">{error}</p> : null}
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 px-1 type-caption text-muted-foreground">{sp("Icon")}</legend>
+            <legend className="mb-2 type-caption text-muted-foreground">{sp("Icon")}</legend>
             <div className="grid max-h-48 grid-cols-8 gap-1.5 overflow-y-auto rounded-2xl bg-card p-2" role="radiogroup" aria-label={sp("Icon")}>
               {SYMBOL_CHOICES.map((symbol) => {
                 const Icon = symbolIcon(symbol)
@@ -133,7 +133,7 @@ export function NewCategoryDialog({
             </div>
           </fieldset>
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 px-1 type-caption text-muted-foreground">{sp("Color")}</legend>
+            <legend className="mb-2 type-caption text-muted-foreground">{sp("Color")}</legend>
             <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={sp("Color")}>
               {CATEGORY_COLOR_KEYS.map((key) => (
                 <button

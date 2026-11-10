@@ -1,4 +1,4 @@
-import { Page } from "@/components/kw/primitives"
+import { Page, PAGE_COLUMN } from "@/components/kw/primitives"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
@@ -47,7 +47,7 @@ function SkeletonSettingRow() {
 function SkeletonGroup({ rows }: { rows: number }) {
   return (
     <div className="flex flex-col gap-2">
-      <Skeleton className="ml-1 h-3.5 w-24 bg-card" />
+      <Skeleton className="h-3.5 w-24 bg-card" />
       <div className="flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card">
         {Array.from({ length: rows }, (_, index) => (
           <SkeletonSettingRow key={index} />
@@ -75,7 +75,7 @@ export function HomeSkeleton() {
     <div className="flex flex-col" aria-busy>
       {/* The hero keeps its brand gradient; only the words in it wait. */}
       <section className="dark mt-[calc(var(--topbar-h)*-1)] rounded-b-(--radius-surface) bg-linear-to-b from-brand-600 to-brand-700 pt-(--topbar-h) text-foreground dark:rounded-none dark:bg-[linear-gradient(to_bottom,var(--brand-600)_0%,var(--brand-900)_55%,var(--background)_100%)]">
-        <div className="mx-auto grid w-full max-w-[1400px] justify-items-center gap-5 px-(--gutter) pt-6 pb-10 md:px-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end lg:justify-items-stretch lg:gap-x-6 lg:gap-y-4 lg:pt-4 lg:pb-6">
+        <div className={cn(PAGE_COLUMN, "grid justify-items-center gap-5 pt-6 pb-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end lg:justify-items-stretch lg:gap-x-6 lg:gap-y-4 lg:pt-4 lg:pb-6")}>
           <div className="flex flex-col items-center gap-2 lg:col-start-1 lg:row-start-1 lg:items-start lg:self-center">
             <Skeleton className="h-3.5 w-36 bg-white/15" />
             <Skeleton className="h-7 w-56 bg-white/15" />
@@ -101,11 +101,11 @@ export function HomeSkeleton() {
       <Page className="pt-2 md:pt-2">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="flex flex-col gap-3">
-            <Skeleton className="ml-1 h-4 w-20 bg-card" />
+            <Skeleton className="h-4 w-20 bg-card" />
             <SkeletonList rows={8} />
           </div>
           <aside className="flex flex-col gap-6">
-            <div className="flex flex-col gap-4 rounded-2xl bg-card p-[18px] lg:hidden">
+            <div className="flex flex-col gap-4 rounded-2xl bg-card p-4 lg:hidden">
               <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-2">
                   <Skeleton className="h-3.5 w-28" />
@@ -121,7 +121,7 @@ export function HomeSkeleton() {
               ))}
             </div>
             <div className="flex flex-col gap-3">
-              <Skeleton className="ml-1 h-4 w-24 bg-card" />
+              <Skeleton className="h-4 w-24 bg-card" />
               <SkeletonGroup rows={4} />
             </div>
           </aside>
@@ -145,7 +145,7 @@ export function TransactionsSkeleton() {
       </div>
       {[5, 3, 4].map((rows, index) => (
         <div key={index} className="flex flex-col gap-3">
-          <div className="flex justify-between px-1">
+          <div className="flex justify-between">
             <Skeleton className="h-4 w-28 bg-card" />
             <Skeleton className="h-4 w-16 bg-card" />
           </div>
@@ -179,7 +179,7 @@ export function SummarySkeleton() {
       </div>
       <div className="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-3 lg:grid-rows-2">
         {[0, 1].map((index) => (
-          <div key={index} className="flex min-h-64 flex-col gap-4 rounded-2xl bg-card p-5 lg:col-span-2 lg:min-h-0">
+          <div key={index} className="flex min-h-64 flex-col gap-4 rounded-2xl bg-card p-4 lg:col-span-2 lg:min-h-0">
             <div className="flex justify-between">
               <div className="flex flex-col gap-2">
                 <Skeleton className="h-5 w-24" />
@@ -190,7 +190,7 @@ export function SummarySkeleton() {
             <Skeleton className="min-h-32 flex-1 rounded-xl" />
           </div>
         ))}
-        <div className="flex flex-col gap-5 rounded-2xl bg-card p-5 lg:col-start-3 lg:row-span-2 lg:row-start-1">
+        <div className="flex flex-col gap-5 rounded-2xl bg-card p-4 lg:col-start-3 lg:row-span-2 lg:row-start-1">
           <div className="flex items-center justify-between">
             <Skeleton className="h-5 w-28" />
             <Skeleton className="h-8 w-36 rounded-full" />
@@ -283,8 +283,11 @@ export function SidebarAccountsSkeleton() {
   return (
     <div className="flex flex-col gap-0.5" aria-busy>
       {[0, 1, 2].map((index) => (
-        <div key={index} className="flex h-8 items-center gap-2.5 px-3">
-          <Skeleton className="h-2.5 w-3.5 shrink-0 rounded-[3px]" />
+        // As AccountsList's rows: the swatch at the start of a 22 px icon column, then gap-3.
+        <div key={index} className="flex h-8 items-center gap-3 px-3">
+          <span className="flex w-[22px] shrink-0">
+            <Skeleton className="h-2.5 w-3.5 rounded-[3px]" />
+          </span>
           <Skeleton className="h-3 flex-1" />
           <Skeleton className="h-3 w-10" />
         </div>

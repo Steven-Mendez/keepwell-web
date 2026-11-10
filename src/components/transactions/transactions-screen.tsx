@@ -59,7 +59,7 @@ function ScopedAccountCard({
 }) {
   const balances = balanceOf(account, ledger.transactions)
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl bg-card p-[18px]">
+    <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl bg-card p-4">
       <div className="flex flex-col gap-0.5">
         <p className="type-label font-normal text-muted-foreground">
           {account.kind === "credit"
@@ -215,7 +215,7 @@ export function TransactionsScreen() {
           {tag ? (
             // A tag search totals that tag over all time, like iOS's tag totals: a trip or a
             // wedding rarely fits in one month.
-            <p className="px-1 type-label text-muted-foreground">
+            <p className="type-label text-muted-foreground">
               {t.in("transactions", "%@ · All time", tagLabel(tag))}
             </p>
           ) : null}

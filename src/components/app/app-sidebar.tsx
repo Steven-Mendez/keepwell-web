@@ -48,6 +48,25 @@ import { useAppActions } from "./app-actions"
 import { MAIN_NAV, SECTION_NAV, SETTINGS_NAV, type NavItem } from "./navigation"
 
 /**
+ * The sidebar's one column, so the logo, search, tabs, accounts and profile line up: every section
+ * sits `GUTTER` from the sidebar's edges (so row backgrounds and the header's toggle share both
+ * edges) and every row insets its content by `ROW_INSET`, which puts the logo, the icons, the
+ * captions and the avatar on one leading edge and the trailing hints on one trailing edge. Icons sit
+ * in an `IconSlot` so the labels after them start on one line too.
+ */
+const GUTTER = "px-3"
+const ROW_INSET = "px-3"
+
+/** The leading icon's column, as wide as the tab icons; smaller icons and swatches start at its edge. */
+function IconSlot({ children }: { children: ReactNode }) {
+  return (
+    <span className="flex w-[22px] shrink-0 items-center justify-start">
+      {children}
+    </span>
+  )
+}
+
+/**
  * The desktop navigation, drawn with the iOS design system: the `nav` surface with its divider (as
  * under KWTabBar), the tab icons and colors of KWTabBar (white when selected, `faint` otherwise),
  * the accounts as plain rows with a card-art swatch (no grouped card: with real data it got heavy);
@@ -73,12 +92,15 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
       className="border-r border-divider **:data-[slot=sidebar-inner]:bg-nav"
       {...props}
     >
-      <SidebarHeader className="gap-4 px-4 pt-5 pb-3">
+      <SidebarHeader className={cn("gap-4 pt-5 pb-3", GUTTER)}>
         <div className="flex items-center justify-between gap-2">
           <Link
             href="/"
             onClick={close}
-            className="flex items-center gap-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className={cn(
+              "flex items-center gap-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              ROW_INSET
+            )}
           >
             <KWLockup height={28} className="text-logo" />
           </Link>
@@ -108,9 +130,14 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
               close()
               setPaletteOpen(true)
             }}
-            className="flex h-10 press items-center gap-2 rounded-xl bg-card px-3 text-muted-foreground outline-none hover:text-text-secondary focus-visible:ring-2 focus-visible:ring-ring"
+            className={cn(
+              "flex h-10 press items-center gap-3 rounded-xl bg-card text-muted-foreground outline-none hover:text-text-secondary focus-visible:ring-2 focus-visible:ring-ring",
+              ROW_INSET
+            )}
           >
-            <KWIcon name="search" size={18} />
+            <IconSlot>
+              <KWIcon name="search" size={18} />
+            </IconSlot>
             <span className="flex-1 truncate text-left type-body">
               {t.in("transactions", "Search")}
             </span>
@@ -119,7 +146,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="gap-5 px-3 pb-3">
+      <SidebarContent className={cn("gap-5 pb-3", GUTTER)}>
         <nav aria-label="Keepwell">
           <ul className="flex flex-col gap-0.5">
             {MAIN_NAV.map((item, index) => (
@@ -146,7 +173,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
         </nav>
 
         <section className="group/accounts flex flex-col gap-1">
-          <div className="flex h-8 items-center gap-2 pr-1 pl-3">
+          <div className={cn("flex h-8 items-center gap-2", ROW_INSET)}>
             <Link
               href="/accounts"
               onClick={close}
@@ -158,7 +185,8 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
               type="button"
               onClick={() => openAddAccount()}
               aria-label={t.in("accounts", "Add account or card")}
-              className="flex size-6 items-center justify-center rounded-md text-text-faint transition-opacity outline-none hover:bg-card hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring md:opacity-0 md:group-hover/accounts:opacity-100"
+              // -mr-[5px]: the 14 px glyph, not its 24 px hit box, ends on the balances' trailing edge.
+              className="-mr-[5px] flex size-6 items-center justify-center rounded-md text-text-faint transition-opacity outline-none hover:bg-card hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring md:opacity-0 md:group-hover/accounts:opacity-100"
             >
               <KWIcon name="plus" size={14} strokeWidth={2.2} />
             </button>
@@ -171,7 +199,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
         </section>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-divider p-3">
+      <SidebarFooter className={cn("border-t border-divider py-3", GUTTER)}>
         <ProfileMenu onNavigate={close} />
       </SidebarFooter>
       <SidebarRail className="hover:after:bg-divider" />
@@ -198,7 +226,8 @@ function TabLink({
       onClick={onNavigate}
       aria-current={isCurrent ? "page" : undefined}
       className={cn(
-        "group/tab relative isolate flex h-10 items-center gap-3 rounded-xl px-3 press-row outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "group/tab relative isolate flex h-10 items-center gap-3 rounded-xl press-row outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        ROW_INSET,
         isCurrent
           ? "text-foreground"
           : "text-text-faint hover:bg-card/60 hover:text-text-secondary"
@@ -208,7 +237,9 @@ function TabLink({
       {isCurrent ? (
         <SelectionPill layoutId="sidebar-tab" className="rounded-xl bg-card" />
       ) : null}
-      <KWIcon name={item.kwIcon} size={22} />
+      <IconSlot>
+        <KWIcon name={item.kwIcon} size={22} />
+      </IconSlot>
       <span className="flex-1 type-label">{t.in(item.ns, item.title)}</span>
       <span
         className="type-micro text-text-faint opacity-0 transition-opacity group-hover/tab:opacity-100"
@@ -242,14 +273,15 @@ function PlainLink({
       onClick={onNavigate}
       aria-current={isCurrent ? "page" : undefined}
       className={cn(
-        "flex h-8 items-center gap-2.5 rounded-lg px-3 press-row outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex h-8 items-center gap-3 rounded-lg press-row outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        ROW_INSET,
         isCurrent
           ? "bg-card text-foreground"
           : "text-text-secondary hover:bg-card/60 hover:text-foreground"
       )}
     >
-      <span className="flex w-4 shrink-0 items-center justify-center text-text-faint">
-        {icon}
+      <span className="text-text-faint">
+        <IconSlot>{icon}</IconSlot>
       </span>
       <span className="min-w-0 flex-1 truncate type-body">{children}</span>
       {trailing}
@@ -342,7 +374,12 @@ function AccountsList({
           </PlainLink>
         </li>
       ))}
-      <li className="mt-1 flex h-8 items-center gap-2.5 border-t border-divider px-3 pt-1">
+      <li
+        className={cn(
+          "mt-1 flex h-8 items-center gap-3 border-t border-divider pt-1",
+          ROW_INSET
+        )}
+      >
         <span className="flex-1 type-caption text-muted-foreground">
           {t.in("home", "Net worth")}
         </span>
@@ -383,7 +420,12 @@ function ProfileMenu({ onNavigate }: { onNavigate: () => void }) {
   const item = "gap-2.5 px-2 py-1.5 [&_svg]:text-text-faint"
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors outline-none hover:bg-card focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-card">
+      <DropdownMenuTrigger
+        className={cn(
+          "flex w-full items-center gap-3 rounded-xl py-2 text-left transition-colors outline-none hover:bg-card focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-card",
+          ROW_INSET
+        )}
+      >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary type-label text-foreground uppercase">
           {name ? [...name][0] : <KWIcon name="person" size={18} />}
         </span>

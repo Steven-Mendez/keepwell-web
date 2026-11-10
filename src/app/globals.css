@@ -365,6 +365,26 @@
   }
 }
 
+/*
+ * shadcn pins the dialog's X 8 px from the corner whatever padding the dialog sets (p-4, p-5, p-6),
+ * so it never lined up with the title or the fields. It shares the first grid cell with the header
+ * instead: its glyph (16 px in a 28 px ghost button, hence -6 px) ends on the content's trailing edge
+ * and sits on the title's line, for every dialog padding.
+ */
+[data-slot="dialog-content"]:has(> [data-slot="dialog-close"]) > :first-child,
+[data-slot="dialog-content"] > [data-slot="dialog-close"] {
+  grid-area: 1 / 1;
+}
+
+[data-slot="dialog-content"] > [data-slot="dialog-close"] {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  justify-self: end;
+  align-self: start;
+  margin-right: -6px;
+}
+
 [data-slot="sheet-content"] {
   box-shadow: var(--shadow-elevated);
   transition-duration: var(--duration-slow);

@@ -38,7 +38,7 @@ export function BudgetCard({
   const byId = new Map(categories.map((category) => [category.id, category]))
 
   return (
-    <Surface className={cn("flex flex-col gap-4 p-5", className)}>
+    <Surface className={cn("flex flex-col gap-4 p-4", className)}>
       <h2 className="type-heading">{t.in("summary", "Budgets")}</h2>
       <ul className="grid gap-x-8 gap-y-3 md:grid-cols-2 xl:grid-cols-3">
         {statuses.map((status) => {

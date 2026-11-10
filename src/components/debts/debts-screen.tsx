@@ -104,7 +104,7 @@ export function DebtsScreen() {
         <SkeletonList rows={3} />
       ) : (
         <>
-          <Surface className="flex flex-col gap-3 p-5">
+          <Surface className="flex flex-col gap-3 p-4">
             <div className="grid grid-cols-2 gap-4">
               <Total
                 t={t}
@@ -296,7 +296,7 @@ function LoanCard({
       <button
         type="button"
         onClick={onOpen}
-        className="flex h-full w-full flex-col gap-3 rounded-2xl p-5 text-left outline-none hover:bg-secondary/40 focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex h-full w-full flex-col gap-3 rounded-2xl p-4 text-left outline-none hover:bg-secondary/40 focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="flex items-baseline justify-between gap-3">
           <span className="flex min-w-0 flex-col">

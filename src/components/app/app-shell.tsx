@@ -13,6 +13,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { KWCircleButton } from "@/components/kw/design"
 import { KWIcon } from "@/components/kw/kw-icon"
+import { PAGE_COLUMN } from "@/components/kw/primitives"
 import { useLedger } from "@/hooks/use-ledger"
 import { useT } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
@@ -132,50 +133,54 @@ function TopBar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-10 mb-[calc(var(--topbar-h)-4rem)] flex h-16 shrink-0 items-center gap-3 border-b px-(--gutter) transition-[background-color,border-color] duration-300 ease-snappy md:px-8",
+        "sticky top-0 z-10 mb-[calc(var(--topbar-h)-4rem)] flex h-16 shrink-0 border-b transition-[background-color,border-color] duration-300 ease-snappy",
         isScrolled
           ? "border-divider bg-background/85 backdrop-blur-xl"
           : "border-transparent bg-transparent",
         floats && !isScrolled && "pointer-events-none"
       )}
     >
-      {floats ? null : (
-        <KWCircleButton
-          icon={
-            <PanelLeftIcon className="size-5" strokeWidth={2} aria-hidden />
-          }
-          label={t.in("web", "Toggle sidebar")}
-          shortcut="⌘B"
-          onClick={toggleSidebar}
-        />
-      )}
-      <p
-        className={cn(
-          "min-w-0 flex-1 truncate type-heading transition-[opacity,translate] duration-300 ease-snappy",
-          isScrolled ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
+      {/* The page's column, not the window's: on a window wider than it, the buttons would otherwise
+          sit outside the content's edges. */}
+      <div className={cn(PAGE_COLUMN, "flex items-center gap-3")}>
+        {floats ? null : (
+          <KWCircleButton
+            icon={
+              <PanelLeftIcon className="size-5" strokeWidth={2} aria-hidden />
+            }
+            label={t.in("web", "Toggle sidebar")}
+            shortcut="⌘B"
+            onClick={toggleSidebar}
+          />
         )}
-        aria-hidden={!isScrolled}
-      >
-        {t.in(section.ns, section.title)}
-      </p>
-      {sidebarHidden ? (
-        <KWCircleButton
-          icon="search"
-          label={t.in("web", "Search or jump to…")}
-          shortcut="⌘K"
-          onClick={() => setPaletteOpen(true)}
-        />
-      ) : null}
-      {/* Phones log from the tab bar's "+". */}
-      {sidebarHidden && !isMobile ? (
-        <KWCircleButton
-          icon="plus"
-          variant="white"
-          label={t.in("home", "Log transaction")}
-          shortcut="N"
-          onClick={() => openEditor()}
-        />
-      ) : null}
+        <p
+          className={cn(
+            "min-w-0 flex-1 truncate type-heading transition-[opacity,translate] duration-300 ease-snappy",
+            isScrolled ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
+          )}
+          aria-hidden={!isScrolled}
+        >
+          {t.in(section.ns, section.title)}
+        </p>
+        {sidebarHidden ? (
+          <KWCircleButton
+            icon="search"
+            label={t.in("web", "Search or jump to…")}
+            shortcut="⌘K"
+            onClick={() => setPaletteOpen(true)}
+          />
+        ) : null}
+        {/* Phones log from the tab bar's "+". */}
+        {sidebarHidden && !isMobile ? (
+          <KWCircleButton
+            icon="plus"
+            variant="white"
+            label={t.in("home", "Log transaction")}
+            shortcut="N"
+            onClick={() => openEditor()}
+          />
+        ) : null}
+      </div>
     </header>
   )
 }

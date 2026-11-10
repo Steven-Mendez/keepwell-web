@@ -96,7 +96,7 @@ export function CashFlowCard({
   const average = report.averageExpense
 
   return (
-    <Surface className={cn("flex min-h-0 flex-col gap-3 p-5", className)}>
+    <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col">
           <h2 className="type-heading">{t.in("summary", "Cash flow")}</h2>

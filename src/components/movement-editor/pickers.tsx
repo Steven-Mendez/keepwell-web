@@ -66,7 +66,7 @@ export function MethodPicker({ groups, value, onChange }: { groups: MethodGroup[
     <div className="flex flex-col gap-4" role="radiogroup">
       {groups.map((group) => (
         <div key={group.title} className="flex flex-col gap-2">
-          <span className="px-1 type-caption font-semibold text-muted-foreground">{group.title}</span>
+          <span className="type-caption font-semibold text-muted-foreground">{group.title}</span>
           <div className={GROUP}>
             {group.rows.map((row) => (
               <ChoiceRow
@@ -192,7 +192,7 @@ export function CategoryPicker({
         </button>
       </div>
       {!searching && ordered.length > COLLAPSED_COUNT ? (
-        <button type="button" onClick={() => setExpanded((open) => !open)} className="self-start px-1 type-label text-link transition-colors hover:text-link-hover">
+        <button type="button" onClick={() => setExpanded((open) => !open)} className="self-start type-label text-link transition-colors hover:text-link-hover">
           {expanded ? t.in("web", "Show fewer") : t.in("createtransaction", "See all %lld", ordered.length)}
         </button>
       ) : null}
