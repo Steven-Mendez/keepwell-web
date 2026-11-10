@@ -1,12 +1,12 @@
 // Monthly budgets per category: the statuses the summary and home read, saving one, and keeping it
-// through IndexedDB and the backup file.
+// through IndexedDB.
 import "fake-indexeddb/auto"
 
 import { describe, expect, it } from "vitest"
 
 import { DomainError, InMemoryStore, budgetStatuses, dec, saveCategory, type CategoryTotal } from "@/lib/domain"
-import { backupRepository, categoryRepository, settingsRepository } from "@/lib/repositories"
-import { DEFAULT_SETTINGS, parseBackupFile, type TransactionCategory } from "@/lib/schema"
+import { categoryRepository, settingsRepository } from "@/lib/repositories"
+import { DEFAULT_SETTINGS, type TransactionCategory } from "@/lib/schema"
 
 const expense = (id: string, budget?: string, currency = "NIO"): TransactionCategory => ({
   id,
@@ -78,27 +78,18 @@ describe("Saving a budget", () => {
   })
 })
 
-describe("Budgets through IndexedDB and the backup", () => {
-  it("stores, exports and restores the budget, and restoring defaults clears it", async () => {
+describe("Budgets through IndexedDB", () => {
+  it("stores the budget, and restoring defaults clears it", async () => {
     await settingsRepository.save({ ...DEFAULT_SETTINGS, currencies: { principal: "NIO", rate: "1" }, hasCompletedOnboarding: true })
     await categoryRepository.ensureDefaults()
     const groceries = (await categoryRepository.list()).find((c) => c.id === "groceries")!
     await categoryRepository.save({ ...groceries, monthlyBudget: { amount: "8000", currency: "NIO" } })
-
-    const text = await backupRepository.export()
-    const exported = parseBackupFile(text).categories.find((c) => c.id === "groceries")
-    expect(exported?.monthlyBudget).toEqual({ amount: "8000", currency: "NIO" })
-    expect(parseBackupFile(text).schemaVersion).toBe(4)
-    // Categories without one leave the key out, as iOS writes it.
-    expect(JSON.parse(text).categories.find((c: { id: string }) => c.id === "restaurants")).not.toHaveProperty("monthlyBudget")
-
-    await categoryRepository.restoreDefaults()
-    expect((await categoryRepository.list()).find((c) => c.id === "groceries")?.monthlyBudget).toBeUndefined()
-
-    await backupRepository.import(text)
     expect((await categoryRepository.list()).find((c) => c.id === "groceries")?.monthlyBudget).toEqual({
       amount: "8000",
       currency: "NIO",
     })
+
+    await categoryRepository.restoreDefaults()
+    expect((await categoryRepository.list()).find((c) => c.id === "groceries")?.monthlyBudget).toBeUndefined()
   })
 })

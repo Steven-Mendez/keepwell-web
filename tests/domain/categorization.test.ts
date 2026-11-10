@@ -1,5 +1,5 @@
 // Tags and categorization rules: the same cases as iOS TagsAndRulesTests, the use cases, CSV import,
-// IndexedDB and the backup file. The pinned JSON is the same text iOS TagsAndRulesBackupTests checks.
+// and IndexedDB.
 import "fake-indexeddb/auto"
 
 import { describe, expect, it } from "vitest"
@@ -32,18 +32,7 @@ import {
   parseCsvRows,
 } from "@/lib/domain/csv"
 import {
-  backupRepository,
-  categorizationRuleRepository,
-  settingsRepository,
-  transactionRepository,
-} from "@/lib/repositories"
-import {
-  CURRENT_SCHEMA_VERSION,
   DEFAULT_CATEGORIES,
-  DEFAULT_SETTINGS,
-  parseBackupFile,
-  serializeBackupFile,
-  type BackupFile,
   type CategorizationRule,
   type RecurringRule,
   type Transaction,
@@ -236,114 +225,6 @@ describe("Categorization rules", () => {
   })
 })
 
-describe("Backup file version 4: tags and categorization rules", () => {
-  const audit = { createdAt: "2026-10-26T07:33:20.000Z", updatedAt: "2026-10-26T07:33:20.500Z" }
-  const settings = {
-    ...DEFAULT_SETTINGS,
-    currencies: { principal: "USD", second: "NIO", rate: "36.6243" },
-    hasCompletedOnboarding: true,
-    updatedAt: audit.updatedAt,
-  }
-
-  function file(): BackupFile {
-    return {
-      schemaVersion: CURRENT_SCHEMA_VERSION,
-      exportedAt: audit.createdAt,
-      settings,
-      accounts: [],
-      cards: [],
-      categories: [],
-      transactions: [
-        {
-          id: "7d8e9fa0-b1c2-4d3e-8f40-5162738495a6",
-          date: "2026-11-14T18:00:00.000Z",
-          status: "confirmed",
-          description: "Uber to the airport",
-          kind: "expense",
-          categoryId: "transport",
-          amount: "12.5",
-          currency: "USD",
-          accountId: IDs.savings,
-          exchangeRate: { principal: "USD", second: "NIO", rate: "36.6243" },
-          isShared: false,
-          tags: normalizedTags(["#Viaje México", "boda", "viaje méxico"]),
-          ...audit,
-        },
-      ],
-      recurringRules: [],
-      savingsGoals: [],
-      loans: [],
-      personalDebts: [],
-      categorizationRules: [
-        { id: "8e9fa0b1-c2d3-4e4f-9051-62738495a6b7", match: "Uber", categoryId: "transport", kind: "expense", tags: normalizedTags(["Viaje México"]), sortIndex: 0, ...audit },
-        { id: "9fa0b1c2-d3e4-4f50-a162-738495a6b7c8", match: "Payroll", categoryId: "salary", kind: "income", sortIndex: 1, ...audit, deletedAt: audit.updatedAt },
-      ],
-    }
-  }
-
-  it("writes the same text as iOS: sorted keys, empty tags left out", () => {
-    const text = serializeBackupFile(file())
-    expect(text).toContain(
-      '"transactions":[{"accountId":"00000000-0000-0000-0000-00000000a001","amount":"12.5","categoryId":"transport",' +
-        '"createdAt":"2026-10-26T07:33:20.000Z","currency":"USD","date":"2026-11-14T18:00:00.000Z",' +
-        '"description":"Uber to the airport","exchangeRate":{"principal":"USD","rate":"36.6243","second":"NIO"},' +
-        '"id":"7d8e9fa0-b1c2-4d3e-8f40-5162738495a6","isShared":false,"kind":"expense","status":"confirmed",' +
-        '"tags":["viaje-méxico","boda"],"updatedAt":"2026-10-26T07:33:20.500Z"}]'
-    )
-    expect(text).toContain(
-      '"categorizationRules":[{"categoryId":"transport","createdAt":"2026-10-26T07:33:20.000Z",' +
-        '"id":"8e9fa0b1-c2d3-4e4f-9051-62738495a6b7","kind":"expense","match":"Uber","sortIndex":0,' +
-        '"tags":["viaje-méxico"],"updatedAt":"2026-10-26T07:33:20.500Z"},' +
-        '{"categoryId":"salary","createdAt":"2026-10-26T07:33:20.000Z","deletedAt":"2026-10-26T07:33:20.500Z",' +
-        '"id":"9fa0b1c2-d3e4-4f50-a162-738495a6b7c8","kind":"income","match":"Payroll","sortIndex":1,' +
-        '"updatedAt":"2026-10-26T07:33:20.500Z"}]'
-    )
-    const parsed = parseBackupFile(text)
-    expect(parsed).toEqual(file())
-    expect(serializeBackupFile(parsed)).toBe(text)
-  })
-
-  it("a file without tags or rules still reads, with none", () => {
-    const { categorizationRules: _, ...older } = file()
-    const { tags: __, ...movement } = older.transactions[0]!
-    const parsed = parseBackupFile(JSON.stringify({ ...older, schemaVersion: 3, transactions: [movement] }))
-    expect(parsed.categorizationRules).toEqual([])
-    expect(parsed.transactions[0]).not.toHaveProperty("tags")
-  })
-
-  it("refuses a rule for transfers", () => {
-    const damaged = JSON.parse(serializeBackupFile(file()))
-    damaged.categorizationRules[0].kind = "transfer"
-    expect(() => parseBackupFile(JSON.stringify(damaged))).toThrow("Not a valid Keepwell backup")
-  })
-
-  it("exports and restores tags and rules through IndexedDB, in order and with deletions", async () => {
-    await settingsRepository.save({ ...DEFAULT_SETTINGS, currencies: { principal: "USD", second: "NIO", rate: "36.6243" }, hasCompletedOnboarding: true })
-    const uber = await categorizationRuleRepository.save({ id: crypto.randomUUID(), match: "Uber", categoryId: "transport", kind: "expense", tags: ["Viaje México"] })
-    const cafe = await categorizationRuleRepository.save({ id: crypto.randomUUID(), match: "Café", categoryId: "restaurants", kind: "expense" })
-    const gone = await categorizationRuleRepository.save({ id: crypto.randomUUID(), match: "Payroll", categoryId: "salary", kind: "income" })
-    await categorizationRuleRepository.save({ ...uber, match: "UBER" })
-    await categorizationRuleRepository.reorder([cafe.id, uber.id])
-    await categorizationRuleRepository.remove(gone.id)
-    await expect(categorizationRuleRepository.remove(gone.id)).rejects.toThrow()
-    expect((await categorizationRuleRepository.list()).map((rule) => rule.match)).toEqual(["Café", "UBER"])
-    expect((await categorizationRuleRepository.list())[1]!.tags).toEqual(["viaje-méxico"])
-    const movement = await transactionRepository.save({ ...transaction({ amount: "3", account: IDs.savings }), tags: ["#Boda", "boda"] })
-    expect(movement.tags).toEqual(["boda"])
-    expect((await transactionRepository.list()).find((row) => row.id === movement.id)?.tags).toEqual(["boda"])
-
-    const text = await backupRepository.export()
-    const exported = parseBackupFile(text)
-    expect(exported.categorizationRules.map((rule) => [rule.match, rule.sortIndex, rule.deletedAt !== undefined])).toEqual([
-      ["Café", 0, false],
-      ["UBER", 1, false],
-      ["Payroll", 2, true],
-    ])
-    await backupRepository.import(text)
-    expect((await categorizationRuleRepository.list()).map((rule) => rule.match)).toEqual(["Café", "UBER"])
-    expect((await transactionRepository.list()).find((row) => row.id === movement.id)?.tags).toEqual(["boda"])
-  })
-})
 
 describe("filtering by tag", () => {
   it("narrows a #tag search to that tag and keeps plain searches as text", async () => {
@@ -381,4 +262,3 @@ describe("filtering by tag", () => {
     expect(store.transactions.find((t) => t.description === "Taxi")?.tags).toEqual(["viaje", "trabajo"])
   })
 })
-

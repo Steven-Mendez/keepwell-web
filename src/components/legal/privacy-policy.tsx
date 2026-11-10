@@ -28,7 +28,7 @@ const CONTENT: Record<"en" | "es", { title: string; lead: string; updated: strin
         body: (
           <p>
             Everything you enter (accounts, cards, movements, budgets, goals, debts) stays on your iPhone or in your
-            browser. We receive nothing. A backup file you export stays wherever you save it.
+            browser. We receive nothing. A CSV file you export stays wherever you save it.
           </p>
         ),
       },
@@ -161,7 +161,7 @@ const CONTENT: Record<"en" | "es", { title: string; lead: string; updated: strin
         body: (
           <p>
             Todo lo que registras (cuentas, tarjetas, movimientos, presupuestos, metas, deudas) se queda en tu iPhone o en
-            tu navegador. No recibimos nada. Un archivo de respaldo que exportes se queda donde lo guardes.
+            tu navegador. No recibimos nada. Un archivo CSV que exportes se queda donde lo guardes.
           </p>
         ),
       },
