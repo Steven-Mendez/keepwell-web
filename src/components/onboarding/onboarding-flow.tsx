@@ -217,7 +217,12 @@ export function OnboardingFlow() {
           setRestoreFailed(false)
           setAttempt((n) => n + 1)
         }}
-        onSignOut={() => void signOut().then(refreshAccount, refreshAccount)}
+        onSignOut={() => {
+          // Signing back in (even as the same account) must try the restore again, not show the old failure.
+          restoredFor.current = undefined
+          setRestoreFailed(false)
+          void signOut().then(refreshAccount, refreshAccount)
+        }}
         onPasskeySignedIn={refreshAccount}
         onUseLocally={() => setStep("name")}
       />

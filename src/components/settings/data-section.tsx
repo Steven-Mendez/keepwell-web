@@ -120,6 +120,8 @@ export function EraseDataRow({ t, signedIn = false, onSignedOut }: { t: Translat
       if (signedIn) onSignedOut?.()
       router.replace("/welcome")
     } catch {
+      // Sign-out may have gone through before the erase failed: let Settings show the signed-out state.
+      if (signedIn) onSignedOut?.()
       toast.add({ title: t.in("settings", "We couldn't delete your data. Try again."), type: "error" })
     }
   }
