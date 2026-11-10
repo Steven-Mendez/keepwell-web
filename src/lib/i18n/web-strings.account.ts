@@ -135,4 +135,15 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   },
   "Couldn't complete that. Try again.": { es: "No se pudo completar. Inténtalo de nuevo." },
   "Privacy Policy": { es: "Política de privacidad" },
+  "Synced with Keepwell for iPhone": { es: "Sincronizado con Keepwell para iPhone" },
+  "Already use Keepwell?": { es: "¿Ya usas Keepwell?" },
+  "Sign in and your accounts and movements come back as they were.": {
+    es: "Inicia sesión y tus cuentas y movimientos vuelven tal como estaban.",
+  },
+  "Use without an account": { es: "Usar sin cuenta" },
+  "Everything stays only in this browser. You can sign in later from Settings.": {
+    es: "Todo se queda solo en este navegador. Puedes iniciar sesión después desde Ajustes.",
+  },
+  "Signed in as %@": { es: "Sesión iniciada como %@" },
+  "Looking for your data…": { es: "Buscando tus datos…" },
 }

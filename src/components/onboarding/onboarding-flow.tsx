@@ -5,7 +5,22 @@ import { transactionAmountClass } from "@/components/kw/design-styles"
 import { newID } from "@/lib/platform/uuid"
 
 import { useRouter } from "next/navigation"
-import { useState, type FormEvent, type ReactNode } from "react"
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react"
+
+import { SignInOptions } from "@/components/login/sign-in-options"
+import { Spinner } from "@/components/ui/spinner"
+import { useAccount } from "@/hooks/use-account"
+import { useSync } from "@/hooks/use-sync"
+import type { Me } from "@/lib/api/account"
+import { settingsRepository } from "@/lib/repositories"
+import { syncOnce } from "@/lib/sync/engine"
+import { httpTransport } from "@/lib/sync/transport"
 
 import {
   KWButton,
@@ -80,14 +95,55 @@ function regionCurrency(): string {
 }
 
 /**
- * Onboarding (iOS OnboardingFlowView): name, currencies and accounts, kept in this browser.
+ * Pulls a signed-in account's data into this browser. `true` when it brought finished settings, so
+ * there is nothing left to set up. Offline or a server error isn't fatal: setup by hand still
+ * works and syncs later.
+ */
+async function restoreFromAccount(me: Me): Promise<boolean> {
+  if (me.capabilities.includes("cloud_sync")) {
+    try {
+      await syncOnce(httpTransport)
+    } catch {}
+  }
+  const settings = await settingsRepository.load()
+  return settings?.hasCompletedOnboarding ?? false
+}
+
+/**
+ * Onboarding (iOS OnboardingFlowView). The welcome asks first for an existing Keepwell account: one
+ * that already has data brings it down and onboarding ends (AppShell sees the finished settings and
+ * leaves for "/"). A new or empty account, or none at all ("Use without an account", everything in
+ * this browser), goes on to name, currencies and accounts.
  * Drawn with the iOS flow parts (KWFlowHeader with back and step progress, large titles, the white
  * primary button) in a centered column sized for a desktop window.
  */
 export function OnboardingFlow() {
   const t = useT()
   const router = useRouter()
+  const { state: account, refresh: refreshAccount } = useAccount()
+  const me = account.status === "signed-in" ? account.me : undefined
+  const canSync = me?.capabilities.includes("cloud_sync") ?? false
   const [step, setStep] = useState<Step>("welcome")
+  // The account whose data was already looked for (and had nothing finished to bring back).
+  const [restoredUser, setRestoredUser] = useState<string>()
+  const restoring = me !== undefined && restoredUser !== me.user.id
+  const restoredFor = useRef<string>(undefined)
+  // Once past the welcome, what the setup saves syncs up as it's written (the restore ran first).
+  useSync(canSync && step !== "welcome")
+
+  // Signed in on the welcome (a passkey here, or back from Apple): look for the account's data once.
+  useEffect(() => {
+    if (step !== "welcome" || !me || restoredFor.current === me.user.id) return
+    restoredFor.current = me.user.id
+    const userId = me.user.id
+    void restoreFromAccount(me).then((restored) => {
+      // Finished settings came down: AppShell takes over and opens Home.
+      if (restored) return
+      setRestoredUser(userId)
+      setStep("name")
+    })
+  }, [step, me])
+
   const [name, setName] = useState("")
   const [principal, setPrincipal] = useState(regionCurrency)
   const [usesTwo, setUsesTwo] = useState(false)
@@ -151,7 +207,15 @@ export function OnboardingFlow() {
   }
 
   if (step === "welcome")
-    return <WelcomeScreen onStart={() => setStep("name")} />
+    return (
+      <WelcomeScreen
+        account={account.status}
+        signedInAs={me ? me.user.name || me.user.email : undefined}
+        restoring={restoring}
+        onPasskeySignedIn={refreshAccount}
+        onUseLocally={() => setStep("name")}
+      />
+    )
 
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden bg-background">
@@ -258,16 +322,33 @@ function Heading({ title, body }: { title: ReactNode; body?: ReactNode }) {
 }
 
 /**
- * Welcome. Phones keep the iOS column (title, three promises, a full-width white button). From `lg`
- * it becomes the split first-run screen desktop web apps use (Mobbin: Perplexity Health, Rox, Maze,
- * Base): the pitch and a normal-width button on the left, a preview of the app bleeding off the
- * right edge, instead of a phone column floating in the middle of a wide window.
+ * Welcome, and the one decision before setup: an existing Keepwell account or none. Sign-in comes
+ * first, right here (Mobbin: Monarch, Wise, Fuse put Apple on the welcome itself), and the local path
+ * sits under it as a real choice with what it means (Buddy's "Continue Anonymous"), not a default.
+ * Phones keep the iOS column. From `lg` it becomes the split first-run screen desktop web apps use
+ * (Mobbin: Perplexity Health, Rox, Maze, Base): the pitch and the choice on the left, a preview of the
+ * app bleeding off the right edge.
  */
-function WelcomeScreen({ onStart }: { onStart: () => void }) {
+function WelcomeScreen({
+  account,
+  signedInAs,
+  restoring,
+  onPasskeySignedIn,
+  onUseLocally,
+}: {
+  account: "unavailable" | "loading" | "signed-out" | "signed-in" | "error"
+  signedInAs: string | undefined
+  restoring: boolean
+  onPasskeySignedIn: () => void
+  onUseLocally: () => void
+}) {
   const t = useT()
+  // Builds without the Keepwell API (or with it down) can only be used locally: a plain start.
+  const offersAccount = account !== "unavailable" && account !== "error"
   const promises: { icon: KWIconName; title: string }[] = [
-    { icon: "personOff", title: t.in("onboarding", "No account needed") },
-    { icon: "phone", title: t.in("web", "Stored in this browser") },
+    offersAccount
+      ? { icon: "cloud", title: t.in("web", "Synced with Keepwell for iPhone") }
+      : { icon: "phone", title: t.in("web", "Stored in this browser") },
     {
       icon: "transfer",
       title: t.in("onboarding", "Any currency, with your own rate"),
@@ -306,21 +387,33 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
               </li>
             ))}
           </ul>
-          <KWButton
-            size="large"
-            onClick={onStart}
-            autoFocus
-            className="w-full lg:w-auto lg:min-w-48 lg:self-start"
-          >
-            {t.in("onboarding", "Start")}
-          </KWButton>
-        </div>
-        <p className="relative type-caption text-text-faint">
-          {t.in(
-            "web",
-            "Your data lives in this browser. Export a CSV now and then to keep a copy."
+          {offersAccount ? (
+            <WelcomeChoice
+              signedInAs={signedInAs}
+              restoring={restoring}
+              busy={restoring || account === "loading"}
+              onPasskeySignedIn={onPasskeySignedIn}
+              onUseLocally={onUseLocally}
+            />
+          ) : (
+            <KWButton
+              size="large"
+              onClick={onUseLocally}
+              autoFocus
+              className="w-full lg:w-auto lg:min-w-48 lg:self-start"
+            >
+              {t.in("onboarding", "Start")}
+            </KWButton>
           )}
-        </p>
+        </div>
+        {offersAccount ? null : (
+          <p className="relative type-caption text-text-faint">
+            {t.in(
+              "web",
+              "Your data lives in this browser. Export a CSV now and then to keep a copy."
+            )}
+          </p>
+        )}
       </section>
       <aside className="hidden flex-1 p-3 lg:block" aria-hidden>
         <div className="relative h-full overflow-hidden rounded-[28px] bg-linear-to-br from-brand-700/45 via-brand-900/40 to-card">
@@ -329,6 +422,91 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
           <FloatingPieces />
         </div>
       </aside>
+    </div>
+  )
+}
+
+/**
+ * Sign in to an existing account first; under an "or", Keepwell without an account and what that
+ * means. While signed in and the account's data comes down, the choice gives way to the wait.
+ */
+function WelcomeChoice({
+  signedInAs,
+  restoring,
+  busy,
+  onPasskeySignedIn,
+  onUseLocally,
+}: {
+  signedInAs: string | undefined
+  restoring: boolean
+  busy: boolean
+  onPasskeySignedIn: () => void
+  onUseLocally: () => void
+}) {
+  const t = useT()
+  if (signedInAs)
+    return (
+      <div
+        className="flex flex-col items-center gap-3 rounded-2xl bg-card px-4 py-5 text-center lg:items-start lg:text-left"
+        aria-live="polite"
+      >
+        <span className="type-caption text-muted-foreground">
+          {t.in("web", "Signed in as %@", signedInAs)}
+        </span>
+        {restoring ? (
+          <span className="inline-flex items-center gap-2 type-body text-foreground">
+            <Spinner className="size-4 text-muted-foreground" />
+            {t.in("web", "Looking for your data…")}
+          </span>
+        ) : (
+          <KWButton fill onClick={onUseLocally}>
+            {t.in("onboarding", "Continue")}
+          </KWButton>
+        )}
+      </div>
+    )
+  return (
+    <div className="flex w-full flex-col gap-4 lg:max-w-sm">
+      <div className="flex flex-col gap-1">
+        <h2 className="type-heading text-foreground">
+          {t.in("web", "Already use Keepwell?")}
+        </h2>
+        <p className="type-caption text-muted-foreground">
+          {t.in(
+            "web",
+            "Sign in and your accounts and movements come back as they were."
+          )}
+        </p>
+      </div>
+      <SignInOptions
+        returnPath="/welcome"
+        disabled={busy}
+        onPasskeySignedIn={onPasskeySignedIn}
+      />
+      <div
+        className="flex items-center gap-3 type-caption text-muted-foreground"
+        aria-hidden
+      >
+        <span className="h-px flex-1 bg-border" />
+        {t.in("web", "or")}
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <KWButton
+          fill
+          variant="surface"
+          disabled={busy}
+          onClick={onUseLocally}
+        >
+          {t.in("web", "Use without an account")}
+        </KWButton>
+        <p className="text-center type-caption-sm text-muted-foreground">
+          {t.in(
+            "web",
+            "Everything stays only in this browser. You can sign in later from Settings."
+          )}
+        </p>
+      </div>
     </div>
   )
 }
