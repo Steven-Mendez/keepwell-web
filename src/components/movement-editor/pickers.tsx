@@ -172,7 +172,7 @@ export function CategoryPicker({
               onClick={() => onChange(category.id)}
               className={cn(
                 "flex h-24 flex-col items-center justify-center gap-2 rounded-[18px] px-2 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                selected ? "bg-white text-black" : "bg-card text-foreground hover:bg-secondary",
+                selected ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary",
               )}
             >
               <CategoryBadge category={category} size="sm" />

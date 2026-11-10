@@ -5,7 +5,7 @@ import { transactionAmountClass } from "@/components/kw/design-styles"
 import { newID } from "@/lib/platform/uuid"
 
 import { useRouter } from "next/navigation"
-import { useRef, useState, type FormEvent, type ReactNode } from "react"
+import { useState, type FormEvent, type ReactNode } from "react"
 
 import {
   KWButton,
@@ -15,7 +15,7 @@ import {
   KWTransactionIcon,
   KWValueRow,
 } from "@/components/kw/design"
-import { KWAppIconTile, KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
+import { KWIcon, KWLockup, KWMiniCard } from "@/components/kw/kw-icon"
 import type { KWIconName } from "@/components/kw/kw-icon-data"
 import { CurrencyPicker } from "@/components/kw/pickers"
 import { CardArt } from "@/components/kw/primitives"
@@ -42,16 +42,14 @@ import {
   type OnboardingAccountDraft,
 } from "@/lib/domain/onboarding"
 import { useT } from "@/lib/i18n"
-import { backupRepository, ledgerStore, profileStore } from "@/lib/repositories"
+import { ledgerStore, profileStore } from "@/lib/repositories"
 import type { CardNetwork, DebtMode } from "@/lib/schema"
 
 import { AccountForm } from "./account-form"
 
-type Step =
-  "welcome" | "returning" | "name" | "currencies" | "accounts" | "done"
+type Step = "welcome" | "name" | "currencies" | "accounts" | "done"
 const STEPS: readonly Step[] = [
   "welcome",
-  "returning",
   "name",
   "currencies",
   "accounts",
@@ -82,7 +80,7 @@ function regionCurrency(): string {
 }
 
 /**
- * Onboarding (iOS OnboardingFlowView): restore a backup or set up name, currencies and accounts.
+ * Onboarding (iOS OnboardingFlowView): name, currencies and accounts, kept in this browser.
  * Drawn with the iOS flow parts (KWFlowHeader with back and step progress, large titles, the white
  * primary button) in a centered column sized for a desktop window.
  */
@@ -153,7 +151,7 @@ export function OnboardingFlow() {
   }
 
   if (step === "welcome")
-    return <WelcomeScreen onStart={() => setStep("returning")} />
+    return <WelcomeScreen onStart={() => setStep("name")} />
 
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden bg-background">
@@ -165,10 +163,7 @@ export function OnboardingFlow() {
         <div className="flex w-full max-w-xl flex-col gap-8">
           {step === "done" ? (
             <div className="flex items-center gap-2.5">
-              <KWAppIconTile size={32} />
-              <span className="text-[1.375rem] leading-none font-extrabold tracking-[-0.06em] text-foreground">
-                keepwell
-              </span>
+              <KWLockup height={28} className="text-logo" />
             </div>
           ) : (
             <FlowHeader
@@ -177,9 +172,6 @@ export function OnboardingFlow() {
               progress={{ total: STEPS.length - 2, current: index }}
             />
           )}
-          {step === "returning" ? (
-            <ReturningStep onScratch={() => setStep("name")} />
-          ) : null}
           {step === "name" ? (
             <NameStep
               name={name}
@@ -265,31 +257,6 @@ function Heading({ title, body }: { title: ReactNode; body?: ReactNode }) {
   )
 }
 
-/** A row with its icon in a `surface2` circle, as the welcome and privacy lists show them. */
-function IconRow({
-  icon,
-  title,
-  body,
-}: {
-  icon: KWIconName
-  title: string
-  body?: string
-}) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground">
-        <KWIcon name={icon} size={20} />
-      </span>
-      <span className="flex min-w-0 flex-col">
-        <span className="type-body font-semibold text-foreground">{title}</span>
-        {body ? (
-          <span className="type-caption text-muted-foreground">{body}</span>
-        ) : null}
-      </span>
-    </div>
-  )
-}
-
 /**
  * Welcome. Phones keep the iOS column (title, three promises, a full-width white button). From `lg`
  * it becomes the split first-run screen desktop web apps use (Mobbin: Perplexity Health, Rox, Maze,
@@ -299,7 +266,7 @@ function IconRow({
 function WelcomeScreen({ onStart }: { onStart: () => void }) {
   const t = useT()
   const promises: { icon: KWIconName; title: string }[] = [
-    { icon: "personOff", title: t.in("onboarding", "No account or sign-up") },
+    { icon: "personOff", title: t.in("onboarding", "No account needed") },
     { icon: "phone", title: t.in("web", "Stored in this browser") },
     {
       icon: "transfer",
@@ -314,10 +281,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
           aria-hidden
         />
         <div className="relative flex items-center gap-2.5">
-          <KWAppIconTile size={32} />
-          <span className="text-[1.375rem] leading-none font-extrabold tracking-[-0.06em] text-foreground">
-            keepwell
-          </span>
+          <KWLockup height={28} className="text-logo" />
         </div>
         <div className="relative flex flex-1 flex-col justify-center gap-8 py-10 lg:max-w-md">
           <Heading
@@ -354,7 +318,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
         <p className="relative type-caption text-text-faint">
           {t.in(
             "web",
-            "Your data lives in this browser. Back it up now and then to keep a copy."
+            "Your data lives in this browser. Export a CSV now and then to keep a copy."
           )}
         </p>
       </section>
@@ -436,101 +400,6 @@ function FloatingPieces() {
         </div>
       </div>
     </div>
-  )
-}
-
-function ReturningStep({ onScratch }: { onScratch: () => void }) {
-  const t = useT()
-  const file = useRef<HTMLInputElement>(null)
-  const [restoring, setRestoring] = useState(false)
-
-  async function restore(selected: File) {
-    setRestoring(true)
-    try {
-      const summary = await backupRepository.import(await selected.text())
-      toast.add({
-        title: t.in(
-          "app",
-          "Restored %lld accounts and %lld movements",
-          summary.accounts,
-          summary.transactions
-        ),
-        type: "success",
-      })
-      // The shell sees finished settings and opens home.
-    } catch {
-      setRestoring(false)
-      toast.add({
-        title: t.in("app", "That file isn't a Keepwell backup."),
-        type: "error",
-      })
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      <Heading
-        title={t.in("onboarding", "Have you used Keepwell before?")}
-        body={t.in(
-          "onboarding",
-          "Bring your accounts, cards and movements from a backup, or set everything up from scratch."
-        )}
-      />
-      <KWGroupedCard>
-        <ChoiceRow
-          icon="download"
-          title={t.in("onboarding", "Restore from a backup file (.json)")}
-          body={t.in(
-            "onboarding",
-            "A file saved with “Back up now” in Settings"
-          )}
-          onClick={() => file.current?.click()}
-          disabled={restoring}
-        />
-      </KWGroupedCard>
-      <KWButton size="large" fill onClick={onScratch}>
-        {t.in("onboarding", "Start from scratch")}
-      </KWButton>
-      <input
-        ref={file}
-        type="file"
-        accept="application/json,.json"
-        className="hidden"
-        onChange={(event) => {
-          const selected = event.target.files?.[0]
-          event.target.value = ""
-          if (selected) void restore(selected)
-        }}
-      />
-    </div>
-  )
-}
-
-function ChoiceRow({
-  icon,
-  title,
-  body,
-  onClick,
-  disabled,
-}: {
-  icon: KWIconName
-  title: string
-  body?: string
-  onClick: () => void
-  disabled?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="flex w-full items-center gap-3 text-left transition-colors outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50 disabled:opacity-40"
-    >
-      <span className="min-w-0 flex-1">
-        <IconRow icon={icon} title={title} {...(body ? { body } : {})} />
-      </span>
-      <KWIcon name="chevronRight" size={16} className="mr-4 text-text-faint" />
-    </button>
   )
 }
 

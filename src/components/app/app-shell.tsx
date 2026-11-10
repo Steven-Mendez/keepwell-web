@@ -209,7 +209,7 @@ function MobileTabBar() {
               <button
                 type="button"
                 onClick={() => openEditor()}
-                className="flex size-12 press items-center justify-center rounded-full bg-white text-black"
+                className="flex size-12 press items-center justify-center rounded-full bg-primary text-primary-foreground"
                 aria-label={t.in("home", "Log transaction")}
               >
                 <KWIcon name="plus" size={24} strokeWidth={2.2} />

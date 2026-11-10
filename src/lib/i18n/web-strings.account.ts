@@ -124,7 +124,8 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "or": { es: "o" },
   "Sync this browser with Keepwell for iPhone.": { es: "Sincroniza este navegador con Keepwell para iPhone." },
   "Sign in": { es: "Iniciar sesión" },
-  "Not now": { es: "Ahora no" },
+  "Continue without an account": { es: "Continuar sin cuenta" },
+  "Your data stays only in this browser.": { es: "Tus datos se quedan solo en este navegador." },
   "No passkey was used. If you don't have one yet, continue with Apple and add it in Settings.": {
     es: "No se usó ninguna passkey. Si aún no tienes una, continúa con Apple y añádela en Ajustes.",
   },

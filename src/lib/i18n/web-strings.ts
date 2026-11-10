@@ -42,8 +42,8 @@ export const WEB_STRINGS_CORE: WebStrings = {
   "welcome.preview.rent": { en: "Rent", es: "Alquiler" },
   "Kept by the browser": { es: "El navegador lo conserva" },
   "May be cleared": { es: "Podría borrarse" },
-  "Your data lives in this browser. Back it up now and then to keep a copy.": {
-    es: "Tus datos viven en este navegador. Respáldalos de vez en cuando para tener una copia.",
+  "Your data lives in this browser. Export a CSV now and then to keep a copy.": {
+    es: "Tus datos viven en este navegador. Exporta un CSV de vez en cuando para tener una copia.",
   },
   "Follow the browser": { es: "Seguir al navegador" },
   "Keepwell uses your browser's language. To use another one only here, choose it below.":

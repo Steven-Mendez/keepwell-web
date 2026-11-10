@@ -9,7 +9,7 @@ import { toast } from "@/components/ui/toast"
 import { exportCsvFrom, importCsv } from "@/lib/domain/csv"
 import type { Translator } from "@/lib/i18n"
 import { requestPersistentStorage, type StoragePersistence } from "@/lib/platform/persistent-storage"
-import { backupRepository, eraseAllData, ledgerStore, NothingToBackUpError } from "@/lib/repositories"
+import { eraseAllData, ledgerStore } from "@/lib/repositories"
 
 import { ConfirmDialog } from "./confirm-dialog"
 import { SettingsLinkRow, SettingsRow, SettingsSection } from "./settings-rows"
@@ -48,47 +48,17 @@ function useFilePicker(accept: string, onFile: (file: File) => void) {
 }
 
 /**
- * Backup (.json, the file iOS reads too), CSV in and out and "Delete all my data" (iOS
- * SettingsSections `data`). The data lives in this browser, so its storage status sits here too.
+ * CSV in and out, the one way to keep a copy or move movements by hand, and "Delete all my data"
+ * (iOS SettingsSections `data`). The data lives in this browser, so its storage status sits here too.
  */
 export function DataSection({ t }: { t: Translator }) {
   const router = useRouter()
-  const [pendingRestore, setPendingRestore] = useState<File>()
   const [eraseOpen, setEraseOpen] = useState(false)
   const [persistence, setPersistence] = useState<StoragePersistence>()
 
   useEffect(() => {
     requestPersistentStorage().then(setPersistence, () => setPersistence("unsupported"))
   }, [])
-
-  async function backUp() {
-    try {
-      const text = await backupRepository.export()
-      const name = `Keepwell-${today()}.json`
-      download(text, name, "application/json")
-      toast.add({ title: t.in("web", "Backup saved · %@. Keep the file somewhere safe; Keepwell for iPhone can open it too.", name), type: "success" })
-    } catch (error) {
-      toast.add({ title: error instanceof NothingToBackUpError ? t.in("web", "Nothing to back up yet.") : t.in("settings", "We couldn't create the backup. Try again."), type: "error" })
-    }
-  }
-
-  async function restore(file: File) {
-    let text: string
-    try {
-      text = await file.text()
-    } catch {
-      toast.add({ title: t.in("settings", "We couldn't read that file."), type: "error" })
-      return
-    }
-    try {
-      const summary = await backupRepository.import(text)
-      const when = new Date(summary.backupDate).toLocaleDateString(t.locale, { day: "numeric", month: "long", year: "numeric" })
-      toast.add({ title: t.in("settings", "Restored the backup from %@ · %lld transactions", when, summary.transactions), type: "success" })
-    } catch (error) {
-      const isFormat = error instanceof Error && error.name === "BackupFormatError"
-      toast.add({ title: isFormat ? t.in("settings", "That file isn't a Keepwell backup, so nothing was changed.") : t.in("settings", "We couldn't restore the backup. Try again."), type: "error" })
-    }
-  }
 
   async function exportCsv() {
     try {
@@ -127,21 +97,17 @@ export function DataSection({ t }: { t: Translator }) {
     }
   }
 
-  const backupPicker = useFilePicker("application/json,.json", setPendingRestore)
   const csvPicker = useFilePicker("text/csv,.csv", (file) => void importCsvFile(file))
 
   return (
     <>
-      <SettingsSection title={t.in("settings", "Data")} footnote={t.in("web", "One .json file with everything. Restoring replaces all data in this browser.")}>
-        <SettingsLinkRow label={t.in("settings", "Back up now")} onClick={() => void backUp()} />
-        <SettingsLinkRow label={t.in("web", "Restore from a file")} onClick={backupPicker.open} />
+      <SettingsSection title={t.in("settings", "Data")}>
         <SettingsLinkRow label={t.in("settings", "Export CSV")} onClick={() => void exportCsv()} />
         <SettingsLinkRow label={t.in("settings", "Import CSV")} onClick={csvPicker.open} />
-        {backupPicker.element}
         {csvPicker.element}
       </SettingsSection>
 
-      <SettingsSection title={t.in("web", "On this device")} footnote={t.in("web", "Your data lives in this browser. Back it up now and then to keep a copy.")}>
+      <SettingsSection title={t.in("web", "On this device")} footnote={t.in("web", "Your data lives in this browser. Export a CSV now and then to keep a copy.")}>
         <SettingsRow label={t.in("web", "Storage")} description={t.in("web", "Stored in this browser")}>
           {persistence === "persisted" ? (
             <StatusPill tone="positive">{t.in("web", "Kept by the browser")}</StatusPill>
@@ -162,20 +128,6 @@ export function DataSection({ t }: { t: Translator }) {
         <p className="px-1 type-caption text-muted-foreground">{t.in("web", "Deletes the data in this browser.")}</p>
       </div>
 
-      <ConfirmDialog
-        open={pendingRestore !== undefined}
-        onOpenChange={(open) => {
-          if (!open) setPendingRestore(undefined)
-        }}
-        title={t.in("settings", "Replace your data with this backup?")}
-        description={t.in("web", "What's in this browser now is replaced by the backup.")}
-        action={t.in("settings", "Restore")}
-        destructive
-        onConfirm={() => {
-          if (pendingRestore) void restore(pendingRestore)
-          setPendingRestore(undefined)
-        }}
-      />
       <ConfirmDialog
         open={eraseOpen}
         onOpenChange={setEraseOpen}

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState, useSyncExternalStore } from "react"
 
-import { KWButton } from "@/components/kw/design"
+import { KWButton, KWButtonLink } from "@/components/kw/design"
 import { KWAppIconTile } from "@/components/kw/kw-icon"
 import { Input } from "@/components/ui/input"
 import { useAccount } from "@/hooks/use-account"
@@ -33,8 +33,8 @@ function AppleGlyph() {
 }
 
 /**
- * /login: the Keepwell account, on a page of its own. Optional: everything works in this browser
- * without it; an account syncs with the iPhone. New accounts need an invitation.
+ * /login: the Keepwell account, on a page of its own. Optional: "Continue without an account" keeps
+ * everything in this browser; an account syncs with the iPhone. New accounts need an invitation.
  */
 export function LoginScreen() {
   const t = useT()
@@ -170,12 +170,14 @@ export function LoginScreen() {
           </button>
         ) : null}
 
-        <Link
-          href="/"
-          className="type-caption text-muted-foreground underline-offset-4 hover:underline"
-        >
-          {t.in("web", "Not now")}
-        </Link>
+        <div className="flex w-full flex-col gap-1.5">
+          <KWButtonLink href="/" fill variant="surface">
+            {t.in("web", "Continue without an account")}
+          </KWButtonLink>
+          <p className="type-caption-sm text-muted-foreground">
+            {t.in("web", "Your data stays only in this browser.")}
+          </p>
+        </div>
         <Link
           href="/privacy"
           className="type-caption-sm text-muted-foreground underline-offset-4 hover:underline"

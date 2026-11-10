@@ -3,7 +3,15 @@
 @import "shadcn/tailwind.css";
 @import "./tokens.css";
 
-@custom-variant dark (&:is(.dark *));
+/* `dark:` follows the system appearance, and applies inside a `.dark` subtree in both appearances. */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    @slot;
+  }
+  &:is(.dark *) {
+    @slot;
+  }
+}
 
 /*
  * Structure only: every value lives in tokens.css, generated from the iOS DesignSystem (the single
@@ -12,10 +20,12 @@
  * shadcn variables can't express is a wrapper in src/components/.
  *
  * Utilities added beyond shadcn's: bg/text-positive|pending|negative|extra (+ -foreground, -tint),
- * brand-500…900, link, nav, divider, control-off, text-secondary, text-faint, category-<key>,
+ * brand-500…900, link, nav, logo, divider, control-off, text-secondary, text-faint, category-<key>,
  * rounded-mini, shadow-glow/depth and the iOS type scale (type-display … type-micro, see below). Spacing is Tailwind's 4px scale, which KWSpacing already follows.
  */
-:root {
+/* Declared on every theme root so they mix that appearance's colors, not the page's. */
+:root,
+.dark {
   /* KWColor.Tint: 14% (18% for accent) backgrounds behind state icons and pills */
   --positive-tint: color-mix(in srgb, var(--positive) 14%, transparent);
   --pending-tint: color-mix(in srgb, var(--pending) 14%, transparent);
@@ -23,6 +33,9 @@
   --extra-tint: color-mix(in srgb, var(--extra) 14%, transparent);
   --neutral-tint: color-mix(in srgb, var(--neutral) 14%, transparent);
   --accent-tint: color-mix(in srgb, var(--ring) 18%, transparent);
+}
+
+:root {
 
   /*
    * Motion, the web's SwiftUI curves. `out-ios` is the entrance curve for elements and modals (fast
@@ -41,10 +54,19 @@
   --duration-base: 200ms;
   --duration-slow: 280ms;
 
-  /* Floating surfaces (dialogs, sheets, menus): a 1 px light edge and two-layer depth on black. */
-  --edge: rgb(255 255 255 / 0.07);
-  --shadow-elevated: 0 0 0 1px var(--edge), 0 1px 0 0 rgb(255 255 255 / 0.05) inset, 0 8px 24px -8px rgb(0 0 0 / 0.6), 0 32px 80px -16px rgb(0 0 0 / 0.85);
-  --shadow-popover: 0 0 0 1px var(--edge), 0 12px 32px -8px rgb(0 0 0 / 0.7);
+  /* Floating surfaces (dialogs, sheets, menus) on light: a hairline navy edge and soft depth. */
+  --edge: rgb(13 18 38 / 0.08);
+  --shadow-elevated: 0 0 0 1px var(--edge), 0 8px 24px -8px rgb(13 18 38 / 0.18), 0 32px 80px -16px rgb(13 18 38 / 0.22);
+  --shadow-popover: 0 0 0 1px var(--edge), 0 12px 32px -8px rgb(13 18 38 / 0.2);
+}
+
+/* On black: a 1 px light edge and two-layer depth. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --edge: rgb(255 255 255 / 0.07);
+    --shadow-elevated: 0 0 0 1px var(--edge), 0 1px 0 0 rgb(255 255 255 / 0.05) inset, 0 8px 24px -8px rgb(0 0 0 / 0.6), 0 32px 80px -16px rgb(0 0 0 / 0.85);
+    --shadow-popover: 0 0 0 1px var(--edge), 0 12px 32px -8px rgb(0 0 0 / 0.7);
+  }
 }
 
 @theme inline {
@@ -106,6 +128,7 @@
   --color-nav: var(--nav);
   --color-divider: var(--divider);
   --color-control-off: var(--control-off);
+  --color-logo: var(--logo);
   --color-text-secondary: var(--text-secondary);
   --color-text-faint: var(--text-faint);
   --color-category-blue: var(--category-blue);
@@ -313,9 +336,17 @@
 [data-slot="dialog-overlay"],
 [data-slot="alert-dialog-overlay"],
 [data-slot="sheet-overlay"] {
-  background-color: rgb(0 0 0 / 0.62);
+  background-color: rgb(13 18 38 / 0.32);
   backdrop-filter: blur(6px) saturate(140%);
   --tw-duration: var(--duration-base);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-slot="dialog-overlay"],
+  [data-slot="alert-dialog-overlay"],
+  [data-slot="sheet-overlay"] {
+    background-color: rgb(0 0 0 / 0.62);
+  }
 }
 
 [data-slot="dialog-content"],
