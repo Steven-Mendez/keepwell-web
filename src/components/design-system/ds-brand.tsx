@@ -2,13 +2,14 @@
 
 import type { CSSProperties } from "react"
 
-import { KWAppIconTile, KWLogoMark } from "@/components/kw/kw-icon"
+import { KW_SYMBOL } from "@/components/kw/kw-brand"
+import { KWAppIconTile, KWLockup, KWLogoMark } from "@/components/kw/kw-icon"
 import { cn } from "@/lib/utils"
 
 import { Block, Caption, DocSection, Panel } from "./ds-parts"
 
-// La marca: el símbolo (cabeza y arco que la sostiene), el icono de la app sobre el degradado azul
-// y el logotipo "keepwell". Geometría de keepwell-ios Components/KWLogo.swift.
+// La marca: el símbolo (billetera con candado), el icono de la app sobre el degradado azul y el
+// logotipo "KEEPWELL". Trazos de la diseñadora, los mismos que keepwell-ios Components/KWLogo.swift.
 
 const ASSETS = [
   { file: "/icon.svg", format: "SVG · 1024 × 1024" },
@@ -17,7 +18,7 @@ const ASSETS = [
   { file: "/icon-180.png", format: "PNG · 180 × 180" },
 ]
 
-/** El logotipo: símbolo + "keepwell" en minúsculas, Inter ExtraBold con interletrado negativo. */
+/** El logotipo: símbolo + "KEEPWELL", del arte de la diseñadora (KEEPWELL LOGO-05). */
 export function Wordmark({
   size = 32,
   className,
@@ -25,22 +26,7 @@ export function Wordmark({
   size?: number
   className?: string
 }) {
-  return (
-    <span
-      className={cn("inline-flex items-center text-foreground", className)}
-      style={{ gap: size * 0.2 }}
-      aria-label="keepwell"
-    >
-      <KWLogoMark size={size} />
-      <span
-        className="leading-none font-extrabold"
-        style={{ fontSize: size * 0.92, letterSpacing: "-0.045em" }}
-        aria-hidden
-      >
-        keepwell
-      </span>
-    </span>
-  )
+  return <KWLockup height={size} className={cn("text-foreground", className)} />
 }
 
 export function BrandSection() {
@@ -177,24 +163,10 @@ function Construction() {
           <line x1="0" y1={v} x2="72" y2={v} />
         </g>
       ))}
-      <g
-        stroke="var(--ring)"
-        strokeWidth="0.35"
-        strokeDasharray="1.2 1"
-        fill="none"
-      >
-        <circle cx="36" cy="41" r="21" />
-        <line x1="36" y1="0" x2="36" y2="72" />
-        <line x1="0" y1="21" x2="72" y2="21" />
-      </g>
-      <circle cx="36" cy="21" r="9" fill="var(--foreground)" />
-      <path
-        d="M15 34v7a21 21 0 0 0 42 0v-7"
-        stroke="var(--foreground)"
-        strokeWidth="7.5"
-        strokeLinecap="round"
-        fill="none"
-      />
+      {/* As on the app icon: 40 of 72 units, 2.5 above center. */}
+      <svg x="16" y="13.5" width="40" height="40" viewBox={KW_SYMBOL.viewBox}>
+        <path d={KW_SYMBOL.d} fill="var(--foreground)" />
+      </svg>
     </svg>
   )
 }
