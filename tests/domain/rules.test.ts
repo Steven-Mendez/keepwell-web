@@ -26,6 +26,7 @@ import {
   monthlySummary,
   monthlyTotals,
   netWorth,
+  excludedCurrencies,
   nextOccurrence,
   normalizedCurrency,
   plannedSummary,
@@ -305,6 +306,13 @@ describe("Net worth (rule 6)", () => {
 
   it("a currency the settings don't convert is left out", () => {
     expect(netWorth([m(1, "EUR"), m(5, "USD")], currencySettings("USD", "NIO", 36))).toEqual(m(5, "USD"))
+  })
+
+  it("names the currencies net worth leaves out: sorted, unique, ignoring zero balances", () => {
+    const settings = currencySettings("USD", "NIO", 36)
+    expect(excludedCurrencies([m(1, "EUR"), m(5, "USD"), m(2, "GBP"), m(3, "EUR"), m(0, "CHF"), m(8, "NIO")], settings)).toEqual(["EUR", "GBP"])
+    expect(excludedCurrencies([m(5, "USD"), m(8, "NIO")], settings)).toEqual([])
+    expect(excludedCurrencies([], currencySettings("USD"))).toEqual([])
   })
 
   it("a single currency has no second total", () => {

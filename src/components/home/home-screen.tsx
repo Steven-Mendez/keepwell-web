@@ -710,6 +710,11 @@ function Hero({
                 </span>
               )}
             </p>
+            {overview.netWorthExcluded.length > 0 ? (
+              <p className="type-caption text-foreground/70">
+                {t.in("web", "Doesn't include balances in %@", overview.netWorthExcluded.join(", "))}
+              </p>
+            ) : null}
             {/* The conversion and the counts chip share a line on desktop: one row less, same facts. */}
             <div className="flex flex-col items-center gap-2 lg:mt-1 lg:flex-row lg:flex-wrap lg:gap-3">
               {overview.netWorthInSecond ? (

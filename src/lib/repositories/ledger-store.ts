@@ -87,9 +87,12 @@ export const profileStore: ProfileStore = {
 /**
  * "Delete all my data": every table on this device, then the shipped categories again. The sync
  * cursor goes too, so a signed-in browser starts over with a first sync (and gets the account's
- * data back) instead of following on from data it no longer has.
+ * data back) instead of following on from data it no longer has. Signed in, the browser is signed
+ * out first (`signOut`): the account keeps its copy, and staying signed in would bring it straight
+ * back. If signing out fails nothing is erased.
  */
-export async function eraseAllData(): Promise<void> {
+export async function eraseAllData(options: { signOut?: () => Promise<unknown> } = {}): Promise<void> {
+  if (options.signOut) await options.signOut()
   await db.transaction("rw", [...allTables(), db.meta], async () => {
     await Promise.all(allTables().map((table) => table.clear()))
     await db.meta.where("key").noneOf(KEPT_META).delete()

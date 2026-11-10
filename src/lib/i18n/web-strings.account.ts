@@ -146,4 +146,9 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   },
   "Signed in as %@": { es: "Sesión iniciada como %@" },
   "Looking for your data…": { es: "Buscando tus datos…" },
+  "Couldn't load your data. Check your connection and try again.": { es: "No se pudieron cargar tus datos. Revisa tu conexión e inténtalo de nuevo." },
+  "Your Keepwell account keeps its copy; to erase it too, delete your account.": { es: "Tu cuenta de Keepwell conserva su copia; para borrarla también, elimina tu cuenta." },
+  "You'll be signed out on this browser.": { es: "Se cerrará la sesión en este navegador." },
+  "Doesn't include balances in %@": { es: "No incluye saldos en %@" },
+  "Try again": { es: "Reintentar" },
 }

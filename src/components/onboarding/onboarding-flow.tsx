@@ -16,7 +16,8 @@ import {
 import { SignInOptions } from "@/components/login/sign-in-options"
 import { Spinner } from "@/components/ui/spinner"
 import { useAccount } from "@/hooks/use-account"
-import { restoreFromAccount } from "@/lib/sync/restore"
+import { signOut } from "@/lib/api/account"
+import { restoreFromAccountResult } from "@/lib/sync/restore"
 import { httpTransport } from "@/lib/sync/transport"
 
 import {
@@ -107,7 +108,10 @@ export function OnboardingFlow() {
   const [step, setStep] = useState<Step>("welcome")
   // The account whose data was already looked for (and had nothing finished to bring back).
   const [restoredUser, setRestoredUser] = useState<string>()
-  const restoring = me !== undefined && restoredUser !== me.user.id
+  // The account's data couldn't be loaded (offline, server error): the welcome says so and retries.
+  const [restoreFailed, setRestoreFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  const restoring = me !== undefined && restoredUser !== me.user.id && !restoreFailed
   const restoredFor = useRef<string>(undefined)
   const [name, setName] = useState("")
   // Nothing syncs during the setup: the account's settings (finished on another device) would end
@@ -120,10 +124,16 @@ export function OnboardingFlow() {
     const userId = me.user.id
     // The greeting's name: the first one of the account's ("Ana" from "Ana López").
     const accountName = normalizedPreferredName(me.user.name.trim().split(/\s+/)[0])
-    void restoreFromAccount(me, httpTransport).then((restored) => {
+    setRestoreFailed(false)
+    void restoreFromAccountResult(me, httpTransport).then((result) => {
+      // Never drop into onboarding because the account couldn't be read: that would hide data.
+      if (result === "failed") {
+        setRestoreFailed(true)
+        return
+      }
       // The account's data came down: AppShell takes over and opens Home. The greeting's name is
       // this device's, so it starts from the account's here too.
-      if (restored) {
+      if (result === "restored") {
         if (accountName && !profileStore.preferredName()) profileStore.setPreferredName(accountName)
         return
       }
@@ -132,7 +142,7 @@ export function OnboardingFlow() {
       if (accountName) setName((current) => current || accountName)
       setStep("name")
     })
-  }, [step, me])
+  }, [step, me, attempt])
 
   const [principal, setPrincipal] = useState(regionCurrency)
   const [usesTwo, setUsesTwo] = useState(false)
@@ -201,6 +211,13 @@ export function OnboardingFlow() {
         account={account.status}
         signedInAs={me ? me.user.name || me.user.email : undefined}
         restoring={restoring}
+        restoreFailed={restoreFailed}
+        onRetry={() => {
+          restoredFor.current = undefined
+          setRestoreFailed(false)
+          setAttempt((n) => n + 1)
+        }}
+        onSignOut={() => void signOut().then(refreshAccount, refreshAccount)}
         onPasskeySignedIn={refreshAccount}
         onUseLocally={() => setStep("name")}
       />
@@ -322,12 +339,18 @@ function WelcomeScreen({
   account,
   signedInAs,
   restoring,
+  restoreFailed,
+  onRetry,
+  onSignOut,
   onPasskeySignedIn,
   onUseLocally,
 }: {
   account: "unavailable" | "loading" | "signed-out" | "signed-in" | "error"
   signedInAs: string | undefined
   restoring: boolean
+  restoreFailed: boolean
+  onRetry: () => void
+  onSignOut: () => void
   onPasskeySignedIn: () => void
   onUseLocally: () => void
 }) {
@@ -380,6 +403,9 @@ function WelcomeScreen({
             <WelcomeChoice
               signedInAs={signedInAs}
               restoring={restoring}
+              restoreFailed={restoreFailed}
+              onRetry={onRetry}
+              onSignOut={onSignOut}
               busy={restoring || account === "loading"}
               onPasskeySignedIn={onPasskeySignedIn}
               onUseLocally={onUseLocally}
@@ -422,12 +448,18 @@ function WelcomeScreen({
 function WelcomeChoice({
   signedInAs,
   restoring,
+  restoreFailed,
+  onRetry,
+  onSignOut,
   busy,
   onPasskeySignedIn,
   onUseLocally,
 }: {
   signedInAs: string | undefined
   restoring: boolean
+  restoreFailed: boolean
+  onRetry: () => void
+  onSignOut: () => void
   busy: boolean
   onPasskeySignedIn: () => void
   onUseLocally: () => void
@@ -447,6 +479,21 @@ function WelcomeChoice({
             <Spinner className="size-4 text-muted-foreground" />
             {t.in("web", "Looking for your data…")}
           </span>
+        ) : restoreFailed ? (
+          <>
+            <p role="alert" className="type-body text-foreground">
+              {t.in("web", "Couldn't load your data. Check your connection and try again.")}
+            </p>
+            <KWButton fill onClick={onRetry}>
+              {t.in("web", "Try again")}
+            </KWButton>
+            <KWButton fill variant="surface" onClick={onUseLocally}>
+              {t.in("web", "Use without an account")}
+            </KWButton>
+            <KWButton variant="plain" size="regular" onClick={onSignOut}>
+              {t.in("web", "Sign out")}
+            </KWButton>
+          </>
         ) : (
           <KWButton fill onClick={onUseLocally}>
             {t.in("onboarding", "Continue")}

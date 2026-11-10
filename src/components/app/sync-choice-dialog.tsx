@@ -42,7 +42,7 @@ export function describeCounts(t: Translator, counts: DataCounts): string {
  * own: sync is paused until the person keeps one side. Opens by itself once per session (and again
  * from Settings after "Decide later").
  */
-export function SyncChoiceDialog({ status }: { status: SyncStatus | undefined }) {
+export function SyncChoiceDialog({ status, userId }: { status: SyncStatus | undefined; userId?: string | undefined }) {
   const t = useT()
   const choice = status?.state === "needs_choice" ? status.choice : undefined
   // Opens by itself until "Decide later" in this session; Settings opens it again on request.
@@ -77,8 +77,9 @@ export function SyncChoiceDialog({ status }: { status: SyncStatus | undefined })
   const resolve = async (side: "account" | "browser") => {
     setBusy(side)
     try {
-      if (side === "account") await takeAccountData()
-      else await keepBrowserData(httpTransport)
+      // False: the choice was for another account; it's dropped and the next round decides again.
+      if (side === "account") await takeAccountData(httpTransport, userId)
+      else await keepBrowserData(httpTransport, userId)
       const after = await syncScheduler().runNow()
       if (after.state === "error" || after.state === "offline") {
         toast.add({ title: t.in("web", "Couldn't sync. Keepwell will try again."), type: "error" })

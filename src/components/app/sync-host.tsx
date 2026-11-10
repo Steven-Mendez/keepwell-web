@@ -13,5 +13,5 @@ export function SyncHost() {
   const { state } = useAccount()
   const userId = state.status === "signed-in" && state.me.capabilities.includes("cloud_sync") ? state.me.user.id : undefined
   const { status } = useSync(userId)
-  return <SyncChoiceDialog status={status} />
+  return <SyncChoiceDialog status={status} userId={userId} />
 }
