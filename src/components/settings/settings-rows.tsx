@@ -20,7 +20,7 @@ export function SettingsSection({ id, title, footnote, children, className }: { 
     <section id={id} className={cn("flex scroll-mt-24 flex-col gap-2", className)}>
       {title ? <KWSectionHeader title={title} /> : null}
       <KWGroupedCard>{children}</KWGroupedCard>
-      {footnote ? <p className="px-1 type-caption leading-relaxed text-muted-foreground">{footnote}</p> : null}
+      {footnote ? <p className="type-caption leading-relaxed text-muted-foreground">{footnote}</p> : null}
     </section>
   )
 }

@@ -133,7 +133,7 @@ export function CategoriesScreen() {
             { value: "income", title: t.in("settings", "Income") },
           ]}
         />
-        <span className="px-1 type-caption text-muted-foreground">
+        <span className="type-caption text-muted-foreground">
           {t.in("web", "Drag to reorder, or use the arrows.")}
         </span>
       </div>
@@ -246,7 +246,7 @@ export function CategoriesScreen() {
         >
           {t.in("settings", "Restore default categories")}
         </KWButton>
-        <p className="px-1 type-caption text-muted-foreground">
+        <p className="type-caption text-muted-foreground">
           {t.in(
             "settings",
             "Deleting a category moves its movements to “%@”, which stays so they always have a place.",

@@ -157,7 +157,7 @@ export function RulesScreen() {
         </KWGroupedCard>
       )}
 
-      <p className="px-1 type-caption text-muted-foreground">
+      <p className="type-caption text-muted-foreground">
         {t.in(
           "settings",
           "New movements take the category of the first rule that matches, unless you pick one. Past ones stay as they are."

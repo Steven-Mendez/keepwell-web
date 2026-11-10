@@ -217,7 +217,7 @@ export function RuleEditorDialog({
                   {t.in("settings", "Apply to past movements")}
                 </KWButton>
                 {applied ? (
-                  <p className="px-1 type-caption text-text-secondary" aria-live="polite">
+                  <p className="type-caption text-text-secondary" aria-live="polite">
                     {applied}
                   </p>
                 ) : null}
