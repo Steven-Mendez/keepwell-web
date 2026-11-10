@@ -69,9 +69,6 @@
   "Postpone": {
    "es": "Posponer"
   },
-  "Restored %lld accounts and %lld movements": {
-   "es": "Se restauraron %1$lld cuentas y %2$lld movimientos"
-  },
   "Saves an expense in Keepwell with its amount, category and how you paid.": {
    "es": "Guarda un gasto en Keepwell con su monto, categoría y cómo pagaste."
   },
@@ -80,9 +77,6 @@
   },
   "Summary": {
    "es": "Resumen"
-  },
-  "That file isn't a Keepwell backup.": {
-   "es": "Ese archivo no es un respaldo de Keepwell."
   },
   "This section is still being built. Your transactions are already saved.": {
    "es": "Esta sección todavía se está construyendo. Tus movimientos ya están guardados."
@@ -1739,9 +1733,6 @@
   "%@ · already included": {
    "es": "%@ · ya incluida"
   },
-  "A file saved with “Back up now” in Settings": {
-   "es": "Un archivo guardado con “Respaldar ahora” en Ajustes"
-  },
   "Account": {
    "es": "Cuenta"
   },
@@ -1783,9 +1774,6 @@
   },
   "Bank · %@ · Debit ··%@": {
    "es": "Banco · %@ · Débito ··%@"
-  },
-  "Bring your accounts, cards and movements from a backup, or set everything up from scratch.": {
-   "es": "Trae tus cuentas, tarjetas y movimientos desde un respaldo, o configura todo desde cero."
   },
   "Cash": {
    "es": "Efectivo"
@@ -1847,14 +1835,8 @@
   "Go to home": {
    "es": "Ir al inicio"
   },
-  "Have you used Keepwell before?": {
-   "es": "¿Ya usaste Keepwell?"
-  },
   "Hide amounts when leaving": {
    "es": "Ocultar montos al salir"
-  },
-  "If iCloud backup was on in Keepwell": {
-   "es": "Si tenías activado el respaldo en iCloud en Keepwell"
   },
   "Import movements only (.csv)": {
    "es": "Importar solo movimientos (.csv)"
@@ -1877,20 +1859,14 @@
   "Log first expense": {
    "es": "Anotar primer gasto"
   },
-  "Looking for your backup…": {
-   "es": "Buscando tu respaldo…"
-  },
   "Main currency": {
    "es": "Moneda principal"
   },
   "Name": {
    "es": "Nombre"
   },
-  "No account and no servers of ours. Your data lives on your iPhone and, if you want, in your iCloud.": {
-   "es": "Sin cuenta y sin nuestros servidores. Tus datos viven en tu iPhone y, si quieres, en tu iCloud."
-  },
-  "No account or sign-up": {
-   "es": "Sin cuenta ni registro"
+  "No account needed": {
+   "es": "No necesitas una cuenta"
   },
   "Not now": {
    "es": "Ahora no"
@@ -1900,9 +1876,6 @@
   },
   "On": {
    "es": "Activado"
-  },
-  "On your iPhone, backed up to your iCloud": {
-   "es": "En tu iPhone, con respaldo en tu iCloud"
   },
   "On · tap to choose another": {
    "es": "Activado · toca para elegir otro"
@@ -1925,20 +1898,11 @@
   "Rate": {
    "es": "Tasa"
   },
-  "Recover everything if you change iPhone": {
-   "es": "Recupera todo si cambias de iPhone"
-  },
   "Remove account": {
    "es": "Quitar cuenta"
   },
   "Reports and net worth are calculated in the main currency.": {
    "es": "Los reportes y el patrimonio se calculan en la moneda principal."
-  },
-  "Restore from a backup file (.json)": {
-   "es": "Restaurar desde un archivo de respaldo (.json)"
-  },
-  "Restore from iCloud": {
-   "es": "Restaurar desde iCloud"
   },
   "Save": {
    "es": "Guardar"
@@ -1964,9 +1928,6 @@
   "Start": {
    "es": "Empezar"
   },
-  "Start from scratch": {
-   "es": "Empezar de cero"
-  },
   "Statement and payment dates for your cards": {
    "es": "Corte y pago de tus tarjetas"
   },
@@ -1987,9 +1948,6 @@
   },
   "Useful notifications, no spam": {
    "es": "Avisos útiles, sin spam"
-  },
-  "We couldn't find a backup in your iCloud.": {
-   "es": "No encontramos un respaldo en tu iCloud."
   },
   "We couldn't save your data. Try again.": {
    "es": "No pudimos guardar tus datos. Intenta de nuevo."
@@ -2026,9 +1984,6 @@
   },
   "Your name": {
    "es": "Tu nombre"
-  },
-  "iCloud backup": {
-   "es": "Respaldo en iCloud"
   }
  },
  "recurring": {
@@ -2269,12 +2224,6 @@
   "Ask again after": {
    "es": "Pedirlo al volver después de"
   },
-  "Back up now": {
-   "es": "Respaldar ahora"
-  },
-  "Backup ready · %@. Save it in iCloud Drive or Files.": {
-   "es": "Respaldo listo · %@. Guárdalo en iCloud Drive o en Archivos."
-  },
   "Bank transfer": {
    "es": "Transferencia bancaria"
   },
@@ -2338,9 +2287,6 @@
   "Deleted defaults come back and edits to them are undone. Your own categories and movements stay.": {
    "es": "Vuelven las predeterminadas que eliminaste y se deshacen sus cambios. Tus categorías y movimientos se quedan como están."
   },
-  "Deletes the data on this iPhone and the iCloud backup.": {
-   "es": "Borra los datos de este iPhone y el respaldo de iCloud."
-  },
   "Deleting a category moves its movements to “%@”, which stays so they always have a place.": {
    "es": "Al eliminar una categoría, sus movimientos pasan a “%@”, que no se puede eliminar para que siempre tengan un lugar."
   },
@@ -2377,9 +2323,6 @@
   "Import CSV": {
    "es": "Importar CSV"
   },
-  "In your own iCloud, encrypted. We don't see anything.": {
-   "es": "En tu propio iCloud, cifrado. Nosotros no vemos nada."
-  },
   "Income": {
    "es": "Ingresos"
   },
@@ -2397,9 +2340,6 @@
   },
   "Language": {
    "es": "Idioma"
-  },
-  "Last backup: %@": {
-   "es": "Último respaldo: %@"
   },
   "Main currency": {
    "es": "Moneda principal"
@@ -2453,9 +2393,6 @@
   "No rules yet": {
    "es": "Aún no tienes reglas"
   },
-  "Off: your data stays only on this iPhone.": {
-   "es": "Apagado: tus datos quedan solo en este iPhone."
-  },
   "On ›": {
    "es": "Activado ›"
   },
@@ -2483,9 +2420,6 @@
   "Reorder": {
    "es": "Reordenar"
   },
-  "Replace your data with this backup?": {
-   "es": "¿Reemplazar tus datos con este respaldo?"
-  },
   "Restore": {
    "es": "Restaurar"
   },
@@ -2494,16 +2428,6 @@
   },
   "Restore default categories?": {
    "es": "¿Restaurar las categorías predeterminadas?"
-  },
-  "Restored the backup from %@ · %lld transactions": {
-   "en": {
-    "one": "Restored the backup from %@ · %lld transaction",
-    "other": "Restored the backup from %@ · %lld transactions"
-   },
-   "es": {
-    "one": "Respaldo del %@ restaurado · %lld movimiento",
-    "other": "Respaldo del %@ restaurado · %lld movimientos"
-   }
   },
   "Rules": {
    "es": "Reglas"
@@ -2529,9 +2453,6 @@
   "Swap currencies": {
    "es": "Intercambiar monedas"
   },
-  "Syncs on its own while you have iCloud on this iPhone.": {
-   "es": "Se sincroniza solo mientras tengas iCloud en este iPhone."
-  },
   "Tags to add": {
    "es": "Etiquetas para agregar"
   },
@@ -2540,12 +2461,6 @@
   },
   "Text to look for": {
    "es": "Texto a buscar"
-  },
-  "That file isn't a Keepwell backup, so nothing was changed.": {
-   "es": "Ese archivo no es un respaldo de Keepwell, así que no cambió nada."
-  },
-  "The change applies the next time you open Keepwell.": {
-   "es": "El cambio se aplica la próxima vez que abras Keepwell."
   },
   "The rate has to be a number greater than zero.": {
    "es": "La tasa tiene que ser un número mayor que cero."
@@ -2564,9 +2479,6 @@
   },
   "Update it whenever you like by replacing the value. Each transaction keeps the rate it was logged with, so your history doesn't change.": {
    "es": "Actualízala cuando quieras reemplazando el valor. Cada movimiento guarda la tasa con la que se anotó, así tu historial no cambia."
-  },
-  "We couldn't create the backup. Try again.": {
-   "es": "No pudimos crear el respaldo. Inténtalo de nuevo."
   },
   "We couldn't create the file. Try again.": {
    "es": "No pudimos crear el archivo. Inténtalo de nuevo."
@@ -2592,14 +2504,8 @@
   "We couldn't look at your movements. Try again.": {
    "es": "No pudimos revisar tus movimientos. Inténtalo de nuevo."
   },
-  "We couldn't read that file.": {
-   "es": "No pudimos leer ese archivo."
-  },
   "We couldn't read that file. Export it again as CSV (UTF-8).": {
    "es": "No pudimos leer ese archivo. Expórtalo de nuevo como CSV (UTF-8)."
-  },
-  "We couldn't restore the backup. Try again.": {
-   "es": "No pudimos restaurar el respaldo. Inténtalo de nuevo."
   },
   "We couldn't restore the default categories. Try again.": {
    "es": "No pudimos restaurar las categorías predeterminadas. Inténtalo de nuevo."
@@ -2619,17 +2525,8 @@
   "We use Face ID or Touch ID, whichever your iPhone has": {
    "es": "Usamos Face ID o Touch ID según tu iPhone"
   },
-  "What's on this iPhone now is replaced by the backup.": {
-   "es": "Lo que hay ahora en este iPhone se reemplaza por el respaldo."
-  },
-  "Your accounts, cards and transactions are deleted from this iPhone and from iCloud. This can't be undone.": {
-   "es": "Tus cuentas, tarjetas y movimientos se borran de este iPhone y de iCloud. No se puede deshacer."
-  },
   "Your name": {
    "es": "Tu nombre"
-  },
-  "iCloud backup": {
-   "es": "Respaldo en iCloud"
   },
   "“%@” → %@": {
    "es": "“%1$@” → %2$@"

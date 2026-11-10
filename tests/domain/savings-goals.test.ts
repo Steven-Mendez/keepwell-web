@@ -1,5 +1,4 @@
-// Savings goals: progress and the monthly amount, the use cases, and the goal through IndexedDB and
-// the backup file (version 3).
+// Savings goals: progress and the monthly amount, the use cases, and the goal through IndexedDB.
 import "fake-indexeddb/auto"
 
 import { describe, expect, it } from "vitest"
@@ -13,8 +12,8 @@ import {
   savingsGoalProgress,
   withdrawFromSavingsGoal,
 } from "@/lib/domain"
-import { backupRepository, savingsGoalRepository, settingsRepository } from "@/lib/repositories"
-import { DEFAULT_SETTINGS, parseBackupFile, type SavingsGoal } from "@/lib/schema"
+import { savingsGoalRepository, settingsRepository } from "@/lib/repositories"
+import { DEFAULT_SETTINGS, type SavingsGoal } from "@/lib/schema"
 
 const NOV_2026 = new Date(2026, 10, 6, 12)
 
@@ -125,34 +124,16 @@ describe("Savings goal use cases", () => {
   })
 })
 
-describe("Savings goals through IndexedDB and the backup", () => {
-  it("exports the current version with goals and restores them; older files restore with none", async () => {
+describe("Savings goals through IndexedDB", () => {
+  it("stores goals and hides a deleted one", async () => {
     await settingsRepository.save({ ...DEFAULT_SETTINGS, currencies: { principal: "NIO", rate: "1" }, hasCompletedOnboarding: true })
     await savingsGoalRepository.save(goal({ saved: "2500.5", icon: "airplane", color: "blue" }))
     const { targetMonth: _, ...undated } = goal({ id: "00000000-0000-0000-0000-00000000a002", name: "Emergency" })
     await savingsGoalRepository.save(undated)
     await savingsGoalRepository.remove(undated.id)
 
-    const text = await backupRepository.export()
-    const file = parseBackupFile(text)
-    expect(file.schemaVersion).toBe(4)
-    expect(file.savingsGoals).toHaveLength(2)
-    expect(file.savingsGoals[0]).toMatchObject({ name: "Trip", saved: "2500.5", targetMonth: { month: 12, year: 2026 }, icon: "airplane" })
-    const json = JSON.parse(text) as { savingsGoals: Record<string, unknown>[] }
-    expect(json.savingsGoals[1]).not.toHaveProperty("targetMonth")
-    expect(json.savingsGoals[1]!.deletedAt).toBeDefined()
-
-    await backupRepository.import(text)
-    expect((await savingsGoalRepository.list()).map((g) => g.name)).toEqual(["Trip"])
-
-    const v2 = { ...JSON.parse(text), schemaVersion: 2 }
-    delete v2.savingsGoals
-    await backupRepository.import(JSON.stringify(v2))
-    expect(await savingsGoalRepository.list()).toEqual([])
-  })
-
-  it("refuses a goal with a negative amount saved", () => {
-    const file = { schemaVersion: 3, exportedAt: "2026-11-06T12:00:00.000Z", settings: { ...DEFAULT_SETTINGS, updatedAt: "2026-11-06T12:00:00.000Z" }, accounts: [], cards: [], categories: [], transactions: [], savingsGoals: [{ ...goal({ saved: "-1" }), createdAt: "2026-11-06T12:00:00.000Z", updatedAt: "2026-11-06T12:00:00.000Z" }] }
-    expect(() => parseBackupFile(JSON.stringify(file))).toThrow("Not a valid Keepwell backup")
+    const goals = await savingsGoalRepository.list()
+    expect(goals.map((g) => g.name)).toEqual(["Trip"])
+    expect(goals[0]).toMatchObject({ saved: "2500.5", targetMonth: { month: 12, year: 2026 }, icon: "airplane" })
   })
 })
