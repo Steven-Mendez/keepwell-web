@@ -151,7 +151,7 @@ function DetailCards({
   onOpenRule: () => void
 }) {
   return (
-    <div className="flex flex-col gap-4 px-5 pb-6">
+    <div className="flex flex-col gap-4 px-(--gutter) pb-6">
       <KWGroupedCard>
         <KWValueRow
           label={ct("Date")}
@@ -241,7 +241,7 @@ function DetailBody({
   const planned = transaction.status === "planned"
   return (
     <>
-      <div className="flex items-center justify-between px-5 pt-5">
+      <div className="flex items-center justify-between px-(--gutter) pt-5">
         <KWCircleButton
           icon="close"
           label={t.in("designsystem", "Close")}
@@ -252,7 +252,7 @@ function DetailBody({
           <StatusPill confirmed={false}>{ct("Draft")}</StatusPill>
         ) : null}
       </div>
-      <header className="flex flex-col items-center gap-1 px-5 pt-4 pb-6 text-center">
+      <header className="flex flex-col items-center gap-1 px-(--gutter) pt-4 pb-6 text-center">
         <KWTransactionIcon style={style} className="mb-2 size-14" />
         <SheetTitle
           className={cn(
@@ -272,7 +272,7 @@ function DetailBody({
         ) : null}
       </header>
 
-      <div className="flex justify-center gap-6 px-5 pb-6">
+      <div className="flex justify-center gap-6 px-(--gutter) pb-6">
         {planned ? (
           <KWActionButton
             icon="check"

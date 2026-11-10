@@ -115,7 +115,7 @@ function RuleEditorBody({
 
   if (context.accounts.length === 0) {
     return (
-      <div className="flex flex-col gap-2 p-5">
+      <div className="flex flex-col gap-2 p-(--gutter) md:p-6">
         <FlowHeader leading="close" onLeading={onClose} />
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <KWEmptyState
@@ -189,7 +189,7 @@ function RuleForm({
         }}
         className="flex min-h-0 flex-1 flex-col bg-background"
       >
-        <header className="flex flex-col gap-4 border-b border-divider px-5 pt-5 pb-4 md:px-6">
+        <header className="flex flex-col gap-4 border-b border-divider px-(--gutter) pt-5 pb-4 md:px-6">
           <FlowHeader
             leading="close"
             onLeading={onClose}
@@ -231,7 +231,7 @@ function RuleForm({
         </header>
 
         <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,1fr)_360px] md:overflow-hidden">
-          <div className="flex flex-col gap-8 px-5 py-6 md:overflow-y-auto md:px-6">
+          <div className="flex flex-col gap-8 px-(--gutter) py-6 md:overflow-y-auto md:px-6">
             {movesBetweenAccounts ? (
               <TransferAccountsSection editor={shown} />
             ) : null}
@@ -448,7 +448,7 @@ function RuleSummary({
         .join(" → ")
     : (editor.sourceTitleText ?? "—")
   return (
-    <aside className="flex flex-col gap-5 border-t border-divider px-5 py-6 md:overflow-y-auto md:border-t-0 md:border-l md:px-6">
+    <aside className="flex flex-col gap-5 border-t border-divider px-(--gutter) py-6 md:overflow-y-auto md:border-t-0 md:border-l md:px-6">
       <div className="flex flex-col items-center gap-1 rounded-2xl bg-card px-4 pt-5 pb-4 text-center">
         <span className="type-label text-text-secondary">
           {frequencyText(t, model.frequency, model.interval)}

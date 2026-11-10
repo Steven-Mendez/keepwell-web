@@ -37,14 +37,14 @@ export function SavedReceipt({
   )
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background">
-      <div className="px-5 pt-5 md:px-6">
+      <div className="px-(--gutter) pt-5 md:px-6">
         <FlowHeader leading="close" onLeading={onClose} />
         <DialogTitle className="sr-only">{receipt.headline}</DialogTitle>
         <DialogDescription className="sr-only">
           {receipt.amount}
         </DialogDescription>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4 md:px-6">
+      <div className="min-h-0 flex-1 overflow-y-auto px-(--gutter) pb-4 md:px-6">
         <ReceiptTicket
           receipt={receipt}
           footer={<ReceiptActions receipt={receipt} />}
@@ -53,7 +53,7 @@ export function SavedReceipt({
       </div>
       {/* The gutter outside the 400 px column, as around the ticket, so the buttons span exactly the
           ticket's width (inside it they sat 20 px in, and two w-full buttons overflowed it). */}
-      <div className="px-5 pt-3 pb-6 md:px-6">
+      <div className="px-(--gutter) pt-3 pb-6 md:px-6">
         <div className="mx-auto flex w-full max-w-[400px] gap-2.5">
           <KWButton
             variant="surface"

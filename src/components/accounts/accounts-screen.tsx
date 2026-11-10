@@ -401,7 +401,7 @@ function DetailPanel({
       <AnimatePresence mode="wait" initial={false}>
         <m.div
           key={panelKey}
-          className="h-full [scrollbar-width:thin] overflow-y-auto p-5"
+          className="h-full [scrollbar-width:thin] overflow-y-auto p-(--gutter)"
           initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           exit={{

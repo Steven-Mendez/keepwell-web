@@ -51,7 +51,7 @@ function EditorBody({ request, onClose }: { request: EditorRequest; onClose: () 
 
   if (context.accounts.length === 0) {
     return (
-      <div className="flex flex-col gap-2 p-5">
+      <div className="flex flex-col gap-2 p-(--gutter) md:p-6">
         <FlowHeader leading="close" onLeading={onClose} />
         <DialogTitle className="sr-only">{t.in("app", "New transaction")}</DialogTitle>
         <KWEmptyState

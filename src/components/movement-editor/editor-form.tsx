@@ -60,7 +60,7 @@ export function EditorForm({
       }}
       className="flex min-h-0 flex-1 flex-col bg-background"
     >
-      <header className="flex flex-col gap-4 border-b border-divider px-5 pt-5 pb-4 md:px-6">
+      <header className="flex flex-col gap-4 border-b border-divider px-(--gutter) pt-5 pb-4 md:px-6">
         <EditorTitle editor={editor} onClose={onClose} />
         {editor.types.length > 1 ? (
           <div className="-mx-1 overflow-x-auto px-1 pb-0.5">
@@ -81,7 +81,7 @@ export function EditorForm({
       </header>
 
       <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,1fr)_360px] md:overflow-hidden">
-        <div className="flex flex-col gap-8 px-5 py-6 md:overflow-y-auto md:px-6">
+        <div className="flex flex-col gap-8 px-(--gutter) py-6 md:overflow-y-auto md:px-6">
           {movesBetweenAccounts ? (
             <TransferAccountsSection editor={editor} />
           ) : null}

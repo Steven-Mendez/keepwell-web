@@ -37,7 +37,7 @@ export function EditorReview({
   const { t } = useCreateTransactionT()
   const { existing, fields, form } = editor
   return (
-    <aside className="flex flex-col gap-4 border-t border-divider px-5 py-6 md:overflow-y-auto md:border-t-0 md:border-l md:px-6">
+    <aside className="flex flex-col gap-4 border-t border-divider px-(--gutter) py-6 md:overflow-y-auto md:border-t-0 md:border-l md:px-6">
       <ReceiptTicket editor={editor} />
       <ReviewParties editor={editor} />
       {existing ? null : <RepeatField editor={editor} />}
