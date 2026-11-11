@@ -51,7 +51,7 @@ export function CommandPalette() {
           </CommandItem>
           <CommandItem onSelect={() => run(() => openRuleEditor({ mode: "create" }))}>
             <RepeatIcon />
-            {t.in("web", "Add recurring")}
+            {t.in("recurring", "Add recurring")}
           </CommandItem>
           <CommandItem onSelect={() => run(() => router.push("/settings/categories"))}>
             <TagsIcon />
