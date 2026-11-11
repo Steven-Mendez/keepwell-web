@@ -68,7 +68,7 @@ export function RecurringScreen() {
           <>
             <KWCircleButton
               icon={hidden ? "eye" : "eyeOff"}
-              label={t.in("web", hidden ? "Show balances" : "Hide balances")}
+              label={t.in("web", hidden ? "Show amounts" : "Hide amounts")}
               onClick={toggleHidden}
             />
             <KWButton icon="plus" onClick={add}>

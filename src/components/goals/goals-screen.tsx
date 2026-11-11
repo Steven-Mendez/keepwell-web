@@ -26,7 +26,7 @@ import { GoalMoneyDialog, type GoalMoneyMode } from "./goal-money-dialog"
 
 const TONE_CLASS = {
   positive: "text-positive",
-  negative: "text-negative",
+  pending: "text-pending",
   neutral: "text-muted-foreground",
 } as const
 
@@ -52,7 +52,7 @@ export function GoalsScreen() {
           <>
             <KWCircleButton
               icon={hidden ? "eye" : "eyeOff"}
-              label={t.in("web", hidden ? "Show balances" : "Hide balances")}
+              label={t.in("web", hidden ? "Show amounts" : "Hide amounts")}
               onClick={toggleHidden}
             />
             <KWButton icon="plus" onClick={add}>

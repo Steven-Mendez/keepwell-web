@@ -481,7 +481,7 @@ function ProfileMenu({ onNavigate }: { onNavigate: () => void }) {
             onClick={toggleHidden}
           >
             <KWIcon name={hidden ? "eye" : "eyeOff"} size={16} />
-            {t.in("web", hidden ? "Show balances" : "Hide balances")}
+            {t.in("web", hidden ? "Show amounts" : "Hide amounts")}
           </DropdownMenuItem>
           <DropdownMenuItem
             className={item}

@@ -31,7 +31,7 @@ import { DEFAULT_GOAL_SYMBOL, goalBadge } from "./goal-format"
 
 export type GoalEditorTarget = { mode: "create" } | { mode: "edit"; goal: SavingsGoal }
 
-const YEARS_AHEAD = 15
+const YEARS_AHEAD = 30
 const SELECT = cn(SETTINGS_INPUT, "w-full appearance-none")
 
 function saveErrorMessage(t: Translator, thrown: unknown): string {
