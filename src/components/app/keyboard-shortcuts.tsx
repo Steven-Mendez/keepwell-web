@@ -33,8 +33,8 @@ function dialogIsOpen(): boolean {
 }
 
 /**
- * Desktop keyboard navigation: ⌘K palette, N new movement (E/I/T by type), 1–4 and "g" then a
- * letter for the sections (G R for Recurring, G G for Goals, G D for Debts), "," settings, "/" search, "?" this list.
+ * Desktop keyboard navigation: ⌘K palette, N new movement (E/I/T by type), 1–5 and "g" then a
+ * letter for the sections (G P for Plan, G R for Recurring, G G for Goals, G D for Debts), "," settings, "/" search, "?" this list.
  */
 export function KeyboardShortcuts() {
   const t = useT()
@@ -102,6 +102,7 @@ export function KeyboardShortcuts() {
         case "2":
         case "3":
         case "4":
+        case "5":
           go(MAIN_NAV[Number(key) - 1]!.href)
           return
         case ",":

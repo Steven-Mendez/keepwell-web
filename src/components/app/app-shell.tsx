@@ -190,12 +190,13 @@ function MobileTabBar() {
   const isCurrent = useIsCurrent()
   const { openEditor } = useAppActions()
   const items = [...MAIN_NAV.slice(0, 2), undefined, ...MAIN_NAV.slice(2)]
+  // Home, Transactions, "+", Accounts, Summary, Plan.
   return (
     <nav
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-20 border-t border-divider bg-nav/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="grid grid-cols-6">
         {items.map((item) =>
           item ? (
             <li key={item.href}>

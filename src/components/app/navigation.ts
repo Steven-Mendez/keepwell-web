@@ -1,4 +1,4 @@
-import { ChartColumnIcon, HandCoinsIcon, HouseIcon, ListIcon, PiggyBankIcon, RepeatIcon, SettingsIcon, WalletCardsIcon, type LucideIcon } from "lucide-react"
+import { CalendarCheckIcon, ChartColumnIcon, HandCoinsIcon, HouseIcon, ListIcon, PiggyBankIcon, RepeatIcon, SettingsIcon, WalletCardsIcon, type LucideIcon } from "lucide-react"
 
 import type { KWIconName } from "@/components/kw/kw-icon-data"
 import type { Namespace } from "@/lib/i18n"
@@ -15,12 +15,16 @@ export interface NavItem {
   key: string
 }
 
+/** The Plan hub, the iOS tab after Summary; on the web the label of the sidebar group holding Recurring, Goals and Debts. */
+export const PLAN_NAV: NavItem = { title: "Plan", ns: "plan", href: "/plan", icon: CalendarCheckIcon, kwIcon: "clock", key: "p" }
+
 /** The iOS tabs (MainTabView), in the same order. */
 export const MAIN_NAV: readonly NavItem[] = [
   { title: "Home", ns: "app", href: "/", icon: HouseIcon, kwIcon: "home", key: "h" },
   { title: "Transactions", ns: "transactions", href: "/transactions", icon: ListIcon, kwIcon: "list", key: "t" },
   { title: "Accounts", ns: "accounts", href: "/accounts", icon: WalletCardsIcon, kwIcon: "tabAccounts", key: "a" },
   { title: "Summary", ns: "summary", href: "/summary", icon: ChartColumnIcon, kwIcon: "chartBars", key: "s" },
+  PLAN_NAV,
 ]
 
 /** Recurring movements and subscriptions: pushed from Home on iOS; on the web a section of the sidebar. */
@@ -32,7 +36,7 @@ export const GOALS_NAV: NavItem = { title: "Goals", ns: "goals", href: "/goals",
 /** Loans and personal debts: pushed from Home on iOS, like Goals; on the web a section of the sidebar. */
 export const DEBTS_NAV: NavItem = { title: "Debts", ns: "debts", href: "/debts", icon: HandCoinsIcon, kwIcon: "cash", key: "d" }
 
-/** The sections after the tabs, in the sidebar and in "G then a letter". */
+/** The sections under the Plan group, in the sidebar and in "G then a letter". */
 export const SECTION_NAV: readonly NavItem[] = [RECURRING_NAV, GOALS_NAV, DEBTS_NAV]
 
 /** Reached from home on iOS; on a wide screen it sits at the foot of the sidebar. */

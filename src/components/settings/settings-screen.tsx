@@ -298,12 +298,6 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
         onClick={() => setMethodsOpen(true)}
       />
       <SettingsLinkRow
-        icon="subscription"
-        label={t.in("settings", "Recurring")}
-        description={t.in("settings", "Subscriptions and regular movements")}
-        href="/recurring"
-      />
-      <SettingsLinkRow
         icon="bolt"
         label={t.in("settings", "Rules")}
         description={t.in("settings", "Categorize movements by their description")}
