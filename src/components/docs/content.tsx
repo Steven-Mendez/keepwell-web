@@ -725,6 +725,36 @@ function english(
                     <C>limit</C> up to 100
                   </>,
                 ],
+                [
+                  <C key="8">list_categories</C>,
+                  "Expense and income categories in your order, with monthly budgets.",
+                  "—",
+                ],
+                [
+                  <C key="9">list_recurring_rules</C>,
+                  "Recurring payments and subscriptions with their schedule and whether they are paused.",
+                  "—",
+                ],
+                [
+                  <C key="10">list_savings_goals</C>,
+                  "Savings goals with their target and what is set aside.",
+                  "—",
+                ],
+                [
+                  <C key="11">list_loans</C>,
+                  "Loans with their installments and which are paid.",
+                  "—",
+                ],
+                [
+                  <C key="12">list_personal_debts</C>,
+                  "Money owed to or by people, with repayments and whether settled.",
+                  "—",
+                ],
+                [
+                  <C key="13">list_categorization_rules</C>,
+                  "Rules that categorize movements by their description, in the order they apply.",
+                  "—",
+                ],
               ]}
             />
           ),
@@ -1538,6 +1568,36 @@ function spanish(
                     fechas, cuenta, categoría, tipo, moneda, estado, texto,{" "}
                     <C>limit</C> hasta 100
                   </>,
+                ],
+                [
+                  <C key="8">list_categories</C>,
+                  "Categorías de gastos e ingresos en tu orden, con sus presupuestos mensuales.",
+                  "—",
+                ],
+                [
+                  <C key="9">list_recurring_rules</C>,
+                  "Pagos recurrentes y suscripciones, con su calendario y si están en pausa.",
+                  "—",
+                ],
+                [
+                  <C key="10">list_savings_goals</C>,
+                  "Metas de ahorro con su objetivo y lo apartado.",
+                  "—",
+                ],
+                [
+                  <C key="11">list_loans</C>,
+                  "Préstamos con sus cuotas y cuáles están pagadas.",
+                  "—",
+                ],
+                [
+                  <C key="12">list_personal_debts</C>,
+                  "Dinero que te deben o que debes, con abonos y si está saldado.",
+                  "—",
+                ],
+                [
+                  <C key="13">list_categorization_rules</C>,
+                  "Reglas que categorizan movimientos por su descripción, en el orden en que se aplican.",
+                  "—",
                 ],
               ]}
             />

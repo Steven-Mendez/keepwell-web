@@ -51,12 +51,26 @@ export async function disconnectAll(): Promise<void> {
   await api("/mcp/disconnect-all", { method: "POST", body: "{}" })
 }
 
-/** The scopes a client can ask for, as the person reads them. */
-export const SCOPE_TEXT: Record<string, string> = {
-  read: "See your accounts, balances, movements, budgets and upcoming payments",
-  write:
-    "Record movements and recurring payments, which wait for you to confirm them",
-  manage:
-    "Do what you can do in the app: create, edit and delete accounts, movements, categories, budgets, goals, loans and debts, and change currencies. Deletes can be undone for 30 days",
-  offline_access: "Stay connected until you disconnect it",
+/** What each scope lets a client do, as the person reads it on the consent screen. */
+export const SCOPES: Record<string, { title: string; description: string; level: "read" | "write" | "manage" | "session" }> = {
+  read: {
+    title: "See your finances",
+    description: "Accounts, balances, movements, budgets and upcoming payments",
+    level: "read",
+  },
+  write: {
+    title: "Propose movements",
+    description: "Movements and recurring payments it records wait for you to confirm them",
+    level: "write",
+  },
+  manage: {
+    title: "Full control",
+    description: "Create, edit and delete accounts, movements, categories, budgets, goals, loans and debts, and change currencies, as you can in the app",
+    level: "manage",
+  },
+  offline_access: {
+    title: "Stay connected",
+    description: "Until you disconnect it",
+    level: "session",
+  },
 }
