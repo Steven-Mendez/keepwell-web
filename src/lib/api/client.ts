@@ -33,7 +33,15 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers: { ...(init.body ? { "content-type": "application/json" } : {}), ...init.headers },
   })
   const text = await res.text()
-  const body = text ? (JSON.parse(text) as unknown) : undefined
+  // A gateway or proxy error (503 from a throttled function, an HTML error page) may not be JSON:
+  // it still has to surface as an ApiError with its status, so callers can tell it apart.
+  let body: unknown
+  try {
+    body = text ? (JSON.parse(text) as unknown) : undefined
+  } catch {
+    if (res.ok) throw new ApiError(res.status, "invalid_json", "The response wasn't JSON")
+    body = undefined
+  }
   if (!res.ok) {
     // Our routes answer { error: { code } }; Better Auth (/api/auth) answers { code } at the top.
     const error =

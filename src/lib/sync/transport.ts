@@ -25,10 +25,31 @@ export interface SyncTransport {
   snapshot(entity: SyncEntity, after: string): Promise<{ rows: PulledChange["row"][]; server_seq: number; next_after: string | null }>
 }
 
+/** Statuses that mean "busy, try again": throttled, or the function couldn't start in time. */
+const TRANSIENT = new Set([429, 502, 503, 504])
+const RETRY_DELAYS_MS = [400, 1200, 3000]
+
+/**
+ * Reads that are safe to repeat, retried with backoff when the API is momentarily busy (a burst over
+ * the function's concurrency answers 503). Push is never retried here: the engine owns its events.
+ */
+export async function withRetry<T>(read: () => Promise<T>, delays: readonly number[] = RETRY_DELAYS_MS): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await read()
+    } catch (error) {
+      const transient = error instanceof ApiError && TRANSIENT.has(error.status)
+      const delay = delays[attempt]
+      if (!transient || delay === undefined) throw error
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
+  }
+}
+
 export const httpTransport: SyncTransport = {
   push: (body) => api("/sync/push", { method: "POST", body: JSON.stringify(body) }),
-  pull: (clientId, cursor) => api(`/sync/pull?client_id=${clientId}&cursor=${cursor}&limit=500`),
-  snapshot: (entity, after) => api(`/sync/snapshot?entity=${entity}&after=${encodeURIComponent(after)}&limit=500`),
+  pull: (clientId, cursor) => withRetry(() => api(`/sync/pull?client_id=${clientId}&cursor=${cursor}&limit=500`)),
+  snapshot: (entity, after) => withRetry(() => api(`/sync/snapshot?entity=${entity}&after=${encodeURIComponent(after)}&limit=500`)),
 }
 
 export { ApiError }
