@@ -1,6 +1,6 @@
 "use client"
 
-import { KeyRoundIcon, LogOutIcon } from "lucide-react"
+import { KeyRoundIcon, LogOutIcon, RefreshCwIcon } from "lucide-react"
 import { useState } from "react"
 
 import { openSyncChoice } from "@/components/app/sync-choice-dialog"
@@ -11,7 +11,9 @@ import type { AccountState } from "@/hooks/use-account"
 import { signOutEverywhere, type Me } from "@/lib/api/account"
 import { accountErrorCode, describeAccountError } from "@/lib/api/account-errors"
 import { addPasskey, passkeysSupported } from "@/lib/api/passkeys"
+import { syncScheduler } from "@/hooks/use-sync"
 import type { Translator } from "@/lib/i18n"
+import { relativeTime } from "@/lib/presentation/relative-time"
 import type { RejectedEvent, SyncStatus } from "@/lib/sync/engine"
 import { cn } from "@/lib/utils"
 
@@ -49,8 +51,8 @@ function syncDescription(t: Translator, me: Me, sync: SyncStatus | undefined): s
   if (sync?.state === "offline") return t.in("cloudaccount", "Offline. Changes sync when you're back online.")
   if (sync?.state === "error") return t.in("cloudaccount", "Couldn't sync. Keepwell will try again.")
   if (sync?.state === "syncing") return t.in("cloudaccount", "Syncing…")
-  if (me.early_access.includes("cloud_sync")) return t.in("web", "Sync included during early access.")
-  return t.in("web", "Up to date.")
+  if (sync?.state === "idle" && sync.lastSyncAt) return t.in("cloudaccount", "Last synced %@", relativeTime(sync.lastSyncAt, new Date(), t.locale))
+  return t.in("cloudaccount", "Synced")
 }
 
 /** A short state for the header's pill. */
@@ -133,8 +135,12 @@ export function SyncRows({ t, me, sync, rejected }: { t: Translator; me: Me; syn
     <>
       {sync?.state === "needs_choice" ? (
         <SettingsLinkRow icon="cloud" label={t.in("cloudaccount", "Choose which data to keep")} description={syncDescription(t, me, sync)} onClick={openSyncChoice} />
+      ) : canSync(me) && sync?.state !== "needs_plan" ? (
+        <SettingsLinkRow icon={<RefreshCwIcon strokeWidth={2} />} label={t.in("cloudaccount", "Sync now")} description={syncDescription(t, me, sync)} disabled={sync?.state === "syncing"} onClick={() => void syncScheduler().runNow()} />
       ) : (
-        <SettingsRow icon="cloud" label={t.in("cloudaccount", "Sync")} description={syncDescription(t, me, sync)} />
+        <SettingsRow icon="cloud" label={t.in("cloudaccount", "Sync")} description={syncDescription(t, me, sync)}>
+          <StatusPill tone="neutral">{t.in("cloudaccount", "Off")}</StatusPill>
+        </SettingsRow>
       )}
       {rejected.length > 0 ? (
         <SettingsRow icon="close" label={t.in("web", "Changes the server refused")} description={t.in("web", "%@ changes couldn't sync and stay only in this browser.", String(rejected.length))} />
@@ -155,7 +161,7 @@ export function SecuritySection({ t, action }: { t: Translator; action: AccountR
           </KWButton>
         </SettingsRow>
       ) : null}
-      <SettingsRow icon={<LogOutIcon strokeWidth={2} />} label={t.in("cloudaccount", "Sign out on all devices")} description={t.in("web", "Ends every session of your account, here and on your other devices.")}>
+      <SettingsRow icon={<LogOutIcon strokeWidth={2} />} label={t.in("cloudaccount", "Sign out on all devices")} description={t.in("cloudaccount", "Every iPhone and browser will need to sign in again.")}>
         <KWButton variant="secondary" size="small" disabled={busy} onClick={() => void run(signOutEverywhere)}>
           {t.in("cloudaccount", "Sign out everywhere")}
         </KWButton>

@@ -8,11 +8,6 @@ export const WEB_STRINGS_SYNC: WebStrings = {
   "Sync this browser with Keepwell for iPhone. Without an account, your data stays only here.": {
     es: "Sincroniza este navegador con Keepwell para iPhone. Sin una cuenta, tus datos se quedan solo aquí.",
   },
-  "Every movement, in a file for a spreadsheet.": { es: "Todos tus movimientos, en un archivo para una hoja de cálculo." },
-  "Adds movements from a CSV file.": { es: "Agrega movimientos desde un archivo CSV." },
-  "Ends every session of your account, here and on your other devices.": {
-    es: "Cierra todas las sesiones de tu cuenta, aquí y en tus otros dispositivos.",
-  },
   "Signing out or deleting the account keeps what's in this browser.": {
     es: "Al cerrar sesión o eliminar la cuenta, lo que hay en este navegador se queda.",
   },

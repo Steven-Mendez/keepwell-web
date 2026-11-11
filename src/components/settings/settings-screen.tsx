@@ -247,7 +247,7 @@ function EndSection({ t, signedIn, action, onSignedOut }: { t: Translator; signe
             icon="personOff"
             tone="destructive"
             label={t.in("cloudaccount", "Delete account")}
-            description={t.in("web", "Erases your account and its synced data from Keepwell's servers.")}
+            description={t.in("cloudaccount", "Erases your synced data from Keepwell's servers.")}
             disabled={action.busy}
             onClick={() => setConfirmingDelete(true)}
           />

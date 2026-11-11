@@ -57,7 +57,6 @@ export const WEB_STRINGS_CORE: WebStrings = {
       es: "Tus cuentas, tarjetas y movimientos se borran de este navegador. No se puede deshacer.",
     },
   "Save changes": { es: "Guardar cambios" },
-  Planned: { es: "Previsto" },
   "Rate stored": { es: "Tasa guardada" },
   Back: { es: "Atrás" },
   /** iOS takes these from the system; the web needs them spelled out. */

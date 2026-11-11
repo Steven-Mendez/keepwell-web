@@ -51,7 +51,7 @@ function useFilePicker(accept: string, onFile: (file: File) => void) {
 /** Downloads a CSV of every movement. */
 async function exportCsv(t: Translator) {
   try {
-    download(await exportCsvFrom(ledgerStore), `Keepwell-${today()}.csv`, "text/csv;charset=utf-8")
+    download(await exportCsvFrom(ledgerStore), `keepwell-${today()}.csv`, "text/csv;charset=utf-8")
   } catch {
     toast.add({ title: t.in("settings", "We couldn't create the file. Try again."), type: "error" })
   }
@@ -93,8 +93,8 @@ export function DataSection({ t, syncRows }: { t: Translator; syncRows?: ReactNo
   return (
     <SettingsSection id="data" title={t.in("settings", "Data & sync")} footnote={t.in("web", "Your data lives in this browser. Export a CSV now and then to keep a copy.")}>
       {syncRows}
-      <SettingsLinkRow icon="share" label={t.in("settings", "Export CSV")} description={t.in("web", "Every movement, in a file for a spreadsheet.")} onClick={() => void exportCsv(t)} />
-      <SettingsLinkRow icon="download" label={t.in("settings", "Import CSV")} description={t.in("web", "Adds movements from a CSV file.")} onClick={csvPicker.open} />
+      <SettingsLinkRow icon="share" label={t.in("settings", "Export CSV")} description={t.in("settings", "A copy of every movement")} onClick={() => void exportCsv(t)} />
+      <SettingsLinkRow icon="download" label={t.in("settings", "Import CSV")} description={t.in("settings", "Add movements from a spreadsheet")} onClick={csvPicker.open} />
       {csvPicker.element}
       <SettingsRow icon={<HardDriveIcon strokeWidth={2} />} label={t.in("web", "Storage")} description={t.in("web", "Stored in this browser")}>
         {persistence === "persisted" ? (

@@ -8,9 +8,6 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
     {
       es: "Una cuenta sincroniza este navegador con Keepwell para iPhone. Sin ella, tus datos se quedan solo aquí.",
     },
-  "Erases your account and its synced data from Keepwell's servers.": {
-    es: "Borra tu cuenta y sus datos sincronizados de los servidores de Keepwell.",
-  },
   "You're signed out everywhere at once and your synced data is erased from Keepwell's servers. Backups keep it up to 35 more days. What's in this browser stays here.":
     {
       es: "Se cierra tu sesión en todos lados al instante y tus datos sincronizados se borran de los servidores de Keepwell. Las copias de seguridad los conservan hasta 35 días más. Lo que hay en este navegador se queda aquí.",
@@ -19,10 +16,6 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
     {
       es: "La sincronización no está incluida en tu plan. Consíguela con el café en Keepwell para iPhone; todo sigue funcionando en este navegador.",
     },
-  "Sync included during early access.": {
-    es: "Sincronización incluida en el acceso anticipado.",
-  },
-  "Up to date.": { es: "Al día." },
   "Changes the server refused": { es: "Cambios que el servidor rechazó" },
   "%@ changes couldn't sync and stay only in this browser.": {
     es: "%@ cambios no se pudieron sincronizar y se quedan solo en este navegador.",
@@ -86,13 +79,9 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   },
   "Can read": { es: "Puede leer" },
   Disconnect: { es: "Desconectar" },
-  "Disconnect everything": { es: "Desconectar todo" },
   "How to connect Claude": { es: "Cómo conectar Claude" },
   "Step by step, on the web, desktop, phone and Claude Code.": { es: "Paso a paso, en la web, el escritorio, el teléfono y Claude Code." },
   "Connect Claude": { es: "Conectar Claude" },
-  "Every assistant loses access at once.": {
-    es: "Todos los asistentes pierden el acceso al instante.",
-  },
   "Disconnect all": { es: "Desconectar todos" },
   "Disconnect every assistant?": { es: "¿Desconectar todos los asistentes?" },
   "They lose access right away and would have to be connected again.": {
