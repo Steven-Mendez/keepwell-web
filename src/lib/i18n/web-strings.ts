@@ -9,19 +9,10 @@ export type WebStrings = Record<
 >
 
 export const WEB_STRINGS_CORE: WebStrings = {
-  "Keyboard shortcuts": { es: "Atajos de teclado" },
   "More actions": { es: "Más acciones" },
   "Search or jump to…": { es: "Busca o ve a…" },
   "No results.": { es: "Sin resultados." },
-  "Go to": { es: "Ir a" },
-  Actions: { es: "Acciones" },
-  "New expense": { es: "Nuevo gasto" },
-  "New income": { es: "Nuevo ingreso" },
-  "New transfer": { es: "Nueva transferencia" },
-  "Command palette": { es: "Paleta de comandos" },
-  "Show shortcuts": { es: "Ver atajos" },
   "Toggle sidebar": { es: "Mostrar u ocultar la barra lateral" },
-  "Focus search": { es: "Buscar" },
   "Close panel": { es: "Cerrar panel" },
   "Next or previous movement": { es: "Movimiento siguiente o anterior" },
   "column.description": { en: "Description", es: "Descripción" },

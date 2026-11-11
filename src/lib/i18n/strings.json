@@ -2417,6 +2417,9 @@
   "Keepwell will ask for your iPhone passcode instead.": {
    "es": "Keepwell te pedirá el código de tu iPhone en su lugar."
   },
+  "Keyboard shortcuts": {
+   "es": "Atajos de teclado"
+  },
   "Language": {
    "es": "Idioma"
   },
@@ -2663,11 +2666,23 @@
   "Account name": {
    "es": "Nombre de la cuenta"
   },
+  "Accounts": {
+   "es": "Cuentas"
+  },
+  "Actions": {
+   "es": "Acciones"
+  },
   "Add": {
    "es": "Agregar"
   },
   "Add a tag": {
    "es": "Agregar etiqueta"
+  },
+  "Add account or card": {
+   "es": "Agregar cuenta o tarjeta"
+  },
+  "Add recurring": {
+   "es": "Agregar recurrente"
   },
   "Adds the tag": {
    "es": "Agrega la etiqueta"
@@ -2690,14 +2705,23 @@
   "Card number": {
    "es": "Número de la tarjeta"
   },
+  "Categories": {
+   "es": "Categorías"
+  },
   "Category name": {
    "es": "Nombre de la categoría"
   },
   "Choose both the month and the year.": {
    "es": "Elige el mes y el año."
   },
+  "Close": {
+   "es": "Cerrar"
+  },
   "Color": {
    "es": "Color"
+  },
+  "Command palette": {
+   "es": "Paleta de comandos"
   },
   "Create category": {
    "es": "Crear categoría"
@@ -2716,6 +2740,9 @@
   },
   "Debit •••• %@": {
    "es": "Débito •••• %@"
+  },
+  "Debts": {
+   "es": "Deudas"
   },
   "Delete": {
    "es": "Eliminar"
@@ -2789,6 +2816,9 @@
   "Fees": {
    "es": "Comisiones"
   },
+  "Focus search": {
+   "es": "Buscar"
+  },
   "Freelance": {
    "es": "Trabajo independiente"
   },
@@ -2800,6 +2830,12 @@
   },
   "Give the category a name.": {
    "es": "Ponle un nombre a la categoría."
+  },
+  "Go to": {
+   "es": "Ir a"
+  },
+  "Goals": {
+   "es": "Metas"
   },
   "Gray": {
    "es": "Gris"
@@ -2819,6 +2855,9 @@
   "Hide balance": {
    "es": "Ocultar saldo"
   },
+  "Home": {
+   "es": "Inicio"
+  },
   "Housing": {
    "es": "Vivienda"
   },
@@ -2837,6 +2876,9 @@
   "Its movements move to “%@”.": {
    "es": "Sus movimientos pasan a “%@”."
   },
+  "Keyboard shortcuts": {
+   "es": "Atajos de teclado"
+  },
   "Last 4 digits": {
    "es": "Últimos 4 dígitos"
   },
@@ -2848,6 +2890,9 @@
   },
   "Loan payments": {
    "es": "Pagos de préstamos"
+  },
+  "Log transaction": {
+   "es": "Anotar movimiento"
   },
   "Monthly budget": {
    "es": "Presupuesto mensual"
@@ -2863,6 +2908,15 @@
   },
   "New category": {
    "es": "Nueva categoría"
+  },
+  "New expense": {
+   "es": "Nuevo gasto"
+  },
+  "New income": {
+   "es": "Nuevo ingreso"
+  },
+  "New transfer": {
+   "es": "Nueva transferencia"
   },
   "No limit": {
    "es": "Sin límite"
@@ -2900,6 +2954,9 @@
   "Recorded by Claude": {
    "es": "Registrado por Claude"
   },
+  "Recurring": {
+   "es": "Recurrentes"
+  },
   "Recurring · %@": {
    "es": "Recurrente · %@"
   },
@@ -2915,6 +2972,9 @@
   "Restaurants": {
    "es": "Restaurantes"
   },
+  "Rules": {
+   "es": "Reglas"
+  },
   "Salary": {
    "es": "Salario"
   },
@@ -2927,14 +2987,23 @@
   "See all": {
    "es": "Ver todos"
   },
+  "Settings": {
+   "es": "Ajustes"
+  },
   "Shopping": {
    "es": "Compras"
   },
   "Show balance": {
    "es": "Mostrar saldo"
   },
+  "Show shortcuts": {
+   "es": "Ver atajos"
+  },
   "Subscriptions": {
    "es": "Suscripciones"
+  },
+  "Summary": {
+   "es": "Resumen"
   },
   "Summary shows how much is left, and Home warns you at 80% and 100%.": {
    "es": "Resumen muestra cuánto queda, e Inicio te avisa al llegar al 80 % y al 100 %."
@@ -2950,6 +3019,9 @@
   },
   "Tools": {
    "es": "Herramientas"
+  },
+  "Transactions": {
+   "es": "Movimientos"
   },
   "Transport": {
    "es": "Transporte"

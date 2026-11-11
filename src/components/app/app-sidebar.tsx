@@ -488,7 +488,7 @@ function ProfileMenu({ onNavigate }: { onNavigate: () => void }) {
             onClick={() => setShortcutsOpen(true)}
           >
             <KWIcon name="list" size={16} />
-            {t.in("web", "Keyboard shortcuts")}
+            {t.in("sharedpresentation", "Keyboard shortcuts")}
             <DropdownMenuShortcut>?</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuGroup>

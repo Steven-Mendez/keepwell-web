@@ -25,24 +25,24 @@ export function CommandPalette() {
   }
 
   return (
-    <CommandDialog open={paletteOpen} onOpenChange={setPaletteOpen} title={t.in("web", "Command palette")} description={t.in("web", "Search or jump to…")}>
+    <CommandDialog open={paletteOpen} onOpenChange={setPaletteOpen} title={t.in("sharedpresentation", "Command palette")} description={t.in("web", "Search or jump to…")}>
       <CommandInput placeholder={t.in("web", "Search or jump to…")} />
       <CommandList>
         <CommandEmpty>{t.in("web", "No results.")}</CommandEmpty>
-        <CommandGroup heading={t.in("web", "Actions")}>
+        <CommandGroup heading={t.in("sharedpresentation", "Actions")}>
           <CommandItem onSelect={() => run(() => openEditor({ mode: "create", type: "expense" }))}>
             <ArrowUpRightIcon />
-            {t.in("web", "New expense")}
+            {t.in("sharedpresentation", "New expense")}
             <CommandShortcut>E</CommandShortcut>
           </CommandItem>
           <CommandItem onSelect={() => run(() => openEditor({ mode: "create", type: "income" }))}>
             <ArrowDownLeftIcon />
-            {t.in("web", "New income")}
+            {t.in("sharedpresentation", "New income")}
             <CommandShortcut>I</CommandShortcut>
           </CommandItem>
           <CommandItem onSelect={() => run(() => openEditor({ mode: "create", type: "transfer" }))}>
             <ArrowLeftRightIcon />
-            {t.in("web", "New transfer")}
+            {t.in("sharedpresentation", "New transfer")}
             <CommandShortcut>T</CommandShortcut>
           </CommandItem>
           <CommandItem onSelect={() => run(() => openAddAccount())}>
@@ -63,11 +63,11 @@ export function CommandPalette() {
           </CommandItem>
           <CommandItem onSelect={() => run(() => setShortcutsOpen(true))}>
             <KeyboardIcon />
-            {t.in("web", "Keyboard shortcuts")}
+            {t.in("sharedpresentation", "Keyboard shortcuts")}
             <CommandShortcut>?</CommandShortcut>
           </CommandItem>
         </CommandGroup>
-        <CommandGroup heading={t.in("web", "Go to")}>
+        <CommandGroup heading={t.in("sharedpresentation", "Go to")}>
           {[...MAIN_NAV, ...SECTION_NAV, SETTINGS_NAV].map((item, index) => (
             <CommandItem key={item.href} onSelect={() => run(() => router.push(item.href))}>
               <item.icon />

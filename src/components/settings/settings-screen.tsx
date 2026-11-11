@@ -201,7 +201,7 @@ function PreferencesSection({ t }: { t: Translator }) {
           ]}
         />
       </SettingsRow>
-      <SettingsLinkRow icon={<KeyboardIcon strokeWidth={2} />} label={t.in("web", "Keyboard shortcuts")} value="?" onClick={() => setShortcutsOpen(true)} />
+      <SettingsLinkRow icon={<KeyboardIcon strokeWidth={2} />} label={t.in("settings", "Keyboard shortcuts")} value="?" onClick={() => setShortcutsOpen(true)} />
     </SettingsSection>
   )
 }
