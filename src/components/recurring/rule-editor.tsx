@@ -18,7 +18,7 @@ import {
   TransferAccountsSection,
 } from "@/components/movement-editor/editor-fields"
 import { typeSubtitle } from "@/components/movement-editor/editor-model"
-import { typeOptions } from "@/components/movement-editor/editor-state"
+import { typeOptions, withDay } from "@/components/movement-editor/editor-state"
 import {
   FieldLabel,
   FlowHeader,
@@ -313,9 +313,9 @@ function ScheduleSection({ t, model }: SectionProps) {
         <FieldLabel htmlFor="rule-start">{t.in("recurring", "Starts")}</FieldLabel>
         <Input
           id="rule-start"
-          type="datetime-local"
-          value={editor.fields.dateText}
-          onChange={(event) => editor.update({ dateText: event.target.value })}
+          type="date"
+          value={editor.fields.dateText.slice(0, 10)}
+          onChange={(event) => editor.update({ dateText: withDay(editor.fields.dateText, event.target.value) })}
           className={cn(KW_FIELD, "[color-scheme:dark]")}
         />
       </div>

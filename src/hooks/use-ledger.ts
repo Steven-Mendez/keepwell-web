@@ -16,6 +16,21 @@ export function useLedger(): Ledger | undefined {
   return useLiveQuery(() => loadLedger(ledgerStore), [])
 }
 
+/**
+ * `useLedger` plus whether the read failed, for the screens that say so as iOS does ("We couldn't
+ * load your goals."). A failed read would otherwise throw into the error boundary.
+ */
+export function useLedgerLoad(): { ledger?: Ledger; failed: boolean } {
+  const result = useLiveQuery(async () => {
+    try {
+      return { ledger: await loadLedger(ledgerStore), failed: false }
+    } catch {
+      return { failed: true }
+    }
+  }, [])
+  return result ?? { failed: false }
+}
+
 /** How movements read, for the current language and ledger. */
 export function useTransactionDisplay(ledger: Ledger | undefined): TransactionDisplay | undefined {
   const t = useT()

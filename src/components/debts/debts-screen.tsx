@@ -21,7 +21,7 @@ import { AnimatedList, ListItem, SpringFill } from "@/components/kw/motion"
 import { Page, Surface } from "@/components/kw/primitives"
 import { SkeletonList } from "@/components/kw/skeletons"
 import { useHiddenBalances } from "@/hooks/use-hidden-balances"
-import { useLedger } from "@/hooks/use-ledger"
+import { useLedgerLoad } from "@/hooks/use-ledger"
 import {
   debtTotals,
   orderedLoans,
@@ -56,7 +56,7 @@ type Open =
  */
 export function DebtsScreen() {
   const t = useT()
-  const ledger = useLedger()
+  const { ledger, failed } = useLedgerLoad()
   const [hidden, toggleHidden] = useHiddenBalances()
   const [now] = useState(() => new Date())
   const [open, setOpen] = useState<Open>()
@@ -130,7 +130,9 @@ export function DebtsScreen() {
           </>
         }
       />
-      {!ledger || !loans || !debts || !totals ? (
+      {failed ? (
+        <p className="type-body text-muted-foreground">{t.in("debts", "We couldn't load your debts.")}</p>
+      ) : !ledger || !loans || !debts || !totals ? (
         <SkeletonList rows={3} />
       ) : (
         <>

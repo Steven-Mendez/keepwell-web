@@ -18,7 +18,7 @@ import { AnimatedList, ListItem } from "@/components/kw/motion"
 import { CategoryBadge, Page } from "@/components/kw/primitives"
 import { SkeletonList } from "@/components/kw/skeletons"
 import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
-import { useLedger } from "@/hooks/use-ledger"
+import { useLedgerLoad } from "@/hooks/use-ledger"
 import {
   isFinished,
   nextOccurrenceOf,
@@ -47,7 +47,7 @@ import {
  */
 export function RecurringScreen() {
   const t = useT()
-  const ledger = useLedger()
+  const { ledger, failed } = useLedgerLoad()
   const { openRuleEditor } = useAppActions()
   const [hidden, toggleHidden] = useHiddenBalances()
   const [now] = useState(() => new Date())
@@ -77,7 +77,9 @@ export function RecurringScreen() {
           </>
         }
       />
-      {!ledger || !overview ? (
+      {failed ? (
+        <p className="type-body text-muted-foreground">{t.in("recurring", "We couldn't load your recurring movements.")}</p>
+      ) : !ledger || !overview ? (
         <>
           <SkeletonList rows={1} />
           <SkeletonList rows={4} />
