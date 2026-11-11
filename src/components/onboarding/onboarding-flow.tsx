@@ -381,7 +381,7 @@ function WelcomeScreen({
         <div className="relative flex items-center gap-2.5">
           <KWLogo height={28} />
         </div>
-        <div className="relative flex flex-1 flex-col justify-center gap-8 py-10 lg:max-w-md">
+        <div className="relative flex flex-1 flex-col justify-center gap-8 py-10 lg:max-w-md lg:justify-start lg:pt-[clamp(2.5rem,14svh,9rem)]">
           <Heading
             title={t.in(
               "onboarding",
