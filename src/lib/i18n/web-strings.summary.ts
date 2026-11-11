@@ -2,7 +2,6 @@ import type { WebStrings } from "./web-strings"
 
 /** Summary over a period longer than a month, which only the desktop web shows. */
 export const WEB_STRINGS_SUMMARY: WebStrings = {
-  Month: { es: "Mes" },
   Period: { es: "Período" },
   "This year": { es: "Este año" },
   "Last 12 months": { es: "Últimos 12 meses" },

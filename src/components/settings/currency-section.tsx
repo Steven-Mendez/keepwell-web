@@ -370,7 +370,7 @@ export function CurrencySection({
   return (
     <SettingsSection
       id="money"
-      title={t.in("web", "Money")}
+      title={t.in("settings", "Money")}
       footnote={
         currencies.second
           ? t.in(

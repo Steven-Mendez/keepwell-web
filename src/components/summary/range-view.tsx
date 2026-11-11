@@ -60,7 +60,7 @@ export function PeriodPicker({ t, value, onChange }: { t: Translator; value: Per
       value={value}
       onChange={onChange}
       options={[
-        { value: "month", title: t.in("web", "Month") },
+        { value: "month", title: t.in("summary", "Month") },
         { value: "thisYear", title: t.in("web", "This year") },
         { value: "last12", title: t.in("web", "Last 12 months") },
         { value: "custom", title: t.in("web", "Custom") },

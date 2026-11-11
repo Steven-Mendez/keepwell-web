@@ -5,6 +5,4 @@ import type { WebStrings } from "./web-strings"
  * saving it, so it never offers to turn that change into a rule; the web's editor can.
  */
 export const WEB_STRINGS_RULES: WebStrings = {
-  "Always use %@ for “%@”?": { es: "¿Usar siempre %1$@ para “%2$@”?" },
-  "Rule saved": { es: "Regla guardada" },
 }

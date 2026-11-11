@@ -493,10 +493,10 @@ function WelcomeChoice({
               {t.in("web", "Try again")}
             </KWButton>
             <KWButton fill variant="surface" onClick={onUseLocally}>
-              {t.in("web", "Use without an account")}
+              {t.in("cloudaccount", "Use without an account")}
             </KWButton>
             <KWButton variant="plain" size="regular" onClick={onSignOut}>
-              {t.in("web", "Sign out")}
+              {t.in("cloudaccount", "Sign out")}
             </KWButton>
           </>
         ) : (
@@ -510,7 +510,7 @@ function WelcomeChoice({
     <div className="flex w-full flex-col gap-4 lg:max-w-sm">
       <div className="flex flex-col gap-1">
         <h2 className="type-heading text-foreground">
-          {t.in("web", "Already use Keepwell?")}
+          {t.in("cloudaccount", "Already use Keepwell?")}
         </h2>
         <p className="type-caption text-muted-foreground">
           {t.in(
@@ -529,7 +529,7 @@ function WelcomeChoice({
         aria-hidden
       >
         <span className="h-px flex-1 bg-border" />
-        {t.in("web", "or")}
+        {t.in("cloudaccount", "or")}
         <span className="h-px flex-1 bg-border" />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -539,7 +539,7 @@ function WelcomeChoice({
           disabled={busy}
           onClick={onUseLocally}
         >
-          {t.in("web", "Use without an account")}
+          {t.in("cloudaccount", "Use without an account")}
         </KWButton>
         <p className="text-center type-caption-sm text-muted-foreground">
           {t.in(

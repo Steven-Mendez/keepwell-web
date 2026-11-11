@@ -588,7 +588,7 @@ export function primaryLabel(
   existing: Transaction | undefined,
   fields: EditorFields
 ): string {
-  if (existing) return t.in("web", "Save changes")
+  if (existing) return t.in("createtransaction", "Save changes")
   return fields.isDraft ? ct("Save as draft") : saveTitle(t, fields.type)
 }
 

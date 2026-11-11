@@ -44,13 +44,13 @@ type SectionId = "preferences" | "money" | "organization" | "data" | "security" 
 
 function sectionTitles(t: Translator): Record<SectionId, string> {
   return {
-    preferences: t.in("web", "Profile & preferences"),
-    money: t.in("web", "Money"),
+    preferences: t.in("settings", "Profile & preferences"),
+    money: t.in("settings", "Money"),
     organization: t.in("settings", "Organization"),
-    data: t.in("web", "Data & sync"),
-    security: t.in("web", "Security"),
-    assistants: t.in("web", "Connected assistants"),
-    about: t.in("web", "About"),
+    data: t.in("settings", "Data & sync"),
+    security: t.in("settings", "Security"),
+    assistants: t.in("cloudaccount", "Connected assistants"),
+    about: t.in("settings", "About"),
   }
 }
 
@@ -242,11 +242,11 @@ function EndSection({ t, signedIn, action, onSignedOut }: { t: Translator; signe
     <SettingsSection footnote={signedIn ? t.in("web", "Signing out or deleting the account keeps what's in this browser.") : undefined}>
       {signedIn ? (
         <>
-          <SettingsLinkRow icon={<LogOutIcon strokeWidth={2} />} tone="destructive" label={t.in("web", "Sign out")} disabled={action.busy} onClick={() => void action.run(signOut)} />
+          <SettingsLinkRow icon={<LogOutIcon strokeWidth={2} />} tone="destructive" label={t.in("cloudaccount", "Sign out")} disabled={action.busy} onClick={() => void action.run(signOut)} />
           <SettingsLinkRow
             icon="personOff"
             tone="destructive"
-            label={t.in("web", "Delete account")}
+            label={t.in("cloudaccount", "Delete account")}
             description={t.in("web", "Erases your account and its synced data from Keepwell's servers.")}
             disabled={action.busy}
             onClick={() => setConfirmingDelete(true)}
@@ -254,9 +254,9 @@ function EndSection({ t, signedIn, action, onSignedOut }: { t: Translator; signe
           <ConfirmDialog
             open={confirmingDelete}
             onOpenChange={setConfirmingDelete}
-            title={t.in("web", "Delete your Keepwell account?")}
+            title={t.in("cloudaccount", "Delete your Keepwell account?")}
             description={t.in("web", "You're signed out everywhere at once and your synced data is erased from Keepwell's servers. Backups keep it up to 35 more days. What's in this browser stays here.")}
-            action={t.in("web", "Delete account")}
+            action={t.in("cloudaccount", "Delete account")}
             destructive
             onConfirm={() => void action.run(deleteAccount)}
           />

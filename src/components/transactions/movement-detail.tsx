@@ -162,7 +162,7 @@ function DetailCards({
         />
         <RouteRows ct={ct} transaction={transaction} display={display} />
         <KWValueRow
-          label={t.in("web", "Status")}
+          label={t.in("transactions", "Status")}
           value={
             <StatusPill confirmed={transaction.status === "confirmed"}>
               {transaction.status === "planned"
@@ -283,7 +283,7 @@ function DetailBody({
         ) : null}
         <KWActionButton
           icon="pencil"
-          title={t.in("web", "Edit")}
+          title={t.in("transactions", "Edit")}
           variant={planned ? "neutral" : "prominent"}
           onClick={onEdit}
         />
@@ -296,7 +296,7 @@ function DetailBody({
         ) : null}
         <KWActionButton
           icon="share"
-          title={t.in("web", "Receipt")}
+          title={t.in("transactions", "Receipt")}
           onClick={onReceipt}
         />
         <KWActionButton

@@ -36,7 +36,7 @@ export function UpcomingSection({
   if (next.length === 0) return null
   return (
     <KWSection
-      title={t.in("web", "Upcoming")}
+      title={t.in("home", "Upcoming")}
       action={
         <Link
           href="/recurring"

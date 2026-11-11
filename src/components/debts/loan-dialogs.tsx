@@ -611,7 +611,7 @@ export function LoanDialog({
         <DialogFooter className={FOOTER}>
           <span />
           <KWButton variant="surface" onClick={onClose}>
-            {t.in("web", "OK")}
+            {t.in("createtransaction", "OK")}
           </KWButton>
         </DialogFooter>
       </DialogContent>

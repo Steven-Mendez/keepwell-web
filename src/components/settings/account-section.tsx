@@ -45,22 +45,22 @@ export const canSync = (me: Me | undefined) => me?.capabilities.includes("cloud_
 function syncDescription(t: Translator, me: Me, sync: SyncStatus | undefined): string {
   if (!canSync(me) || sync?.state === "needs_plan")
     return t.in("web", "Sync isn't included in your plan. Get it with the coffee in Keepwell for iPhone; everything keeps working in this browser.")
-  if (sync?.state === "needs_choice") return t.in("web", "Sync is paused until you choose.")
-  if (sync?.state === "offline") return t.in("web", "Offline. Changes sync when you're back online.")
-  if (sync?.state === "error") return t.in("web", "Couldn't sync. Keepwell will try again.")
-  if (sync?.state === "syncing") return t.in("web", "Syncing…")
+  if (sync?.state === "needs_choice") return t.in("cloudaccount", "Sync is paused until you choose.")
+  if (sync?.state === "offline") return t.in("cloudaccount", "Offline. Changes sync when you're back online.")
+  if (sync?.state === "error") return t.in("cloudaccount", "Couldn't sync. Keepwell will try again.")
+  if (sync?.state === "syncing") return t.in("cloudaccount", "Syncing…")
   if (me.early_access.includes("cloud_sync")) return t.in("web", "Sync included during early access.")
   return t.in("web", "Up to date.")
 }
 
 /** A short state for the header's pill. */
 function syncPill(t: Translator, me: Me, sync: SyncStatus | undefined): { text: string; tone: "positive" | "pending" | "neutral" } {
-  if (!canSync(me) || sync?.state === "needs_plan") return { text: t.in("web", "Sync off"), tone: "neutral" }
-  if (sync?.state === "needs_choice") return { text: t.in("web", "Sync paused"), tone: "pending" }
-  if (sync?.state === "offline") return { text: t.in("web", "Offline"), tone: "pending" }
-  if (sync?.state === "error") return { text: t.in("web", "Couldn't sync"), tone: "pending" }
-  if (sync?.state === "syncing" || sync === undefined) return { text: t.in("web", "Syncing…"), tone: "neutral" }
-  return { text: t.in("web", "Synced"), tone: "positive" }
+  if (!canSync(me) || sync?.state === "needs_plan") return { text: t.in("cloudaccount", "Sync off"), tone: "neutral" }
+  if (sync?.state === "needs_choice") return { text: t.in("cloudaccount", "Sync paused"), tone: "pending" }
+  if (sync?.state === "offline") return { text: t.in("cloudaccount", "Offline"), tone: "pending" }
+  if (sync?.state === "error") return { text: t.in("cloudaccount", "Couldn't sync"), tone: "pending" }
+  if (sync?.state === "syncing" || sync === undefined) return { text: t.in("cloudaccount", "Syncing…"), tone: "neutral" }
+  return { text: t.in("cloudaccount", "Synced"), tone: "positive" }
 }
 
 /** A state on its 14 % tint, as iOS shows state next to a value. */
@@ -115,9 +115,9 @@ export function AccountHeader({ t, state, sync, preferredName }: { t: Translator
         <KWIcon name="cloud" size={24} />
       </span>
       <div className="flex min-w-0 flex-1 basis-48 flex-col gap-0.5">
-        <p className="type-heading text-foreground">{t.in("web", "Sign in to sync")}</p>
+        <p className="type-heading text-foreground">{t.in("cloudaccount", "Sign in to sync")}</p>
         <p className="type-caption leading-snug text-muted-foreground">
-          {state.status === "error" ? t.in("web", "Couldn't reach Keepwell. Try again.") : t.in("web", "Sync this browser with Keepwell for iPhone. Without an account, your data stays only here.")}
+          {state.status === "error" ? t.in("cloudaccount", "Couldn't reach Keepwell. Try again.") : t.in("web", "Sync this browser with Keepwell for iPhone. Without an account, your data stays only here.")}
         </p>
       </div>
       <KWButtonLink size="regular" href="/login" className="max-sm:w-full" aria-disabled={state.status === "loading"}>
@@ -132,9 +132,9 @@ export function SyncRows({ t, me, sync, rejected }: { t: Translator; me: Me; syn
   return (
     <>
       {sync?.state === "needs_choice" ? (
-        <SettingsLinkRow icon="cloud" label={t.in("web", "Choose which data to keep")} description={syncDescription(t, me, sync)} onClick={openSyncChoice} />
+        <SettingsLinkRow icon="cloud" label={t.in("cloudaccount", "Choose which data to keep")} description={syncDescription(t, me, sync)} onClick={openSyncChoice} />
       ) : (
-        <SettingsRow icon="cloud" label={t.in("web", "Sync")} description={syncDescription(t, me, sync)} />
+        <SettingsRow icon="cloud" label={t.in("cloudaccount", "Sync")} description={syncDescription(t, me, sync)} />
       )}
       {rejected.length > 0 ? (
         <SettingsRow icon="close" label={t.in("web", "Changes the server refused")} description={t.in("web", "%@ changes couldn't sync and stay only in this browser.", String(rejected.length))} />
@@ -147,7 +147,7 @@ export function SyncRows({ t, me, sync, rejected }: { t: Translator; me: Me; syn
 export function SecuritySection({ t, action }: { t: Translator; action: AccountRun }) {
   const { busy, run } = action
   return (
-    <SettingsSection id="security" title={t.in("web", "Security")}>
+    <SettingsSection id="security" title={t.in("settings", "Security")}>
       {passkeysSupported() ? (
         <SettingsRow icon={<KeyRoundIcon strokeWidth={2} />} label={t.in("web", "Passkey")} description={t.in("web", "Sign in with Face ID, Touch ID or your device's lock instead of Apple.")}>
           <KWButton variant="secondary" size="small" disabled={busy} onClick={() => void run(() => addPasskey("Keepwell"))}>
@@ -155,9 +155,9 @@ export function SecuritySection({ t, action }: { t: Translator; action: AccountR
           </KWButton>
         </SettingsRow>
       ) : null}
-      <SettingsRow icon={<LogOutIcon strokeWidth={2} />} label={t.in("web", "Sign out on all devices")} description={t.in("web", "Ends every session of your account, here and on your other devices.")}>
+      <SettingsRow icon={<LogOutIcon strokeWidth={2} />} label={t.in("cloudaccount", "Sign out on all devices")} description={t.in("web", "Ends every session of your account, here and on your other devices.")}>
         <KWButton variant="secondary" size="small" disabled={busy} onClick={() => void run(signOutEverywhere)}>
-          {t.in("web", "Sign out everywhere")}
+          {t.in("cloudaccount", "Sign out everywhere")}
         </KWButton>
       </SettingsRow>
     </SettingsSection>

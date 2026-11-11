@@ -7,10 +7,7 @@ import type { WebStrings } from "./web-strings"
 export const WEB_STRINGS_RECURRING: WebStrings = {
   Recurring: { es: "Recurrentes" },
   "Add recurring": { es: "Agregar recurrente" },
-  "New recurring": { es: "Nuevo recurrente" },
-  "Edit recurring": { es: "Editar recurrente" },
   "Subscriptions per month": { es: "Suscripciones al mes" },
-  "≈ %@ per year": { es: "≈ %@ al año" },
   "Bills and other expenses": { es: "Facturas y otros gastos" },
   "Every %lld weeks": {
     en: { one: "Every week", other: "Every %lld weeks" },
@@ -52,8 +49,6 @@ export const WEB_STRINGS_RECURRING: WebStrings = {
   "Next dates": { es: "Próximas fechas" },
   "Movements it created": { es: "Movimientos que generó" },
   "None yet.": { es: "Ninguno todavía." },
-  Pause: { es: "Pausar" },
-  Resume: { es: "Reanudar" },
   "Delete this recurring movement?": { es: "¿Eliminar este movimiento recurrente?" },
   "Its pending drafts are deleted too. Movements already confirmed stay.": {
     es: "También se eliminan sus borradores pendientes. Los movimientos ya confirmados se quedan.",
@@ -62,11 +57,7 @@ export const WEB_STRINGS_RECURRING: WebStrings = {
   "Repeat every 1 to 99.": { es: "Repite cada 1 a 99." },
   "The end can't be before the start.": { es: "El final no puede ser antes del inicio." },
   "We couldn't save the change. Try again.": { es: "No pudimos guardar el cambio. Intenta de nuevo." },
-  Repeat: { es: "Repetir" },
   "The next ones wait as drafts on their date for you to confirm.": {
     es: "Los siguientes esperan como borradores en su fecha para que los confirmes.",
   },
-  Upcoming: { es: "Próximos" },
-  "%@ renews tomorrow": { es: "%@ se renueva mañana" },
-  "%@ on %@": { es: "%1$@ con %2$@" },
 }

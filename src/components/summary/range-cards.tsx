@@ -1086,7 +1086,7 @@ export function YearsCard({
                 label: t.in("summary", "Went out"),
                 swatch: dot("bg-negative"),
               },
-              { label: t.in("web", "Saved"), swatch: dot("bg-chart-1") },
+              { label: t.in("createtransaction", "Saved"), swatch: dot("bg-chart-1") },
             ]}
           />
         }

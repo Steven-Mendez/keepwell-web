@@ -109,7 +109,7 @@ export function SignInOptions({
       {showInvitation ? (
         <label className="flex flex-col gap-1.5 text-left">
           <span className="type-caption text-muted-foreground">
-            {t.in("web", "Invitation code")}
+            {t.in("cloudaccount", "Invitation code")}
           </span>
           <Input
             value={invitation}
@@ -146,7 +146,7 @@ export function SignInOptions({
           disabled={busy || disabled}
           onClick={() => void withPasskey()}
         >
-          {t.in("web", "Use a passkey")}
+          {t.in("cloudaccount", "Use a passkey")}
         </KWButton>
       ) : null}
       {!showInvitation ? (

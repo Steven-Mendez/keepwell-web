@@ -96,7 +96,7 @@ function TransactionText({
 }: RowParts & { dateLabel: string | undefined; columns: boolean }) {
   const t = useT()
   // Movements an assistant recorded say so, confirmed or not (`source = mcp`).
-  const recordedBy = transaction.source === "mcp" ? t.in("web", "Recorded by Claude") : undefined
+  const recordedBy = transaction.source === "mcp" ? t.in("sharedpresentation", "Recorded by Claude") : undefined
   return (
     <span className="flex min-w-0 flex-1 flex-col text-left">
       {/* KWTransactionRow: title 15/600, subtitle caption muted, amount 15/700, the second amount faint. */}

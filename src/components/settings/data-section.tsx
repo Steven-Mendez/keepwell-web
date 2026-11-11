@@ -91,7 +91,7 @@ export function DataSection({ t, syncRows }: { t: Translator; syncRows?: ReactNo
   const csvPicker = useFilePicker("text/csv,.csv", (file) => void importCsvFile(t, file))
 
   return (
-    <SettingsSection id="data" title={t.in("web", "Data & sync")} footnote={t.in("web", "Your data lives in this browser. Export a CSV now and then to keep a copy.")}>
+    <SettingsSection id="data" title={t.in("settings", "Data & sync")} footnote={t.in("web", "Your data lives in this browser. Export a CSV now and then to keep a copy.")}>
       {syncRows}
       <SettingsLinkRow icon="share" label={t.in("settings", "Export CSV")} description={t.in("web", "Every movement, in a file for a spreadsheet.")} onClick={() => void exportCsv(t)} />
       <SettingsLinkRow icon="download" label={t.in("settings", "Import CSV")} description={t.in("web", "Adds movements from a CSV file.")} onClick={csvPicker.open} />
@@ -135,7 +135,7 @@ export function EraseDataRow({ t, signedIn = false, onSignedOut }: { t: Translat
         title={t.in("settings", "Delete all your data?")}
         description={
           signedIn
-            ? `${t.in("web", "Your accounts, cards and transactions are deleted from this browser. This can't be undone.")} ${t.in("web", "Your Keepwell account keeps its copy; to erase it too, delete your account.")} ${t.in("web", "You'll be signed out on this browser.")}`
+            ? `${t.in("web", "Your accounts, cards and transactions are deleted from this browser. This can't be undone.")} ${t.in("settings", "Your Keepwell account keeps its copy; to erase it too, delete your account.")} ${t.in("web", "You'll be signed out on this browser.")}`
             : t.in("web", "Your accounts, cards and transactions are deleted from this browser. This can't be undone.")
         }
         action={t.in("settings", "Delete everything")}

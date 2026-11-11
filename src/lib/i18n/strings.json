@@ -140,6 +140,9 @@
   "On": {
    "es": "Activado"
   },
+  "Opens outside Keepwell": {
+   "es": "Se abre fuera de Keepwell"
+  },
   "Platinum": {
    "es": "Platino"
   },
@@ -1462,6 +1465,12 @@
   "Debts": {
    "es": "Deudas"
   },
+  "Discard": {
+   "es": "Descartar"
+  },
+  "Doesn't include balances in %@": {
+   "es": "No incluye saldos en %@"
+  },
   "Draft for today": {
    "es": "Borrador para hoy"
   },
@@ -1934,6 +1943,9 @@
   "Statement and payment dates for your cards": {
    "es": "Corte y pago de tus tarjetas"
   },
+  "Stays on your iPhone": {
+   "es": "Se queda en tu iPhone"
+  },
   "Swap": {
    "es": "Intercambiar"
   },
@@ -1975,6 +1987,9 @@
   },
   "Your balances are yours alone. Lock the app so only you can open it.": {
    "es": "Tus saldos son solo tuyos. Bloquea la app para que solo tú puedas abrirla."
+  },
+  "Your data lives on your iPhone. A Keepwell account to sync with the web is optional, and you can add it later in Settings.": {
+   "es": "Tus datos viven en tu iPhone. Una cuenta Keepwell para sincronizar con la web es opcional, y puedes añadirla después en Ajustes."
   },
   "Your data stays yours": {
    "es": "Tus datos son tuyos"
@@ -2209,8 +2224,17 @@
     "other": "%lld movimientos importados"
    }
   },
+  "A copy of every movement": {
+   "es": "Una copia de todos tus movimientos"
+  },
+  "About": {
+   "es": "Acerca de"
+  },
   "Add a bank account or a card from Accounts to see it here.": {
    "es": "Agrega una cuenta de banco o una tarjeta desde Cuentas para verla aquí."
+  },
+  "Add movements from a spreadsheet": {
+   "es": "Agrega movimientos desde una hoja de cálculo"
   },
   "App language": {
    "es": "Idioma de la app"
@@ -2232,6 +2256,9 @@
   },
   "Categories": {
    "es": "Categorías"
+  },
+  "Categorize movements by their description": {
+   "es": "Categoriza los movimientos según su descripción"
   },
   "Category": {
    "es": "Categoría"
@@ -2260,6 +2287,9 @@
   "Data": {
    "es": "Datos"
   },
+  "Data & sync": {
+   "es": "Datos y sincronización"
+  },
   "Debit": {
    "es": "Débito"
   },
@@ -2286,6 +2316,9 @@
   },
   "Deleted defaults come back and edits to them are undone. Your own categories and movements stay.": {
    "es": "Vuelven las predeterminadas que eliminaste y se deshacen sus cambios. Tus categorías y movimientos se quedan como están."
+  },
+  "Deletes the data on this iPhone.": {
+   "es": "Borra los datos de este iPhone."
   },
   "Deleting a category moves its movements to “%@”, which stays so they always have a place.": {
    "es": "Al eliminar una categoría, sus movimientos pasan a “%@”, que no se puede eliminar para que siempre tengan un lugar."
@@ -2329,6 +2362,9 @@
   "Income categories": {
    "es": "Categorías de ingreso"
   },
+  "Keepwell %@": {
+   "es": "Keepwell %@"
+  },
   "Keepwell passcode": {
    "es": "Código de Keepwell"
   },
@@ -2352,6 +2388,9 @@
   },
   "Manual · default 1": {
    "es": "Manual · por defecto 1"
+  },
+  "Money": {
+   "es": "Dinero"
   },
   "Move %lld movements to %@?": {
    "en": {
@@ -2393,6 +2432,9 @@
   "No rules yet": {
    "es": "Aún no tienes reglas"
   },
+  "On": {
+   "es": "Activado"
+  },
   "On ›": {
    "es": "Activado ›"
   },
@@ -2407,6 +2449,12 @@
   },
   "Payment methods": {
    "es": "Medios de pago"
+  },
+  "Privacy policy": {
+   "es": "Política de privacidad"
+  },
+  "Profile & preferences": {
+   "es": "Perfil y preferencias"
   },
   "Rate": {
    "es": "Tasa"
@@ -2438,8 +2486,14 @@
   "Second currency": {
    "es": "Segunda moneda"
   },
+  "Security": {
+   "es": "Seguridad"
+  },
   "Security and privacy": {
    "es": "Seguridad y privacidad"
+  },
+  "Set up": {
+   "es": "Configurar"
   },
   "Set up ›": {
    "es": "Configurar ›"
@@ -2449,6 +2503,9 @@
   },
   "Six digits, kept only on this iPhone. Without one, the lock uses your iPhone passcode.": {
    "es": "Seis dígitos, guardados solo en este iPhone. Sin él, el bloqueo usa el código de tu iPhone."
+  },
+  "Subscriptions and regular movements": {
+   "es": "Suscripciones y movimientos periódicos"
   },
   "Swap currencies": {
    "es": "Intercambiar monedas"
@@ -2524,6 +2581,18 @@
   },
   "We use Face ID or Touch ID, whichever your iPhone has": {
    "es": "Usamos Face ID o Touch ID según tu iPhone"
+  },
+  "You'll be signed out on this iPhone.": {
+   "es": "Se cerrará la sesión en este iPhone."
+  },
+  "Your Keepwell account keeps its copy; to erase it too, delete your account.": {
+   "es": "Tu cuenta de Keepwell conserva su copia; para borrarla también, elimina tu cuenta."
+  },
+  "Your accounts, cards and transactions are deleted from this iPhone. This can't be undone. Data synced to your Keepwell account goes when you delete the account.": {
+   "es": "Tus cuentas, tarjetas y movimientos se borran de este iPhone. No se puede deshacer. Lo sincronizado con tu cuenta Keepwell se borra al eliminar la cuenta."
+  },
+  "Your data stays only on this iPhone.": {
+   "es": "Tus datos se quedan solo en este iPhone."
   },
   "Your name": {
    "es": "Tu nombre"
@@ -2760,6 +2829,9 @@
   },
   "Purple": {
    "es": "Morado"
+  },
+  "Recorded by Claude": {
+   "es": "Registrado por Claude"
   },
   "Recurring · %@": {
    "es": "Recurrente · %@"
@@ -3271,6 +3343,296 @@
   },
   "spent · 4 drafts": {
    "es": "gastado · 4 borradores"
+  }
+ },
+ "cloudaccount": {
+  "%lld accounts": {
+   "en": {
+    "one": "%lld account",
+    "other": "%lld accounts"
+   },
+   "es": {
+    "one": "%lld cuenta",
+    "other": "%lld cuentas"
+   }
+  },
+  "%lld debts": {
+   "en": {
+    "one": "%lld debt",
+    "other": "%lld debts"
+   },
+   "es": {
+    "one": "%lld deuda",
+    "other": "%lld deudas"
+   }
+  },
+  "%lld goals": {
+   "en": {
+    "one": "%lld goal",
+    "other": "%lld goals"
+   },
+   "es": {
+    "one": "%lld meta",
+    "other": "%lld metas"
+   }
+  },
+  "%lld movements": {
+   "en": {
+    "one": "%lld movement",
+    "other": "%lld movements"
+   },
+   "es": {
+    "one": "%lld movimiento",
+    "other": "%lld movimientos"
+   }
+  },
+  "%lld recurring": {
+   "en": {
+    "one": "%lld recurring",
+    "other": "%lld recurring"
+   },
+   "es": {
+    "one": "%lld recurrente",
+    "other": "%lld recurrentes"
+   }
+  },
+  "%lld rules": {
+   "en": {
+    "one": "%lld rule",
+    "other": "%lld rules"
+   },
+   "es": {
+    "one": "%lld regla",
+    "other": "%lld reglas"
+   }
+  },
+  "Already use Keepwell?": {
+   "es": "¿Ya usas Keepwell?"
+  },
+  "Assistants disconnected": {
+   "es": "Asistentes desconectados"
+  },
+  "Choose which data to keep": {
+   "es": "Elige qué datos conservar"
+  },
+  "Choose which to keep. The other is replaced, and this can't be undone.": {
+   "es": "Elige cuáles conservar. Los otros se reemplazan y no se puede deshacer."
+  },
+  "Claude and other assistants lose access to your account at once.": {
+   "es": "Claude y los demás asistentes pierden el acceso a tu cuenta al instante."
+  },
+  "Connected assistants": {
+   "es": "Asistentes conectados"
+  },
+  "Continue": {
+   "es": "Continuar"
+  },
+  "Couldn't reach Keepwell. Try again.": {
+   "es": "No se pudo conectar con Keepwell. Inténtalo de nuevo."
+  },
+  "Couldn't sign in with Apple. Try again.": {
+   "es": "No se pudo iniciar sesión con Apple. Inténtalo de nuevo."
+  },
+  "Couldn't sync": {
+   "es": "No se pudo sincronizar"
+  },
+  "Couldn't sync. Keepwell will try again.": {
+   "es": "No se pudo sincronizar. Keepwell lo intentará de nuevo."
+  },
+  "Decide later": {
+   "es": "Decidir después"
+  },
+  "Delete account": {
+   "es": "Eliminar cuenta"
+  },
+  "Delete your Keepwell account?": {
+   "es": "¿Eliminar tu cuenta de Keepwell?"
+  },
+  "Disconnect assistants": {
+   "es": "Desconectar asistentes"
+  },
+  "Early access": {
+   "es": "Acceso anticipado"
+  },
+  "Erases your synced data from Keepwell's servers.": {
+   "es": "Borra tus datos sincronizados de los servidores de Keepwell."
+  },
+  "Every iPhone and browser signed in to this account will need to sign in again.": {
+   "es": "Cada iPhone y navegador con esta cuenta tendrá que volver a iniciar sesión."
+  },
+  "Every iPhone and browser will need to sign in again.": {
+   "es": "Cada iPhone y navegador tendrá que volver a iniciar sesión."
+  },
+  "Everything stays only on this iPhone. You can sign in later from Settings.": {
+   "es": "Todo se queda solo en este iPhone. Puedes iniciar sesión después desde Ajustes."
+  },
+  "Free plan": {
+   "es": "Plan gratuito"
+  },
+  "Have an invitation code?": {
+   "es": "¿Tienes un código de invitación?"
+  },
+  "Invitation code": {
+   "es": "Código de invitación"
+  },
+  "Invitation code (new accounts)": {
+   "es": "Código de invitación (cuentas nuevas)"
+  },
+  "Invite me a coffee": {
+   "es": "Invítame un café"
+  },
+  "Keep this iPhone's data": {
+   "es": "Conservar los datos de este iPhone"
+  },
+  "Keepwell accounts are invite-only for now.": {
+   "es": "Por ahora las cuentas de Keepwell son solo por invitación."
+  },
+  "Keepwell accounts are invite-only for now. Enter an invitation code first.": {
+   "es": "Las cuentas de Keepwell son solo por invitación por ahora. Escribe primero un código de invitación."
+  },
+  "Last synced %@": {
+   "es": "Sincronizado %@"
+  },
+  "Loading your data…": {
+   "es": "Cargando tus datos…"
+  },
+  "New accounts need one. Then sign in with Apple or a passkey.": {
+   "es": "Las cuentas nuevas lo necesitan. Luego inicia sesión con Apple o una passkey."
+  },
+  "No purchases to restore for this Apple ID.": {
+   "es": "No hay compras que restaurar para este Apple ID."
+  },
+  "Off": {
+   "es": "Desactivada"
+  },
+  "Offline": {
+   "es": "Sin conexión"
+  },
+  "Offline. Changes sync when you're back online.": {
+   "es": "Sin conexión. Los cambios se sincronizan al volver a estar en línea."
+  },
+  "Purchase restored.": {
+   "es": "Compra restaurada."
+  },
+  "Replace": {
+   "es": "Reemplazar"
+  },
+  "Replace your account's data?": {
+   "es": "¿Reemplazar los datos de tu cuenta?"
+  },
+  "Replaces what's on this iPhone with the data in your Keepwell account.": {
+   "es": "Reemplaza lo que hay en este iPhone con los datos de tu cuenta de Keepwell."
+  },
+  "Replaces your account's data, on every device, with what's here.": {
+   "es": "Reemplaza los datos de tu cuenta, en todos tus dispositivos, con lo que hay aquí."
+  },
+  "Restore purchases": {
+   "es": "Restaurar compras"
+  },
+  "Sign in and your accounts and movements come back as they were.": {
+   "es": "Inicia sesión y tus cuentas y movimientos vuelven tal como estaban."
+  },
+  "Sign in at the top to sync with Keepwell on the web.": {
+   "es": "Inicia sesión arriba para sincronizar con Keepwell en la web."
+  },
+  "Sign in to sync": {
+   "es": "Inicia sesión para sincronizar"
+  },
+  "Sign out": {
+   "es": "Cerrar sesión"
+  },
+  "Sign out everywhere": {
+   "es": "Cerrar en todos"
+  },
+  "Sign out on all devices": {
+   "es": "Cerrar sesión en todos los dispositivos"
+  },
+  "Sign out on all devices?": {
+   "es": "¿Cerrar sesión en todos los dispositivos?"
+  },
+  "Signed in as": {
+   "es": "Sesión iniciada como"
+  },
+  "Signing in…": {
+   "es": "Iniciando sesión…"
+  },
+  "Support Keepwell": {
+   "es": "Apoya a Keepwell"
+  },
+  "Supporter": {
+   "es": "Colaborador"
+  },
+  "Sync": {
+   "es": "Sincronización"
+  },
+  "Sync is included during early access. A one-time coffee keeps it, and lets Claude read and record your finances.": {
+   "es": "La sincronización está incluida durante el acceso anticipado. Un café, una sola vez, la mantiene y deja que Claude lea y registre tus finanzas."
+  },
+  "Sync is paused until you choose.": {
+   "es": "La sincronización está en pausa hasta que elijas."
+  },
+  "Sync isn't included in your plan. Everything keeps working on this iPhone.": {
+   "es": "La sincronización no está incluida en tu plan. Todo sigue funcionando en este iPhone."
+  },
+  "Sync now": {
+   "es": "Sincronizar ahora"
+  },
+  "Sync off": {
+   "es": "Sincronización desactivada"
+  },
+  "Sync paused": {
+   "es": "Sincronización en pausa"
+  },
+  "Sync with the web and Claude come with a one-time coffee. Everything else stays free and works on this iPhone.": {
+   "es": "La sincronización con la web y Claude vienen con un café, una sola vez. Todo lo demás sigue siendo gratis y funciona en este iPhone."
+  },
+  "Synced": {
+   "es": "Sincronizado"
+  },
+  "Syncing": {
+   "es": "Sincronizando"
+  },
+  "Syncing…": {
+   "es": "Sincronizando…"
+  },
+  "Thank you for the coffee. Sync and Claude are on.": {
+   "es": "Gracias por el café. La sincronización y Claude ya están activos."
+  },
+  "That invitation is not valid. It may have expired or been used.": {
+   "es": "Esa invitación no es válida. Puede que haya caducado o ya se haya usado."
+  },
+  "The App Store couldn't complete the purchase. Try again.": {
+   "es": "El App Store no pudo completar la compra. Inténtalo de nuevo."
+  },
+  "The coffee isn't available in the App Store right now. Check your connection and try again later.": {
+   "es": "El café no está disponible en el App Store en este momento. Revisa tu conexión e inténtalo más tarde."
+  },
+  "This iPhone and your account have different data": {
+   "es": "Este iPhone y tu cuenta tienen datos distintos"
+  },
+  "This purchase is already linked to another Keepwell account.": {
+   "es": "Esta compra ya está vinculada a otra cuenta de Keepwell."
+  },
+  "Use a passkey": {
+   "es": "Usar una passkey"
+  },
+  "Use without an account": {
+   "es": "Usar sin cuenta"
+  },
+  "Use your account's data": {
+   "es": "Usar los datos de tu cuenta"
+  },
+  "You were signed out. Sign in again to keep syncing.": {
+   "es": "Se cerró tu sesión. Vuelve a iniciarla para seguir sincronizando."
+  },
+  "You're signed out everywhere at once and your synced data is erased from Keepwell's servers. Backups keep it up to 35 more days. What's on this iPhone stays here.": {
+   "es": "Se cierra tu sesión en todos lados al instante y tus datos sincronizados se borran de los servidores de Keepwell. Las copias de seguridad los conservan hasta 35 días más. Lo que hay en este iPhone se queda aquí."
+  },
+  "Your data is only on this iPhone. Sign in to keep it in sync with Keepwell on the web.": {
+   "es": "Tus datos están solo en este iPhone. Inicia sesión para mantenerlos sincronizados con Keepwell en la web."
+  },
+  "or": {
+   "es": "o"
   }
  }
 }
