@@ -115,10 +115,13 @@ export function PlatformTabs({
         ))}
       </TabsList>
       {tabs.map((tab) => (
+        // Kept mounted (hidden) so "Copy page" includes every platform, not only the open tab.
         <TabsContent
           key={tab.id}
           value={tab.id}
-          className="flex flex-col gap-4"
+          keepMounted
+          data-tab-label={tab.label}
+          className="flex flex-col gap-4 data-hidden:hidden"
         >
           {tab.body}
         </TabsContent>
@@ -182,7 +185,10 @@ export function C({ children }: { children: ReactNode }) {
 /** An example prompt, the way it is typed into Claude. */
 export function Prompt({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-xl border bg-card px-4 py-3 type-body text-foreground before:mr-2 before:text-text-faint before:content-['›']">
+    <p
+      data-md-prompt
+      className="rounded-xl border bg-card px-4 py-3 type-body text-foreground before:mr-2 before:text-text-faint before:content-['›']"
+    >
       {children}
     </p>
   )

@@ -2,7 +2,7 @@
 
 import { ArrowLeftIcon, ArrowRightIcon, MenuIcon } from "lucide-react"
 import Link from "next/link"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { KWLogo } from "@/components/kw/kw-icon"
@@ -17,6 +17,7 @@ import { useI18n } from "@/lib/i18n"
 import { cn } from "cn"
 
 import { docsPages, type DocPage, type Lang } from "./content"
+import { CopyPage } from "./copy-page"
 
 const UI = {
   en: {
@@ -50,13 +51,15 @@ export function DocsShell({ slug }: { slug: string }) {
   const { locale, setLocale } = useI18n()
   const router = useRouter()
   const pathname = usePathname()
-  const requested = useSearchParams().get("lang")
-  const lang: Lang =
-    requested === "es" || requested === "en"
-      ? requested
-      : locale.startsWith("es")
-        ? "es"
-        : "en"
+  // ?lang= is read after hydration, so the server renders the whole page (in English) for crawlers
+  // and assistants that fetch it, instead of an empty shell.
+  const [requested, setRequested] = useState<Lang>()
+  useEffect(() => {
+    const value = new URLSearchParams(location.search).get("lang")
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the query is only known in the browser
+    if (value === "es" || value === "en") setRequested(value)
+  }, [pathname])
+  const lang: Lang = requested ?? (locale.startsWith("es") ? "es" : "en")
   const ui = UI[lang]
   const pages = docsPages(lang, {
     mcpUrl: API_URL ? `${API_URL}/mcp` : undefined,
@@ -72,7 +75,10 @@ export function DocsShell({ slug }: { slug: string }) {
   const pickLanguage = (code: Lang) => {
     setLocale(code)
     // Drop ?lang so the choice above, kept by the app, applies to every page.
-    if (requested) router.replace(pathname)
+    if (requested) {
+      setRequested(undefined)
+      router.replace(pathname)
+    }
   }
 
   return (
@@ -138,11 +144,19 @@ export function DocsShell({ slug }: { slug: string }) {
         </aside>
 
         <main className="min-w-0 flex-1 py-8 lg:py-10">
-          <article className="mx-auto flex max-w-3xl flex-col gap-10">
+          <article
+            id="doc-article"
+            className="mx-auto flex max-w-3xl flex-col gap-10"
+          >
             <header className="flex flex-col gap-3 border-b pb-8">
-              <p className="type-label text-brand-600 dark:text-brand-500">
-                {page.group}
-              </p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="type-label text-brand-600 dark:text-brand-500">
+                  {page.group}
+                </p>
+                <div data-md-skip>
+                  <CopyPage lang={lang} />
+                </div>
+              </div>
               <h1 className="type-title">{page.title}</h1>
               <p className="type-heading font-normal text-text-secondary">
                 {page.description}
