@@ -268,11 +268,6 @@ function AccountForm({
     if (form.name.trim() === "")
       next.name = t.in("accounts", "Write a name for the account.")
     if (!balance) next.balance = t.in("addcard", "Check the balance.")
-    if (isBank && form.lastFour !== "" && form.lastFour.length !== 4)
-      next.lastFour = t.in(
-        "onboarding",
-        "Enter all 4 digits or leave it empty."
-      )
     setErrors(next)
     if (Object.keys(next).length > 0 || !balance) return
     setBusy(true)
@@ -285,7 +280,7 @@ function AccountForm({
         ...(isBank
           ? {
               debitCard: {
-                ...(form.lastFour ? { lastFour: form.lastFour } : {}),
+                lastFour: form.lastFour,
                 ...(form.network ? { network: form.network } : {}),
                 color: form.color,
               },
@@ -434,7 +429,13 @@ function AccountForm({
           {errors.form}
         </p>
       ) : null}
-      <KWButton type="submit" size="large" fill disabled={busy}>
+      <KWButton
+        type="submit"
+        size="large"
+        fill
+        // Like iOS AddCard: a bank account comes with its debit card, so its 4 digits are required.
+        disabled={busy || (isBank && form.lastFour.length !== 4)}
+      >
         {isBank ? t.in("addcard", "Add card") : t.in("addcard", "Add")}
       </KWButton>
     </form>
