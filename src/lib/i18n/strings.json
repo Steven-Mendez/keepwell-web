@@ -1754,6 +1754,9 @@
   "All set, %@": {
    "es": "Todo listo, %@"
   },
+  "All your money, in one place": {
+   "es": "Todo tu dinero, en un solo lugar"
+  },
   "Allow notifications": {
    "es": "Permitir avisos"
   },
@@ -1847,14 +1850,14 @@
   "It defaults to 1. Change it whenever you want; each transaction keeps the rate from when you logged it.": {
    "es": "Por defecto es 1. Cámbiala cuando quieras; cada movimiento guarda la tasa del momento en que lo anotaste."
   },
+  "Keep clear accounts in one or more currencies. Log expenses, transfers and drafts at your own pace.": {
+   "es": "Lleva tus cuentas claras en una o más monedas. Anota gastos, transferencias y borradores a tu propio ritmo."
+  },
   "Keepwell passcode": {
    "es": "Código de Keepwell"
   },
   "Last 4 digits": {
    "es": "Últimos 4 dígitos"
-  },
-  "Log expenses, income and transfers. Cards, cash and drafts to confirm later.": {
-   "es": "Anota gastos, ingresos y transferencias. Tarjetas, efectivo y borradores para confirmar después."
   },
   "Log first expense": {
    "es": "Anotar primer gasto"
@@ -1978,9 +1981,6 @@
   },
   "Your first name": {
    "es": "Tu nombre"
-  },
-  "Your money, clear, in one or two currencies": {
-   "es": "Tu dinero claro, en una o dos monedas"
   },
   "Your name": {
    "es": "Tu nombre"
