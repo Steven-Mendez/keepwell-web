@@ -19,6 +19,7 @@ import { useT } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
 import { AddAccountDialog } from "../accounts/add-account-dialog"
+import { NotificationsBell } from "../notifications/notifications-bell"
 import { MovementDetail } from "../transactions/movement-detail"
 import { MovementEditor } from "../movement-editor/movement-editor"
 import { RuleEditor } from "../recurring/rule-editor"
@@ -29,6 +30,7 @@ import { KeyboardShortcuts } from "./keyboard-shortcuts"
 import { SyncHost } from "./sync-host"
 import {
   MAIN_NAV,
+  NOTIFICATIONS_NAV,
   ONBOARDING_PATH,
   SECTION_NAV,
   SETTINGS_NAV,
@@ -115,7 +117,7 @@ function TopBar() {
   const [isScrolled, setScrolled] = useState(false)
   const section = pathname.startsWith("/settings/categories")
     ? { ns: "settings" as const, title: "Categories" }
-    : ([...MAIN_NAV, ...SECTION_NAV, SETTINGS_NAV]
+    : ([...MAIN_NAV, ...SECTION_NAV, SETTINGS_NAV, NOTIFICATIONS_NAV]
         .filter((item) => item.href !== "/")
         .find((item) => pathname.startsWith(item.href)) ?? MAIN_NAV[0]!)
 
@@ -162,6 +164,8 @@ function TopBar() {
         >
           {t.in(section.ns, section.title)}
         </p>
+        {/* With the sidebar hidden (or on a phone) the bell leaves its header for here, by search. */}
+        {sidebarHidden ? <NotificationsBell size={40} /> : null}
         {sidebarHidden ? (
           <KWCircleButton
             icon="search"

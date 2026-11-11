@@ -111,12 +111,16 @@ export function homeReminders(
           id: `payment-${account.id}`,
           icon: "creditCard",
           tone: "negative",
-          title: t.in(
-            "home",
-            "%@: payment in %lld days",
-            display(account),
-            days
-          ),
+          // "Payment in 0 days" reads like a glitch on the last day to pay.
+          title:
+            days === 0
+              ? t.in("home", "%@: due today", display(account))
+              : t.in(
+                  "home",
+                  "%@: payment in %lld days",
+                  display(account),
+                  days
+                ),
           body: t.in(
             "home",
             "Pay before day %lld so it doesn't generate interest.",
