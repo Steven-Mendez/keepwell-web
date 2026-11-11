@@ -44,6 +44,8 @@ import {
   Segmented,
 } from "./form-parts"
 import {
+  creditAddedSummary,
+  hasLastFour,
   initialCreditForm,
   validateCreditForm,
   type CreditFormErrors,
@@ -58,12 +60,15 @@ export function AddAccountDialog() {
   const t = useT()
   const { addAccount: request, closeAddAccount } = useAppActions()
   const ledger = useLedger()
+  const router = useRouter()
   const [chosen, setChosen] = useState<Kind>()
+  const [added, setAdded] = useState<AddedCard>()
   const [lastRequest, setLastRequest] = useState(request)
   // A new request starts on what it asks for, or on the menu.
   if (request !== lastRequest) {
     setLastRequest(request)
     setChosen(request?.kind)
+    setAdded(undefined)
   }
   const currencies = ledger?.settings.currencies ?? {
     principal: "USD",
@@ -77,7 +82,20 @@ export function AddAccountDialog() {
       onOpenChange={(open) => !open && closeAddAccount()}
     >
       <DialogContent className="max-h-[calc(100svh-2rem)] gap-5 overflow-y-auto rounded-2xl bg-nav p-6 ring-divider sm:max-w-lg">
-        {kind === undefined ? (
+        {added ? (
+          <CardAdded
+            t={t}
+            added={added}
+            onView={() => {
+              closeAddAccount()
+              router.push(`/accounts?id=${added.accountId}`)
+            }}
+            onAddAnother={() => {
+              setAdded(undefined)
+              setChosen(undefined)
+            }}
+          />
+        ) : kind === undefined ? (
           <>
             <DialogHeader>
               <DialogTitle className="type-title-sm text-foreground">
@@ -140,7 +158,10 @@ export function AddAccountDialog() {
               <CreditForm
                 t={t}
                 currencies={currencies}
-                onDone={closeAddAccount}
+                reminderDays={
+                  ledger?.settings.paymentReminderDaysBefore ?? 3
+                }
+                onAdded={setAdded}
               />
             ) : (
               <AccountForm
@@ -423,17 +444,20 @@ function AccountForm({
 function CreditForm({
   t,
   currencies,
-  onDone,
+  reminderDays,
+  onAdded,
 }: {
   t: Translator
   currencies: CurrencySettings
-  onDone: () => void
+  reminderDays: number
+  onAdded: (added: AddedCard) => void
 }) {
   const owner = usePreferredName()
   const { form, setForm, errors, busy, submit } = useCreditForm(
     t,
     currencies,
-    onDone
+    reminderDays,
+    onAdded
   )
   const debtCurrency = creditDebtCurrency(form, currencies)
 
@@ -468,10 +492,11 @@ function CreditForm({
         <LabeledField
           id="credit-digits"
           label={t.in("addcard", "Last 4 digits")}
-          error={errors.lastFour}
         >
           <Input
             id="credit-digits"
+            required
+            maxLength={4}
             inputMode="numeric"
             placeholder="0000"
             className={`${KW_INPUT} tracking-widest tabular-nums`}
@@ -554,10 +579,71 @@ function CreditForm({
           {errors.form}
         </p>
       ) : null}
-      <KWButton type="submit" size="large" fill disabled={busy}>
+      <KWButton
+        type="submit"
+        size="large"
+        fill
+        disabled={busy || !hasLastFour(form)}
+      >
         {t.in("addcard", "Add card")}
       </KWButton>
     </form>
+  )
+}
+
+/** What the "Card added" step shows (iOS CardAddedView). */
+type AddedCard = {
+  accountId: string
+  color: CardColor
+  network: CardNetwork
+  bank: string
+  lastFour: string
+  summary: string
+}
+
+/** Step 4 · Added: the card, what was set up, "View card" and "Add another". */
+function CardAdded({
+  t,
+  added,
+  onView,
+  onAddAnother,
+}: {
+  t: Translator
+  added: AddedCard
+  onView: () => void
+  onAddAnother: () => void
+}) {
+  const owner = usePreferredName()
+  return (
+    <div className="flex flex-col items-center gap-5 text-center">
+      <div className="w-full max-w-xs">
+        <CardArt
+          color={added.color}
+          bank={added.bank || t.in("addcard", "Bank")}
+          network={added.network}
+          lastFour={added.lastFour}
+          kind="creditHolder"
+          kindLabel={cardKindLabel(t, "creditHolder")}
+          holder={owner?.toLocaleUpperCase(t.locale)}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <DialogTitle className="type-title-sm text-foreground">
+          {t.in("addcard", "Card added")}
+        </DialogTitle>
+        <DialogDescription className="type-body text-muted-foreground">
+          {added.summary}
+        </DialogDescription>
+      </div>
+      <div className="flex w-full flex-col gap-2">
+        <KWButton size="large" fill onClick={onView}>
+          {t.in("addcard", "View card")}
+        </KWButton>
+        <KWButton variant="plain" fill onClick={onAddAnother}>
+          {t.in("addcard", "Add another")}
+        </KWButton>
+      </div>
+    </div>
   )
 }
 
@@ -575,9 +661,9 @@ function creditDebtCurrency(
 function useCreditForm(
   t: Translator,
   currencies: CurrencySettings,
-  onDone: () => void
+  reminderDays: number,
+  onAdded: (added: AddedCard) => void
 ) {
-  const afterAdding = useAfterAdding()
   const [form, setForm] = useState(() => initialCreditForm(currencies.second))
   const [errors, setErrors] = useState<CreditFormErrors>({})
   const [busy, setBusy] = useState(false)
@@ -590,7 +676,14 @@ function useCreditForm(
     setBusy(true)
     try {
       const { account } = await addCreditCard(ledgerStore, draft)
-      afterAdding(account.id, onDone, t.in("addcard", "Card added"))
+      onAdded({
+        accountId: account.id,
+        color: form.color,
+        network: form.network,
+        bank: form.bank,
+        lastFour: form.lastFour,
+        summary: creditAddedSummary(t, form, currencies, reminderDays),
+      })
     } catch (error) {
       setErrors({
         form: domainErrorText(
