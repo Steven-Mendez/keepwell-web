@@ -1,6 +1,6 @@
 "use client"
 
-import { PanelLeftIcon, TagsIcon } from "lucide-react"
+import { BookOpenIcon, PanelLeftIcon, TagsIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import type { ComponentProps, ReactNode } from "react"
@@ -467,6 +467,10 @@ function ProfileMenu({ onNavigate }: { onNavigate: () => void }) {
             <KWIcon name={SETTINGS_NAV.kwIcon} size={16} />
             {t.in(SETTINGS_NAV.ns, SETTINGS_NAV.title)}
             <DropdownMenuShortcut>,</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem className={item} onClick={() => go("/docs/mcp")}>
+            <BookOpenIcon className="size-4" strokeWidth={2} aria-hidden />
+            {t.in("web", "Connect Claude")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator className="my-1.5" />
