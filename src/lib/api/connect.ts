@@ -56,5 +56,7 @@ export const SCOPE_TEXT: Record<string, string> = {
   read: "See your accounts, balances, movements, budgets and upcoming payments",
   write:
     "Record movements and recurring payments, which wait for you to confirm them",
+  manage:
+    "Do what you can do in the app: create, edit and delete accounts, movements, categories, budgets, goals, loans and debts, and change currencies. Deletes can be undone for 30 days",
   offline_access: "Stay connected until you disconnect it",
 }
