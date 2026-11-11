@@ -52,7 +52,7 @@ export function EditorReview({
       ) : null}
       {existing && form.rate.second !== form.rate.principal ? (
         <p className="type-caption-sm text-muted-foreground">
-          {t.in("web", "Edits keep the rate this transaction was logged with.")}
+          {t.in("createtransaction", "Edits keep the rate this transaction was logged with.")}
         </p>
       ) : null}
 
@@ -125,7 +125,7 @@ function ReceiptTicket({ editor }: ReviewProps) {
 function RepeatField({ editor }: ReviewProps) {
   const { t } = useCreateTransactionT()
   const options: { value: RepeatChoice; label: string }[] = [
-    { value: "none", label: t.in("web", "None") },
+    { value: "none", label: t.in("createtransaction", "repeat.none") },
     ...(["weekly", "monthly", "yearly"] as const).map((frequency) => ({
       value: frequency,
       label: frequencyText(t, frequency, 1),
@@ -133,7 +133,7 @@ function RepeatField({ editor }: ReviewProps) {
   ]
   return (
     <div className="flex flex-col gap-1.5">
-      <FieldLabel htmlFor="editor-repeat">{t.in("web", "Repeat")}</FieldLabel>
+      <FieldLabel htmlFor="editor-repeat">{t.in("createtransaction", "Repeat")}</FieldLabel>
       <OptionSelect
         id="editor-repeat"
         className="rounded-xl border-0 bg-secondary px-3.5 type-body dark:bg-secondary"
@@ -141,14 +141,6 @@ function RepeatField({ editor }: ReviewProps) {
         options={options}
         onChange={editor.setRepeat}
       />
-      {editor.repeat === "none" ? null : (
-        <p className="type-caption-sm text-muted-foreground">
-          {t.in(
-            "web",
-            "The next ones wait as drafts on their date for you to confirm."
-          )}
-        </p>
-      )}
     </div>
   )
 }

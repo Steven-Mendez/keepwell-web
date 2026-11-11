@@ -24,7 +24,7 @@ export function targetMonthText(t: Translator, month: TargetMonth): string {
   })
 }
 
-export type GoalTone = "positive" | "negative" | "neutral"
+export type GoalTone = "positive" | "pending" | "neutral"
 
 /** The one line under a goal's bar: what to set aside, that it's done, or that the date passed. */
 export function goalStatus(
@@ -35,7 +35,7 @@ export function goalStatus(
 ): { text: string; tone: GoalTone } {
   const remaining = money(progress.remaining.toFixed())
   if (progress.isReached) return { text: t.in("goals", "Goal reached"), tone: "positive" }
-  if (progress.isOverdue) return { text: t.in("goals", "The date passed with %@ to go", remaining), tone: "negative" }
+  if (progress.isOverdue) return { text: t.in("goals", "The date passed with %@ to go", remaining), tone: "pending" }
   if (progress.monthlyAmount && goal.targetMonth) {
     const monthly = money(progress.monthlyAmount.toFixed())
     return progress.monthsLeft === 1

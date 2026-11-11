@@ -9,35 +9,16 @@ export type WebStrings = Record<
 >
 
 export const WEB_STRINGS_CORE: WebStrings = {
-  "Keyboard shortcuts": { es: "Atajos de teclado" },
-  "Hide balances": { es: "Ocultar saldos" },
-  "Show balances": { es: "Mostrar saldos" },
+  "More actions": { es: "Más acciones" },
   "Search or jump to…": { es: "Busca o ve a…" },
   "No results.": { es: "Sin resultados." },
-  "Go to": { es: "Ir a" },
-  Actions: { es: "Acciones" },
-  "New expense": { es: "Nuevo gasto" },
-  "New income": { es: "Nuevo ingreso" },
-  "New transfer": { es: "Nueva transferencia" },
-  "Command palette": { es: "Paleta de comandos" },
-  "Show shortcuts": { es: "Ver atajos" },
   "Toggle sidebar": { es: "Mostrar u ocultar la barra lateral" },
-  "Focus search": { es: "Buscar" },
   "Close panel": { es: "Cerrar panel" },
   "Next or previous movement": { es: "Movimiento siguiente o anterior" },
-  "Money in": { es: "Entradas" },
-  "Money out": { es: "Salidas" },
-  Net: { es: "Neto" },
-  Movements: { es: "Movimientos" },
   "column.description": { en: "Description", es: "Descripción" },
   "column.category": { en: "Category", es: "Categoría" },
   "column.account": { en: "Account", es: "Cuenta" },
   "column.amount": { en: "Amount", es: "Monto" },
-  Navigation: { es: "Navegación" },
-  "then %@": { es: "luego %@" },
-  "Install app": { es: "Instalar app" },
-  "Works offline": { es: "Funciona sin conexión" },
-  "On this device": { es: "En este dispositivo" },
   "Stored in this browser": { es: "Guardado en este navegador" },
   "welcome.preview.rent": { en: "Rent", es: "Alquiler" },
   "Kept by the browser": { es: "El navegador lo conserva" },
@@ -57,13 +38,6 @@ export const WEB_STRINGS_CORE: WebStrings = {
     {
       es: "Tus cuentas, tarjetas y movimientos se borran de este navegador. No se puede deshacer.",
     },
-  "Edit transaction": { es: "Editar movimiento" },
-  "Save changes": { es: "Guardar cambios" },
-  "Transaction details": { es: "Detalle del movimiento" },
-  Edit: { es: "Editar" },
-  Status: { es: "Estado" },
-  Planned: { es: "Previsto" },
-  "Rate stored": { es: "Tasa guardada" },
   Back: { es: "Atrás" },
   /** iOS takes these from the system; the web needs them spelled out. */
   Cancel: { es: "Cancelar" },
@@ -72,7 +46,6 @@ export const WEB_STRINGS_CORE: WebStrings = {
     {
       es: "Lo usaremos para saludarte y mostrarlo en tus tarjetas. Solo se guarda en este navegador.",
     },
-  OK: { es: "OK" },
 }
 
 import { WEB_STRINGS_SYNC } from "./web-strings.sync"

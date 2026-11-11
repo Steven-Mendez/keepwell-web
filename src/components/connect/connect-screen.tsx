@@ -103,8 +103,8 @@ export function ConnectSignIn() {
               (e: unknown) =>
                 setError(
                   e instanceof ApiError && e.code === "NOT_INVITED"
-                    ? t.in("web", "Keepwell accounts are invite-only for now.")
-                    : t.in("web", "Couldn't reach Keepwell. Try again.")
+                    ? t.in("cloudaccount", "Keepwell accounts are invite-only for now.")
+                    : t.in("cloudaccount", "Couldn't reach Keepwell. Try again.")
                 )
             )
           }
@@ -121,11 +121,11 @@ export function ConnectSignIn() {
               void signInWithPasskey(oauthQuery()).then(
                 () => window.location.reload(),
                 () =>
-                  setError(t.in("web", "Couldn't reach Keepwell. Try again."))
+                  setError(t.in("cloudaccount", "Couldn't reach Keepwell. Try again."))
               )
             }
           >
-            {t.in("web", "Use a passkey")}
+            {t.in("cloudaccount", "Use a passkey")}
           </KWButton>
         ) : null}
         {error ? (

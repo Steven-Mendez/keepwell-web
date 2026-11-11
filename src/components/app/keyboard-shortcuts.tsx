@@ -33,8 +33,8 @@ function dialogIsOpen(): boolean {
 }
 
 /**
- * Desktop keyboard navigation: ⌘K palette, N new movement (E/I/T by type), 1–4 and "g" then a
- * letter for the sections (G R for Recurring, G G for Goals, G D for Debts), "," settings, "/" search, "?" this list.
+ * Desktop keyboard navigation: ⌘K palette, N new movement (E/I/T by type), 1–5 and "g" then a
+ * letter for the sections (G P for Plan, G R for Recurring, G G for Goals, G D for Debts), "," settings, "/" search, "?" this list.
  */
 export function KeyboardShortcuts() {
   const t = useT()
@@ -102,6 +102,7 @@ export function KeyboardShortcuts() {
         case "2":
         case "3":
         case "4":
+        case "5":
           go(MAIN_NAV[Number(key) - 1]!.href)
           return
         case ",":
@@ -127,12 +128,12 @@ export function KeyboardShortcuts() {
   }, [openEditor, router, setPaletteOpen, setShortcutsOpen])
 
   const rows: [string[], string][] = [
-    [["⌘", "K"], t.in("web", "Command palette")],
+    [["⌘", "K"], t.in("sharedpresentation", "Command palette")],
     [["N"], t.in("home", "Log transaction")],
-    [["E"], t.in("web", "New expense")],
-    [["I"], t.in("web", "New income")],
-    [["T"], t.in("web", "New transfer")],
-    [["/"], t.in("web", "Focus search")],
+    [["E"], t.in("sharedpresentation", "New expense")],
+    [["I"], t.in("sharedpresentation", "New income")],
+    [["T"], t.in("sharedpresentation", "New transfer")],
+    [["/"], t.in("sharedpresentation", "Focus search")],
     [["J", "K"], t.in("web", "Next or previous movement")],
     ...MAIN_NAV.map((item, index): [string[], string] => [
       [String(index + 1)],
@@ -143,7 +144,7 @@ export function KeyboardShortcuts() {
       t.in(item.ns, item.title),
     ]),
     [["⌘", "B"], t.in("web", "Toggle sidebar")],
-    [["?"], t.in("web", "Show shortcuts")],
+    [["?"], t.in("sharedpresentation", "Show shortcuts")],
     [["Esc"], t.in("web", "Close panel")],
   ]
 
@@ -151,7 +152,7 @@ export function KeyboardShortcuts() {
     <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen}>
       <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t.in("web", "Keyboard shortcuts")}</DialogTitle>
+          <DialogTitle>{t.in("sharedpresentation", "Keyboard shortcuts")}</DialogTitle>
         </DialogHeader>
         <ul className="grid gap-1">
           {rows.map(([keys, label]) => (
