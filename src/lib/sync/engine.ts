@@ -95,20 +95,26 @@ const SNAPSHOT_ORDER: readonly SyncEntity[] = ["settings", ...SYNC_ENTITIES.filt
 
 /** Every row the account holds for each entity (tombstones too), and the sequence they reflect. */
 async function cloudRows(transport: SyncTransport, entities: readonly SyncEntity[]): Promise<{ rows: Map<SyncEntity, Row[]>; serverSeq: number }> {
-  const rows = new Map<SyncEntity, Row[]>()
-  let serverSeq = Infinity
-  for (const entity of entities) {
-    const list: Row[] = []
-    let after = ""
-    for (;;) {
-      const page = await transport.snapshot(entity, after)
-      serverSeq = Math.min(serverSeq, page.server_seq)
-      list.push(...page.rows)
-      if (!page.next_after) break
-      after = page.next_after
-    }
-    rows.set(entity, list)
-  }
+  // Entities in parallel (each still pages in order): one round trip per entity one after another
+  // made the first sign-in wait seconds for a handful of small requests.
+  const fetched = await Promise.all(
+    entities.map(async (entity) => {
+      const list: Row[] = []
+      let serverSeq = Infinity
+      let after = ""
+      for (;;) {
+        const page = await transport.snapshot(entity, after)
+        serverSeq = Math.min(serverSeq, page.server_seq)
+        list.push(...page.rows)
+        if (!page.next_after) break
+        after = page.next_after
+      }
+      return { entity, list, serverSeq }
+    }),
+  )
+  // The map keeps the requested order (settings first where the caller asks for it).
+  const rows = new Map<SyncEntity, Row[]>(fetched.map(({ entity, list }) => [entity, list]))
+  const serverSeq = Math.min(...fetched.map((entry) => entry.serverSeq))
   return { rows, serverSeq: serverSeq === Infinity ? 0 : serverSeq }
 }
 
