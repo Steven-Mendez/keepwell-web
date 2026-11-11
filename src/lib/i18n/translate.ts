@@ -32,6 +32,7 @@ const SEARCH_ORDER: readonly string[] = [
   "designsystem",
   "lock",
   "widgets",
+  "plan",
   "web",
 ]
 

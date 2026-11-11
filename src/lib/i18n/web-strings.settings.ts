@@ -3,7 +3,6 @@ import type { WebStrings } from "./web-strings"
 /** Web-only text for the settings, summary and categories screens (see web-strings.ts). */
 export const WEB_STRINGS_SETTINGS: WebStrings = {
   Storage: { es: "Almacenamiento" },
-  None: { es: "Ninguna" },
   "Used by your accounts, so it can't change here.": {
     es: "La usan tus cuentas, así que no se puede cambiar aquí.",
   },

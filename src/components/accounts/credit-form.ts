@@ -19,29 +19,64 @@ export type CreditFormValues = {
 }
 
 export type CreditFormErrors = {
-  lastFour?: string
+  /** Required: no text, as iOS only keeps Add disabled until there are 4 digits. */
+  lastFour?: boolean
   principalDebt?: string
   secondDebt?: string
   limit?: string
   form?: string
 }
 
-/** A blank form; with a second currency the debt starts as dual. */
+/** A blank form as iOS starts it: a Mastercard, debts at 0.00, dual with a second currency. */
 export function initialCreditForm(
   second: string | undefined
 ): CreditFormValues {
   return {
     bank: "",
     lastFour: "",
-    network: "visa",
+    network: "mastercard",
     color: "azul",
     debtMode: second ? "dual" : "principal",
-    principalDebt: "",
-    secondDebt: "",
+    principalDebt: "0.00",
+    secondDebt: "0.00",
     limit: "",
     cutoff: "",
     due: "",
   }
+}
+
+/** The last four digits are required: exactly 4 (iOS `isLastFourValid`). */
+export const hasLastFour = (form: Pick<CreditFormValues, "lastFour">) =>
+  /^\d{4}$/.test(form.lastFour)
+
+/** The sentence under "Card added" for a credit card (iOS `AddCardViewModel.summary`). */
+export function creditAddedSummary(
+  t: Translator,
+  form: CreditFormValues,
+  currencies: { principal: string; second?: string | undefined },
+  reminderDays: number
+): string {
+  const first = currencies.principal
+  const other = currencies.second ?? first
+  const mode = currencies.second ? form.debtMode : "principal"
+  const debt =
+    mode === "dual"
+      ? t.in("addcard", "Debt in %@ and %@", first, other)
+      : t.in("addcard", "Debt in %@", mode === "second" ? other : first)
+  const cutoff = Number(form.cutoff)
+  const due = Number(form.due)
+  // The cycle is optional: one sentence per combination of days set, as iOS AddCardViewModel.
+  const cycle =
+    form.cutoff && form.due
+      ? t.in("addcard", "%@ · cutoff day %lld · due day %lld.", debt, cutoff, due)
+      : form.cutoff
+        ? t.in("addcard", "%@ · cutoff day %lld.", debt, cutoff)
+        : form.due
+          ? t.in("addcard", "%@ · due day %lld.", debt, due)
+          : t.in("addcard", "%@.", debt)
+  return form.due
+    ? `${cycle} ${t.in("addcard", "We'll remind you %lld days before the due date.", reminderDays)}`
+    : cycle
 }
 
 /** An empty debt is no debt; anything else must parse. */
@@ -61,11 +96,7 @@ export function validateCreditForm(
     form.debtMode === "dual" ? debtAmount(form.secondDebt) : ZERO
   const limit = form.limit.trim() === "" ? undefined : parseAmount(form.limit)
   const errors: CreditFormErrors = {}
-  if (form.lastFour.length !== 4)
-    errors.lastFour = t.in(
-      "onboarding",
-      "Enter all 4 digits or leave it empty."
-    )
+  if (!hasLastFour(form)) errors.lastFour = true
   if (!principalDebt)
     errors.principalDebt = t.in("addcard", "Check the balance.")
   if (!secondDebt) errors.secondDebt = t.in("addcard", "Check the balance.")

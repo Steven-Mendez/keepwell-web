@@ -178,20 +178,20 @@ export function TrendKpis({ t, f, report }: CardProps) {
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
       <Tile
         label={
-          net.lt(0) ? t.in("web", "You overspent") : t.in("web", "You saved")
+          net.lt(0) ? t.in("summary", "You overspent") : t.in("summary", "You saved")
         }
         value={f.money(net, net.gt(0) ? "always" : "automatic")}
         tone={toneOf(cashFlow.income, cashFlow.expense)}
         caption={
           rate && rate.gt(0)
-            ? t.in("web", "You kept %@ of what came in", f.percent(rate))
+            ? t.in("summary", "You kept %@ of what came in", f.percent(rate))
             : undefined
         }
         detail={
           savedChange && !savedChange.isZero()
             ? {
                 text: t.in(
-                  "web",
+                  "summary",
                   savedChange.gt(0) ? "%@ more than %@" : "%@ less than %@",
                   f.money(savedChange.abs()),
                   rangeText(f, report.comparison)
@@ -214,18 +214,18 @@ export function TrendKpis({ t, f, report }: CardProps) {
         detail={versus(cashFlow.expense, comparisonCashFlow.expense, false)}
       />
       <Tile
-        label={t.in("web", "Average spending")}
+        label={t.in("summary", "Average spending")}
         value={
           report.averageExpense
             ? f.money(report.averageExpense)
             : f.money(cashFlow.expense)
         }
-        caption={t.in("web", "per month")}
+        caption={t.in("summary", "per month")}
         detail={
           report.averageIncome
             ? {
                 text: t.in(
-                  "web",
+                  "summary",
                   "Income averages %@",
                   f.money(report.averageIncome)
                 ),
@@ -314,7 +314,7 @@ export function MonthlyFlowCard({ t, f, report, className }: CardProps) {
   return (
     <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <CardHeader
-        title={t.in("web", "Month by month")}
+        title={t.in("summary", "Month by month")}
         caption={
           average
             ? t.in("summary", "Average %@ / month", f.money(average))
@@ -432,7 +432,7 @@ function MonthTable({
     result: f.money(savings(month), "always"),
   }))
   return (
-    <MonthFlowTable t={t} caption={t.in("web", "Month by month")} rows={rows} />
+    <MonthFlowTable t={t} caption={t.in("summary", "Month by month")} rows={rows} />
   )
 }
 
@@ -471,10 +471,10 @@ export function SavingsCard({ t, f, report, className }: CardProps) {
   return (
     <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <CardHeader
-        title={t.in("web", "Savings over time")}
+        title={t.in("summary", "Savings over time")}
         caption={
           total
-            ? t.in("web", "Running total of what you kept, month after month")
+            ? t.in("summary", "Running total of what you kept, month after month")
             : undefined
         }
         trailing={
@@ -525,7 +525,7 @@ export function SavingsCard({ t, f, report, className }: CardProps) {
                   title={row.name}
                   rows={[
                     {
-                      label: t.in("web", "Saved so far"),
+                      label: t.in("summary", "Saved so far"),
                       value: row.currentText,
                       swatch: solidLine("var(--chart-1)"),
                     },
@@ -793,7 +793,7 @@ function ChangeChip({
   if (!entry.previous.gt(0))
     return (
       <span className="rounded-full bg-secondary px-1.5 text-text-secondary">
-        {t.in("web", "New")}
+        {t.in("summary", "New")}
       </span>
     )
   const text = changePercent(f, entry.amount, entry.previous) ?? ""
@@ -803,7 +803,7 @@ function ChangeChip({
       className={cn(
         tone === "neutral" ? "text-muted-foreground" : toneClass[tone]
       )}
-      title={t.in("web", "Before: %@", f.money(entry.previous))}
+      title={t.in("summary", "Before: %@", f.money(entry.previous))}
     >
       {text}
     </span>
@@ -846,9 +846,9 @@ export function CategoryTrendsCard({
   return (
     <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <CardHeader
-        title={t.in("web", "Top categories over time")}
+        title={t.in("summary", "Top categories over time")}
         caption={t.in(
-          "web",
+          "summary",
           "Your largest spending categories, month by month"
         )}
         trailing={
@@ -953,7 +953,7 @@ export function HighlightsCard({
   if (report.bestMonth) {
     const net = savings(report.bestMonth)
     items.push({
-      label: t.in("web", "Best month"),
+      label: t.in("summary", "Best month"),
       value: f.month(report.bestMonth.month, "long", true, multiYear(report)),
       detail: f.money(net, "always"),
       tone: net.gt(0) ? "positive" : "neutral",
@@ -962,7 +962,7 @@ export function HighlightsCard({
   if (report.worstMonth) {
     const net = savings(report.worstMonth)
     items.push({
-      label: t.in("web", "Toughest month"),
+      label: t.in("summary", "Toughest month"),
       value: f.month(report.worstMonth.month, "long", true, multiYear(report)),
       detail: f.money(net, net.gt(0) ? "always" : "automatic"),
       tone: net.lt(0) ? "negative" : "neutral",
@@ -970,14 +970,14 @@ export function HighlightsCard({
   }
   if (active > 0) {
     items.push({
-      label: t.in("web", "Months you saved"),
-      value: t.in("web", "%lld of %lld", report.cashFlow.monthsSaved, active),
+      label: t.in("summary", "Months you saved"),
+      value: t.in("summary", "%lld of %lld", report.cashFlow.monthsSaved, active),
       tone: "neutral",
     })
   }
   if (report.biggestIncrease) {
     items.push({
-      label: t.in("web", "Grew the most"),
+      label: t.in("summary", "Grew the most"),
       value: nameOf(report.biggestIncrease.categoryId),
       detail: `+${f.money(report.biggestIncrease.change)}`,
       tone: "negative",
@@ -985,7 +985,7 @@ export function HighlightsCard({
   }
   if (report.biggestDecrease) {
     items.push({
-      label: t.in("web", "Dropped the most"),
+      label: t.in("summary", "Dropped the most"),
       value: nameOf(report.biggestDecrease.categoryId),
       detail: `−${f.money(report.biggestDecrease.change.abs())}`,
       tone: "positive",
@@ -995,12 +995,12 @@ export function HighlightsCard({
   return (
     <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <CardHeader
-        title={t.in("web", "Highlights")}
+        title={t.in("summary", "Highlights")}
         caption={
           report.hasComparison &&
           (report.biggestIncrease || report.biggestDecrease)
             ? t.in(
-                "web",
+                "summary",
                 "Spending changes %@",
                 comparisonLabel(t, f, report.comparison)
               )
@@ -1053,7 +1053,7 @@ export function YearsCard({
     const net = savings(year.cashFlow)
     return {
       label: year.isRunning
-        ? t.in("web", "%lld so far", year.year)
+        ? t.in("summary", "%lld so far", year.year)
         : String(year.year),
       income: year.cashFlow.income.toNumber(),
       expense: year.cashFlow.expense.toNumber(),
@@ -1073,9 +1073,9 @@ export function YearsCard({
   return (
     <Surface className={cn("flex min-h-0 flex-col gap-3 p-4", className)}>
       <CardHeader
-        title={t.in("web", "Year over year")}
+        title={t.in("summary", "Year over year")}
         caption={t.in(
-          "web",
+          "summary",
           "Every year you've logged, whatever range is picked above"
         )}
         trailing={
@@ -1086,7 +1086,7 @@ export function YearsCard({
                 label: t.in("summary", "Went out"),
                 swatch: dot("bg-negative"),
               },
-              { label: t.in("web", "Saved"), swatch: dot("bg-chart-1") },
+              { label: t.in("createtransaction", "Saved"), swatch: dot("bg-chart-1") },
             ]}
           />
         }
@@ -1173,7 +1173,7 @@ export function YearsCard({
         </BarChart>
       </ChartContainer>
       <table className="sr-only">
-        <caption>{t.in("web", "Year over year")}</caption>
+        <caption>{t.in("summary", "Year over year")}</caption>
         <tbody>
           {data.map((row) => (
             <tr key={row.label}>

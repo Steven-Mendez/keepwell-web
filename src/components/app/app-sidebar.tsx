@@ -45,7 +45,7 @@ import { accountName } from "@/lib/presentation/display"
 import { cn } from "@/lib/utils"
 
 import { useAppActions } from "./app-actions"
-import { MAIN_NAV, SECTION_NAV, SETTINGS_NAV, type NavItem } from "./navigation"
+import { MAIN_NAV, PLAN_NAV, SECTION_NAV, SETTINGS_NAV, type NavItem } from "./navigation"
 
 /**
  * The sidebar's one column, so the logo, search, tabs, accounts and profile line up: every section
@@ -149,16 +149,37 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
       <SidebarContent className={cn("gap-5 pb-3", GUTTER)}>
         <nav aria-label="Keepwell">
           <ul className="flex flex-col gap-0.5">
-            {MAIN_NAV.map((item, index) => (
+            {MAIN_NAV.filter((item) => item !== PLAN_NAV).map((item) => (
               <li key={item.href}>
                 <TabLink
                   item={item}
-                  shortcut={String(index + 1)}
+                  shortcut={String(MAIN_NAV.indexOf(item) + 1)}
                   isCurrent={isCurrent(item.href)}
                   onNavigate={close}
                 />
               </li>
             ))}
+          </ul>
+        </nav>
+
+        <section aria-label={t.in(PLAN_NAV.ns, PLAN_NAV.title)} className="flex flex-col gap-0.5">
+          <div className={cn("flex h-8 items-center gap-2", ROW_INSET)}>
+            <Link
+              href={PLAN_NAV.href}
+              onClick={close}
+              aria-current={isCurrent(PLAN_NAV.href) ? "page" : undefined}
+              className={cn(
+                "flex-1 type-caption transition-colors outline-none hover:text-text-secondary focus-visible:text-foreground",
+                isCurrent(PLAN_NAV.href) ? "text-foreground" : "text-muted-foreground"
+              )}
+            >
+              {t.in(PLAN_NAV.ns, PLAN_NAV.title)}
+            </Link>
+            <span className="type-micro text-text-faint" aria-hidden>
+              5
+            </span>
+          </div>
+          <ul className="flex flex-col gap-0.5">
             {SECTION_NAV.map((item) => (
               <li key={item.href}>
                 <TabLink
@@ -170,7 +191,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
               </li>
             ))}
           </ul>
-        </nav>
+        </section>
 
         <section className="group/accounts flex flex-col gap-1">
           <div className={cn("flex h-8 items-center gap-2", ROW_INSET)}>
@@ -481,14 +502,14 @@ function ProfileMenu({ onNavigate }: { onNavigate: () => void }) {
             onClick={toggleHidden}
           >
             <KWIcon name={hidden ? "eye" : "eyeOff"} size={16} />
-            {t.in("web", hidden ? "Show balances" : "Hide balances")}
+            {t.in("web", hidden ? "Show amounts" : "Hide amounts")}
           </DropdownMenuItem>
           <DropdownMenuItem
             className={item}
             onClick={() => setShortcutsOpen(true)}
           >
             <KWIcon name="list" size={16} />
-            {t.in("web", "Keyboard shortcuts")}
+            {t.in("sharedpresentation", "Keyboard shortcuts")}
             <DropdownMenuShortcut>?</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuGroup>

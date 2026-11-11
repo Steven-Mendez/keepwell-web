@@ -18,7 +18,7 @@ import {
   TransferAccountsSection,
 } from "@/components/movement-editor/editor-fields"
 import { typeSubtitle } from "@/components/movement-editor/editor-model"
-import { typeOptions } from "@/components/movement-editor/editor-state"
+import { typeOptions, withDay } from "@/components/movement-editor/editor-state"
 import {
   FieldLabel,
   FlowHeader,
@@ -100,7 +100,7 @@ function RuleEditorBody({
         )
       : undefined
   const title = t.in(
-    "web",
+    "recurring",
     request.mode === "edit" ? "Edit recurring" : "New recurring"
   )
 
@@ -173,6 +173,15 @@ function RuleForm({
     form: { ...editor.form, showsDebited: false },
   }
   const { movesBetweenAccounts } = editor.form
+  // iOS offers Expense, Income and Transfer; ATM withdrawal and Card payment stay out of rules
+  // (an old rule of those types keeps its own).
+  const types = editor.types.filter(
+    (type) =>
+      type === "expense" ||
+      type === "income" ||
+      type === "transfer" ||
+      type === editor.initialType
+  )
 
   return (
     <>
@@ -196,7 +205,7 @@ function RuleForm({
             trailing={
               rule?.isPaused ? (
                 <StatusPill confirmed={false}>
-                  {t.in("web", "Paused")}
+                  {t.in("recurring", "Paused")}
                 </StatusPill>
               ) : undefined
             }
@@ -209,7 +218,7 @@ function RuleForm({
               {typeSubtitle(t, editor.fields.type)}
             </DialogDescription>
           </div>
-          {editor.types.length > 1 ? (
+          {types.length > 1 ? (
             <div className="-mx-1 overflow-x-auto px-1 pb-0.5">
               <KWSegmented
                 className="min-w-max"
@@ -218,10 +227,10 @@ function RuleForm({
                   "What are you recording?"
                 )}
                 value={editor.fields.type}
-                onChange={editor.changeType}
+                onChange={model.changeType}
                 options={typeOptions(
                   t,
-                  editor.types,
+                  types,
                   undefined,
                   editor.initialType
                 )}
@@ -247,12 +256,12 @@ function RuleForm({
       <ConfirmDialog
         open={model.confirmingDelete}
         onOpenChange={model.setConfirmingDelete}
-        title={t.in("web", "Delete this recurring movement?")}
+        title={t.in("recurring", "Delete this recurring movement?")}
         description={t.in(
-          "web",
-          "Its pending drafts are deleted too. Movements already confirmed stay."
+          "recurring",
+          "Its drafts waiting for confirmation are deleted too. Movements already confirmed stay."
         )}
-        action={t.in("transactions", "Delete")}
+        action={t.in("recurring", "Delete")}
         destructive
         onConfirm={() => void model.remove()}
       />
@@ -267,16 +276,16 @@ function ScheduleSection({ t, model }: SectionProps) {
   const { editor } = model
   const frequencies: { value: RecurringFrequency; label: string }[] = (
     ["weekly", "monthly", "yearly"] as const
-  ).map((value) => ({ value, label: frequencyUnit(t, value, model.interval) }))
+  ).map((value) => ({ value, label: frequencyUnit(t, value) }))
   return (
     <section className="grid gap-4 sm:grid-cols-2">
       <div className="flex flex-col gap-1.5 sm:col-span-2">
         <FieldLabel htmlFor="rule-interval">
-          {t.in("web", "Repeats")}
+          {t.in("recurring", "Repeats")}
         </FieldLabel>
         <div className="flex items-center gap-2">
           <span className="type-body text-text-secondary">
-            {t.in("web", "Every")}
+            {t.in("recurring", "Every")}
           </span>
           <Input
             id="rule-interval"
@@ -293,7 +302,7 @@ function ScheduleSection({ t, model }: SectionProps) {
           />
           <OptionSelect
             className="w-40 rounded-xl border-0 bg-secondary px-3.5 type-body dark:bg-secondary"
-            aria-label={t.in("web", "Repeats")}
+            aria-label={t.in("recurring", "Repeats")}
             value={model.frequency}
             options={frequencies}
             onChange={model.setFrequency}
@@ -301,17 +310,17 @@ function ScheduleSection({ t, model }: SectionProps) {
         </div>
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="rule-start">{t.in("web", "Starts")}</FieldLabel>
+        <FieldLabel htmlFor="rule-start">{t.in("recurring", "Starts")}</FieldLabel>
         <Input
           id="rule-start"
-          type="datetime-local"
-          value={editor.fields.dateText}
-          onChange={(event) => editor.update({ dateText: event.target.value })}
+          type="date"
+          value={editor.fields.dateText.slice(0, 10)}
+          onChange={(event) => editor.update({ dateText: withDay(editor.fields.dateText, event.target.value) })}
           className={cn(KW_FIELD, "[color-scheme:dark]")}
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="rule-ends">{t.in("web", "Ends")}</FieldLabel>
+        <FieldLabel htmlFor="rule-ends">{t.in("recurring", "Ends")}</FieldLabel>
         <div className="flex h-10 items-center justify-between gap-3 rounded-xl bg-secondary px-3.5">
           {model.hasEnd ? (
             <input
@@ -324,17 +333,16 @@ function ScheduleSection({ t, model }: SectionProps) {
             />
           ) : (
             <span className="truncate type-caption text-muted-foreground">
-              {t.in("web", "Ends on a date")}
+              {t.in("recurring", "Last day")}
             </span>
           )}
           <KWSwitch
             checked={model.hasEnd}
             onChange={(on) => {
               model.setHasEnd(on)
-              if (on && !model.endsText)
-                model.setEndsText(editor.fields.dateText.slice(0, 10))
+              if (on && !model.endsText) model.setEndsText(model.defaultEnd())
             }}
-            label={t.in("web", "Ends on a date")}
+            label={t.in("recurring", "Ends")}
           />
         </div>
       </div>
@@ -352,7 +360,7 @@ function SwitchRow({
 }: {
   id: string
   label: string
-  description: ReactNode
+  description?: ReactNode
   checked: boolean
   onChange: (checked: boolean) => void
 }) {
@@ -362,9 +370,11 @@ function SwitchRow({
         <label htmlFor={id} className="type-body text-foreground">
           {label}
         </label>
-        <span className="type-caption text-muted-foreground">
-          {description}
-        </span>
+        {description ? (
+          <span className="type-caption text-muted-foreground">
+            {description}
+          </span>
+        ) : null}
       </div>
       <KWSwitch id={id} checked={checked} onChange={onChange} label={label} />
     </div>
@@ -374,12 +384,11 @@ function SwitchRow({
 /** Name, the subscription and auto-record switches, and the note copied to each movement. */
 function RuleDetailsSection({ t, model }: SectionProps) {
   const { editor } = model
-  const ct = (key: string) => t.in("createtransaction", key)
-  return (
+    return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor="editor-description">
-          {t.in("web", "Name")}
+          {t.in("recurring", "Name")}
         </FieldLabel>
         <Input
           id="editor-description"
@@ -387,7 +396,7 @@ function RuleDetailsSection({ t, model }: SectionProps) {
           onChange={(event) =>
             editor.update({ description: event.target.value })
           }
-          placeholder={editor.form.draft.description}
+          placeholder={t.in("recurring", "Rent, Netflix…")}
           autoComplete="off"
           className={KW_FIELD}
         />
@@ -395,29 +404,30 @@ function RuleDetailsSection({ t, model }: SectionProps) {
       {editor.form.kind === "expense" ? (
         <SwitchRow
           id="rule-subscription"
-          label={t.in("web", "Subscription")}
-          description={t.in(
-            "web",
-            "Shows it under Subscriptions and in the monthly total."
-          )}
+          label={t.in("recurring", "Subscription")}
           checked={model.isSubscription}
           onChange={model.setSubscription}
         />
       ) : null}
       <SwitchRow
         id="rule-auto"
-        label={t.in("web", "Record automatically")}
-        description={t.in("web", "Off: it waits as a draft for you to confirm")}
+        label={t.in("recurring", "Record automatically")}
+        description={t.in(
+          "recurring",
+          "Off: it waits as a draft for you to confirm."
+        )}
         checked={model.autoConfirm}
         onChange={model.setAutoConfirm}
       />
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="editor-note">{ct("Note")}</FieldLabel>
+        <FieldLabel htmlFor="editor-note">
+          {t.in("recurring", "Note")}
+        </FieldLabel>
         <Textarea
           id="editor-note"
           value={editor.fields.note}
           onChange={(event) => editor.update({ note: event.target.value })}
-          placeholder={ct("Add a note")}
+          placeholder={t.in("recurring", "Optional")}
           rows={2}
           className={KW_TEXTAREA}
         />
@@ -474,12 +484,12 @@ function RuleSummary({
 
       <section className="flex flex-col gap-2">
         <h3 className="type-label text-muted-foreground">
-          {t.in("web", "Next dates")}
+          {t.in("recurring", "Next dates")}
         </h3>
         <ol className="flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card">
           {model.nextDates.length === 0 ? (
             <li className="px-4 py-3 type-caption text-muted-foreground">
-              {t.in("web", rule?.isPaused ? "Paused" : "Ended")}
+              {t.in("recurring", rule?.isPaused ? "Paused" : "Ended")}
             </li>
           ) : (
             model.nextDates.map((date) => (
@@ -502,30 +512,24 @@ function RuleSummary({
         </ol>
       </section>
 
-      {rule && display ? (
+      {rule && display && produced.length > 0 ? (
         <section className="flex flex-col gap-2">
           <h3 className="type-label text-muted-foreground">
-            {t.in("web", "Movements it created")}
+            {t.in("recurring", "Recorded")}
           </h3>
           <div className="flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card">
-            {produced.length === 0 ? (
-              <p className="px-4 py-3 type-caption text-muted-foreground">
-                {t.in("web", "None yet.")}
-              </p>
-            ) : (
-              produced.map((transaction) => (
-                <TransactionRow
-                  key={transaction.id}
-                  transaction={transaction}
-                  display={display}
-                  dateLabel={dayLabel(t, new Date(transaction.date))}
-                  onSelect={() => {
-                    onClose()
-                    showDetail(transaction.id)
-                  }}
-                />
-              ))
-            )}
+            {produced.map((transaction) => (
+              <TransactionRow
+                key={transaction.id}
+                transaction={transaction}
+                display={display}
+                dateLabel={dayLabel(t, new Date(transaction.date))}
+                onSelect={() => {
+                  onClose()
+                  showDetail(transaction.id)
+                }}
+              />
+            ))}
           </div>
         </section>
       ) : null}
@@ -543,7 +547,7 @@ function RuleSummary({
           shortcut="⌘↵"
           className="justify-between"
         >
-          {rule ? t.in("web", "Save changes") : t.in("web", "Add recurring")}
+          {t.in("recurring", "Save")}
         </KWButton>
         {rule ? (
           <div className="grid grid-cols-2 gap-2">
@@ -553,7 +557,7 @@ function RuleSummary({
               disabled={model.busy}
               onClick={() => void model.togglePause()}
             >
-              {t.in("web", rule.isPaused ? "Resume" : "Pause")}
+              {t.in("recurring", rule.isPaused ? "Resume" : "Pause")}
             </KWButton>
             <KWButton
               variant="destructive"
@@ -563,7 +567,7 @@ function RuleSummary({
               disabled={model.busy}
               onClick={() => model.setConfirmingDelete(true)}
             >
-              {t.in("transactions", "Delete")}
+              {t.in("recurring", "Delete")}
             </KWButton>
           </div>
         ) : null}

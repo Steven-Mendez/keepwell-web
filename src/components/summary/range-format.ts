@@ -31,5 +31,5 @@ export function changeTone(current: Decimal, previous: Decimal, upIsGood: boolea
 }
 
 export function comparisonLabel(t: Translator, f: SummaryFormat, range: MonthRange): string {
-  return t.in("web", "vs %@", rangeText(f, range))
+  return t.in("summary", "vs %@", rangeText(f, range))
 }

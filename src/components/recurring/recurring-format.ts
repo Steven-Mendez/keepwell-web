@@ -18,27 +18,26 @@ export function frequencyText(
 ): string {
   switch (frequency) {
     case "weekly":
-      return t.in("web", "Every %lld weeks", interval)
+      return t.in("sharedpresentation", "Every %lld weeks", interval)
     case "monthly":
-      return t.in("web", "Every %lld months", interval)
+      return t.in("sharedpresentation", "Every %lld months", interval)
     case "yearly":
-      return t.in("web", "Every %lld years", interval)
+      return t.in("sharedpresentation", "Every %lld years", interval)
   }
 }
 
-/** The unit after "Every N" in the editor ("week" / "weeks"). */
+/** The frequency choices in the editor ("Weekly", "Monthly", "Yearly"), as iOS. */
 export function frequencyUnit(
   t: Translator,
-  frequency: RecurringFrequency,
-  interval: number
+  frequency: RecurringFrequency
 ): string {
   switch (frequency) {
     case "weekly":
-      return t.in("web", "unit.week", interval)
+      return t.in("recurring", "Weekly")
     case "monthly":
-      return t.in("web", "unit.month", interval)
+      return t.in("recurring", "Monthly")
     case "yearly":
-      return t.in("web", "unit.year", interval)
+      return t.in("recurring", "Yearly")
   }
 }
 
@@ -50,14 +49,14 @@ export function nextDateText(
   date: Date,
   now: Date = new Date()
 ): string {
-  if (sameDay(date, now)) return t.in("web", "Today")
+  if (sameDay(date, now)) return t.in("sharedpresentation", "Today")
   if (
     sameDay(
       date,
       new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
     )
   )
-    return t.in("web", "Tomorrow")
+    return t.in("sharedpresentation", "Tomorrow")
   return date.toLocaleDateString(t.locale, {
     day: "numeric",
     month: "short",
@@ -73,7 +72,7 @@ export function sectionTitle(
     case "subscriptions":
       return t.in("sharedpresentation", "Subscriptions")
     case "bills":
-      return t.in("web", "Bills and other expenses")
+      return t.in("recurring", "Bills and other expenses")
     case "income":
       return t.in("home", "Income")
     case "transfers":

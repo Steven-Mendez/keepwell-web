@@ -122,7 +122,7 @@ function EditorTitle({
       <div className="flex flex-col gap-1">
         <DialogTitle className="type-title-sm text-foreground">
           {existing
-            ? t.in("web", "Edit transaction")
+            ? t.in("createtransaction", "Edit transaction")
             : typeTitle(t, fields.type)}
         </DialogTitle>
         <DialogDescription className="type-body text-muted-foreground">

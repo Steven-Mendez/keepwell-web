@@ -73,6 +73,16 @@ export function localDateTime(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+/**
+ * Puts a picked day (`YYYY-MM-DD` from a date input) into a `localDateTime` text, keeping its time
+ * of day. As on iOS, people pick only the day; the time stays the one the movement already had.
+ */
+export function withDay(dateText: string, day: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return dateText
+  const time = dateText.slice(11) || "12:00"
+  return `${day}T${time}`
+}
+
 /** The movement types on offer; an edited movement keeps its own type even if the accounts changed since. */
 export function editorTypes(
   context: TransactionContext,
@@ -588,7 +598,7 @@ export function primaryLabel(
   existing: Transaction | undefined,
   fields: EditorFields
 ): string {
-  if (existing) return t.in("web", "Save changes")
+  if (existing) return t.in("createtransaction", "Save changes")
   return fields.isDraft ? ct("Save as draft") : saveTitle(t, fields.type)
 }
 

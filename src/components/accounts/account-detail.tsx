@@ -404,7 +404,7 @@ function DebitDetail({
                     />
                     <ManageRow
                       icon="creditCard"
-                      label={t.in("web", "Card number")}
+                      label={t.in("sharedpresentation", "Card number")}
                       value={debitTitle(t, card)}
                       onClick={() => setOpen("number")}
                     />
@@ -875,7 +875,7 @@ function HolderManageRows({
     <>
       <ManageRow
         icon="creditCard"
-        label={t.in("web", "Card number")}
+        label={t.in("sharedpresentation", "Card number")}
         value={
           holder.lastFour
             ? `•••• ${holder.lastFour}`

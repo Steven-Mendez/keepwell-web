@@ -140,6 +140,9 @@
   "On": {
    "es": "Activado"
   },
+  "Opens outside Keepwell": {
+   "es": "Se abre fuera de Keepwell"
+  },
   "Platinum": {
    "es": "Platino"
   },
@@ -260,6 +263,15 @@
   },
   "%@ · cutoff day %lld · due day %lld.": {
    "es": "%1$@ · corte día %2$lld · pago día %3$lld."
+  },
+  "%@ · cutoff day %lld.": {
+   "es": "%1$@ · corte día %2$lld."
+  },
+  "%@ · due day %lld.": {
+   "es": "%1$@ · pago día %2$lld."
+  },
+  "%@.": {
+   "es": "%@."
   },
   "Account": {
    "es": "Cuenta"
@@ -875,6 +887,9 @@
   "Card color": {
    "es": "Color de la tarjeta"
   },
+  "Card number": {
+   "es": "Número de la tarjeta"
+  },
   "Check the credit limit.": {
    "es": "Revisa el límite de crédito."
   },
@@ -904,6 +919,12 @@
   },
   "Day %lld · next %@": {
    "es": "Día %lld · próximo %@"
+  },
+  "Delete %@?": {
+   "es": "¿Eliminar %@?"
+  },
+  "Delete account": {
+   "es": "Eliminar cuenta"
   },
   "Edit name": {
    "es": "Editar nombre"
@@ -935,11 +956,27 @@
   "Save": {
    "es": "Guardar"
   },
+  "The account and its card are deleted. This can't be undone.": {
+   "es": "Se eliminan la cuenta y su tarjeta. No se puede deshacer."
+  },
+  "The account, its card and its %lld movements are deleted, including transfers with your other accounts, so their balances change too. This can't be undone.": {
+   "en": {
+    "one": "The account, its card and its %lld movement are deleted, including any transfer with your other accounts, so their balances change too. This can't be undone.",
+    "other": "The account, its card and its %lld movements are deleted, including transfers with your other accounts, so their balances change too. This can't be undone."
+   },
+   "es": {
+    "one": "Se eliminan la cuenta, su tarjeta y su %lld movimiento, incluida cualquier transferencia con tus otras cuentas, así que sus saldos también cambian. No se puede deshacer.",
+    "other": "Se eliminan la cuenta, su tarjeta y sus %lld movimientos, incluidas las transferencias con tus otras cuentas, así que sus saldos también cambian. No se puede deshacer."
+   }
+  },
   "The cutoff day closes each cycle, and with the payment day we remind you before it's due.": {
    "es": "El día de corte cierra cada ciclo y, con el día de pago, te avisamos antes de que venza."
   },
   "This cycle": {
    "es": "Este ciclo"
+  },
+  "Total %@": {
+   "es": "Total %@"
   },
   "We couldn't load this card.": {
    "es": "No pudimos cargar esta tarjeta."
@@ -1462,6 +1499,12 @@
   "Debts": {
    "es": "Deudas"
   },
+  "Discard": {
+   "es": "Descartar"
+  },
+  "Doesn't include balances in %@": {
+   "es": "No incluye saldos en %@"
+  },
   "Draft for today": {
    "es": "Borrador para hoy"
   },
@@ -1555,6 +1598,9 @@
   "Planned income": {
    "es": "Ingresos previstos"
   },
+  "Proposed by Claude": {
+   "es": "Propuesto por Claude"
+  },
   "Recent": {
    "es": "Recientes"
   },
@@ -1596,6 +1642,9 @@
   },
   "We couldn't confirm it. Try again.": {
    "es": "No pudimos confirmarlo. Inténtalo de nuevo."
+  },
+  "We couldn't save the change. Try again.": {
+   "es": "No pudimos guardar el cambio. Inténtalo de nuevo."
   },
   "What your bank and cash accounts would hold, counting what's planned and your usual spending.": {
    "es": "Lo que tendrían tus cuentas y tu efectivo, contando lo previsto y tu gasto habitual."
@@ -1934,6 +1983,9 @@
   "Statement and payment dates for your cards": {
    "es": "Corte y pago de tus tarjetas"
   },
+  "Stays on your iPhone": {
+   "es": "Se queda en tu iPhone"
+  },
   "Swap": {
    "es": "Intercambiar"
   },
@@ -1975,6 +2027,9 @@
   },
   "Your balances are yours alone. Lock the app so only you can open it.": {
    "es": "Tus saldos son solo tuyos. Bloquea la app para que solo tú puedas abrirla."
+  },
+  "Your data lives on your iPhone. A Keepwell account to sync with the web is optional, and you can add it later in Settings.": {
+   "es": "Tus datos viven en tu iPhone. Una cuenta Keepwell para sincronizar con la web es opcional, y puedes añadirla después en Ajustes."
   },
   "Your data stays yours": {
    "es": "Tus datos son tuyos"
@@ -2095,6 +2150,9 @@
   "Payment method": {
    "es": "Método de pago"
   },
+  "Proposed by Claude · resume to confirm": {
+   "es": "Propuesto por Claude · reanúdalo para confirmar"
+  },
   "Record automatically": {
    "es": "Registrar automáticamente"
   },
@@ -2209,8 +2267,17 @@
     "other": "%lld movimientos importados"
    }
   },
+  "A copy of every movement": {
+   "es": "Una copia de todos tus movimientos"
+  },
+  "About": {
+   "es": "Acerca de"
+  },
   "Add a bank account or a card from Accounts to see it here.": {
    "es": "Agrega una cuenta de banco o una tarjeta desde Cuentas para verla aquí."
+  },
+  "Add movements from a spreadsheet": {
+   "es": "Agrega movimientos desde una hoja de cálculo"
   },
   "App language": {
    "es": "Idioma de la app"
@@ -2232,6 +2299,9 @@
   },
   "Categories": {
    "es": "Categorías"
+  },
+  "Categorize movements by their description": {
+   "es": "Categoriza los movimientos según su descripción"
   },
   "Category": {
    "es": "Categoría"
@@ -2260,6 +2330,9 @@
   "Data": {
    "es": "Datos"
   },
+  "Data & sync": {
+   "es": "Datos y sincronización"
+  },
   "Debit": {
    "es": "Débito"
   },
@@ -2286,6 +2359,9 @@
   },
   "Deleted defaults come back and edits to them are undone. Your own categories and movements stay.": {
    "es": "Vuelven las predeterminadas que eliminaste y se deshacen sus cambios. Tus categorías y movimientos se quedan como están."
+  },
+  "Deletes the data on this iPhone.": {
+   "es": "Borra los datos de este iPhone."
   },
   "Deleting a category moves its movements to “%@”, which stays so they always have a place.": {
    "es": "Al eliminar una categoría, sus movimientos pasan a “%@”, que no se puede eliminar para que siempre tengan un lugar."
@@ -2329,6 +2405,9 @@
   "Income categories": {
    "es": "Categorías de ingreso"
   },
+  "Keepwell %@": {
+   "es": "Keepwell %@"
+  },
   "Keepwell passcode": {
    "es": "Código de Keepwell"
   },
@@ -2337,6 +2416,9 @@
   },
   "Keepwell will ask for your iPhone passcode instead.": {
    "es": "Keepwell te pedirá el código de tu iPhone en su lugar."
+  },
+  "Keyboard shortcuts": {
+   "es": "Atajos de teclado"
   },
   "Language": {
    "es": "Idioma"
@@ -2352,6 +2434,9 @@
   },
   "Manual · default 1": {
    "es": "Manual · por defecto 1"
+  },
+  "Money": {
+   "es": "Dinero"
   },
   "Move %lld movements to %@?": {
    "en": {
@@ -2393,6 +2478,12 @@
   "No rules yet": {
    "es": "Aún no tienes reglas"
   },
+  "None": {
+   "es": "Ninguna"
+  },
+  "On": {
+   "es": "Activado"
+  },
   "On ›": {
    "es": "Activado ›"
   },
@@ -2407,6 +2498,12 @@
   },
   "Payment methods": {
    "es": "Medios de pago"
+  },
+  "Privacy policy": {
+   "es": "Política de privacidad"
+  },
+  "Profile & preferences": {
+   "es": "Perfil y preferencias"
   },
   "Rate": {
    "es": "Tasa"
@@ -2435,11 +2532,20 @@
   "Save": {
    "es": "Guardar"
   },
+  "Search currency": {
+   "es": "Buscar moneda"
+  },
   "Second currency": {
    "es": "Segunda moneda"
   },
+  "Security": {
+   "es": "Seguridad"
+  },
   "Security and privacy": {
    "es": "Seguridad y privacidad"
+  },
+  "Set up": {
+   "es": "Configurar"
   },
   "Set up ›": {
    "es": "Configurar ›"
@@ -2449,6 +2555,9 @@
   },
   "Six digits, kept only on this iPhone. Without one, the lock uses your iPhone passcode.": {
    "es": "Seis dígitos, guardados solo en este iPhone. Sin él, el bloqueo usa el código de tu iPhone."
+  },
+  "Subscriptions and regular movements": {
+   "es": "Suscripciones y movimientos periódicos"
   },
   "Swap currencies": {
    "es": "Intercambiar monedas"
@@ -2461,6 +2570,9 @@
   },
   "Text to look for": {
    "es": "Texto a buscar"
+  },
+  "That currency is in use, so it can't change.": {
+   "es": "Esa moneda está en uso, así que no se puede cambiar."
   },
   "The rate has to be a number greater than zero.": {
    "es": "La tasa tiene que ser un número mayor que cero."
@@ -2479,6 +2591,9 @@
   },
   "Update it whenever you like by replacing the value. Each transaction keeps the rate it was logged with, so your history doesn't change.": {
    "es": "Actualízala cuando quieras reemplazando el valor. Cada movimiento guarda la tasa con la que se anotó, así tu historial no cambia."
+  },
+  "Used by your accounts, so it can't change here.": {
+   "es": "La usan tus cuentas, así que no se puede cambiar aquí."
   },
   "We couldn't create the file. Try again.": {
    "es": "No pudimos crear el archivo. Inténtalo de nuevo."
@@ -2525,6 +2640,18 @@
   "We use Face ID or Touch ID, whichever your iPhone has": {
    "es": "Usamos Face ID o Touch ID según tu iPhone"
   },
+  "You'll be signed out on this iPhone.": {
+   "es": "Se cerrará la sesión en este iPhone."
+  },
+  "Your Keepwell account keeps its copy; to erase it too, delete your account.": {
+   "es": "Tu cuenta de Keepwell conserva su copia; para borrarla también, elimina tu cuenta."
+  },
+  "Your accounts, cards and transactions are deleted from this iPhone. This can't be undone. Data synced to your Keepwell account goes when you delete the account.": {
+   "es": "Tus cuentas, tarjetas y movimientos se borran de este iPhone. No se puede deshacer. Lo sincronizado con tu cuenta Keepwell se borra al eliminar la cuenta."
+  },
+  "Your data stays only on this iPhone.": {
+   "es": "Tus datos se quedan solo en este iPhone."
+  },
   "Your name": {
    "es": "Tu nombre"
   },
@@ -2539,11 +2666,23 @@
   "Account name": {
    "es": "Nombre de la cuenta"
   },
+  "Accounts": {
+   "es": "Cuentas"
+  },
+  "Actions": {
+   "es": "Acciones"
+  },
   "Add": {
    "es": "Agregar"
   },
   "Add a tag": {
    "es": "Agregar etiqueta"
+  },
+  "Add account or card": {
+   "es": "Agregar cuenta o tarjeta"
+  },
+  "Add recurring": {
+   "es": "Agregar recurrente"
   },
   "Adds the tag": {
    "es": "Agrega la etiqueta"
@@ -2563,14 +2702,26 @@
   "Card color": {
    "es": "Color de la tarjeta"
   },
+  "Card number": {
+   "es": "Número de la tarjeta"
+  },
+  "Categories": {
+   "es": "Categorías"
+  },
   "Category name": {
    "es": "Nombre de la categoría"
   },
   "Choose both the month and the year.": {
    "es": "Elige el mes y el año."
   },
+  "Close": {
+   "es": "Cerrar"
+  },
   "Color": {
    "es": "Color"
+  },
+  "Command palette": {
+   "es": "Paleta de comandos"
   },
   "Create category": {
    "es": "Crear categoría"
@@ -2589,6 +2740,9 @@
   },
   "Debit •••• %@": {
    "es": "Débito •••• %@"
+  },
+  "Debts": {
+   "es": "Deudas"
   },
   "Delete": {
    "es": "Eliminar"
@@ -2610,6 +2764,9 @@
   },
   "Education": {
    "es": "Educación"
+  },
+  "Enter the last 4 digits.": {
+   "es": "Escribe los últimos 4 dígitos."
   },
   "Every %lld months": {
    "en": {
@@ -2659,6 +2816,9 @@
   "Fees": {
    "es": "Comisiones"
   },
+  "Focus search": {
+   "es": "Buscar"
+  },
   "Freelance": {
    "es": "Trabajo independiente"
   },
@@ -2670,6 +2830,12 @@
   },
   "Give the category a name.": {
    "es": "Ponle un nombre a la categoría."
+  },
+  "Go to": {
+   "es": "Ir a"
+  },
+  "Goals": {
+   "es": "Metas"
   },
   "Gray": {
    "es": "Gris"
@@ -2689,6 +2855,9 @@
   "Hide balance": {
    "es": "Ocultar saldo"
   },
+  "Home": {
+   "es": "Inicio"
+  },
   "Housing": {
    "es": "Vivienda"
   },
@@ -2707,6 +2876,12 @@
   "Its movements move to “%@”.": {
    "es": "Sus movimientos pasan a “%@”."
   },
+  "Keyboard shortcuts": {
+   "es": "Atajos de teclado"
+  },
+  "Last 4 digits": {
+   "es": "Últimos 4 dígitos"
+  },
   "Leisure": {
    "es": "Ocio"
   },
@@ -2715,6 +2890,9 @@
   },
   "Loan payments": {
    "es": "Pagos de préstamos"
+  },
+  "Log transaction": {
+   "es": "Anotar movimiento"
   },
   "Monthly budget": {
    "es": "Presupuesto mensual"
@@ -2725,8 +2903,20 @@
   "Name": {
    "es": "Nombre"
   },
+  "Network": {
+   "es": "Red"
+  },
   "New category": {
    "es": "Nueva categoría"
+  },
+  "New expense": {
+   "es": "Nuevo gasto"
+  },
+  "New income": {
+   "es": "Nuevo ingreso"
+  },
+  "New transfer": {
+   "es": "Nueva transferencia"
   },
   "No limit": {
    "es": "Sin límite"
@@ -2761,6 +2951,12 @@
   "Purple": {
    "es": "Morado"
   },
+  "Recorded by Claude": {
+   "es": "Registrado por Claude"
+  },
+  "Recurring": {
+   "es": "Recurrentes"
+  },
   "Recurring · %@": {
    "es": "Recurrente · %@"
   },
@@ -2776,6 +2972,9 @@
   "Restaurants": {
    "es": "Restaurantes"
   },
+  "Rules": {
+   "es": "Reglas"
+  },
   "Salary": {
    "es": "Salario"
   },
@@ -2788,14 +2987,23 @@
   "See all": {
    "es": "Ver todos"
   },
+  "Settings": {
+   "es": "Ajustes"
+  },
   "Shopping": {
    "es": "Compras"
   },
   "Show balance": {
    "es": "Mostrar saldo"
   },
+  "Show shortcuts": {
+   "es": "Ver atajos"
+  },
   "Subscriptions": {
    "es": "Suscripciones"
+  },
+  "Summary": {
+   "es": "Resumen"
   },
   "Summary shows how much is left, and Home warns you at 80% and 100%.": {
    "es": "Resumen muestra cuánto queda, e Inicio te avisa al llegar al 80 % y al 100 %."
@@ -2812,6 +3020,9 @@
   "Tools": {
    "es": "Herramientas"
   },
+  "Transactions": {
+   "es": "Movimientos"
+  },
   "Transport": {
    "es": "Transporte"
   },
@@ -2826,6 +3037,9 @@
   },
   "We couldn't save the category. Try again.": {
    "es": "No pudimos guardar la categoría. Inténtalo de nuevo."
+  },
+  "We never ask for the full number or the CVV.": {
+   "es": "Nunca pedimos el número completo ni el CVV."
   },
   "Yellow": {
    "es": "Amarillo"
@@ -2842,8 +3056,14 @@
   "%@ left": {
    "es": "Quedan %@"
   },
+  "%@ less than %@": {
+   "es": "%1$@ menos que en %2$@"
+  },
   "%@ less than %@ by the same day": {
    "es": "%1$@ menos que en %2$@ al mismo día"
+  },
+  "%@ more than %@": {
+   "es": "%1$@ más que en %2$@"
   },
   "%@ more than %@ by the same day": {
    "es": "%1$@ más que en %2$@ al mismo día"
@@ -2859,6 +3079,9 @@
   },
   "%@ total: %@": {
    "es": "Total de %1$@: %2$@"
+  },
+  "%@ · through today": {
+   "es": "%@ · hasta hoy"
   },
   "%@, came in": {
    "es": "%@, entró"
@@ -2886,6 +3109,12 @@
     "other": "%lld categorías más"
    }
   },
+  "%lld of %lld": {
+   "es": "%1$lld de %2$lld"
+  },
+  "%lld so far": {
+   "es": "%lld (en curso)"
+  },
   "Amount": {
    "es": "Monto"
   },
@@ -2897,6 +3126,15 @@
   },
   "Average %@ / month": {
    "es": "Promedio %@ / mes"
+  },
+  "Average spending": {
+   "es": "Gasto promedio"
+  },
+  "Before: %@": {
+   "es": "Antes: %@"
+  },
+  "Best month": {
+   "es": "Mejor mes"
   },
   "Budgets": {
    "es": "Presupuestos"
@@ -2916,17 +3154,38 @@
   "Categories": {
    "es": "Categorías"
   },
+  "Custom": {
+   "es": "Personalizado"
+  },
   "Day": {
    "es": "Día"
   },
   "Direction": {
    "es": "Dirección"
   },
+  "Dropped the most": {
+   "es": "Lo que más bajó"
+  },
+  "Every year you've logged, whatever range is picked above": {
+   "es": "Todos los años que registraste, sin importar el rango elegido arriba"
+  },
   "Expenses": {
    "es": "Gastos"
   },
+  "From": {
+   "es": "Desde"
+  },
+  "Grew the most": {
+   "es": "Lo que más subió"
+  },
+  "Highlights": {
+   "es": "Lo más destacado"
+  },
   "Income": {
    "es": "Ingresos"
+  },
+  "Income averages %@": {
+   "es": "Ingreso promedio: %@"
   },
   "Last %lld months": {
    "en": {
@@ -2938,14 +3197,26 @@
     "other": "Últimos %lld meses"
    }
   },
+  "Last 12 months": {
+   "es": "Últimos 12 meses"
+  },
   "Log transaction": {
    "es": "Anotar movimiento"
   },
   "Month": {
    "es": "Mes"
   },
+  "Month by month": {
+   "es": "Mes a mes"
+  },
+  "Months you saved": {
+   "es": "Meses en que ahorraste"
+  },
   "Net worth": {
    "es": "Patrimonio neto"
+  },
+  "New": {
+   "es": "Nueva"
   },
   "Next month": {
    "es": "Mes siguiente"
@@ -2980,6 +3251,9 @@
   "Pace": {
    "es": "Ritmo"
   },
+  "Period": {
+   "es": "Período"
+  },
   "Previous month": {
    "es": "Mes anterior"
   },
@@ -2989,8 +3263,23 @@
   "Result per month": {
    "es": "Resultado por mes"
   },
+  "Running total of what you kept, month after month": {
+   "es": "Lo que fuiste guardando, sumado mes a mes"
+  },
   "Same as %@ by the same day": {
    "es": "Igual que en %@ al mismo día"
+  },
+  "Saved": {
+   "es": "Ahorrado"
+  },
+  "Saved so far": {
+   "es": "Ahorrado hasta ahí"
+  },
+  "Savings over time": {
+   "es": "Ahorro acumulado"
+  },
+  "Spending changes %@": {
+   "es": "Cambios en gastos %@"
   },
   "Spent in %@": {
    "es": "Gastado en %@"
@@ -3001,17 +3290,41 @@
   "Summary": {
    "es": "Resumen"
   },
+  "This year": {
+   "es": "Este año"
+  },
+  "To": {
+   "es": "Hasta"
+  },
+  "Top categories over time": {
+   "es": "Tus categorías principales"
+  },
+  "Toughest month": {
+   "es": "Mes más difícil"
+  },
   "Went out": {
    "es": "Salió"
+  },
+  "Year over year": {
+   "es": "Año contra año"
   },
   "You broke even in %@": {
    "es": "Quedaste a mano en %@"
   },
+  "You kept %@ of what came in": {
+   "es": "Guardaste el %@ de lo que entró"
+  },
   "You kept %@ of what came in.": {
    "es": "Guardaste el %@ de lo que entró."
   },
+  "You overspent": {
+   "es": "Gastaste de más"
+  },
   "You overspent in %@": {
    "es": "Gastaste de más en %@"
+  },
+  "You saved": {
+   "es": "Ahorraste"
   },
   "You saved in %@": {
    "es": "Ahorraste en %@"
@@ -3025,6 +3338,9 @@
   "You spent exactly what came in.": {
    "es": "Gastaste exactamente lo que entró."
   },
+  "Your largest spending categories, month by month": {
+   "es": "Las categorías en que más gastas, mes a mes"
+  },
   "Your summary starts with one transaction": {
    "es": "Tu resumen empieza con un movimiento"
   },
@@ -3037,6 +3353,9 @@
   "overspent %@": {
    "es": "gastó %@ de más"
   },
+  "per month": {
+   "es": "por mes"
+  },
   "received": {
    "es": "recibido"
   },
@@ -3045,6 +3364,9 @@
   },
   "spent": {
    "es": "gastado"
+  },
+  "vs %@": {
+   "es": "vs %@"
   }
  },
  "transactions": {
@@ -3134,6 +3456,18 @@
   },
   "Log your first expense, income or transfer and it shows up here.": {
    "es": "Anota tu primer gasto, ingreso o transferencia y aparecerá aquí."
+  },
+  "Money in": {
+   "es": "Entradas"
+  },
+  "Money out": {
+   "es": "Salidas"
+  },
+  "Movements": {
+   "es": "Movimientos"
+  },
+  "Net": {
+   "es": "Neto"
   },
   "New transaction": {
    "es": "Nuevo movimiento"
@@ -3271,6 +3605,347 @@
   },
   "spent · 4 drafts": {
    "es": "gastado · 4 borradores"
+  }
+ },
+ "cloudaccount": {
+  "%lld accounts": {
+   "en": {
+    "one": "%lld account",
+    "other": "%lld accounts"
+   },
+   "es": {
+    "one": "%lld cuenta",
+    "other": "%lld cuentas"
+   }
+  },
+  "%lld debts": {
+   "en": {
+    "one": "%lld debt",
+    "other": "%lld debts"
+   },
+   "es": {
+    "one": "%lld deuda",
+    "other": "%lld deudas"
+   }
+  },
+  "%lld goals": {
+   "en": {
+    "one": "%lld goal",
+    "other": "%lld goals"
+   },
+   "es": {
+    "one": "%lld meta",
+    "other": "%lld metas"
+   }
+  },
+  "%lld movements": {
+   "en": {
+    "one": "%lld movement",
+    "other": "%lld movements"
+   },
+   "es": {
+    "one": "%lld movimiento",
+    "other": "%lld movimientos"
+   }
+  },
+  "%lld recurring": {
+   "en": {
+    "one": "%lld recurring",
+    "other": "%lld recurring"
+   },
+   "es": {
+    "one": "%lld recurrente",
+    "other": "%lld recurrentes"
+   }
+  },
+  "%lld rules": {
+   "en": {
+    "one": "%lld rule",
+    "other": "%lld rules"
+   },
+   "es": {
+    "one": "%lld regla",
+    "other": "%lld reglas"
+   }
+  },
+  "Already use Keepwell?": {
+   "es": "¿Ya usas Keepwell?"
+  },
+  "Assistants disconnected": {
+   "es": "Asistentes desconectados"
+  },
+  "Assistants like Claude can read your data and record movements you then confirm here.": {
+   "es": "Asistentes como Claude pueden leer tus datos y registrar movimientos que luego confirmas aquí."
+  },
+  "Can read": {
+   "es": "Puede leer"
+  },
+  "Can read and record": {
+   "es": "Puede leer y registrar"
+  },
+  "Choose which data to keep": {
+   "es": "Elige qué datos conservar"
+  },
+  "Choose which to keep. The other is replaced, and this can't be undone.": {
+   "es": "Elige cuáles conservar. Los otros se reemplazan y no se puede deshacer."
+  },
+  "Claude and other assistants lose access to your account at once.": {
+   "es": "Claude y los demás asistentes pierden el acceso a tu cuenta al instante."
+  },
+  "Connected assistants": {
+   "es": "Asistentes conectados"
+  },
+  "Continue": {
+   "es": "Continuar"
+  },
+  "Couldn't reach Keepwell. Try again.": {
+   "es": "No se pudo conectar con Keepwell. Inténtalo de nuevo."
+  },
+  "Couldn't sign in with Apple. Try again.": {
+   "es": "No se pudo iniciar sesión con Apple. Inténtalo de nuevo."
+  },
+  "Couldn't sync": {
+   "es": "No se pudo sincronizar"
+  },
+  "Couldn't sync. Keepwell will try again.": {
+   "es": "No se pudo sincronizar. Keepwell lo intentará de nuevo."
+  },
+  "Decide later": {
+   "es": "Decidir después"
+  },
+  "Delete account": {
+   "es": "Eliminar cuenta"
+  },
+  "Delete your Keepwell account?": {
+   "es": "¿Eliminar tu cuenta de Keepwell?"
+  },
+  "Disconnect": {
+   "es": "Desconectar"
+  },
+  "Disconnect all": {
+   "es": "Desconectar todos"
+  },
+  "Disconnect assistants": {
+   "es": "Desconectar asistentes"
+  },
+  "Disconnect every assistant?": {
+   "es": "¿Desconectar todos los asistentes?"
+  },
+  "Early access": {
+   "es": "Acceso anticipado"
+  },
+  "Erases your synced data from Keepwell's servers.": {
+   "es": "Borra tus datos sincronizados de los servidores de Keepwell."
+  },
+  "Every iPhone and browser signed in to this account will need to sign in again.": {
+   "es": "Cada iPhone y navegador con esta cuenta tendrá que volver a iniciar sesión."
+  },
+  "Every iPhone and browser will need to sign in again.": {
+   "es": "Cada iPhone y navegador tendrá que volver a iniciar sesión."
+  },
+  "Everything stays only on this iPhone. You can sign in later from Settings.": {
+   "es": "Todo se queda solo en este iPhone. Puedes iniciar sesión después desde Ajustes."
+  },
+  "Free plan": {
+   "es": "Plan gratuito"
+  },
+  "Full control": {
+   "es": "Control total"
+  },
+  "Have an invitation code?": {
+   "es": "¿Tienes un código de invitación?"
+  },
+  "How to connect Claude": {
+   "es": "Cómo conectar Claude"
+  },
+  "Invitation code": {
+   "es": "Código de invitación"
+  },
+  "Invitation code (new accounts)": {
+   "es": "Código de invitación (cuentas nuevas)"
+  },
+  "Invite me a coffee": {
+   "es": "Invítame un café"
+  },
+  "Keep this iPhone's data": {
+   "es": "Conservar los datos de este iPhone"
+  },
+  "Keepwell accounts are invite-only for now.": {
+   "es": "Por ahora las cuentas de Keepwell son solo por invitación."
+  },
+  "Keepwell accounts are invite-only for now. Enter an invitation code first.": {
+   "es": "Las cuentas de Keepwell son solo por invitación por ahora. Escribe primero un código de invitación."
+  },
+  "Last synced %@": {
+   "es": "Sincronizado %@"
+  },
+  "Loading your data…": {
+   "es": "Cargando tus datos…"
+  },
+  "New accounts need one. Then sign in with Apple or a passkey.": {
+   "es": "Las cuentas nuevas lo necesitan. Luego inicia sesión con Apple o una passkey."
+  },
+  "No purchases to restore for this Apple ID.": {
+   "es": "No hay compras que restaurar para este Apple ID."
+  },
+  "None connected": {
+   "es": "Ninguno conectado"
+  },
+  "Off": {
+   "es": "Desactivada"
+  },
+  "Offline": {
+   "es": "Sin conexión"
+  },
+  "Offline. Changes sync when you're back online.": {
+   "es": "Sin conexión. Los cambios se sincronizan al volver a estar en línea."
+  },
+  "Purchase restored.": {
+   "es": "Compra restaurada."
+  },
+  "Replace": {
+   "es": "Reemplazar"
+  },
+  "Replace your account's data?": {
+   "es": "¿Reemplazar los datos de tu cuenta?"
+  },
+  "Replaces what's on this iPhone with the data in your Keepwell account.": {
+   "es": "Reemplaza lo que hay en este iPhone con los datos de tu cuenta de Keepwell."
+  },
+  "Replaces your account's data, on every device, with what's here.": {
+   "es": "Reemplaza los datos de tu cuenta, en todos tus dispositivos, con lo que hay aquí."
+  },
+  "Restore purchases": {
+   "es": "Restaurar compras"
+  },
+  "Sign in and your accounts and movements come back as they were.": {
+   "es": "Inicia sesión y tus cuentas y movimientos vuelven tal como estaban."
+  },
+  "Sign in at the top to sync with Keepwell on the web.": {
+   "es": "Inicia sesión arriba para sincronizar con Keepwell en la web."
+  },
+  "Sign in to sync": {
+   "es": "Inicia sesión para sincronizar"
+  },
+  "Sign out": {
+   "es": "Cerrar sesión"
+  },
+  "Sign out everywhere": {
+   "es": "Cerrar en todos"
+  },
+  "Sign out on all devices": {
+   "es": "Cerrar sesión en todos los dispositivos"
+  },
+  "Sign out on all devices?": {
+   "es": "¿Cerrar sesión en todos los dispositivos?"
+  },
+  "Signed in as": {
+   "es": "Sesión iniciada como"
+  },
+  "Signing in…": {
+   "es": "Iniciando sesión…"
+  },
+  "Step by step, on the web, desktop, phone and Claude Code.": {
+   "es": "Paso a paso, en la web, el escritorio, el teléfono y Claude Code."
+  },
+  "Support Keepwell": {
+   "es": "Apoya a Keepwell"
+  },
+  "Supporter": {
+   "es": "Colaborador"
+  },
+  "Sync": {
+   "es": "Sincronización"
+  },
+  "Sync is included during early access. A one-time coffee keeps it, and lets Claude read and record your finances.": {
+   "es": "La sincronización está incluida durante el acceso anticipado. Un café, una sola vez, la mantiene y deja que Claude lea y registre tus finanzas."
+  },
+  "Sync is paused until you choose.": {
+   "es": "La sincronización está en pausa hasta que elijas."
+  },
+  "Sync isn't included in your plan. Everything keeps working on this iPhone.": {
+   "es": "La sincronización no está incluida en tu plan. Todo sigue funcionando en este iPhone."
+  },
+  "Sync now": {
+   "es": "Sincronizar ahora"
+  },
+  "Sync off": {
+   "es": "Sincronización desactivada"
+  },
+  "Sync paused": {
+   "es": "Sincronización en pausa"
+  },
+  "Sync with the web and Claude come with a one-time coffee. Everything else stays free and works on this iPhone.": {
+   "es": "La sincronización con la web y Claude vienen con un café, una sola vez. Todo lo demás sigue siendo gratis y funciona en este iPhone."
+  },
+  "Synced": {
+   "es": "Sincronizado"
+  },
+  "Syncing": {
+   "es": "Sincronizando"
+  },
+  "Syncing…": {
+   "es": "Sincronizando…"
+  },
+  "Thank you for the coffee. Sync and Claude are on.": {
+   "es": "Gracias por el café. La sincronización y Claude ya están activos."
+  },
+  "That invitation is not valid. It may have expired or been used.": {
+   "es": "Esa invitación no es válida. Puede que haya caducado o ya se haya usado."
+  },
+  "The App Store couldn't complete the purchase. Try again.": {
+   "es": "El App Store no pudo completar la compra. Inténtalo de nuevo."
+  },
+  "The coffee isn't available in the App Store right now. Check your connection and try again later.": {
+   "es": "El café no está disponible en el App Store en este momento. Revisa tu conexión e inténtalo más tarde."
+  },
+  "They lose access right away and would have to be connected again.": {
+   "es": "Pierden el acceso de inmediato y habría que volver a conectarlos."
+  },
+  "This iPhone and your account have different data": {
+   "es": "Este iPhone y tu cuenta tienen datos distintos"
+  },
+  "This purchase is already linked to another Keepwell account.": {
+   "es": "Esta compra ya está vinculada a otra cuenta de Keepwell."
+  },
+  "Use a passkey": {
+   "es": "Usar una passkey"
+  },
+  "Use without an account": {
+   "es": "Usar sin cuenta"
+  },
+  "Use your account's data": {
+   "es": "Usar los datos de tu cuenta"
+  },
+  "You were signed out. Sign in again to keep syncing.": {
+   "es": "Se cerró tu sesión. Vuelve a iniciarla para seguir sincronizando."
+  },
+  "You're signed out everywhere at once and your synced data is erased from Keepwell's servers. Backups keep it up to 35 more days. What's on this iPhone stays here.": {
+   "es": "Se cierra tu sesión en todos lados al instante y tus datos sincronizados se borran de los servidores de Keepwell. Las copias de seguridad los conservan hasta 35 días más. Lo que hay en este iPhone se queda aquí."
+  },
+  "Your data is only on this iPhone. Sign in to keep it in sync with Keepwell on the web.": {
+   "es": "Tus datos están solo en este iPhone. Inicia sesión para mantenerlos sincronizados con Keepwell en la web."
+  },
+  "or": {
+   "es": "o"
+  }
+ },
+ "plan": {
+  "%lld goals": {
+   "en": {
+    "one": "%lld goal",
+    "other": "%lld goals"
+   },
+   "es": {
+    "one": "%lld meta",
+    "other": "%lld metas"
+   }
+  },
+  "Next: %@ · %@": {
+   "es": "Próximo: %@ · %@"
+  },
+  "Plan": {
+   "es": "Planificar"
   }
  }
 }

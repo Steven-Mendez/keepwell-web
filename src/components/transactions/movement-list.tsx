@@ -12,6 +12,7 @@ import { dayLabel, type TransactionDisplay } from "@/lib/presentation/display"
 import type { Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
+import { useRowMenu } from "./row-menu"
 import { dayNet, type MovementTotals } from "./movement-totals"
 
 function TotalsStrip({
@@ -27,19 +28,19 @@ function TotalsStrip({
 }) {
   const net = totals.moneyIn.minus(totals.moneyOut)
   const cells: { label: string; value: string; tone?: string }[] = [
-    { label: t.in("web", "Movements"), value: String(count) },
+    { label: t.in("transactions", "Movements"), value: String(count) },
     {
-      label: t.in("web", "Money in"),
+      label: t.in("transactions", "Money in"),
       value: formatMoney({ amount: totals.moneyIn, currency: principal }),
       tone: "text-positive",
     },
     {
-      label: t.in("web", "Money out"),
+      label: t.in("transactions", "Money out"),
       value: formatMoney({ amount: totals.moneyOut, currency: principal }),
       tone: "text-negative",
     },
     {
-      label: t.in("web", "Net"),
+      label: t.in("transactions", "Net"),
       value: formatMoney(
         { amount: net, currency: principal },
         { sign: "always" }
@@ -82,6 +83,8 @@ function ColumnHeader({ t }: { t: Translator }) {
       <span className="w-36 shrink-0 text-right">
         {t.in("web", "column.amount")}
       </span>
+      {/* The width of the row's "…" button. */}
+      <span className="-ml-3 w-10 shrink-0" />
     </div>
   )
 }
@@ -94,8 +97,10 @@ function DayGroup({
   display,
   detailId,
   onSelect,
+  wrap,
 }: {
   t: Translator
+  wrap: (transaction: Transaction, row: React.ReactNode) => React.ReactNode
   transactions: readonly Transaction[]
   principal: string
   display: TransactionDisplay
@@ -134,6 +139,7 @@ function DayGroup({
               display={display}
               onSelect={(tx) => onSelect(tx.id)}
               isSelected={detailId === transaction.id}
+              wrap={(row) => wrap(transaction, row)}
             />
           ))}
         </AnimatedList>
@@ -167,8 +173,10 @@ export function MovementList({
   detailId: string | undefined
   onSelect: (id: string) => void
 }) {
+  const { wrap, dialogs } = useRowMenu(t)
   return (
     <div className="flex flex-col gap-4">
+      {dialogs}
       {/* Mobbin (Copilot, Mercury): what the filtered list adds up to, above the list. */}
       <TotalsStrip t={t} totals={totals} principal={principal} count={count} />
       {/* A new filter, account or search swaps the whole list in one quick fade; within one view,
@@ -186,6 +194,7 @@ export function MovementList({
                 display={display}
                 detailId={detailId}
                 onSelect={onSelect}
+                wrap={wrap}
               />
             </ListItem>
           ))}

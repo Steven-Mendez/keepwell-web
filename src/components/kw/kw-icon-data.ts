@@ -132,6 +132,20 @@ export const KW_ICONS = {
    "m15 6-6 6 6 6"
   ]
  ],
+ "calendarCheck": [
+  [
+   "rect",
+   3.0,
+   4.0,
+   18.0,
+   18.0,
+   2.0
+  ],
+  [
+   "path",
+   "M16 2v4M8 2v4M3 10h18m-12 6 2 2 4-4"
+  ]
+ ],
  "chevronRight": [
   [
    "path",
