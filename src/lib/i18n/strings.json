@@ -264,6 +264,15 @@
   "%@ · cutoff day %lld · due day %lld.": {
    "es": "%1$@ · corte día %2$lld · pago día %3$lld."
   },
+  "%@ · cutoff day %lld.": {
+   "es": "%1$@ · corte día %2$lld."
+  },
+  "%@ · due day %lld.": {
+   "es": "%1$@ · pago día %2$lld."
+  },
+  "%@.": {
+   "es": "%@."
+  },
   "Account": {
    "es": "Cuenta"
   },
@@ -878,6 +887,9 @@
   "Card color": {
    "es": "Color de la tarjeta"
   },
+  "Card number": {
+   "es": "Número de la tarjeta"
+  },
   "Check the credit limit.": {
    "es": "Revisa el límite de crédito."
   },
@@ -907,6 +919,12 @@
   },
   "Day %lld · next %@": {
    "es": "Día %lld · próximo %@"
+  },
+  "Delete %@?": {
+   "es": "¿Eliminar %@?"
+  },
+  "Delete account": {
+   "es": "Eliminar cuenta"
   },
   "Edit name": {
    "es": "Editar nombre"
@@ -938,11 +956,27 @@
   "Save": {
    "es": "Guardar"
   },
+  "The account and its card are deleted. This can't be undone.": {
+   "es": "Se eliminan la cuenta y su tarjeta. No se puede deshacer."
+  },
+  "The account, its card and its %lld movements are deleted, including transfers with your other accounts, so their balances change too. This can't be undone.": {
+   "en": {
+    "one": "The account, its card and its %lld movement are deleted, including any transfer with your other accounts, so their balances change too. This can't be undone.",
+    "other": "The account, its card and its %lld movements are deleted, including transfers with your other accounts, so their balances change too. This can't be undone."
+   },
+   "es": {
+    "one": "Se eliminan la cuenta, su tarjeta y su %lld movimiento, incluida cualquier transferencia con tus otras cuentas, así que sus saldos también cambian. No se puede deshacer.",
+    "other": "Se eliminan la cuenta, su tarjeta y sus %lld movimientos, incluidas las transferencias con tus otras cuentas, así que sus saldos también cambian. No se puede deshacer."
+   }
+  },
   "The cutoff day closes each cycle, and with the payment day we remind you before it's due.": {
    "es": "El día de corte cierra cada ciclo y, con el día de pago, te avisamos antes de que venza."
   },
   "This cycle": {
    "es": "Este ciclo"
+  },
+  "Total %@": {
+   "es": "Total %@"
   },
   "We couldn't load this card.": {
    "es": "No pudimos cargar esta tarjeta."
@@ -2635,6 +2669,9 @@
   "Card color": {
    "es": "Color de la tarjeta"
   },
+  "Card number": {
+   "es": "Número de la tarjeta"
+  },
   "Category name": {
    "es": "Nombre de la categoría"
   },
@@ -2682,6 +2719,9 @@
   },
   "Education": {
    "es": "Educación"
+  },
+  "Enter the last 4 digits.": {
+   "es": "Escribe los últimos 4 dígitos."
   },
   "Every %lld months": {
    "en": {
@@ -2779,6 +2819,9 @@
   "Its movements move to “%@”.": {
    "es": "Sus movimientos pasan a “%@”."
   },
+  "Last 4 digits": {
+   "es": "Últimos 4 dígitos"
+  },
   "Leisure": {
    "es": "Ocio"
   },
@@ -2796,6 +2839,9 @@
   },
   "Name": {
    "es": "Nombre"
+  },
+  "Network": {
+   "es": "Red"
   },
   "New category": {
    "es": "Nueva categoría"
@@ -2902,6 +2948,9 @@
   "We couldn't save the category. Try again.": {
    "es": "No pudimos guardar la categoría. Inténtalo de nuevo."
   },
+  "We never ask for the full number or the CVV.": {
+   "es": "Nunca pedimos el número completo ni el CVV."
+  },
   "Yellow": {
    "es": "Amarillo"
   },
@@ -2917,8 +2966,14 @@
   "%@ left": {
    "es": "Quedan %@"
   },
+  "%@ less than %@": {
+   "es": "%1$@ menos que en %2$@"
+  },
   "%@ less than %@ by the same day": {
    "es": "%1$@ menos que en %2$@ al mismo día"
+  },
+  "%@ more than %@": {
+   "es": "%1$@ más que en %2$@"
   },
   "%@ more than %@ by the same day": {
    "es": "%1$@ más que en %2$@ al mismo día"
@@ -2934,6 +2989,9 @@
   },
   "%@ total: %@": {
    "es": "Total de %1$@: %2$@"
+  },
+  "%@ · through today": {
+   "es": "%@ · hasta hoy"
   },
   "%@, came in": {
    "es": "%@, entró"
@@ -2961,6 +3019,12 @@
     "other": "%lld categorías más"
    }
   },
+  "%lld of %lld": {
+   "es": "%1$lld de %2$lld"
+  },
+  "%lld so far": {
+   "es": "%lld (en curso)"
+  },
   "Amount": {
    "es": "Monto"
   },
@@ -2972,6 +3036,15 @@
   },
   "Average %@ / month": {
    "es": "Promedio %@ / mes"
+  },
+  "Average spending": {
+   "es": "Gasto promedio"
+  },
+  "Before: %@": {
+   "es": "Antes: %@"
+  },
+  "Best month": {
+   "es": "Mejor mes"
   },
   "Budgets": {
    "es": "Presupuestos"
@@ -2991,17 +3064,38 @@
   "Categories": {
    "es": "Categorías"
   },
+  "Custom": {
+   "es": "Personalizado"
+  },
   "Day": {
    "es": "Día"
   },
   "Direction": {
    "es": "Dirección"
   },
+  "Dropped the most": {
+   "es": "Lo que más bajó"
+  },
+  "Every year you've logged, whatever range is picked above": {
+   "es": "Todos los años que registraste, sin importar el rango elegido arriba"
+  },
   "Expenses": {
    "es": "Gastos"
   },
+  "From": {
+   "es": "Desde"
+  },
+  "Grew the most": {
+   "es": "Lo que más subió"
+  },
+  "Highlights": {
+   "es": "Lo más destacado"
+  },
   "Income": {
    "es": "Ingresos"
+  },
+  "Income averages %@": {
+   "es": "Ingreso promedio: %@"
   },
   "Last %lld months": {
    "en": {
@@ -3013,14 +3107,26 @@
     "other": "Últimos %lld meses"
    }
   },
+  "Last 12 months": {
+   "es": "Últimos 12 meses"
+  },
   "Log transaction": {
    "es": "Anotar movimiento"
   },
   "Month": {
    "es": "Mes"
   },
+  "Month by month": {
+   "es": "Mes a mes"
+  },
+  "Months you saved": {
+   "es": "Meses en que ahorraste"
+  },
   "Net worth": {
    "es": "Patrimonio neto"
+  },
+  "New": {
+   "es": "Nueva"
   },
   "Next month": {
    "es": "Mes siguiente"
@@ -3055,6 +3161,9 @@
   "Pace": {
    "es": "Ritmo"
   },
+  "Period": {
+   "es": "Período"
+  },
   "Previous month": {
    "es": "Mes anterior"
   },
@@ -3064,8 +3173,23 @@
   "Result per month": {
    "es": "Resultado por mes"
   },
+  "Running total of what you kept, month after month": {
+   "es": "Lo que fuiste guardando, sumado mes a mes"
+  },
   "Same as %@ by the same day": {
    "es": "Igual que en %@ al mismo día"
+  },
+  "Saved": {
+   "es": "Ahorrado"
+  },
+  "Saved so far": {
+   "es": "Ahorrado hasta ahí"
+  },
+  "Savings over time": {
+   "es": "Ahorro acumulado"
+  },
+  "Spending changes %@": {
+   "es": "Cambios en gastos %@"
   },
   "Spent in %@": {
    "es": "Gastado en %@"
@@ -3076,17 +3200,41 @@
   "Summary": {
    "es": "Resumen"
   },
+  "This year": {
+   "es": "Este año"
+  },
+  "To": {
+   "es": "Hasta"
+  },
+  "Top categories over time": {
+   "es": "Tus categorías principales"
+  },
+  "Toughest month": {
+   "es": "Mes más difícil"
+  },
   "Went out": {
    "es": "Salió"
+  },
+  "Year over year": {
+   "es": "Año contra año"
   },
   "You broke even in %@": {
    "es": "Quedaste a mano en %@"
   },
+  "You kept %@ of what came in": {
+   "es": "Guardaste el %@ de lo que entró"
+  },
   "You kept %@ of what came in.": {
    "es": "Guardaste el %@ de lo que entró."
   },
+  "You overspent": {
+   "es": "Gastaste de más"
+  },
   "You overspent in %@": {
    "es": "Gastaste de más en %@"
+  },
+  "You saved": {
+   "es": "Ahorraste"
   },
   "You saved in %@": {
    "es": "Ahorraste en %@"
@@ -3100,6 +3248,9 @@
   "You spent exactly what came in.": {
    "es": "Gastaste exactamente lo que entró."
   },
+  "Your largest spending categories, month by month": {
+   "es": "Las categorías en que más gastas, mes a mes"
+  },
   "Your summary starts with one transaction": {
    "es": "Tu resumen empieza con un movimiento"
   },
@@ -3112,6 +3263,9 @@
   "overspent %@": {
    "es": "gastó %@ de más"
   },
+  "per month": {
+   "es": "por mes"
+  },
   "received": {
    "es": "recibido"
   },
@@ -3120,6 +3274,9 @@
   },
   "spent": {
    "es": "gastado"
+  },
+  "vs %@": {
+   "es": "vs %@"
   }
  },
  "transactions": {

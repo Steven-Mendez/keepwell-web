@@ -44,7 +44,7 @@ export function AssistantRulesSection({
                 {rule.name}
               </span>
               <span className="truncate type-caption text-muted-foreground">
-                {`${rule.amount} ${rule.currency} · ${t.in("web", rule.frequency === "weekly" ? "Weekly" : rule.frequency === "yearly" ? "Yearly" : "Monthly")}`}
+                {`${rule.amount} ${rule.currency} · ${t.in("recurring", rule.frequency === "weekly" ? "Weekly" : rule.frequency === "yearly" ? "Yearly" : "Monthly")}`}
               </span>
             </div>
             <KWButton

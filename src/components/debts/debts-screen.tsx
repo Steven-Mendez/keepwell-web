@@ -88,7 +88,7 @@ export function DebtsScreen() {
           <>
             <KWCircleButton
               icon={hidden ? "eye" : "eyeOff"}
-              label={t.in("web", hidden ? "Show amounts" : "Hide amounts")}
+              label={t.in("debts", hidden ? "Show amounts" : "Hide amounts")}
               onClick={toggleHidden}
             />
             <DropdownMenu>

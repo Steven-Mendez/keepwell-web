@@ -56,14 +56,14 @@ export function PeriodPicker({ t, value, onChange }: { t: Translator; value: Per
     // Full height, so it lines up with the month stepper's 40 px buttons beside it.
     <KWSegmented<Period>
       className="w-auto"
-      aria-label={t.in("web", "Period")}
+      aria-label={t.in("summary", "Period")}
       value={value}
       onChange={onChange}
       options={[
         { value: "month", title: t.in("summary", "Month") },
-        { value: "thisYear", title: t.in("web", "This year") },
-        { value: "last12", title: t.in("web", "Last 12 months") },
-        { value: "custom", title: t.in("web", "Custom") },
+        { value: "thisYear", title: t.in("summary", "This year") },
+        { value: "last12", title: t.in("summary", "Last 12 months") },
+        { value: "custom", title: t.in("summary", "Custom") },
       ]}
     />
   )
@@ -79,9 +79,9 @@ export function CustomRangePicker({ t, f, activity, range, onChange }: { t: Tran
   const end = monthKey(range.end)
   return (
     <div className="flex items-center gap-2">
-      <OptionSelect aria-label={t.in("web", "From")} className="h-10 w-44" value={start} options={options} onChange={(next) => onChange({ start: next, end })} />
+      <OptionSelect aria-label={t.in("summary", "From")} className="h-10 w-44" value={start} options={options} onChange={(next) => onChange({ start: next, end })} />
       <span className="type-caption text-muted-foreground">–</span>
-      <OptionSelect aria-label={t.in("web", "To")} className="h-10 w-44" value={end} options={options} onChange={(next) => onChange({ start, end: next })} />
+      <OptionSelect aria-label={t.in("summary", "To")} className="h-10 w-44" value={end} options={options} onChange={(next) => onChange({ start, end: next })} />
     </div>
   )
 }
