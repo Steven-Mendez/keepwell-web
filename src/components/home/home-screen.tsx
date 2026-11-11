@@ -435,7 +435,7 @@ function DraftsSection({
                         )
                       }
                     >
-                      {t.in("web", "Discard")}
+                      {t.in("home", "Discard")}
                     </KWButton>
                   ) : null}
                   <KWButton
@@ -712,7 +712,7 @@ function Hero({
             </p>
             {overview.netWorthExcluded.length > 0 ? (
               <p className="type-caption text-foreground/70">
-                {t.in("web", "Doesn't include balances in %@", overview.netWorthExcluded.join(", "))}
+                {t.in("home", "Doesn't include balances in %@", overview.netWorthExcluded.join(", "))}
               </p>
             ) : null}
             {/* The conversion and the counts chip share a line on desktop: one row less, same facts. */}

@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { AmountInput } from "@/components/accounts/form-parts"
 import { KWButton } from "@/components/kw/design"
+import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   addToSavingsGoal,
@@ -33,6 +34,7 @@ export function GoalMoneyDialog({
   mode: GoalMoneyMode
   onClose: () => void
 }) {
+  const [hidden] = useHiddenBalances()
   const [text, setText] = useState("")
   const [isSaving, setSaving] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -65,8 +67,8 @@ export function GoalMoneyDialog({
             {t.in(
               "goals",
               "%@ of %@",
-              formatAmount(goal.saved, goal.target.currency),
-              formatAmount(goal.target.amount, goal.target.currency)
+              hidden ? BALANCE_MASK : formatAmount(goal.saved, goal.target.currency),
+              hidden ? BALANCE_MASK : formatAmount(goal.target.amount, goal.target.currency)
             )}
           </p>
         </DialogHeader>

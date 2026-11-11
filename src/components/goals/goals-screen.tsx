@@ -13,7 +13,7 @@ import { AnimatedList, ListItem, SpringFill } from "@/components/kw/motion"
 import { CategoryBadge, Page, Surface } from "@/components/kw/primitives"
 import { SkeletonList } from "@/components/kw/skeletons"
 import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
-import { useLedger } from "@/hooks/use-ledger"
+import { useLedgerLoad } from "@/hooks/use-ledger"
 import { orderedGoals, savingsGoalProgress } from "@/lib/domain"
 import { formatAmount } from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
@@ -26,7 +26,7 @@ import { GoalMoneyDialog, type GoalMoneyMode } from "./goal-money-dialog"
 
 const TONE_CLASS = {
   positive: "text-positive",
-  negative: "text-negative",
+  pending: "text-pending",
   neutral: "text-muted-foreground",
 } as const
 
@@ -36,7 +36,7 @@ const TONE_CLASS = {
  */
 export function GoalsScreen() {
   const t = useT()
-  const ledger = useLedger()
+  const { ledger, failed } = useLedgerLoad()
   const [hidden, toggleHidden] = useHiddenBalances()
   const [now] = useState(() => new Date())
   const [editor, setEditor] = useState<GoalEditorTarget>()
@@ -52,7 +52,7 @@ export function GoalsScreen() {
           <>
             <KWCircleButton
               icon={hidden ? "eye" : "eyeOff"}
-              label={t.in("web", hidden ? "Show balances" : "Hide balances")}
+              label={t.in("goals", hidden ? "Show amounts" : "Hide amounts")}
               onClick={toggleHidden}
             />
             <KWButton icon="plus" onClick={add}>
@@ -61,7 +61,9 @@ export function GoalsScreen() {
           </>
         }
       />
-      {!goals ? (
+      {failed ? (
+        <p className="type-body text-muted-foreground">{t.in("goals", "We couldn't load your goals.")}</p>
+      ) : !goals ? (
         <SkeletonList rows={3} />
       ) : goals.length === 0 ? (
         <KWGroupedCard>

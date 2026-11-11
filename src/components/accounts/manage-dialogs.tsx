@@ -317,12 +317,17 @@ export function CardNumberDialog({
         setError(undefined)
         onOpenChange(next)
       }}
-      title={t.in("web", "Card number")}
+      title={t.in("sharedpresentation", "Card number")}
       description={t.in(
-        "addcard",
+        "sharedpresentation",
         "We never ask for the full number or the CVV."
       )}
       onSubmit={async () => {
+        // As iOS CardNumberSheet: a credit card keeps its 4 digits; a debit card may clear them.
+        if (digits.length !== 4 && (card.kind === "creditHolder" || digits !== "")) {
+          setError(t.in("sharedpresentation", "Enter the last 4 digits."))
+          return false
+        }
         try {
           await setCardNumber(
             ledgerStore,
@@ -346,7 +351,7 @@ export function CardNumberDialog({
       <div className="grid grid-cols-2 gap-3">
         <LabeledField
           id="card-digits"
-          label={t.in("addcard", "Last 4 digits")}
+          label={t.in("sharedpresentation", "Last 4 digits")}
           error={error}
         >
           <Input

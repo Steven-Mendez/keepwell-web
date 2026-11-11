@@ -9,10 +9,5 @@ export const WEB_STRINGS_EDITOR: WebStrings = {
   "Saved as a draft, it doesn't affect balances until you confirm it.": {
     es: "Se guarda como borrador y no afecta los saldos hasta que lo confirmes.",
   },
-  "Edits keep the rate this transaction was logged with.": {
-    es: "Al editar se mantiene la tasa con la que se registró el movimiento.",
-  },
-  Time: { es: "Hora" },
   "Download image": { es: "Descargar imagen" },
-  Receipt: { es: "Comprobante" },
 }

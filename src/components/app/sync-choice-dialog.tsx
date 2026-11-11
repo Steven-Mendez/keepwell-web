@@ -82,11 +82,11 @@ export function SyncChoiceDialog({ status, userId }: { status: SyncStatus | unde
       else await keepBrowserData(httpTransport, userId)
       const after = await syncScheduler().runNow()
       if (after.state === "error" || after.state === "offline") {
-        toast.add({ title: t.in("web", "Couldn't sync. Keepwell will try again."), type: "error" })
+        toast.add({ title: t.in("cloudaccount", "Couldn't sync. Keepwell will try again."), type: "error" })
       }
       setRequested(false)
     } catch {
-      toast.add({ title: t.in("web", "Couldn't reach Keepwell. Try again."), type: "error" })
+      toast.add({ title: t.in("cloudaccount", "Couldn't reach Keepwell. Try again."), type: "error" })
     } finally {
       setBusy(undefined)
     }
@@ -99,13 +99,13 @@ export function SyncChoiceDialog({ status, userId }: { status: SyncStatus | unde
           <DialogHeader className="gap-2">
             <DialogTitle className="type-heading">{t.in("web", "This browser and your account have different data")}</DialogTitle>
             <DialogDescription className="type-body leading-relaxed text-muted-foreground">
-              {t.in("web", "Choose which to keep. The other is replaced, and this can't be undone.")}
+              {t.in("cloudaccount", "Choose which to keep. The other is replaced, and this can't be undone.")}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3">
             <ChoiceCard
               icon={<KWIcon name="cloud" size={20} />}
-              title={t.in("web", "Use your account's data")}
+              title={t.in("cloudaccount", "Use your account's data")}
               description={t.in("web", "Replaces what's in this browser with the data in your Keepwell account.")}
               counts={describeCounts(t, choice.cloud)}
               busy={busy === "account"}
@@ -115,7 +115,7 @@ export function SyncChoiceDialog({ status, userId }: { status: SyncStatus | unde
             <ChoiceCard
               icon={<MonitorSmartphoneIcon className="size-5" strokeWidth={2} aria-hidden />}
               title={t.in("web", "Keep this browser's data")}
-              description={t.in("web", "Replaces your account's data, on every device, with what's here.")}
+              description={t.in("cloudaccount", "Replaces your account's data, on every device, with what's here.")}
               counts={describeCounts(t, choice.local)}
               busy={busy === "browser"}
               disabled={busy !== undefined}
@@ -123,16 +123,16 @@ export function SyncChoiceDialog({ status, userId }: { status: SyncStatus | unde
             />
           </div>
           <KWButton variant="plain" size="regular" className="self-center" disabled={busy !== undefined} onClick={decideLater}>
-            {t.in("web", "Decide later")}
+            {t.in("cloudaccount", "Decide later")}
           </KWButton>
         </DialogContent>
       </Dialog>
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
-        title={t.in("web", "Replace your account's data?")}
+        title={t.in("cloudaccount", "Replace your account's data?")}
         description={t.in("web", "Everything in your Keepwell account is deleted on every device and replaced with what's in this browser. This can't be undone.")}
-        action={t.in("web", "Replace")}
+        action={t.in("cloudaccount", "Replace")}
         destructive
         onConfirm={() => void resolve("browser")}
       />

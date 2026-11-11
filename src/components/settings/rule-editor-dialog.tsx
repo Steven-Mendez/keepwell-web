@@ -149,7 +149,7 @@ export function RuleEditorDialog({
             }}
           >
             <KWSegmented
-              aria-label={t.in("settings", "Category")}
+              aria-label={t.in("transactions", "Type")}
               value={kind}
               onChange={(next) => {
                 if (next !== kind) setCategoryId("")

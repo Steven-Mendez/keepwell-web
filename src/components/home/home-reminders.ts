@@ -37,7 +37,7 @@ export interface Reminder {
 
 /**
  * What iOS sends as notifications, shown in place on the web: drafts due today, card payments
- * and loan installments within the reminder window (an installment past its day stays until paid),
+ * and loan installments within the reminder window (until its due day, as iOS),
  * statements closing today, subscriptions renewing tomorrow and plastics expiring this month. Budgets
  * warn from 80% of the month's limit and again once it's spent, and subscriptions whose latest charge
  * cost more than the one before say so.
@@ -145,16 +145,14 @@ export function homeReminders(
     const days = Math.round(
       (startOfDay(next.dueDate).getTime() - today) / 86_400_000
     )
-    if (days > overview.paymentReminderDaysBefore) continue
+    // As iOS: from the reminder day until the due day; an overdue installment shows on Debts.
+    if (days < 0 || days > overview.paymentReminderDaysBefore) continue
     const { loan } = progress
     reminders.push({
       id: `installment-${loan.id}-${next.number}`,
       icon: "cash",
-      tone: days < 0 ? "negative" : "pending",
-      title:
-        days < 0
-          ? t.in("web", "%@: installment overdue", loan.name)
-          : t.in("home", "%@: installment in %lld days", loan.name, days),
+      tone: "pending",
+      title: t.in("home", "%@: installment in %lld days", loan.name, days),
       body: t.in(
         "home",
         "Installment %lld of %lld · %@",
@@ -183,8 +181,8 @@ export function homeReminders(
       id: `renews-${rule.id}`,
       icon: "subscription",
       tone: "accent",
-      title: t.in("web", "%@ renews tomorrow", rule.name),
-      body: t.in("web", "%@ on %@", amount(rule.amount, rule.currency), method),
+      title: t.in("home", "%@ renews tomorrow", rule.name),
+      body: t.in("home", "%@ on %@", amount(rule.amount, rule.currency), method),
     })
   }
   const thisMonth = yearMonthContaining(now)

@@ -17,7 +17,7 @@ import {
   sourceAccounts,
   sourceQuestion,
 } from "./editor-model"
-import { accountRow, availableText } from "./editor-state"
+import { accountRow, availableText, withDay } from "./editor-state"
 import { FieldLabel, KWSwitch, KW_FIELD, KW_TEXTAREA } from "./flow-parts"
 import { NewCategoryDialog } from "./new-category-dialog"
 import { AccountPicker, CategoryPicker, MethodPicker } from "./pickers"
@@ -273,9 +273,9 @@ export function DetailsSection({ editor }: SectionProps) {
         <FieldLabel htmlFor="editor-date">{ct("Date")}</FieldLabel>
         <Input
           id="editor-date"
-          type="datetime-local"
-          value={fields.dateText}
-          onChange={(event) => update({ dateText: event.target.value })}
+          type="date"
+          value={fields.dateText.slice(0, 10)}
+          onChange={(event) => update({ dateText: withDay(fields.dateText, event.target.value) })}
           className={cn(KW_FIELD, "[color-scheme:dark]")}
         />
       </div>

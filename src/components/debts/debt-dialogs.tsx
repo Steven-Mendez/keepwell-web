@@ -30,11 +30,7 @@ import {
   savePersonalDebt,
   settlePersonalDebt,
 } from "@/lib/domain"
-import {
-  formatAmount,
-  formatNumber,
-  parseAmount,
-} from "@/lib/domain/format"
+import { formatAmount, formatNumber, parseAmount } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
 import {
@@ -140,7 +136,9 @@ export function DebtEditorDialog({
             }}
           >
             <KWSegmented
-              aria-label={t.in("debts", "Debts")}
+              aria-label={
+                debt ? t.in("debts", "Edit debt") : t.in("debts", "New debt")
+              }
               value={direction}
               onChange={setDirection}
               options={[

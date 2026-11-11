@@ -35,7 +35,7 @@ export function AssistantRulesSection({
     )
 
   return (
-    <KWSection title={t.in("web", "Proposed by Claude")}>
+    <KWSection title={t.in("home", "Proposed by Claude")}>
       <div className="flex flex-col divide-y divide-border rounded-2xl bg-card">
         {proposed.map((rule) => (
           <div key={rule.id} className="flex items-center gap-3 px-4 py-3">
@@ -44,7 +44,7 @@ export function AssistantRulesSection({
                 {rule.name}
               </span>
               <span className="truncate type-caption text-muted-foreground">
-                {`${rule.amount} ${rule.currency} · ${t.in("web", rule.frequency === "weekly" ? "Weekly" : rule.frequency === "yearly" ? "Yearly" : "Monthly")}`}
+                {`${rule.amount} ${rule.currency} · ${t.in("recurring", rule.frequency === "weekly" ? "Weekly" : rule.frequency === "yearly" ? "Yearly" : "Monthly")}`}
               </span>
             </div>
             <KWButton
@@ -54,7 +54,7 @@ export function AssistantRulesSection({
                 void act(deleteRecurringRule(ledgerStore, rule.id))
               }
             >
-              {t.in("web", "Discard")}
+              {t.in("home", "Discard")}
             </KWButton>
             <KWButton
               size="mini"

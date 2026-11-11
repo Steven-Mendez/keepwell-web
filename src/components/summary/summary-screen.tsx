@@ -65,7 +65,7 @@ function rangeSubtitle(
 ) {
   if (!range) return undefined
   const text = rangeText(f, range.report.range)
-  return range.report.isRunning ? t.in("web", "%@ · through today", text) : text
+  return range.report.isRunning ? t.in("summary", "%@ · through today", text) : text
 }
 
 /** The selected month's title, with its year once it isn't this year's. */

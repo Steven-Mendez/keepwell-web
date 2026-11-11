@@ -290,13 +290,13 @@ function offerRule(
   if (!category || draft.kind === "transfer" || category.id === previousCategoryId || match === "") return
   const name = categoryName(t, category)
   toast.add({
-    title: t.in("web", "Always use %@ for “%@”?", name, match),
+    title: t.in("createtransaction", "Always use %@ for “%@”?", name, match),
     timeout: 8000,
     actionProps: {
       children: t.in("settings", "Create rule"),
       onClick: () => {
         saveCategorizationRule(ledgerStore, { match, categoryId: category.id, kind: draft.kind })
-          .then(() => toast.add({ title: t.in("web", "Rule saved"), type: "success" }))
+          .then(() => toast.add({ title: t.in("createtransaction", "Rule saved"), type: "success" }))
           .catch(() => toast.add({ title: t.in("settings", "We couldn't save the rule. Try again."), type: "error" }))
       },
     },
