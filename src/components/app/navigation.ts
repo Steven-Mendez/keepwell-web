@@ -16,7 +16,7 @@ export interface NavItem {
 }
 
 /** The Plan hub, the iOS tab after Summary; on the web the label of the sidebar group holding Recurring, Goals and Debts. */
-export const PLAN_NAV: NavItem = { title: "Plan", ns: "plan", href: "/plan", icon: CalendarCheckIcon, kwIcon: "clock", key: "p" }
+export const PLAN_NAV: NavItem = { title: "Plan", ns: "plan", href: "/plan", icon: CalendarCheckIcon, kwIcon: "calendarCheck", key: "p" }
 
 /** The iOS tabs (MainTabView), in the same order. */
 export const MAIN_NAV: readonly NavItem[] = [

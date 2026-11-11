@@ -1,6 +1,7 @@
 import {
   isActive,
-  nextOccurrenceOf,
+  occurrencesFrom,
+  startOfDay,
   orderedGoals,
   orderedLoans,
   savingsGoalProgress,
@@ -35,12 +36,16 @@ export interface PlanSummary {
 
 /** The soonest next occurrence among active (not paused, not finished) rules; ties keep the name order. */
 export function nextRecurring(
-  rules: readonly RecurringRule[]
+  rules: readonly RecurringRule[],
+  now: Date
 ): { rule: RecurringRule; date: Date } | undefined {
   let best: { rule: RecurringRule; date: Date } | undefined
   for (const rule of rules) {
     if (!isActive(rule)) continue
-    const date = nextOccurrenceOf(rule)
+    // The stored next date, or today if it already passed (not recorded yet): never a past day, as iOS.
+    const stored = new Date(rule.nextDate)
+    const today = startOfDay(now)
+    const date = occurrencesFrom(rule, stored > today ? stored : today, 1)[0]
     if (!date) continue
     if (
       !best ||
@@ -57,7 +62,7 @@ export function planSummary(ledger: Ledger, now: Date): PlanSummary {
   const first = goals[0]
   const totals = debtTotals(ledger.loans, ledger.personalDebts)
   const nextLoan = orderedLoans(ledger.loans, now).find((entry) => entry.next)
-  const next = nextRecurring(ledger.recurringRules)
+  const next = nextRecurring(ledger.recurringRules, now)
   return {
     recurring: {
       ruleCount: ledger.recurringRules.length,
