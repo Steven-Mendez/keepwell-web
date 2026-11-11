@@ -1,6 +1,7 @@
 "use client"
 
 import { BotIcon, InfoIcon, KeyboardIcon, LanguagesIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
@@ -297,8 +298,15 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
         onClick={() => setMethodsOpen(true)}
       />
       <SettingsLinkRow
+        icon="subscription"
+        label={t.in("settings", "Recurring")}
+        description={t.in("settings", "Subscriptions and regular movements")}
+        href="/recurring"
+      />
+      <SettingsLinkRow
         icon="bolt"
         label={t.in("settings", "Rules")}
+        description={t.in("settings", "Categorize movements by their description")}
         value={ledger.categorizationRules.length}
         href="/settings/rules"
       />
@@ -322,31 +330,55 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
                 <div key={account.id} className="flex flex-col gap-2">
                   <KWSectionHeader title={accountName(account)} />
                   <KWGroupedCard>
-                    {methods.map((card) => (
-                      <div
-                        key={card.id}
-                        className="flex min-h-12 items-center gap-3 px-4 py-2.5"
-                      >
-                        {card.kind === "transfer" ? (
-                          <KWMiniCard kind="transfer" />
-                        ) : (
-                          <KWMiniCard color={card.color} />
-                        )}
-                        <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="truncate type-label text-foreground">
-                            {methodTitle(t, card, account)}
+                    {methods.map((card) => {
+                      const content = (
+                        <>
+                          {card.kind === "transfer" ? (
+                            <KWMiniCard kind="transfer" />
+                          ) : (
+                            <KWMiniCard color={card.color} />
+                          )}
+                          <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="truncate type-label text-foreground">
+                              {methodTitle(t, card, account)}
+                            </span>
+                            <span className="truncate type-caption text-muted-foreground">
+                              {card.kind === "transfer"
+                                ? t.in(
+                                    "settings",
+                                    "Charged straight to the account"
+                                  )
+                                : plasticSubtitle(t, card)}
+                            </span>
                           </span>
-                          <span className="truncate type-caption text-muted-foreground">
-                            {card.kind === "transfer"
-                              ? t.in(
-                                  "settings",
-                                  "Charged straight to the account"
-                                )
-                              : plasticSubtitle(t, card)}
-                          </span>
-                        </span>
-                      </div>
-                    ))}
+                        </>
+                      )
+                      const rowClass =
+                        "flex min-h-12 items-center gap-3 px-4 py-2.5"
+                      // A card opens its account, where it is edited; the transfer channel has no screen (iOS).
+                      return card.kind === "transfer" ? (
+                        <div key={card.id} className={rowClass}>
+                          {content}
+                        </div>
+                      ) : (
+                        <Link
+                          key={card.id}
+                          href={`/accounts?id=${account.id}`}
+                          onClick={() => setMethodsOpen(false)}
+                          className={cn(
+                            rowClass,
+                            "press-row outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50"
+                          )}
+                        >
+                          {content}
+                          <KWIcon
+                            name="chevronRight"
+                            size={16}
+                            className="shrink-0 text-text-faint"
+                          />
+                        </Link>
+                      )
+                    })}
                   </KWGroupedCard>
                 </div>
               ))}
