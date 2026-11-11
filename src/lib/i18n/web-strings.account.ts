@@ -180,4 +180,7 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "You'll be signed out on this browser.": { es: "Se cerrará la sesión en este navegador." },
   "Doesn't include balances in %@": { es: "No incluye saldos en %@" },
   "Try again": { es: "Reintentar" },
+  "Couldn't open the editor.": { es: "No se pudo abrir el editor." },
+  "This is taking too long.": { es: "Está tardando demasiado." },
+  Close: { es: "Cerrar" },
 }

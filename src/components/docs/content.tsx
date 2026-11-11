@@ -128,6 +128,10 @@ const MANAGE_TOOLS: { area: { en: string; es: string }; tools: string[] }[] = [
   },
   { area: { en: "Settings", es: "Ajustes" }, tools: ["update_settings"] },
   {
+    area: { en: "Several at once", es: "Varios a la vez" },
+    tools: ["apply_changes"],
+  },
+  {
     area: { en: "Undo", es: "Deshacer" },
     tools: ["list_deleted", "restore_deleted"],
   },
@@ -583,6 +587,11 @@ function english(
                 Delete the duplicate grocery expense from yesterday.
               </Prompt>
               <Prompt>Undo the last thing you deleted.</Prompt>
+              <Prompt>Log these 12 receipts in Cash: (paste the list).</Prompt>
+              <Callout kind="tip">
+                Several changes at once go through <C>apply_changes</C>: one
+                call, one card in the chat, all saved or none.
+              </Callout>
             </>
           ),
         },
@@ -1428,6 +1437,14 @@ function spanish(
               </Prompt>
               <Prompt>Borra el gasto del súper duplicado de ayer.</Prompt>
               <Prompt>Deshaz lo último que borraste.</Prompt>
+              <Prompt>
+                Anota estos 12 recibos en Efectivo: (pega la lista).
+              </Prompt>
+              <Callout kind="tip">
+                Varios cambios a la vez pasan por <C>apply_changes</C>: una sola
+                llamada, una sola tarjeta en el chat, y se guardan todos o
+                ninguno.
+              </Callout>
             </>
           ),
         },
