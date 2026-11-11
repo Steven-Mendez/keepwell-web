@@ -1,7 +1,7 @@
 "use client"
 
 import { useLiveQuery } from "dexie-react-hooks"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { useAppActions, type EditorRequest } from "@/components/app/app-actions"
 import { KWButton, KWEmptyState } from "@/components/kw/design"
@@ -37,17 +37,55 @@ function EditorBody({ request, onClose }: { request: EditorRequest; onClose: () 
   const { openAddAccount } = useAppActions()
   // "Log another" on the receipt remounts the form on a fresh movement.
   const [round, setRound] = useState(0)
+  const [attempt, setAttempt] = useState(0)
   // Live: a category created inside the flow, or a balance changed in another tab, shows at once.
-  const context = useLiveQuery(() => getTransactionContext(ledgerStore), [])
+  // A failure is caught and shown, never left as an endless spinner.
+  const loaded = useLiveQuery(async () => {
+    try {
+      return { context: await getTransactionContext(ledgerStore) }
+    } catch (error) {
+      console.error("[Keepwell] couldn't load the movement editor", error)
+      return { error: error instanceof Error ? `${error.name}: ${error.message}` : String(error) }
+    }
+  }, [attempt])
+  // Some browsers leave an IndexedDB read hanging instead of failing; after a while say so.
+  const [slow, setSlow] = useState(false)
+  useEffect(() => {
+    if (loaded) return
+    const timer = setTimeout(() => setSlow(true), 8000)
+    return () => clearTimeout(timer)
+  }, [loaded, attempt])
 
-  if (!context) {
+  if (!loaded?.context) {
+    const problem = loaded?.error ?? (slow ? t.in("web", "This is taking too long.") : undefined)
     return (
-      <div className="flex min-h-64 items-center justify-center" aria-busy>
+      <div className="flex min-h-64 flex-col items-center justify-center gap-4 p-6 text-center" aria-busy={!problem}>
         <DialogTitle className="sr-only">{t.in("app", "New transaction")}</DialogTitle>
-        <Spinner className="size-6 text-muted-foreground" />
+        {problem ? (
+          <>
+            <p className="type-body text-foreground">{t.in("web", "Couldn't open the editor.")}</p>
+            <p className="max-w-md type-caption break-words text-muted-foreground">{problem}</p>
+            <div className="flex gap-3">
+              <KWButton variant="secondary" onClick={onClose}>
+                {t.in("web", "Close")}
+              </KWButton>
+              <KWButton
+                onClick={() => {
+                  setSlow(false)
+                  setAttempt((value) => value + 1)
+                }}
+              >
+                {t.in("web", "Try again")}
+              </KWButton>
+            </div>
+          </>
+        ) : (
+          <Spinner className="size-6 text-muted-foreground" />
+        )}
       </div>
     )
   }
+  const context = loaded.context
 
   if (context.accounts.length === 0) {
     return (
