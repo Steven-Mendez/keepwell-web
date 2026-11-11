@@ -514,7 +514,7 @@ function WelcomeChoice({
         </h2>
         <p className="type-caption text-muted-foreground">
           {t.in(
-            "web",
+            "cloudaccount",
             "Sign in and your accounts and movements come back as they were."
           )}
         </p>
