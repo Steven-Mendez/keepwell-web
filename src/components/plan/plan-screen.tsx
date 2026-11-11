@@ -119,8 +119,8 @@ function RecurringCard({
           {recurring.next ? (
             <span className="truncate type-caption text-text-secondary tabular-nums">
               {t.in(
-                "home",
-                "%@ on %@",
+                "plan",
+                "Next: %@ · %@",
                 recurring.next.rule.name,
                 nextDateText(t, recurring.next.date, now)
               )}

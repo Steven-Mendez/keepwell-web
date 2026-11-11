@@ -3941,6 +3941,9 @@
     "other": "%lld metas"
    }
   },
+  "Next: %@ · %@": {
+   "es": "Próximo: %@ · %@"
+  },
   "Plan": {
    "es": "Planificar"
   }
