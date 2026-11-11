@@ -51,7 +51,7 @@ export function ConnectedAppsSection({ t }: { t: Translator }) {
             key={client.client_id}
             icon={<BotIcon strokeWidth={2} />}
             label={client.name ?? client.client_id}
-            description={client.scopes.includes("write") ? t.in("web", "Can read and record") : t.in("web", "Can read")}
+            description={client.scopes.includes("manage") ? t.in("web", "Full control") : client.scopes.includes("write") ? t.in("web", "Can read and record") : t.in("web", "Can read")}
           >
             <KWButton variant="secondary" size="small" onClick={() => void run(() => revokeClient(client.client_id))}>
               {t.in("web", "Disconnect")}

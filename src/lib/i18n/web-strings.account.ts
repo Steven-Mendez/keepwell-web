@@ -79,6 +79,10 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
     },
   "None connected": { es: "Ninguno conectado" },
   "Can read and record": { es: "Puede leer y registrar" },
+  "Full control": { es: "Control total" },
+  "Do what you can do in the app: create, edit and delete accounts, movements, categories, budgets, goals, loans and debts, and change currencies. Deletes can be undone for 30 days": {
+    es: "Hacer lo mismo que tú en la app: crear, editar y borrar cuentas, movimientos, categorías, presupuestos, metas, préstamos y deudas, y cambiar monedas. Los borrados se pueden deshacer durante 30 días",
+  },
   "Can read": { es: "Puede leer" },
   Disconnect: { es: "Desconectar" },
   "Disconnect everything": { es: "Desconectar todo" },
