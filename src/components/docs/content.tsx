@@ -47,7 +47,111 @@ const READ_TOOLS = [
   "get_trends",
   "get_upcoming_payments",
   "search_transactions",
+  "list_categories",
+  "list_recurring_rules",
+  "list_savings_goals",
+  "list_loans",
+  "list_personal_debts",
+  "list_categorization_rules",
 ]
+
+/** The full-control tools, grouped as the app's screens are (ADR 0011 in keepwell-api). */
+const MANAGE_TOOLS: { area: { en: string; es: string }; tools: string[] }[] = [
+  {
+    area: { en: "Accounts and cards", es: "Cuentas y tarjetas" },
+    tools: [
+      "create_account",
+      "create_credit_card",
+      "update_account",
+      "update_card",
+      "delete_account",
+    ],
+  },
+  {
+    area: { en: "Categories and budgets", es: "Categorías y presupuestos" },
+    tools: [
+      "create_category",
+      "update_category",
+      "delete_category",
+      "reorder_categories",
+      "restore_default_categories",
+    ],
+  },
+  {
+    area: { en: "Movements", es: "Movimientos" },
+    tools: [
+      "create_transaction",
+      "update_transaction",
+      "confirm_transaction",
+      "delete_transaction",
+    ],
+  },
+  {
+    area: { en: "Recurring payments", es: "Pagos recurrentes" },
+    tools: [
+      "create_recurring_rule",
+      "update_recurring_rule",
+      "set_recurring_rule_paused",
+      "delete_recurring_rule",
+    ],
+  },
+  {
+    area: { en: "Savings goals", es: "Metas de ahorro" },
+    tools: [
+      "create_savings_goal",
+      "update_savings_goal",
+      "move_savings_goal_money",
+      "delete_savings_goal",
+    ],
+  },
+  {
+    area: { en: "Loans and debts", es: "Préstamos y deudas" },
+    tools: [
+      "create_loan",
+      "update_loan",
+      "pay_loan_installment",
+      "unpay_loan_installment",
+      "delete_loan",
+      "create_personal_debt",
+      "update_personal_debt",
+      "update_personal_debt_status",
+      "delete_personal_debt",
+    ],
+  },
+  {
+    area: { en: "Categorization rules", es: "Reglas de categorización" },
+    tools: [
+      "create_categorization_rule",
+      "update_categorization_rule",
+      "delete_categorization_rule",
+    ],
+  },
+  { area: { en: "Settings", es: "Ajustes" }, tools: ["update_settings"] },
+  {
+    area: { en: "Undo", es: "Deshacer" },
+    tools: ["list_deleted", "restore_deleted"],
+  },
+]
+const MANAGE_COUNT = MANAGE_TOOLS.reduce(
+  (sum, group) => sum + group.tools.length,
+  0
+)
+
+function manageTable(lang: Lang) {
+  return (
+    <RefTable
+      head={lang === "es" ? ["Área", "Herramientas"] : ["Area", "Tools"]}
+      rows={MANAGE_TOOLS.map((group) => [
+        group.area[lang],
+        <span key={group.area.en} className="flex flex-wrap gap-1.5">
+          {group.tools.map((name) => (
+            <C key={name}>{name}</C>
+          ))}
+        </span>,
+      ])}
+    />
+  )
+}
 
 export function docsPages(lang: Lang, { mcpUrl }: DocsInput): DocPage[] {
   const url = mcpUrl ? <Copyable value={mcpUrl} label="Connector URL" /> : null
@@ -103,6 +207,12 @@ function english(
                   <strong>Record, with your OK:</strong> Claude can propose a
                   movement or a recurring payment. It waits as pending until you
                   confirm it in Keepwell.
+                </li>
+                <li>
+                  <strong>Full control, if you allow it:</strong> Claude does
+                  what you can do in the app: accounts, cards, categories,
+                  budgets, movements, goals, loans, debts and currencies.
+                  Deletes can be undone for 30 days.
                 </li>
               </ul>
             </>
@@ -252,8 +362,10 @@ function english(
                           ),
                           body: (
                             <p>
-                              Claude asks to read your data and, if it asks to
-                              record, to propose movements.
+                              You see what Claude asks for: read your data,
+                              propose movements, or full control (do what you
+                              can in the app). Allow what you&rsquo;re
+                              comfortable with.
                             </p>
                           ),
                         },
@@ -448,10 +560,29 @@ function english(
                 on the 12th.
               </Prompt>
               <Callout>
-                What Claude records waits as pending until you confirm it in
-                Keepwell. See{" "}
+                With the record permission, what Claude records waits as pending
+                until you confirm it in Keepwell. See{" "}
                 <Link href="/docs/security">Security and privacy</Link>.
               </Callout>
+            </>
+          ),
+        },
+        {
+          id: "manage",
+          title: "With full control",
+          body: (
+            <>
+              <Prompt>
+                Create a cash wallet called Efectivo with 2,000 NIO.
+              </Prompt>
+              <Prompt>Set a 300 USD monthly budget for Restaurants.</Prompt>
+              <Prompt>
+                Rename my BAC card to BAC Oro and set its due day to the 20th.
+              </Prompt>
+              <Prompt>
+                Delete the duplicate grocery expense from yesterday.
+              </Prompt>
+              <Prompt>Undo the last thing you deleted.</Prompt>
             </>
           ),
         },
@@ -624,12 +755,32 @@ function english(
           ),
         },
         {
+          id: "manage",
+          title: "Full control tools",
+          body: (
+            <>
+              <p>
+                With <strong>full control</strong> allowed, these replace the
+                two write tools above and apply directly, the same way the app
+                does (deleting an account also deletes its cards and movements;
+                deleting a category moves its movements to Other).
+              </p>
+              {manageTable("en")}
+              <Callout kind="warning">
+                Every delete asks you first in Claude. What it removes can be
+                brought back for 30 days with <C>restore_deleted</C>, under new
+                ids.
+              </Callout>
+            </>
+          ),
+        },
+        {
           id: "count",
           title: "At a glance",
           body: (
             <p>
-              {READ_TOOLS.length} read tools, 2 write tools. No tool deletes,
-              edits history, moves money or changes settings.
+              {READ_TOOLS.length} read tools; 2 write tools that only propose;
+              with full control, {MANAGE_COUNT} tools that do what the app does.
             </p>
           ),
         },
@@ -652,8 +803,14 @@ function english(
                 tools.
               </li>
               <li>
-                <strong>Record</strong> adds the write tools. You see both on
-                the consent screen before allowing.
+                <strong>Record</strong> adds the write tools, which only
+                propose.
+              </li>
+              <li>
+                <strong>Full control</strong> lets Claude create, edit and
+                delete as in the app. You see what is asked on the consent
+                screen before allowing; a connection you already have keeps what
+                it had until you connect again.
               </li>
               <li>
                 Claude signs in with a token, never your password. The token is
@@ -672,6 +829,24 @@ function english(
               count toward balances until you confirm them in Keepwell. There is
               also a limit on how many an assistant can propose per hour.
             </p>
+          ),
+        },
+        {
+          id: "undo",
+          title: "With full control: confirm and undo",
+          body: (
+            <ul>
+              <li>Claude asks you before every delete.</li>
+              <li>
+                What an assistant deletes is kept for 30 days: ask Claude
+                &ldquo;what did you delete?&rdquo; and &ldquo;bring it
+                back&rdquo;. Restored records get new ids.
+              </li>
+              <li>
+                What Claude creates is marked as made by Claude, and there is an
+                hourly limit on how much an assistant can change.
+              </li>
+            </ul>
           ),
         },
         {
@@ -768,6 +943,18 @@ function english(
           ),
         },
         {
+          id: "cant-manage",
+          title: "Claude can't create accounts, edit or delete",
+          body: (
+            <p>
+              That needs full control. Disconnect the connector in Claude,
+              connect it again and allow full control on the consent screen. In
+              Keepwell&rsquo;s Settings the assistant then shows &ldquo;Full
+              control&rdquo;.
+            </p>
+          ),
+        },
+        {
           id: "settings",
           title: "No “Connected assistants” in Settings",
           body: (
@@ -826,6 +1013,12 @@ function spanish(
                   <strong>Anotar, con tu visto bueno:</strong> Claude puede
                   proponer un movimiento o un pago recurrente. Queda pendiente
                   hasta que lo confirmas en Keepwell.
+                </li>
+                <li>
+                  <strong>Control total, si lo permites:</strong> Claude hace lo
+                  mismo que tú en la app: cuentas, tarjetas, categorías,
+                  presupuestos, movimientos, metas, préstamos, deudas y monedas.
+                  Los borrados se pueden deshacer durante 30 días.
                 </li>
               </ul>
             </>
@@ -978,8 +1171,9 @@ function spanish(
                           ),
                           body: (
                             <p>
-                              Claude pide leer tus datos y, si lo pide, proponer
-                              movimientos.
+                              Ves lo que pide Claude: leer tus datos, proponer
+                              movimientos o control total (hacer lo mismo que tú
+                              en la app). Permite lo que te dé confianza.
                             </p>
                           ),
                         },
@@ -1180,10 +1374,30 @@ function spanish(
                 del día 12.
               </Prompt>
               <Callout>
-                Lo que anota Claude queda pendiente hasta que lo confirmas en
-                Keepwell. Mira{" "}
+                Con el permiso de anotar, lo que anota Claude queda pendiente
+                hasta que lo confirmas en Keepwell. Mira{" "}
                 <Link href="/docs/security">Seguridad y privacidad</Link>.
               </Callout>
+            </>
+          ),
+        },
+        {
+          id: "manage",
+          title: "Con control total",
+          body: (
+            <>
+              <Prompt>
+                Crea una billetera de efectivo llamada Efectivo con 2,000 NIO.
+              </Prompt>
+              <Prompt>
+                Pon un presupuesto mensual de 300 USD para Restaurantes.
+              </Prompt>
+              <Prompt>
+                Cambia el nombre de mi tarjeta BAC a BAC Oro y su día de pago al
+                20.
+              </Prompt>
+              <Prompt>Borra el gasto del súper duplicado de ayer.</Prompt>
+              <Prompt>Deshaz lo último que borraste.</Prompt>
             </>
           ),
         },
@@ -1356,12 +1570,33 @@ function spanish(
           ),
         },
         {
+          id: "manage",
+          title: "Herramientas de control total",
+          body: (
+            <>
+              <p>
+                Si permites el <strong>control total</strong>, estas reemplazan
+                a las dos de escritura de arriba y se aplican directo, igual que
+                en la app (borrar una cuenta borra también sus tarjetas y
+                movimientos; borrar una categoría pasa sus movimientos a Otros).
+              </p>
+              {manageTable("es")}
+              <Callout kind="warning">
+                Cada borrado te pregunta primero en Claude. Lo que borra se
+                puede recuperar durante 30 días con <C>restore_deleted</C>, con
+                ids nuevos.
+              </Callout>
+            </>
+          ),
+        },
+        {
           id: "count",
           title: "En resumen",
           body: (
             <p>
-              {READ_TOOLS.length} herramientas de lectura y 2 de escritura.
-              Ninguna borra, edita el historial, mueve dinero ni cambia ajustes.
+              {READ_TOOLS.length} herramientas de lectura; 2 de escritura que
+              solo proponen; con control total, {MANAGE_COUNT} herramientas que
+              hacen lo mismo que la app.
             </p>
           ),
         },
@@ -1384,8 +1619,14 @@ function spanish(
                 herramientas de lectura.
               </li>
               <li>
-                <strong>Anotar</strong> agrega las herramientas de escritura.
-                Ves los dos en la pantalla de permisos antes de aceptar.
+                <strong>Anotar</strong> agrega las herramientas de escritura,
+                que solo proponen.
+              </li>
+              <li>
+                <strong>Control total</strong> deja que Claude cree, edite y
+                borre como en la app. Ves lo que pide en la pantalla de permisos
+                antes de aceptar; una conexión que ya tienes conserva lo que
+                tenía hasta que vuelvas a conectar.
               </li>
               <li>
                 Claude entra con un token, nunca con tu contraseña. El token
@@ -1404,6 +1645,24 @@ function spanish(
               cuentan en tus saldos hasta que los confirmas en Keepwell. Además,
               hay un límite de cuántos puede proponer por hora.
             </p>
+          ),
+        },
+        {
+          id: "undo",
+          title: "Con control total: confirmar y deshacer",
+          body: (
+            <ul>
+              <li>Claude te pregunta antes de cada borrado.</li>
+              <li>
+                Lo que borra un asistente se guarda 30 días: pregúntale a Claude
+                &ldquo;¿qué borraste?&rdquo; y &ldquo;recupéralo&rdquo;. Lo
+                recuperado tiene ids nuevos.
+              </li>
+              <li>
+                Lo que crea Claude queda marcado como suyo, y hay un límite por
+                hora de cuánto puede cambiar un asistente.
+              </li>
+            </ul>
           ),
         },
         {
@@ -1493,6 +1752,18 @@ function spanish(
             <p>
               Anotar requiere el permiso de escritura. Desconecta, vuelve a
               conectar y permite anotar en la pantalla de permisos.
+            </p>
+          ),
+        },
+        {
+          id: "cant-manage",
+          title: "Claude no puede crear cuentas, editar ni borrar",
+          body: (
+            <p>
+              Eso requiere control total. Desconecta el conector en Claude,
+              vuelve a conectarlo y permite el control total en la pantalla de
+              permisos. En los Ajustes de Keepwell el asistente aparecerá con
+              &ldquo;Control total&rdquo;.
             </p>
           ),
         },

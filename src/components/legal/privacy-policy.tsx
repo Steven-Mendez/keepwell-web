@@ -9,7 +9,7 @@ import { useT } from "@/lib/i18n"
 
 /** Where people write about their data. One place, so the page never shows two addresses. */
 export const PRIVACY_CONTACT = "stevenampaiz@icloud.com"
-const UPDATED = { en: "November 9, 2026", es: "9 de noviembre de 2026" }
+const UPDATED = { en: "November 11, 2026", es: "11 de noviembre de 2026" }
 
 type Section = { title: string; body: ReactNode }
 
@@ -65,10 +65,12 @@ const CONTENT: Record<"en" | "es", { title: string; lead: string; updated: strin
         title: "Connected assistants (Claude)",
         body: (
           <p>
-            If you connect an AI assistant such as Claude, you choose what it may do (read, or also propose new
-            movements) on a consent screen. It can then read your Keepwell data through that connection, and anything it
-            creates is marked as such and waits for your confirmation. The assistant&rsquo;s provider handles what it
-            reads under its own privacy policy. You can disconnect every assistant at once in Settings.
+            If you connect an AI assistant such as Claude, you choose what it may do on a consent screen: read, also
+            propose new movements (which wait for your confirmation), or full control (do what you can do in the app,
+            directly). It can then read your Keepwell data through that connection, and anything it creates is marked as
+            such. When an assistant with full control deletes something, a copy is kept for 30 days so it can be undone,
+            then erased; deleting your account erases it at once. The assistant&rsquo;s provider handles what it reads
+            under its own privacy policy. You can disconnect every assistant at once in Settings.
           </p>
         ),
       },
@@ -200,10 +202,12 @@ const CONTENT: Record<"en" | "es", { title: string; lead: string; updated: strin
         title: "Asistentes conectados (Claude)",
         body: (
           <p>
-            Si conectas un asistente de IA como Claude, eliges en una pantalla de consentimiento qué puede hacer (leer, o
-            también proponer movimientos). Entonces puede leer tus datos de Keepwell por esa conexión, y lo que cree queda
-            marcado y espera tu confirmación. El proveedor del asistente trata lo que lee según su propia política de
-            privacidad. Puedes desconectar todos los asistentes a la vez en Ajustes.
+            Si conectas un asistente de IA como Claude, eliges en una pantalla de consentimiento qué puede hacer: leer,
+            también proponer movimientos (que esperan tu confirmación), o control total (hacer lo mismo que tú en la app,
+            directamente). Entonces puede leer tus datos de Keepwell por esa conexión, y lo que cree queda marcado como
+            suyo. Cuando un asistente con control total borra algo, se guarda una copia 30 días para poder deshacerlo y
+            luego se elimina; eliminar tu cuenta la borra al instante. El proveedor del asistente trata lo que lee según
+            su propia política de privacidad. Puedes desconectar todos los asistentes a la vez en Ajustes.
           </p>
         ),
       },
