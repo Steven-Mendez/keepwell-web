@@ -5,6 +5,7 @@ import { transactionAmountClass } from "@/components/kw/design-styles"
 import { newID } from "@/lib/platform/uuid"
 
 import { useRouter } from "next/navigation"
+import { importCsv } from "@/lib/domain/csv"
 import {
   useEffect,
   useRef,
@@ -152,6 +153,8 @@ export function OnboardingFlow() {
   const [rateText, setRateText] = useState("1")
   const [accounts, setAccounts] = useState<OnboardingAccountDraft[]>([])
   const [saving, setSaving] = useState(false)
+  // A CSV picked on the accounts step: imported once the setup has saved the accounts (iOS RootView).
+  const [pendingCsv, setPendingCsv] = useState<{ name: string; text: string }>()
 
   const rate = parseAmount(rateText)
   const currencies =
@@ -173,6 +176,19 @@ export function OnboardingFlow() {
     )
   }
 
+  async function importPendingCsv(text: string) {
+    try {
+      const result = await importCsv(ledgerStore, text)
+      toast.add({
+        title: t.in("settings", "%lld transactions imported", result.imported),
+        ...(result.skipped > 0 ? { description: t.in("settings", "%lld rows skipped", result.skipped) } : {}),
+        type: result.imported > 0 ? "success" : "info",
+      })
+    } catch {
+      toast.add({ title: t.in("settings", "We couldn't import the file. Try again."), type: "error" })
+    }
+  }
+
   async function finish(then: "home" | "expense") {
     setSaving(true)
     try {
@@ -190,6 +206,7 @@ export function OnboardingFlow() {
         },
         new Date()
       )
+      if (pendingCsv) await importPendingCsv(pendingCsv.text)
       if (then === "expense") {
         try {
           sessionStorage.setItem("keepwell.openEditor", "expense")
@@ -298,6 +315,8 @@ export function OnboardingFlow() {
               second={currencies.second}
               accounts={accounts}
               onChange={setAccounts}
+              csvName={pendingCsv?.name}
+              onCsv={setPendingCsv}
               onNext={() => setStep("done")}
             />
           ) : null}
@@ -811,15 +830,21 @@ function AccountsStep({
   second,
   accounts,
   onChange,
+  csvName,
+  onCsv,
   onNext,
 }: {
   principal: string
   second: string | undefined
   accounts: OnboardingAccountDraft[]
   onChange: (accounts: OnboardingAccountDraft[]) => void
+  /** The CSV picked to import after setup, if any. */
+  csvName: string | undefined
+  onCsv: (file: { name: string; text: string }) => void
   onNext: () => void
 }) {
   const t = useT()
+  const csvInput = useRef<HTMLInputElement>(null)
   const [editing, setEditing] = useState<OnboardingAccountDraft>()
   const currencies = [principal, second].filter(
     (code): code is string => code !== undefined
@@ -941,9 +966,30 @@ function AccountsStep({
           ))}
         </KWGroupedCard>
       ) : null}
-      <KWButton size="large" fill onClick={onNext}>
-        {t.in("onboarding", "Continue")}
-      </KWButton>
+      <div className="flex flex-col gap-2">
+        <KWButton size="large" fill onClick={onNext}>
+          {t.in("onboarding", "Continue")}
+        </KWButton>
+        {/* Only adds movements to the accounts made here; read now, imported when the setup saves. */}
+        <KWButton variant="plain" fill onClick={() => csvInput.current?.click()}>
+          {csvName ?? t.in("onboarding", "Import movements only (.csv)")}
+        </KWButton>
+        <input
+          ref={csvInput}
+          type="file"
+          accept="text/csv,.csv"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            event.target.value = ""
+            if (!file) return
+            file.text().then(
+              (text) => onCsv({ name: file.name, text }),
+              () => toast.add({ title: t.in("settings", "We couldn't read that file. Export it again as CSV (UTF-8)."), type: "error" })
+            )
+          }}
+        />
+      </div>
       {editing ? (
         <AccountForm
           draft={editing}
