@@ -32,11 +32,6 @@ export const WEB_STRINGS_CORE: WebStrings = {
   "column.category": { en: "Category", es: "Categoría" },
   "column.account": { en: "Account", es: "Cuenta" },
   "column.amount": { en: "Amount", es: "Monto" },
-  Navigation: { es: "Navegación" },
-  "then %@": { es: "luego %@" },
-  "Install app": { es: "Instalar app" },
-  "Works offline": { es: "Funciona sin conexión" },
-  "On this device": { es: "En este dispositivo" },
   "Stored in this browser": { es: "Guardado en este navegador" },
   "welcome.preview.rent": { en: "Rent", es: "Alquiler" },
   "Kept by the browser": { es: "El navegador lo conserva" },
@@ -56,8 +51,6 @@ export const WEB_STRINGS_CORE: WebStrings = {
     {
       es: "Tus cuentas, tarjetas y movimientos se borran de este navegador. No se puede deshacer.",
     },
-  "Save changes": { es: "Guardar cambios" },
-  "Rate stored": { es: "Tasa guardada" },
   Back: { es: "Atrás" },
   /** iOS takes these from the system; the web needs them spelled out. */
   Cancel: { es: "Cancelar" },

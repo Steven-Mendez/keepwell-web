@@ -5,5 +5,4 @@ import type { WebStrings } from "./web-strings"
  * the createtransaction catalog.)
  */
 export const WEB_STRINGS_RULES: WebStrings = {
-  "Rule saved": { es: "Regla guardada" },
 }

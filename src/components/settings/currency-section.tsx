@@ -151,7 +151,7 @@ function MainCurrencyRow({
         ? {}
         : {
             description: t.in(
-              "web",
+              "settings",
               "Used by your accounts, so it can't change here."
             ),
           })}
@@ -224,7 +224,7 @@ function SecondCurrencyPicker({
             onChanged()
           }}
         >
-          {t.in("web", "None")}
+          {t.in("settings", "None")}
         </KWButton>
       ) : null}
     </div>
@@ -254,7 +254,7 @@ function SecondCurrencyRow({
         ? {}
         : {
             description: t.in(
-              "web",
+              "settings",
               "Used by your accounts, so it can't change here."
             ),
           })}
@@ -270,7 +270,7 @@ function SecondCurrencyRow({
         <span className="type-label">
           {currencies.second
             ? currencyName(t, currencies.second)
-            : t.in("web", "None")}
+            : t.in("settings", "None")}
         </span>
       )}
     </SettingsRow>

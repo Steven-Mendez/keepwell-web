@@ -35,7 +35,7 @@ export function AssistantRulesSection({
     )
 
   return (
-    <KWSection title={t.in("web", "Proposed by Claude")}>
+    <KWSection title={t.in("home", "Proposed by Claude")}>
       <div className="flex flex-col divide-y divide-border rounded-2xl bg-card">
         {proposed.map((rule) => (
           <div key={rule.id} className="flex items-center gap-3 px-4 py-3">

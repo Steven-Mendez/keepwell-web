@@ -2,7 +2,6 @@ import type { WebStrings } from "./web-strings"
 
 /** Web-only text for the Keepwell account (sign-in through the API). */
 export const WEB_STRINGS_ACCOUNT: WebStrings = {
-  "Keepwell account": { es: "Cuenta de Keepwell" },
   "Sign in with Apple": { es: "Iniciar sesión con Apple" },
   "An account syncs this browser with Keepwell for iPhone. Without one, your data stays only here.":
     {
@@ -29,7 +28,6 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "Start again from the app that asked to connect.": {
     es: "Empieza de nuevo desde la app que pidió conectarse.",
   },
-  "Allow %@ to use your Keepwell?": { es: "¿Permitir que %@ use tu Keepwell?" },
   "See your accounts, balances, movements, budgets and upcoming payments": {
     es: "Ver tus cuentas, saldos, movimientos, presupuestos y próximos pagos",
   },
@@ -49,8 +47,6 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
     {
       es: "Asistentes como Claude pueden leer tus datos y registrar movimientos que luego confirmas aquí.",
     },
-  "None connected": { es: "Ninguno conectado" },
-  "Can read and record": { es: "Puede leer y registrar" },
   "Full control": { es: "Control total" },
   "Keepwell never shares your password with the assistant.": { es: "Keepwell nunca comparte tu contraseña con el asistente." },
   Read: { es: "Lectura" },
@@ -77,17 +73,10 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "Do what you can do in the app: create, edit and delete accounts, movements, categories, budgets, goals, loans and debts, and change currencies. Deletes can be undone for 30 days": {
     es: "Hacer lo mismo que tú en la app: crear, editar y borrar cuentas, movimientos, categorías, presupuestos, metas, préstamos y deudas, y cambiar monedas. Los borrados se pueden deshacer durante 30 días",
   },
-  "Can read": { es: "Puede leer" },
-  Disconnect: { es: "Desconectar" },
-  "How to connect Claude": { es: "Cómo conectar Claude" },
-  "Step by step, on the web, desktop, phone and Claude Code.": { es: "Paso a paso, en la web, el escritorio, el teléfono y Claude Code." },
   "Connect Claude": { es: "Conectar Claude" },
-  "Disconnect all": { es: "Desconectar todos" },
-  "Disconnect every assistant?": { es: "¿Desconectar todos los asistentes?" },
   "They lose access right away and would have to be connected again.": {
     es: "Pierden el acceso de inmediato y habría que volver a conectarlos.",
   },
-  "Proposed by Claude": { es: "Propuesto por Claude" },
   "Couldn't save the change. Try again.": {
     es: "No se pudo guardar el cambio. Inténtalo de nuevo.",
   },
@@ -108,7 +97,6 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "Couldn't sign in. Try again.": { es: "No se pudo iniciar sesión. Inténtalo de nuevo." },
   "Sign in to Keepwell": { es: "Inicia sesión en Keepwell" },
   "Sync this browser with Keepwell for iPhone. Without an account, everything keeps working here.": { es: "Sincroniza este navegador con Keepwell para iPhone. Sin cuenta, todo sigue funcionando aquí." },
-  "Sync this browser with Keepwell for iPhone.": { es: "Sincroniza este navegador con Keepwell para iPhone." },
   "Sign in": { es: "Iniciar sesión" },
   "Continue without an account": { es: "Continuar sin cuenta" },
   "Your data stays only in this browser.": { es: "Tus datos se quedan solo en este navegador." },
