@@ -65,11 +65,15 @@ export function creditAddedSummary(
       : t.in("addcard", "Debt in %@", mode === "second" ? other : first)
   const cutoff = Number(form.cutoff)
   const due = Number(form.due)
-  // The cycle is optional on the web: the iOS sentence needs both days.
+  // The cycle is optional: one sentence per combination of days set, as iOS AddCardViewModel.
   const cycle =
     form.cutoff && form.due
       ? t.in("addcard", "%@ · cutoff day %lld · due day %lld.", debt, cutoff, due)
-      : `${debt}.`
+      : form.cutoff
+        ? t.in("addcard", "%@ · cutoff day %lld.", debt, cutoff)
+        : form.due
+          ? t.in("addcard", "%@ · due day %lld.", debt, due)
+          : t.in("addcard", "%@.", debt)
   return form.due
     ? `${cycle} ${t.in("addcard", "We'll remind you %lld days before the due date.", reminderDays)}`
     : cycle
