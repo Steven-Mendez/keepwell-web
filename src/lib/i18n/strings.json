@@ -3929,5 +3929,23 @@
   "or": {
    "es": "o"
   }
+ },
+ "plan": {
+  "%lld goals": {
+   "en": {
+    "one": "%lld goal",
+    "other": "%lld goals"
+   },
+   "es": {
+    "one": "%lld meta",
+    "other": "%lld metas"
+   }
+  },
+  "Next: %@ · %@": {
+   "es": "Próximo: %@ · %@"
+  },
+  "Plan": {
+   "es": "Planificar"
+  }
  }
 }
