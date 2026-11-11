@@ -93,25 +93,41 @@ type Row = PulledChange["row"]
 
 const SNAPSHOT_ORDER: readonly SyncEntity[] = ["settings", ...SYNC_ENTITIES.filter((entity) => entity !== "settings")]
 
+/** How many entities are fetched at once: enough to overlap round trips, few enough not to burst. */
+export const SNAPSHOT_PARALLEL = 4
+
+/** `work` over every item, at most `limit` running at once; results in the items' order. */
+export async function inBatches<T, R>(items: readonly T[], limit: number, work: (item: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let next = 0
+  const lane = async () => {
+    while (next < items.length) {
+      const index = next++
+      results[index] = await work(items[index]!)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, lane))
+  return results
+}
+
 /** Every row the account holds for each entity (tombstones too), and the sequence they reflect. */
 async function cloudRows(transport: SyncTransport, entities: readonly SyncEntity[]): Promise<{ rows: Map<SyncEntity, Row[]>; serverSeq: number }> {
   // Entities in parallel (each still pages in order): one round trip per entity one after another
-  // made the first sign-in wait seconds for a handful of small requests.
-  const fetched = await Promise.all(
-    entities.map(async (entity) => {
-      const list: Row[] = []
-      let serverSeq = Infinity
-      let after = ""
-      for (;;) {
-        const page = await transport.snapshot(entity, after)
-        serverSeq = Math.min(serverSeq, page.server_seq)
-        list.push(...page.rows)
-        if (!page.next_after) break
-        after = page.next_after
-      }
-      return { entity, list, serverSeq }
-    }),
-  )
+  // made the first sign-in wait seconds for a handful of small requests. At most SNAPSHOT_PARALLEL at
+  // a time: a burst of one request per entity went over the API's concurrency and came back 503.
+  const fetched = await inBatches(entities, SNAPSHOT_PARALLEL, async (entity) => {
+    const list: Row[] = []
+    let serverSeq = Infinity
+    let after = ""
+    for (;;) {
+      const page = await transport.snapshot(entity, after)
+      serverSeq = Math.min(serverSeq, page.server_seq)
+      list.push(...page.rows)
+      if (!page.next_after) break
+      after = page.next_after
+    }
+    return { entity, list, serverSeq }
+  })
   // The map keeps the requested order (settings first where the caller asks for it).
   const rows = new Map<SyncEntity, Row[]>(fetched.map(({ entity, list }) => [entity, list]))
   const serverSeq = Math.min(...fetched.map((entry) => entry.serverSeq))
