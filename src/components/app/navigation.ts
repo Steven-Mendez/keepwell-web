@@ -24,7 +24,7 @@ export const MAIN_NAV: readonly NavItem[] = [
 ]
 
 /** Recurring movements and subscriptions: pushed from Home on iOS; on the web a section of the sidebar. */
-export const RECURRING_NAV: NavItem = { title: "Recurring", ns: "web", href: "/recurring", icon: RepeatIcon, kwIcon: "subscription", key: "r" }
+export const RECURRING_NAV: NavItem = { title: "Recurring", ns: "recurring", href: "/recurring", icon: RepeatIcon, kwIcon: "subscription", key: "r" }
 
 /** Savings goals: pushed from Home on iOS, like Recurring; on the web a section of the sidebar. */
 export const GOALS_NAV: NavItem = { title: "Goals", ns: "goals", href: "/goals", icon: PiggyBankIcon, kwIcon: "wallet", key: "g" }

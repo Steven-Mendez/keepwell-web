@@ -125,7 +125,7 @@ function ReceiptTicket({ editor }: ReviewProps) {
 function RepeatField({ editor }: ReviewProps) {
   const { t } = useCreateTransactionT()
   const options: { value: RepeatChoice; label: string }[] = [
-    { value: "none", label: t.in("web", "None") },
+    { value: "none", label: t.in("createtransaction", "repeat.none") },
     ...(["weekly", "monthly", "yearly"] as const).map((frequency) => ({
       value: frequency,
       label: frequencyText(t, frequency, 1),
@@ -141,14 +141,6 @@ function RepeatField({ editor }: ReviewProps) {
         options={options}
         onChange={editor.setRepeat}
       />
-      {editor.repeat === "none" ? null : (
-        <p className="type-caption-sm text-muted-foreground">
-          {t.in(
-            "web",
-            "The next ones wait as drafts on their date for you to confirm."
-          )}
-        </p>
-      )}
     </div>
   )
 }
