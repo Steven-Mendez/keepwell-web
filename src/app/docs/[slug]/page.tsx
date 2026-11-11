@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { Suspense } from "react"
 
 import { docsPages } from "@/components/docs/content"
 import { DocsShell } from "@/components/docs/docs-shell"
@@ -31,9 +30,5 @@ export default async function Page({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  return (
-    <Suspense>
-      <DocsShell slug={slug} />
-    </Suspense>
-  )
+  return <DocsShell slug={slug} />
 }
