@@ -31,7 +31,7 @@ export function describeAccountError(code: string, t: Translator, fallback?: str
       return text(t.in("web", "Keepwell accounts are invite-only for now. If you have an invitation, enter it below."), true)
     case "INVALID_INVITATION":
     case "INVITATION_NOT_FOUND":
-      return text(t.in("web", "That invitation is not valid. It may have expired or been used."), true)
+      return text(t.in("cloudaccount", "That invitation is not valid. It may have expired or been used."), true)
     case "ACCESS_DENIED":
     case "USER_CANCELLED":
       return text(t.in("web", "Sign-in was cancelled."))

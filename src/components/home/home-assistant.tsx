@@ -54,7 +54,7 @@ export function AssistantRulesSection({
                 void act(deleteRecurringRule(ledgerStore, rule.id))
               }
             >
-              {t.in("web", "Discard")}
+              {t.in("home", "Discard")}
             </KWButton>
             <KWButton
               size="mini"

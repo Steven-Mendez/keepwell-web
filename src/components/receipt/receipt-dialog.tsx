@@ -74,7 +74,7 @@ function LoadedReceipt({
   if (!receipt) return null
   return (
     <>
-      <DialogTitle className="sr-only">{t.in("web", "Receipt")}</DialogTitle>
+      <DialogTitle className="sr-only">{t.in("transactions", "Receipt")}</DialogTitle>
       <DialogDescription className="sr-only">{`${receipt.headline} ${receipt.amount}`}</DialogDescription>
       <ReceiptTicket
         receipt={receipt}

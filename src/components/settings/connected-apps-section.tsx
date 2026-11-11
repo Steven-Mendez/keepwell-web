@@ -33,14 +33,14 @@ export function ConnectedAppsSection({ t }: { t: Translator }) {
       await work()
       setVersion((v) => v + 1)
     } catch {
-      toast.add({ title: t.in("web", "Couldn't reach Keepwell. Try again."), type: "error" })
+      toast.add({ title: t.in("cloudaccount", "Couldn't reach Keepwell. Try again."), type: "error" })
     }
   }
 
   return (
     <SettingsSection
       id="assistants"
-      title={t.in("web", "Connected assistants")}
+      title={t.in("cloudaccount", "Connected assistants")}
       footnote={t.in("web", "Assistants like Claude can read your data and record movements you then confirm here.")}
     >
       {clients === undefined ? null : clients.length === 0 ? (
@@ -60,7 +60,7 @@ export function ConnectedAppsSection({ t }: { t: Translator }) {
         ))
       )}
       <SettingsLinkRow icon={<BookOpenIcon strokeWidth={2} />} label={t.in("web", "How to connect Claude")} description={t.in("web", "Step by step, on the web, desktop, phone and Claude Code.")} href="/docs/mcp" />
-      <SettingsLinkRow icon="close" tone="destructive" label={t.in("web", "Disconnect everything")} description={t.in("web", "Every assistant loses access at once.")} onClick={() => setConfirmingAll(true)} />
+      <SettingsLinkRow icon="close" tone="destructive" label={t.in("cloudaccount", "Disconnect assistants")} description={t.in("cloudaccount", "Claude and other assistants lose access to your account at once.")} onClick={() => setConfirmingAll(true)} />
       <ConfirmDialog
         open={confirmingAll}
         onOpenChange={setConfirmingAll}

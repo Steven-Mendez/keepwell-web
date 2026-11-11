@@ -1,6 +1,7 @@
 "use client"
 
 import { BotIcon, InfoIcon, KeyboardIcon, LanguagesIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
@@ -44,13 +45,13 @@ type SectionId = "preferences" | "money" | "organization" | "data" | "security" 
 
 function sectionTitles(t: Translator): Record<SectionId, string> {
   return {
-    preferences: t.in("web", "Profile & preferences"),
-    money: t.in("web", "Money"),
+    preferences: t.in("settings", "Profile & preferences"),
+    money: t.in("settings", "Money"),
     organization: t.in("settings", "Organization"),
-    data: t.in("web", "Data & sync"),
-    security: t.in("web", "Security"),
-    assistants: t.in("web", "Connected assistants"),
-    about: t.in("web", "About"),
+    data: t.in("settings", "Data & sync"),
+    security: t.in("settings", "Security"),
+    assistants: t.in("cloudaccount", "Connected assistants"),
+    about: t.in("settings", "About"),
   }
 }
 
@@ -242,21 +243,21 @@ function EndSection({ t, signedIn, action, onSignedOut }: { t: Translator; signe
     <SettingsSection footnote={signedIn ? t.in("web", "Signing out or deleting the account keeps what's in this browser.") : undefined}>
       {signedIn ? (
         <>
-          <SettingsLinkRow icon={<LogOutIcon strokeWidth={2} />} tone="destructive" label={t.in("web", "Sign out")} disabled={action.busy} onClick={() => void action.run(signOut)} />
+          <SettingsLinkRow icon={<LogOutIcon strokeWidth={2} />} tone="destructive" label={t.in("cloudaccount", "Sign out")} disabled={action.busy} onClick={() => void action.run(signOut)} />
           <SettingsLinkRow
             icon="personOff"
             tone="destructive"
-            label={t.in("web", "Delete account")}
-            description={t.in("web", "Erases your account and its synced data from Keepwell's servers.")}
+            label={t.in("cloudaccount", "Delete account")}
+            description={t.in("cloudaccount", "Erases your synced data from Keepwell's servers.")}
             disabled={action.busy}
             onClick={() => setConfirmingDelete(true)}
           />
           <ConfirmDialog
             open={confirmingDelete}
             onOpenChange={setConfirmingDelete}
-            title={t.in("web", "Delete your Keepwell account?")}
+            title={t.in("cloudaccount", "Delete your Keepwell account?")}
             description={t.in("web", "You're signed out everywhere at once and your synced data is erased from Keepwell's servers. Backups keep it up to 35 more days. What's in this browser stays here.")}
-            action={t.in("web", "Delete account")}
+            action={t.in("cloudaccount", "Delete account")}
             destructive
             onConfirm={() => void action.run(deleteAccount)}
           />
@@ -297,8 +298,15 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
         onClick={() => setMethodsOpen(true)}
       />
       <SettingsLinkRow
+        icon="subscription"
+        label={t.in("settings", "Recurring")}
+        description={t.in("settings", "Subscriptions and regular movements")}
+        href="/recurring"
+      />
+      <SettingsLinkRow
         icon="bolt"
         label={t.in("settings", "Rules")}
+        description={t.in("settings", "Categorize movements by their description")}
         value={ledger.categorizationRules.length}
         href="/settings/rules"
       />
@@ -322,31 +330,55 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
                 <div key={account.id} className="flex flex-col gap-2">
                   <KWSectionHeader title={accountName(account)} />
                   <KWGroupedCard>
-                    {methods.map((card) => (
-                      <div
-                        key={card.id}
-                        className="flex min-h-12 items-center gap-3 px-4 py-2.5"
-                      >
-                        {card.kind === "transfer" ? (
-                          <KWMiniCard kind="transfer" />
-                        ) : (
-                          <KWMiniCard color={card.color} />
-                        )}
-                        <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="truncate type-label text-foreground">
-                            {methodTitle(t, card, account)}
+                    {methods.map((card) => {
+                      const content = (
+                        <>
+                          {card.kind === "transfer" ? (
+                            <KWMiniCard kind="transfer" />
+                          ) : (
+                            <KWMiniCard color={card.color} />
+                          )}
+                          <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="truncate type-label text-foreground">
+                              {methodTitle(t, card, account)}
+                            </span>
+                            <span className="truncate type-caption text-muted-foreground">
+                              {card.kind === "transfer"
+                                ? t.in(
+                                    "settings",
+                                    "Charged straight to the account"
+                                  )
+                                : plasticSubtitle(t, card)}
+                            </span>
                           </span>
-                          <span className="truncate type-caption text-muted-foreground">
-                            {card.kind === "transfer"
-                              ? t.in(
-                                  "settings",
-                                  "Charged straight to the account"
-                                )
-                              : plasticSubtitle(t, card)}
-                          </span>
-                        </span>
-                      </div>
-                    ))}
+                        </>
+                      )
+                      const rowClass =
+                        "flex min-h-12 items-center gap-3 px-4 py-2.5"
+                      // A card opens its account, where it is edited; the transfer channel has no screen (iOS).
+                      return card.kind === "transfer" ? (
+                        <div key={card.id} className={rowClass}>
+                          {content}
+                        </div>
+                      ) : (
+                        <Link
+                          key={card.id}
+                          href={`/accounts?id=${account.id}`}
+                          onClick={() => setMethodsOpen(false)}
+                          className={cn(
+                            rowClass,
+                            "press-row outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50"
+                          )}
+                        >
+                          {content}
+                          <KWIcon
+                            name="chevronRight"
+                            size={16}
+                            className="shrink-0 text-text-faint"
+                          />
+                        </Link>
+                      )
+                    })}
                   </KWGroupedCard>
                 </div>
               ))}

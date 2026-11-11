@@ -52,7 +52,7 @@ export function EditorReview({
       ) : null}
       {existing && form.rate.second !== form.rate.principal ? (
         <p className="type-caption-sm text-muted-foreground">
-          {t.in("web", "Edits keep the rate this transaction was logged with.")}
+          {t.in("createtransaction", "Edits keep the rate this transaction was logged with.")}
         </p>
       ) : null}
 
@@ -133,7 +133,7 @@ function RepeatField({ editor }: ReviewProps) {
   ]
   return (
     <div className="flex flex-col gap-1.5">
-      <FieldLabel htmlFor="editor-repeat">{t.in("web", "Repeat")}</FieldLabel>
+      <FieldLabel htmlFor="editor-repeat">{t.in("createtransaction", "Repeat")}</FieldLabel>
       <OptionSelect
         id="editor-repeat"
         className="rounded-xl border-0 bg-secondary px-3.5 type-body dark:bg-secondary"

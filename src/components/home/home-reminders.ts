@@ -183,8 +183,8 @@ export function homeReminders(
       id: `renews-${rule.id}`,
       icon: "subscription",
       tone: "accent",
-      title: t.in("web", "%@ renews tomorrow", rule.name),
-      body: t.in("web", "%@ on %@", amount(rule.amount, rule.currency), method),
+      title: t.in("home", "%@ renews tomorrow", rule.name),
+      body: t.in("home", "%@ on %@", amount(rule.amount, rule.currency), method),
     })
   }
   const thisMonth = yearMonthContaining(now)

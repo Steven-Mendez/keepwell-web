@@ -10,8 +10,7 @@ export type WebStrings = Record<
 
 export const WEB_STRINGS_CORE: WebStrings = {
   "Keyboard shortcuts": { es: "Atajos de teclado" },
-  "Hide amounts": { es: "Ocultar montos" },
-  "Show amounts": { es: "Mostrar montos" },
+  "More actions": { es: "Más acciones" },
   "Search or jump to…": { es: "Busca o ve a…" },
   "No results.": { es: "Sin resultados." },
   "Go to": { es: "Ir a" },
@@ -57,12 +56,7 @@ export const WEB_STRINGS_CORE: WebStrings = {
     {
       es: "Tus cuentas, tarjetas y movimientos se borran de este navegador. No se puede deshacer.",
     },
-  "Edit transaction": { es: "Editar movimiento" },
   "Save changes": { es: "Guardar cambios" },
-  "Transaction details": { es: "Detalle del movimiento" },
-  Edit: { es: "Editar" },
-  Status: { es: "Estado" },
-  Planned: { es: "Previsto" },
   "Rate stored": { es: "Tasa guardada" },
   Back: { es: "Atrás" },
   /** iOS takes these from the system; the web needs them spelled out. */
@@ -72,7 +66,6 @@ export const WEB_STRINGS_CORE: WebStrings = {
     {
       es: "Lo usaremos para saludarte y mostrarlo en tus tarjetas. Solo se guarda en este navegador.",
     },
-  OK: { es: "OK" },
 }
 
 import { WEB_STRINGS_SYNC } from "./web-strings.sync"

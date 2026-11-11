@@ -2,47 +2,20 @@ import type { WebStrings } from "./web-strings"
 
 /** Web-only text for the Keepwell account (sign-in through the API). */
 export const WEB_STRINGS_ACCOUNT: WebStrings = {
-  Account: { es: "Cuenta" },
   "Keepwell account": { es: "Cuenta de Keepwell" },
   "Sign in with Apple": { es: "Iniciar sesión con Apple" },
-  "Sign out": { es: "Cerrar sesión" },
-  "Sign out on all devices": { es: "Cerrar sesión en todos los dispositivos" },
-  "Sign out everywhere": { es: "Cerrar en todos" },
-  "Keepwell accounts are invite-only for now.": {
-    es: "Por ahora las cuentas de Keepwell son solo por invitación.",
-  },
-  "Couldn't reach Keepwell. Try again.": {
-    es: "No se pudo conectar con Keepwell. Inténtalo de nuevo.",
-  },
   "An account syncs this browser with Keepwell for iPhone. Without one, your data stays only here.":
     {
       es: "Una cuenta sincroniza este navegador con Keepwell para iPhone. Sin ella, tus datos se quedan solo aquí.",
     },
-  "Delete account": { es: "Eliminar cuenta" },
-  "Erases your account and its synced data from Keepwell's servers.": {
-    es: "Borra tu cuenta y sus datos sincronizados de los servidores de Keepwell.",
-  },
-  "Delete your Keepwell account?": { es: "¿Eliminar tu cuenta de Keepwell?" },
   "You're signed out everywhere at once and your synced data is erased from Keepwell's servers. Backups keep it up to 35 more days. What's in this browser stays here.":
     {
       es: "Se cierra tu sesión en todos lados al instante y tus datos sincronizados se borran de los servidores de Keepwell. Las copias de seguridad los conservan hasta 35 días más. Lo que hay en este navegador se queda aquí.",
     },
-  Sync: { es: "Sincronización" },
   "Sync isn't included in your plan. Get it with the coffee in Keepwell for iPhone; everything keeps working in this browser.":
     {
       es: "La sincronización no está incluida en tu plan. Consíguela con el café en Keepwell para iPhone; todo sigue funcionando en este navegador.",
     },
-  "Offline. Changes sync when you're back online.": {
-    es: "Sin conexión. Los cambios se sincronizan al volver a estar en línea.",
-  },
-  "Couldn't sync. Keepwell will try again.": {
-    es: "No se pudo sincronizar. Keepwell lo intentará de nuevo.",
-  },
-  "Syncing…": { es: "Sincronizando…" },
-  "Sync included during early access.": {
-    es: "Sincronización incluida en el acceso anticipado.",
-  },
-  "Up to date.": { es: "Al día." },
   "Changes the server refused": { es: "Cambios que el servidor rechazó" },
   "%@ changes couldn't sync and stay only in this browser.": {
     es: "%@ cambios no se pudieron sincronizar y se quedan solo en este navegador.",
@@ -72,7 +45,6 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   },
   Deny: { es: "Rechazar" },
   Allow: { es: "Permitir" },
-  "Connected assistants": { es: "Asistentes conectados" },
   "Assistants like Claude can read your data and record movements you then confirm here.":
     {
       es: "Asistentes como Claude pueden leer tus datos y registrar movimientos que luego confirmas aquí.",
@@ -107,24 +79,15 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   },
   "Can read": { es: "Puede leer" },
   Disconnect: { es: "Desconectar" },
-  "Disconnect everything": { es: "Desconectar todo" },
   "How to connect Claude": { es: "Cómo conectar Claude" },
   "Step by step, on the web, desktop, phone and Claude Code.": { es: "Paso a paso, en la web, el escritorio, el teléfono y Claude Code." },
   "Connect Claude": { es: "Conectar Claude" },
-  "Every assistant loses access at once.": {
-    es: "Todos los asistentes pierden el acceso al instante.",
-  },
   "Disconnect all": { es: "Desconectar todos" },
   "Disconnect every assistant?": { es: "¿Desconectar todos los asistentes?" },
   "They lose access right away and would have to be connected again.": {
     es: "Pierden el acceso de inmediato y habría que volver a conectarlos.",
   },
-  "Recorded by Claude": { es: "Registrado por Claude" },
   "Proposed by Claude": { es: "Propuesto por Claude" },
-  Discard: { es: "Descartar" },
-  Weekly: { es: "Semanal" },
-  Monthly: { es: "Mensual" },
-  Yearly: { es: "Anual" },
   "Couldn't save the change. Try again.": {
     es: "No se pudo guardar el cambio. Inténtalo de nuevo.",
   },
@@ -133,15 +96,10 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
     es: "Inicia sesión con Face ID, Touch ID o el bloqueo de tu dispositivo en vez de Apple.",
   },
   "Add a passkey": { es: "Añadir una passkey" },
-  "Use a passkey": { es: "Usar una passkey" },
-  "That invitation is not valid. It may have expired or been used.": {
-    es: "Esa invitación no es válida. Puede que haya caducado o ya se haya usado.",
-  },
   "Have an invitation?": { es: "¿Tienes una invitación?" },
   "New accounts need one. Enter it, then sign in with Apple.": {
     es: "Las cuentas nuevas la necesitan. Escríbela y luego inicia sesión con Apple.",
   },
-  "Invitation code": { es: "Código de invitación" },
   "Continue with Apple": { es: "Continuar con Apple" },
   "Keepwell accounts are invite-only for now. If you have an invitation, enter it below.": { es: "Las cuentas de Keepwell son solo por invitación por ahora. Si tienes una invitación, escríbela abajo." },
   "Sign-in was cancelled.": { es: "Se canceló el inicio de sesión." },
@@ -150,7 +108,6 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "Couldn't sign in. Try again.": { es: "No se pudo iniciar sesión. Inténtalo de nuevo." },
   "Sign in to Keepwell": { es: "Inicia sesión en Keepwell" },
   "Sync this browser with Keepwell for iPhone. Without an account, everything keeps working here.": { es: "Sincroniza este navegador con Keepwell para iPhone. Sin cuenta, todo sigue funcionando aquí." },
-  "or": { es: "o" },
   "Sync this browser with Keepwell for iPhone.": { es: "Sincroniza este navegador con Keepwell para iPhone." },
   "Sign in": { es: "Iniciar sesión" },
   "Continue without an account": { es: "Continuar sin cuenta" },
@@ -165,19 +122,12 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "Couldn't complete that. Try again.": { es: "No se pudo completar. Inténtalo de nuevo." },
   "Privacy Policy": { es: "Política de privacidad" },
   "Synced with Keepwell for iPhone": { es: "Sincronizado con Keepwell para iPhone" },
-  "Already use Keepwell?": { es: "¿Ya usas Keepwell?" },
-  "Sign in and your accounts and movements come back as they were.": {
-    es: "Inicia sesión y tus cuentas y movimientos vuelven tal como estaban.",
-  },
-  "Use without an account": { es: "Usar sin cuenta" },
   "Everything stays only in this browser. You can sign in later from Settings.": {
     es: "Todo se queda solo en este navegador. Puedes iniciar sesión después desde Ajustes.",
   },
   "Signed in as %@": { es: "Sesión iniciada como %@" },
   "Looking for your data…": { es: "Buscando tus datos…" },
   "Couldn't load your data. Check your connection and try again.": { es: "No se pudieron cargar tus datos. Revisa tu conexión e inténtalo de nuevo." },
-  "Your Keepwell account keeps its copy; to erase it too, delete your account.": { es: "Tu cuenta de Keepwell conserva su copia; para borrarla también, elimina tu cuenta." },
   "You'll be signed out on this browser.": { es: "Se cerrará la sesión en este navegador." },
-  "Doesn't include balances in %@": { es: "No incluye saldos en %@" },
   "Try again": { es: "Reintentar" },
 }
