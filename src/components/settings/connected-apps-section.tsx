@@ -1,6 +1,6 @@
 "use client"
 
-import { BotIcon } from "lucide-react"
+import { BookOpenIcon, BotIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { KWButton } from "@/components/kw/design"
@@ -59,6 +59,7 @@ export function ConnectedAppsSection({ t }: { t: Translator }) {
           </SettingsRow>
         ))
       )}
+      <SettingsLinkRow icon={<BookOpenIcon strokeWidth={2} />} label={t.in("web", "How to connect Claude")} description={t.in("web", "Step by step, on the web, desktop, phone and Claude Code.")} href="/docs/mcp" />
       <SettingsLinkRow icon="close" tone="destructive" label={t.in("web", "Disconnect everything")} description={t.in("web", "Every assistant loses access at once.")} onClick={() => setConfirmingAll(true)} />
       <ConfirmDialog
         open={confirmingAll}

@@ -82,6 +82,9 @@ export const WEB_STRINGS_ACCOUNT: WebStrings = {
   "Can read": { es: "Puede leer" },
   Disconnect: { es: "Desconectar" },
   "Disconnect everything": { es: "Desconectar todo" },
+  "How to connect Claude": { es: "Cómo conectar Claude" },
+  "Step by step, on the web, desktop, phone and Claude Code.": { es: "Paso a paso, en la web, el escritorio, el teléfono y Claude Code." },
+  "Connect Claude": { es: "Conectar Claude" },
   "Every assistant loses access at once.": {
     es: "Todos los asistentes pierden el acceso al instante.",
   },
