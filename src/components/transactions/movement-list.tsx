@@ -28,19 +28,19 @@ function TotalsStrip({
 }) {
   const net = totals.moneyIn.minus(totals.moneyOut)
   const cells: { label: string; value: string; tone?: string }[] = [
-    { label: t.in("web", "Movements"), value: String(count) },
+    { label: t.in("transactions", "Movements"), value: String(count) },
     {
-      label: t.in("web", "Money in"),
+      label: t.in("transactions", "Money in"),
       value: formatMoney({ amount: totals.moneyIn, currency: principal }),
       tone: "text-positive",
     },
     {
-      label: t.in("web", "Money out"),
+      label: t.in("transactions", "Money out"),
       value: formatMoney({ amount: totals.moneyOut, currency: principal }),
       tone: "text-negative",
     },
     {
-      label: t.in("web", "Net"),
+      label: t.in("transactions", "Net"),
       value: formatMoney(
         { amount: net, currency: principal },
         { sign: "always" }

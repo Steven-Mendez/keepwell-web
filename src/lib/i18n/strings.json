@@ -3385,6 +3385,18 @@
   "Log your first expense, income or transfer and it shows up here.": {
    "es": "Anota tu primer gasto, ingreso o transferencia y aparecerá aquí."
   },
+  "Money in": {
+   "es": "Entradas"
+  },
+  "Money out": {
+   "es": "Salidas"
+  },
+  "Movements": {
+   "es": "Movimientos"
+  },
+  "Net": {
+   "es": "Neto"
+  },
   "New transaction": {
    "es": "Nuevo movimiento"
   },
