@@ -26,6 +26,7 @@ export function TransactionRow({
   trailing,
   dateLabel,
   columns = false,
+  wrap,
   className: extraClassName,
 }: {
   transaction: Transaction
@@ -39,6 +40,8 @@ export function TransactionRow({
    * category and the account get columns of their own instead of sharing the subtitle.
    */
   columns?: boolean
+  /** Wraps the row where it stands, for a menu around it. */
+  wrap?: (row: React.ReactNode) => React.ReactNode
   className?: string | undefined
 }) {
   const style = display.style(transaction)
@@ -72,7 +75,7 @@ export function TransactionRow({
     </RowShell>
   )
   // An action of its own (Confirm) sits beside the row, never inside its button.
-  if (!trailing) return <ListItem className={extraClassName}>{row}</ListItem>
+  if (!trailing) return <ListItem className={extraClassName}>{wrap ? wrap(row) : row}</ListItem>
   return (
     <ListItem className={extraClassName}>
       <div className="flex items-center gap-2 pr-4">

@@ -48,7 +48,12 @@ import type { RecurringRule, Transaction } from "@/lib/schema"
 import { frequencyText } from "@/components/recurring/recurring-format"
 import { cn } from "@/lib/utils"
 
+import { movementReference } from "./row-menu-model"
 import { useShowTag } from "./show-tag"
+
+function kindText(t: Translator, transaction: Transaction): string {
+  return t.in("transactions", `kind.${transaction.kind}`)
+}
 
 type Ct = (key: string, ...args: (string | number)[]) => string
 
@@ -83,7 +88,7 @@ function RouteRows({
         value={display.categoryName(transaction) ?? "—"}
       />
       <KWValueRow
-        label={ct("Paid with")}
+        label={transaction.kind === "income" ? ct("Into") : ct("Paid with")}
         value={display.methodName(transaction)}
       />
     </>
@@ -161,19 +166,20 @@ function DetailCards({
           })}
         />
         <RouteRows ct={ct} transaction={transaction} display={display} />
+        <KWValueRow label={t.in("transactions", "Type")} value={kindText(t, transaction)} />
         <KWValueRow
           label={t.in("transactions", "Status")}
           value={
             <StatusPill confirmed={transaction.status === "confirmed"}>
               {transaction.status === "planned"
-                ? t.in("web", "Planned")
+                ? ct("Draft")
                 : ct("Confirmed")}
             </StatusPill>
           }
         />
         {rule ? (
           <KWValueRow
-            label={t.in("web", "Recurring")}
+            label={t.in("transactions", "Repeats")}
             value={frequencyText(t, rule.frequency, rule.interval)}
             onClick={onOpenRule}
           />
@@ -198,7 +204,7 @@ function DetailCards({
           label={ct("Reference")}
           value={
             <span className="font-mono type-caption text-muted-foreground">
-              {transaction.id.slice(0, 8).toUpperCase()}
+              {movementReference(transaction.id)}
             </span>
           }
         />
@@ -318,7 +324,7 @@ function DetailBody({
   )
 }
 
-function DeleteDialog({
+export function DeleteDialog({
   t,
   open,
   onOpenChange,

@@ -10,6 +10,7 @@ export type WebStrings = Record<
 
 export const WEB_STRINGS_CORE: WebStrings = {
   "Keyboard shortcuts": { es: "Atajos de teclado" },
+  "More actions": { es: "Más acciones" },
   "Search or jump to…": { es: "Busca o ve a…" },
   "No results.": { es: "Sin resultados." },
   "Go to": { es: "Ir a" },
