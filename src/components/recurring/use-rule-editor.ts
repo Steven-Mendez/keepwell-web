@@ -16,6 +16,7 @@ import {
   deleteRecurringRule,
   firstNextDate,
   isDomainError,
+  type MovementType,
   movementTypeOf,
   occurrencesFrom,
   parseDayKey,
@@ -58,12 +59,17 @@ function seedFrom(rule: RecurringRule, context: TransactionContext) {
 
 function saveError(t: Translator, thrown: unknown): string {
   if (isDomainError(thrown, "missingName"))
-    return t.in("web", "Give it a name.")
+    return t.in("recurring", "Give it a name.")
   if (isDomainError(thrown, "invalidInterval"))
-    return t.in("web", "Repeat every 1 to 99.")
+    return t.in("recurring", "It can repeat every 1 to 99.")
   if (isDomainError(thrown, "invalidEndDate"))
-    return t.in("web", "The end can't be before the start.")
-  return errorMessage(t, isDomainError(thrown) ? thrown.code : undefined)
+    return t.in("recurring", "It can't end before it starts.")
+  if (
+    isDomainError(thrown, "invalidAmount") ||
+    isDomainError(thrown, "invalidTransferDestination")
+  )
+    return errorMessage(t, thrown.code)
+  return t.in("recurring", "We couldn't save it. Try again.")
 }
 
 /**
@@ -106,9 +112,11 @@ export function useRuleEditor(
   const endDate = hasEnd ? parseDayKey(endsText) : undefined
   const endValid =
     !hasEnd || (endDate !== undefined && dayKey(endDate) >= dayKey(form.date))
+  // Only an expense can be a subscription; a new rule follows its category until the switch is flipped.
   const isSubscription =
-    subscriptionChoice ??
-    (form.kind === "expense" && fields.categoryId === SUBSCRIPTIONS_CATEGORY_ID)
+    form.kind === "expense" &&
+    (subscriptionChoice ?? fields.categoryId === SUBSCRIPTIONS_CATEGORY_ID)
+  const hasName = fields.description.trim() !== ""
   const schedule = {
     frequency,
     interval: intervalValid ? interval : 1,
@@ -127,16 +135,18 @@ export function useRuleEditor(
         3
       )
     : []
-  const canSave = editor.review.canSave && intervalValid && endValid && !busy
+  const canSave =
+    editor.review.canSave && hasName && intervalValid && endValid && !busy
 
   async function save() {
     if (!canSave) {
-      if (!editor.review.hasAmount)
+      if (!hasName) editor.setError(t.in("recurring", "Give it a name."))
+      else if (!editor.review.hasAmount)
         editor.setError(t.in("createtransaction", "Check the amount."))
       else if (!intervalValid)
-        editor.setError(t.in("web", "Repeat every 1 to 99."))
+        editor.setError(t.in("recurring", "It can repeat every 1 to 99."))
       else if (!endValid)
-        editor.setError(t.in("web", "The end can't be before the start."))
+        editor.setError(t.in("recurring", "It can't end before it starts."))
       return
     }
     setBusy(true)
@@ -175,14 +185,18 @@ export function useRuleEditor(
     }
   }
 
-  async function run(work: () => Promise<void>, closes: boolean) {
+  async function run(
+    work: () => Promise<void>,
+    closes: boolean,
+    failure: string
+  ) {
     setBusy(true)
     try {
       await work()
       if (closes) onClose()
     } catch {
       toast.add({
-        title: t.in("web", "We couldn't save the change. Try again."),
+        title: failure,
         type: "error",
       })
     } finally {
@@ -206,6 +220,18 @@ export function useRuleEditor(
     endValid,
     isSubscription,
     setSubscription,
+    /** Changing the kind clears the subscription choice: only an expense can be one (iOS). */
+    changeType: (next: MovementType) => {
+      setSubscription(undefined)
+      editor.changeType(next)
+    },
+    /** The last day when the end switch turns on: a year after the start (iOS). */
+    defaultEnd: () => {
+      const start = form.date
+      return dayKey(
+        new Date(start.getFullYear() + 1, start.getMonth(), start.getDate())
+      )
+    },
     autoConfirm,
     setAutoConfirm,
     nextDates,
@@ -218,12 +244,17 @@ export function useRuleEditor(
       rule
         ? run(
             () => setRecurringRulePaused(ledgerStore, rule.id, !rule.isPaused),
-            false
+            false,
+            t.in("recurring", "We couldn't save it. Try again.")
           )
         : undefined,
     remove: () =>
       rule
-        ? run(() => deleteRecurringRule(ledgerStore, rule.id), true)
+        ? run(
+            () => deleteRecurringRule(ledgerStore, rule.id),
+            true,
+            t.in("recurring", "We couldn't delete it. Try again.")
+          )
         : undefined,
   }
 }

@@ -258,6 +258,21 @@ describe("Recurring rule actions", () => {
     expect(store.transactions.filter((tx) => tx.recurringId === today.id).map((tx) => dayKey(new Date(tx.date)))).toEqual(["2026-10-22"])
   })
 
+  it("only an expense is saved as a subscription", async () => {
+    const store = sampleStore()
+    const expense = await saveRecurringRule(store, draft({ isSubscription: true }), date(2026, 10, 22))
+    expect(expense.isSubscription).toBe(true)
+    const income = await saveRecurringRule(store, draft({ name: "Pay", kind: "income", categoryId: "salary", isSubscription: true }), date(2026, 10, 22))
+    expect(income.isSubscription).toBe(false)
+  })
+
+  it("editing keeps where a rule came from", async () => {
+    const store = sampleStore()
+    store.recurringRules = [rule({ source: "mcp", isPaused: true })]
+    const edited = await saveRecurringRule(store, draft({ id: RULE_ID }), date(2026, 10, 22))
+    expect(edited.source).toBe("mcp")
+  })
+
   it("editing the schedule recomputes nextDate; editing other fields keeps it", async () => {
     const store = sampleStore()
     const saved = await saveRecurringRule(store, draft(), date(2026, 10, 22))

@@ -63,16 +63,16 @@ export function RecurringScreen() {
   return (
     <Page>
       <KWLargeTitleHeader
-        title={t.in("web", "Recurring")}
+        title={t.in("recurring", "Recurring")}
         trailing={
           <>
             <KWCircleButton
               icon={hidden ? "eye" : "eyeOff"}
-              label={t.in("web", hidden ? "Show amounts" : "Hide amounts")}
+              label={t.in("recurring", hidden ? "Show amounts" : "Hide amounts")}
               onClick={toggleHidden}
             />
             <KWButton icon="plus" onClick={add}>
-              {t.in("web", "Add recurring")}
+              {t.in("recurring", "Add recurring")}
             </KWButton>
           </>
         }
@@ -86,14 +86,14 @@ export function RecurringScreen() {
         <KWGroupedCard>
           <KWEmptyState
             icon="subscription"
-            title={t.in("web", "No recurring movements yet")}
+            title={t.in("recurring", "Nothing recurring yet")}
             message={t.in(
-              "web",
-              "Add rent, your salary or a subscription once. On each date it appears as a draft for you to confirm."
+              "recurring",
+              "Add rent, a salary or a subscription once. Each time it's due, a draft waits on that day for you to confirm."
             )}
             action={
               <KWButton icon="plus" size="large" onClick={add}>
-                {t.in("web", "Add recurring")}
+                {t.in("recurring", "Add recurring")}
               </KWButton>
             }
           />
@@ -102,7 +102,7 @@ export function RecurringScreen() {
         <>
           <section className="flex flex-col gap-1 rounded-[var(--radius-surface)] bg-card p-4">
             <span className="type-label text-text-secondary">
-              {t.in("web", "Subscriptions per month")}
+              {t.in("recurring", "Subscriptions per month")}
             </span>
             <AnimatedNumber
               value={
@@ -114,13 +114,11 @@ export function RecurringScreen() {
             />
             <span className="type-caption text-muted-foreground tabular-nums">
               {t.in(
-                "web",
+                "recurring",
                 "≈ %@ per year",
                 hidden
                   ? BALANCE_MASK
-                  : formatMoney(overview.subscriptionsPerYear, {
-                      fractionDigits: 0,
-                    })
+                  : formatMoney(overview.subscriptionsPerYear)
               )}
             </span>
           </section>
@@ -177,9 +175,9 @@ function RuleRow({
   )
   const next = nextOccurrenceOf(rule)
   const status = rule.isPaused
-    ? t.in("web", "Paused")
+    ? t.in("recurring", "Paused")
     : isFinished(rule) || !next
-      ? t.in("web", "Ended")
+      ? t.in("recurring", "Ended")
       : nextDateText(t, next, now)
   const inactive = rule.isPaused || isFinished(rule)
   const style = rule.kind
@@ -205,6 +203,9 @@ function RuleRow({
           <span className="truncate type-caption text-muted-foreground">
             {[
               frequencyText(t, rule.frequency, rule.interval),
+              rule.source === "mcp" && rule.isPaused
+                ? t.in("recurring", "Proposed by Claude · resume to confirm")
+                : "",
               rulePaymentText(t, rule, ledger),
             ]
               .filter(Boolean)
