@@ -27,11 +27,7 @@ import {
   type Ledger,
   type LoanProgress,
 } from "@/lib/domain"
-import {
-  formatAmount,
-  formatNumber,
-  parseAmount,
-} from "@/lib/domain/format"
+import { formatAmount, formatNumber, parseAmount } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { categoryName } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
@@ -287,7 +283,7 @@ export function LoanEditorDialog({
             ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               <KWSegmented
-                aria-label={t.in("debts", "Installment")}
+                aria-label={t.in("debts", "Schedule")}
                 value={frequency}
                 onChange={setFrequency}
                 options={[
@@ -597,7 +593,12 @@ export function LoanDialog({
         <ConfirmDialog
           open={unpaying !== undefined}
           onOpenChange={(open) => !open && setUnpaying(undefined)}
-          title={t.in("debts", "Mark %lld/%lld unpaid?", unpaying ?? 0, loan.installmentCount)}
+          title={t.in(
+            "debts",
+            "Mark %lld/%lld unpaid?",
+            unpaying ?? 0,
+            loan.installmentCount
+          )}
           description={t.in(
             "debts",
             "The expense it recorded is deleted, so balances go back to before you paid it."

@@ -10,6 +10,13 @@ import {
   KWLargeTitleHeader,
   KWSection,
 } from "@/components/kw/design"
+import { KWIcon } from "@/components/kw/kw-icon"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { AnimatedList, ListItem, SpringFill } from "@/components/kw/motion"
 import { Page, Surface } from "@/components/kw/primitives"
 import { SkeletonList } from "@/components/kw/skeletons"
@@ -84,19 +91,42 @@ export function DebtsScreen() {
               label={t.in("web", hidden ? "Show amounts" : "Hide amounts")}
               onClick={toggleHidden}
             />
-            <KWButton
-              variant="surface"
-              icon="plus"
-              onClick={() => setOpen({ kind: "debtEditor" })}
-            >
-              {t.in("debts", "New debt")}
-            </KWButton>
-            <KWButton
-              icon="plus"
-              onClick={() => setOpen({ kind: "loanEditor" })}
-            >
-              {t.in("debts", "New loan")}
-            </KWButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label={t.in("debts", "Add")}
+                className="inline-flex size-10 shrink-0 press items-center justify-center rounded-full bg-primary text-primary-foreground outline-none hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-primary/90"
+              >
+                <KWIcon name="plus" size={20} strokeWidth={2.2} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={6}
+                className="min-w-48 rounded-xl p-1.5"
+              >
+                <DropdownMenuItem
+                  className="px-2 py-1.5"
+                  onClick={() => setOpen({ kind: "loanEditor" })}
+                >
+                  {t.in("debts", "New loan")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="px-2 py-1.5"
+                  onClick={() =>
+                    setOpen({ kind: "debtEditor", direction: "theyOweMe" })
+                  }
+                >
+                  {t.in("debts", "I lent money")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="px-2 py-1.5"
+                  onClick={() =>
+                    setOpen({ kind: "debtEditor", direction: "iOwe" })
+                  }
+                >
+                  {t.in("debts", "I borrowed money")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         }
       />
