@@ -385,11 +385,11 @@ function WelcomeScreen({
           <Heading
             title={t.in(
               "onboarding",
-              "Your money, clear, in one or two currencies"
+              "All your money, in one place"
             )}
             body={t.in(
               "onboarding",
-              "Log expenses, income and transfers. Cards, cash and drafts to confirm later."
+              "Keep clear accounts in one or more currencies. Log expenses, transfers and drafts at your own pace."
             )}
           />
           <ul className="flex flex-col gap-4">
