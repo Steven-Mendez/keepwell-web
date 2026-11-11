@@ -278,7 +278,7 @@ function DetailBody({
         ) : null}
       </header>
 
-      <div className="flex justify-center gap-6 px-(--gutter) pb-6">
+      <div className="grid auto-cols-fr grid-flow-col justify-items-center gap-1 px-(--gutter) pb-6">
         {planned ? (
           <KWActionButton
             icon="check"
