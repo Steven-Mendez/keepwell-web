@@ -5,34 +5,20 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState, type ReactNode } from "react"
 
 import { toast } from "@/components/ui/toast"
-import { exportCsvFrom } from "@/lib/domain/csv"
 import type { Translator } from "@/lib/i18n"
 import { signOut } from "@/lib/api/account"
+import { downloadCsvExport } from "@/lib/platform/csv-download"
 import { requestPersistentStorage, type StoragePersistence } from "@/lib/platform/persistent-storage"
-import { eraseAllData, ledgerStore } from "@/lib/repositories"
+import { eraseAllData } from "@/lib/repositories"
 
 import { StatusPill } from "./account-section"
 import { ConfirmDialog } from "./confirm-dialog"
 import { SettingsLinkRow, SettingsRow, SettingsSection } from "./settings-rows"
 
-function download(text: string, name: string, type: string) {
-  const url = URL.createObjectURL(new Blob([text], { type }))
-  const link = document.createElement("a")
-  link.href = url
-  link.download = name
-  link.click()
-  URL.revokeObjectURL(url)
-}
-
-const today = () => {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
-}
-
 /** Downloads a CSV of every movement. */
 async function exportCsv(t: Translator) {
   try {
-    download(await exportCsvFrom(ledgerStore), `keepwell-${today()}.csv`, "text/csv;charset=utf-8")
+    await downloadCsvExport()
   } catch {
     toast.add({ title: t.in("settings", "We couldn't create the file. Try again."), type: "error" })
   }
