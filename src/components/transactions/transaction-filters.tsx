@@ -1,6 +1,6 @@
 "use client"
 
-import type { RefObject } from "react"
+import type { ComponentProps, RefObject } from "react"
 
 import { KWChip } from "@/components/kw/design"
 import { KWIcon } from "@/components/kw/kw-icon"
@@ -19,6 +19,8 @@ import {
 } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { accountName, cardShortName } from "@/lib/presentation/display"
+
+import { MoreFiltersChips } from "./more-filters"
 
 function filterLabel(t: Translator, filter: TransactionFilter): string {
   const keys: Record<TransactionFilter, string> = {
@@ -113,7 +115,10 @@ function AccountSelect({
   )
 }
 
-/** The search, the account picker and the kind chips above the list. */
+/**
+ * The search, the account picker, the kind chips and, after them, "Filters" with the active amount
+ * and origin chips, above the list.
+ */
 export function TransactionFilters({
   t,
   search,
@@ -124,6 +129,7 @@ export function TransactionFilters({
   onScopeChange,
   filter,
   onFilterChange,
+  more,
 }: {
   t: Translator
   search: RefObject<HTMLInputElement | null>
@@ -134,6 +140,8 @@ export function TransactionFilters({
   onScopeChange: (scope: TransactionScope) => void
   filter: TransactionFilter
   onFilterChange: (filter: TransactionFilter) => void
+  /** The amount range and origin, with what the "Filters" sheet needs to edit them. */
+  more: Omit<ComponentProps<typeof MoreFiltersChips>, "t">
 }) {
   return (
     <>
@@ -166,6 +174,7 @@ export function TransactionFilters({
             {filterLabel(t, option)}
           </KWChip>
         ))}
+        <MoreFiltersChips t={t} {...more} />
       </div>
     </>
   )
