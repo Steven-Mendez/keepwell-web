@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import { compareUpcomingPayments, dayKey, upcomingPayments, type Ledger, type UpcomingPayment } from "@/lib/domain"
 import type { UpcomingFixtures } from "@/lib/fixtures"
-import { Account, CurrencySettings, DEFAULT_SETTINGS, Loan, RecurringRule, Transaction, type Loan as LoanType } from "@/lib/schema"
+import { Account, CurrencySettings, DEFAULT_SETTINGS, Loan, PersonalDebt, RecurringRule, Transaction, type Loan as LoanType, type PersonalDebt as PersonalDebtType } from "@/lib/schema"
 
 import { date, ledgerWith, single, transaction, ZONE } from "./fixtures"
 
@@ -19,6 +19,7 @@ export function fixtureLedger(entry: UpcomingFixtures["cases"][number]): Ledger 
     transactions: entry.ledger.transactions.map((value) => Transaction.parse(value)),
     recurringRules: entry.ledger.recurringRules.map((value) => RecurringRule.parse(value)),
     loans: entry.ledger.loans.map((value) => Loan.parse(value)),
+    personalDebts: (entry.ledger.personalDebts ?? []).map((value) => PersonalDebt.parse(value)),
     timeZone: entry.timeZone,
   })
 }
@@ -119,6 +120,53 @@ describe("upcomingPayments", () => {
     const card = payments[0]
     expect(card?.kind === "card" && card.amount.currency).toBe("USD")
     expect(card?.amount.amount.toString()).toBe("80")
+  })
+
+  it("lists an open debt with a due date, either direction, for what's left of it in its currency", () => {
+    const debt = (id: string, overrides: Partial<PersonalDebtType>): PersonalDebtType => ({
+      id,
+      person: "Ana",
+      direction: "theyOweMe",
+      amount: { amount: "100", currency: "NIO" },
+      date: date(2026, 10, 1).toISOString(),
+      repayments: [],
+      ...overrides,
+    })
+    const late = debt("00000000-0000-4000-8000-0000000000d1", {
+      dueDate: date(2026, 11, 9, 0).toISOString(),
+      repayments: [{ amount: "30", date: date(2026, 10, 20).toISOString() }],
+    })
+    const mine = debt("00000000-0000-4000-8000-0000000000d2", { direction: "iOwe", person: "Luis", dueDate: date(2026, 11, 14, 0).toISOString() })
+    const undated = debt("00000000-0000-4000-8000-0000000000d3", {})
+    const settled = debt("00000000-0000-4000-8000-0000000000d4", { dueDate: date(2026, 11, 10, 0).toISOString(), settledAt: date(2026, 11, 10).toISOString() })
+    const far = debt("00000000-0000-4000-8000-0000000000d5", { dueDate: date(2026, 11, 30, 0).toISOString() })
+    const payments = upcomingPayments(ledgerWith({ personalDebts: [far, settled, undated, mine, late] }), NOW, 7)
+    expect(payments.map((payment) => [payment.id, payment.status, payment.daysFromToday])).toEqual([
+      [`debt:${late.id}`, "overdue", -3],
+      [`debt:${mine.id}`, "upcoming", 2],
+    ])
+    expect(payments[0]).toMatchObject({ kind: "debt", debtId: late.id, person: "Ana", direction: "theyOweMe" })
+    expect([payments[0]?.amount.amount.toString(), payments[0]?.amount.currency]).toEqual(["70", "NIO"])
+    expect(payments[1]).toMatchObject({ kind: "debt", direction: "iOwe" })
+  })
+
+  it("leaves out a closed account's card, even owing, and its rules, from or to it", () => {
+    const closedAt = date(2026, 11, 1).toISOString()
+    const card = { ...credit(14), closedAt }
+    const savings: Account = { id: "00000000-0000-4000-8000-0000000000b9", name: "Old", kind: "deposit", openingBalances: [{ amount: "0", currency: "USD" }], openingDate: date(2026, 1, 1).toISOString(), closedAt }
+    const charge = transaction({ amount: "80", account: card.id, rate: single("USD"), date: date(2026, 11, 2) })
+    const onCard = rule({ id: "00000000-0000-4000-8000-0000000000e4", accountId: card.id })
+    const intoClosed = rule({ id: "00000000-0000-4000-8000-0000000000e5", kind: "transfer", destinationAccountId: savings.id })
+    const ledger = ledgerWith({ accounts: [card, savings], transactions: [charge], recurringRules: [onCard, intoClosed, rule()] })
+    expect(ids(upcomingPayments(ledger, NOW, 7))).toEqual([`recurring:${RULE}:2026-11-12`])
+    // Reopened, both come back.
+    const reopened = ledgerWith({ ...ledger, accounts: [credit(14), { ...savings, closedAt: undefined }] })
+    expect(ids(upcomingPayments(reopened, NOW, 7))).toEqual([
+      `recurring:${RULE}:2026-11-12`,
+      `recurring:${onCard.id}:2026-11-12`,
+      `recurring:${intoClosed.id}:2026-11-12`,
+      `card:${card.id}:2026-11-14`,
+    ])
   })
 
   it("orders by day, then drafts, installments, cards, recurring and debts, then by id bytes", () => {

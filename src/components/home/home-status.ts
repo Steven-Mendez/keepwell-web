@@ -13,14 +13,16 @@ export interface HomeStatus {
   toConfirm: number
   /** Loan installments past their day, one per installment. */
   overdue: number
-  /** Card payments and installments due today. */
+  /** Personal debts past their due date, either direction: the late ones "Upcoming" lists. */
+  overdueDebts: number
+  /** Card payments, installments and personal debts due today. */
   dueToday: number
-  /** Card payments and installments due tomorrow, subscriptions renewing tomorrow and bills due tomorrow. */
+  /** Card payments, installments and personal debts due tomorrow, subscriptions renewing tomorrow and bills due tomorrow. */
   dueTomorrow: number
 }
 
 export function homeStatus(payments: readonly UpcomingPayment[]): HomeStatus {
-  const status: HomeStatus = { toConfirm: 0, overdue: 0, dueToday: 0, dueTomorrow: 0 }
+  const status: HomeStatus = { toConfirm: 0, overdue: 0, overdueDebts: 0, dueToday: 0, dueTomorrow: 0 }
   for (const payment of payments) {
     switch (payment.kind) {
       case "draft":
@@ -39,6 +41,10 @@ export function homeStatus(payments: readonly UpcomingPayment[]): HomeStatus {
         break
       }
       case "debt":
+        // Either direction: the debt reminder (`ledgerNotifications`) covers both, and "Upcoming" lists both.
+        if (payment.status === "overdue") status.overdueDebts++
+        else if (payment.status === "today") status.dueToday++
+        else if (payment.daysFromToday === 1) status.dueTomorrow++
         break
     }
   }
@@ -72,6 +78,9 @@ export function homeStatusText(t: Translator, status: HomeStatus): string {
       : undefined,
     status.overdue > 0
       ? t.in("home", "%lld installments overdue", status.overdue)
+      : undefined,
+    status.overdueDebts > 0
+      ? t.in("home", "%lld debts overdue", status.overdueDebts)
       : undefined,
     status.dueToday > 0
       ? t.in("home", "%lld due today", status.dueToday)
