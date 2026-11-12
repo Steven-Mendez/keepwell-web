@@ -17,7 +17,6 @@ import { KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
 import { CategoryBadge, Page, PAGE_COLUMN } from "@/components/kw/primitives"
 import { TransactionRow } from "@/components/kw/transaction-row"
 import { HomeSkeleton } from "@/components/kw/skeletons"
-import { deleteMovement } from "@/components/transactions/undoable-actions"
 import { useConfirmDraft } from "@/components/transactions/use-confirm-draft"
 import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
 import {
@@ -55,7 +54,7 @@ import { cn } from "@/lib/utils"
 import { ForecastSection } from "./home-forecast"
 import { DebtsSection } from "./home-debts"
 import { GoalsSection } from "./home-goals"
-import { homeStatusText, ledgerHomeStatus } from "./home-status"
+import { homeStatus, homeStatusText, homeUpcomingPayments } from "./home-status"
 import { UpcomingSection } from "./home-upcoming"
 
 const MASK = BALANCE_MASK
@@ -90,12 +89,17 @@ export function HomeScreen() {
     () => (ledger ? homeOverview(ledger, now) : undefined),
     [ledger, now]
   )
+  // One list for "Upcoming" and the line under the greeting, so they never contradict each other.
+  const payments = useMemo(
+    () => (ledger ? homeUpcomingPayments(ledger, now) : undefined),
+    [ledger, now]
+  )
   const status = useMemo(
-    () => (ledger ? homeStatusText(t, ledgerHomeStatus(ledger, now)) : undefined),
-    [ledger, now, t]
+    () => (payments ? homeStatusText(t, homeStatus(payments)) : undefined),
+    [payments, t]
   )
 
-  if (!ledger || !overview || !display) return <HomeSkeleton />
+  if (!ledger || !overview || !display || !payments) return <HomeSkeleton />
 
   const hasCredit = ledger.accounts.some((account) => account.kind === "credit")
   const recent = ledger.transactions
@@ -137,18 +141,18 @@ export function HomeScreen() {
               onSelect={onSelect}
             />
 
-            {overview.planned.length > 0 ? (
-              <DraftsSection
-                t={t}
-                overview={overview}
-                display={display}
-                now={now}
-                hidden={hidden}
-                confirming={confirming}
-                onConfirm={confirmDraft}
-                onSelect={onSelect}
-              />
-            ) : null}
+            {/* Drafts live here now, with what else is pending: one list answers one question. */}
+            <UpcomingSection
+              t={t}
+              ledger={ledger}
+              payments={payments}
+              display={display}
+              now={now}
+              hidden={hidden}
+              confirming={confirming}
+              onConfirm={confirmDraft}
+              onSelect={onSelect}
+            />
           </div>
 
           <aside className="flex min-w-0 flex-col gap-6">
@@ -176,8 +180,6 @@ export function HomeScreen() {
                 hidden={hidden}
               />
             ) : null}
-
-            <UpcomingSection t={t} ledger={ledger} now={now} hidden={hidden} />
 
             <GoalsSection t={t} ledger={ledger} now={now} hidden={hidden} />
 
@@ -300,81 +302,6 @@ function RecentSection({
             ))}
           </AnimatedList>
         )}
-      </div>
-    </KWSection>
-  )
-}
-
-/** iOS drafts section: planned movements with the total and a Confirm button on each row. */
-function DraftsSection({
-  t,
-  overview,
-  display,
-  now,
-  hidden,
-  confirming,
-  onConfirm,
-  onSelect,
-}: {
-  t: Translator
-  overview: HomeOverview
-  display: TransactionDisplay
-  now: Date
-  hidden: boolean
-  confirming: ReadonlySet<string>
-  onConfirm: (planned: Transaction) => void
-  onSelect: (transaction: Transaction) => void
-}) {
-  return (
-    <KWSection
-      title={t.in("home", "Drafts · %lld", overview.plannedSummary.count)}
-      action={
-        <SeeAll
-          href="/transactions?filter=planned"
-          label={t.in("home", "See all")}
-        />
-      }
-    >
-      <div className={GROUPED_LIST}>
-        <p className="px-4 py-3 type-caption text-muted-foreground">
-          {plannedCaption(t, overview, hidden)}
-        </p>
-        <AnimatedList>
-          {overview.planned.map((transaction) => (
-            <TransactionRow
-              key={transaction.id}
-              transaction={transaction}
-              display={display}
-              onSelect={onSelect}
-              dateLabel={dayLabel(t, new Date(transaction.date), now)}
-              className={
-                confirming.has(transaction.id) ? "animate-row-out" : undefined
-              }
-              trailing={
-                <>
-                  {/* An assistant's movement can also be thrown away: it never happened. */}
-                  {transaction.source === "mcp" ? (
-                    <KWButton
-                      size="mini"
-                      variant="secondary"
-                      disabled={confirming.has(transaction.id)}
-                      onClick={() => deleteMovement(t, transaction)}
-                    >
-                      {t.in("home", "Discard")}
-                    </KWButton>
-                  ) : null}
-                  <KWButton
-                    size="mini"
-                    disabled={confirming.has(transaction.id)}
-                    onClick={() => onConfirm(transaction)}
-                  >
-                    {t.in("home", "Confirm")}
-                  </KWButton>
-                </>
-              }
-            />
-          ))}
-        </AnimatedList>
       </div>
     </KWSection>
   )
@@ -821,31 +748,5 @@ function MonthCard({
         )
       ) : null}
     </div>
-  )
-}
-
-function plannedCaption(
-  t: Translator,
-  overview: HomeOverview,
-  hidden: boolean
-): string {
-  if (hidden)
-    return t.in(
-      "home",
-      "They don't count toward balances until you confirm them · %@",
-      MASK
-    )
-  const summary = overview.plannedSummary
-  const principal = formatAmount(
-    summary.principalTotal,
-    overview.settings.principal
-  )
-  const total = overview.settings.second
-    ? `${formatAmount(summary.secondTotal, overview.settings.second, { fractionDigits: 0 })} (≈ ${principal})`
-    : principal
-  return t.in(
-    "home",
-    "They don't count toward balances until you confirm them · %@",
-    total
   )
 }

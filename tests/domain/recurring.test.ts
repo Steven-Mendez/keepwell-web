@@ -15,7 +15,7 @@ import {
   materializeRecurring,
   monthlyEquivalent,
   occurrence,
-  pendingDraftOf,
+  pendingRuleDrafts,
   recurringOverview,
   ruleRepeating,
   saveRecurringRule,
@@ -26,11 +26,12 @@ import {
   subscriptionsPerMonth,
   subscriptionsTotal,
   upcoming,
+  upcomingPayments,
   type RecurringRuleDraft,
 } from "@/lib/domain"
-import { DEFAULT_SETTINGS, type RecurringRule } from "@/lib/schema"
+import { DEFAULT_SETTINGS, type RecurringRule, type Transaction } from "@/lib/schema"
 
-import { d, date, IDs, sampleStore, single, transaction, ZONE } from "./fixtures"
+import { d, date, IDs, ledgerWith, sampleStore, single, transaction, ZONE } from "./fixtures"
 
 const RULE_ID = "00000000-0000-0000-0000-00000000e001"
 
@@ -392,6 +393,9 @@ describe("Recurring rules in memory", () => {
 })
 
 describe("A rule's pending draft", () => {
+  // Derived from the same list Home reads: the drafts through today, indexed by their rule.
+  const pendingDraftOf = (of: Pick<RecurringRule, "id">, transactions: Transaction[], today: Date, zone: string) =>
+    pendingRuleDrafts(upcomingPayments(ledgerWith({ transactions, timeZone: zone }), today, 0)).get(of.id)
   const today = date(2026, 11, 12, 15)
   const draft = (day: Date, overrides: { recurringId?: string | undefined; status?: "planned" | "confirmed" } = {}) => ({
     ...transaction({ amount: "10", status: overrides.status ?? "planned", date: day }),

@@ -24,9 +24,11 @@ import { useLedgerLoad } from "@/hooks/use-ledger"
 import {
   isFinished,
   nextOccurrenceOf,
-  pendingDraftOf,
+  pendingRuleDrafts,
   recurringOverview,
+  upcomingPayments,
   type Ledger,
+  type PendingRuleDraft,
 } from "@/lib/domain"
 import {
   formatAmount,
@@ -62,6 +64,11 @@ export function RecurringScreen() {
         ? recurringOverview(ledger.recurringRules, ledger.settings.currencies, ledger.timeZone)
         : undefined,
     [ledger]
+  )
+  // Once for the screen, from the list Home reads: each rule's draft waiting from today or before.
+  const pendingDrafts = useMemo(
+    () => (ledger ? pendingRuleDrafts(upcomingPayments(ledger, now, 0)) : undefined),
+    [ledger, now]
   )
   const add = () => openRuleEditor({ mode: "create" })
   const addSubscription = () =>
@@ -165,6 +172,7 @@ export function RecurringScreen() {
                         t={t}
                         rule={rule}
                         ledger={ledger}
+                        pending={pendingDrafts?.get(rule.id)}
                         now={now}
                         hidden={hidden}
                         confirming={confirming}
@@ -193,6 +201,7 @@ function RuleRow({
   t,
   rule,
   ledger,
+  pending,
   now,
   hidden,
   confirming,
@@ -202,6 +211,7 @@ function RuleRow({
   t: Translator
   rule: RecurringRule
   ledger: Ledger
+  pending: PendingRuleDraft | undefined
   now: Date
   hidden: boolean
   confirming: ReadonlySet<string>
@@ -211,7 +221,6 @@ function RuleRow({
   const category = ledger.categories.find(
     (candidate) => candidate.id === rule.categoryId
   )
-  const pending = pendingDraftOf(rule, ledger.transactions, now, ledger.timeZone)
   const next = nextOccurrenceOf(rule, ledger.timeZone)
   const status = pending
     ? pendingDraftText(t, pending, now)
