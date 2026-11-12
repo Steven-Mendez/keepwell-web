@@ -4,7 +4,15 @@ import "fake-indexeddb/auto"
 
 import { describe, expect, it } from "vitest"
 
-import { DomainError, InMemoryStore, budgetStatuses, dec, saveCategory, type CategoryTotal } from "@/lib/domain"
+import {
+  DomainError,
+  InMemoryStore,
+  budgetStatuses,
+  dec,
+  otherCurrencyBudgets,
+  saveCategory,
+  type CategoryTotal,
+} from "@/lib/domain"
 import { categoryRepository, settingsRepository } from "@/lib/repositories"
 import { DEFAULT_SETTINGS, type TransactionCategory } from "@/lib/schema"
 
@@ -53,6 +61,30 @@ describe("Budget statuses", () => {
     expect(statuses).toHaveLength(1)
     expect(statuses[0]).toMatchObject({ categoryId: "idle", level: "onTrack" })
     expect(statuses[0]!.spent.isZero()).toBe(true)
+  })
+})
+
+describe("Budgets in another currency", () => {
+  it("counts the expense budgets left out, per currency", () => {
+    const income: TransactionCategory = { ...expense("salary", "500", "USD"), kind: "income" }
+    const categories = [
+      expense("local", "100"),
+      expense("dollars", "10", "USD"),
+      expense("more-dollars", "20", "USD"),
+      expense("euros", "30", "EUR"),
+      expense("zero", "0", "USD"),
+      expense("plain"),
+      income,
+    ]
+    expect(otherCurrencyBudgets(summary({}), categories)).toEqual([
+      { currency: "EUR", count: 1 },
+      { currency: "USD", count: 2 },
+    ])
+    expect(budgetStatuses(summary({}), categories).map((s) => s.categoryId)).toEqual(["local"])
+  })
+
+  it("is empty when every budget is in the summary's currency", () => {
+    expect(otherCurrencyBudgets(summary({}), [expense("local", "100"), expense("plain")])).toEqual([])
   })
 })
 
