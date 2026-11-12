@@ -101,6 +101,8 @@ export interface TransactionRow extends AuditColumns {
   tags: string[]
   /** `mcp` when an MCP client recorded it. Added in version 6 (older rows become `app`); never changes. */
   source: RecordSource
+  /** The statement line it was imported from (T28); absent on rows from before, `null` when not imported. No index, so no new version. */
+  imported_id?: string | null
 }
 
 /** A recurring movement or subscription (iOS `RecurringRuleRecord`). */
