@@ -169,6 +169,8 @@ export function transactionToRow(transaction: Transaction): Columns<TransactionR
     recurring_id: orNull(transaction.recurringId),
     tags: normalizedTags(transaction.tags ?? []),
     source: transaction.source ?? "app",
+    // Always sent, null when it wasn't imported; the server keeps one already set either way.
+    imported_id: orNull(transaction.importedId),
   }
 }
 
@@ -197,6 +199,7 @@ export function rowToTransaction(row: TransactionRow): Transaction {
     ...present("recurringId", row.recurring_id ?? null),
     ...tagsOf(row.tags),
     ...sourceOf(row.source),
+    ...present("importedId", row.imported_id ?? null),
   }
 }
 
