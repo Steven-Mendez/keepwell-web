@@ -9,14 +9,13 @@ import { tagLabel } from "@/components/kw/tag-editor"
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { toast } from "@/components/ui/toast"
-import { confirmPlannedTransaction, deleteTransaction } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
-import { ledgerStore } from "@/lib/repositories"
 import type { Transaction } from "@/lib/schema"
 
 import { DeleteDialog } from "./movement-detail"
 import { rowMenuActions } from "./row-menu-model"
 import { useShowTag } from "./show-tag"
+import { confirmDraft, deleteMovement } from "./undoable-actions"
 
 export interface RowMenuItem {
   key: string
@@ -61,20 +60,16 @@ export function useRowMenu(t: Translator) {
 
   async function confirm(transaction: Transaction) {
     try {
-      await confirmPlannedTransaction(ledgerStore, transaction.id)
+      await confirmDraft(t, transaction)
     } catch {
       toast.add({ title: t.in("home", "We couldn't confirm it. Try again."), type: "error" })
     }
   }
 
-  async function remove() {
+  function remove() {
     if (!deleting) return
-    try {
-      await deleteTransaction(ledgerStore, deleting.id)
-      setDeleting(undefined)
-    } catch {
-      toast.add({ title: t.in("transactions", "We couldn't save the change. Try again."), type: "error" })
-    }
+    deleteMovement(t, deleting)
+    setDeleting(undefined)
   }
 
   const wrap = (transaction: Transaction, row: ReactNode): ReactNode => {
@@ -120,7 +115,7 @@ export function useRowMenu(t: Translator) {
   const dialogs = (
     <>
       {splitting ? <SplitDialog key={splitting.id} t={t} transaction={splitting} onClose={() => setSplitting(undefined)} /> : null}
-      <DeleteDialog t={t} open={deleting !== undefined} onOpenChange={(open) => !open && setDeleting(undefined)} onDelete={() => void remove()} />
+      <DeleteDialog t={t} open={deleting !== undefined} onOpenChange={(open) => !open && setDeleting(undefined)} onDelete={remove} />
     </>
   )
   return { wrap, dialogs }

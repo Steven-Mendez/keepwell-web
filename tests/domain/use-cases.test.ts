@@ -47,6 +47,7 @@ import {
   setCardDetails,
   settingsRate,
   translatesById,
+  unconfirmTransaction,
   updateCreditTerms,
   yearMonthContaining,
   bankRate,
@@ -321,6 +322,32 @@ describe("Transaction actions", () => {
     // A future planned date moves to the day it was confirmed; a past one keeps its date.
     expect(new Date(saved.date).getTime()).toBe(Math.min(new Date(planned.date).getTime(), referenceDate.getTime()))
     expect(saved.amount).toBe(planned.amount)
+  })
+
+  it("unconfirming puts a confirmed draft back as it was, balances included", async () => {
+    const sample = sampleData()
+    const store = sampleStore(sample)
+    const planned = sample.transactions.find((t) => t.status === "planned" && new Date(t.date) > referenceDate)!
+    const balances = async () => {
+      const accounts = await store.fetchAccounts()
+      const transactions = await store.fetchTransactions()
+      return accounts.map((account) => balanceOf(account, transactions).map((m) => `${m.amount.toString()} ${m.currency}`))
+    }
+    const before = await balances()
+    await confirmPlannedTransaction(store, planned.id, referenceDate)
+    expect(await balances()).not.toEqual(before)
+    await unconfirmTransaction(store, planned.id, planned.date)
+    expect((await store.fetchTransactions()).find((t) => t.id === planned.id)).toEqual(planned)
+    expect(await balances()).toEqual(before)
+  })
+
+  it("unconfirming leaves a draft alone and fails for an unknown movement", async () => {
+    const sample = sampleData()
+    const store = sampleStore(sample)
+    const planned = sample.transactions.find((t) => t.status === "planned")!
+    await unconfirmTransaction(store, planned.id, referenceDate.toISOString())
+    expect((await store.fetchTransactions()).find((t) => t.id === planned.id)).toEqual(planned)
+    await expectDomainError(() => unconfirmTransaction(store, crypto.randomUUID(), planned.date), "notFound")
   })
 
   it("confirming an unknown movement fails", async () => {
