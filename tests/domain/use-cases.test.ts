@@ -36,6 +36,7 @@ import {
   netWorth,
   normalizeBankCards,
   previewMovement,
+  reassignDeletedCategories,
   renameAccount,
   reorderCategories,
   restoreDefaultCategories,
@@ -61,7 +62,7 @@ import {
   onboardingDisplayName,
   type OnboardingAccountDraft,
 } from "@/lib/domain/onboarding"
-import type { Account } from "@/lib/schema"
+import type { Account, RecurringRule } from "@/lib/schema"
 import { DEFAULT_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES, OTHER_EXPENSE_ID, OTHER_INCOME_ID, orderedCategories } from "@/lib/schema"
 
 import { IDs, d, referenceDate, sampleData, sampleStore, transaction } from "./fixtures"
@@ -181,6 +182,40 @@ describe("Category actions", () => {
     await deleteCategory(store, boat.id)
     expect(await store.fetchCategories()).not.toContainEqual(boat)
     expect((await store.fetchTransactions()).map((t) => t.categoryId)).toEqual([OTHER_EXPENSE_ID])
+  })
+
+  it("after a pull, records pointing at a deleted category move to Other of their kind", async () => {
+    const sample = sampleData()
+    const expense = sample.transactions.find((t) => t.kind === "expense")!
+    const income = sample.transactions.find((t) => t.kind === "income")!
+    const rule = { id: "rule-1", kind: "expense", categoryId: "custom-boat" } as RecurringRule
+    const store = new InMemoryStore({
+      transactions: [
+        { ...expense, categoryId: "custom-boat" },
+        { ...income, id: "income-1", categoryId: "custom-bonus" },
+        { ...expense, id: "kept", categoryId: "groceries" },
+        { ...expense, id: "unknown", categoryId: "custom-not-pulled-yet" },
+      ],
+      recurringRules: [rule],
+    })
+    expect(await reassignDeletedCategories(store, new Set(["custom-boat", "custom-bonus"]))).toBe(3)
+    const byId = new Map((await store.fetchTransactions()).map((t) => [t.id, t.categoryId]))
+    expect(byId).toEqual(new Map([[expense.id, OTHER_EXPENSE_ID], ["income-1", OTHER_INCOME_ID], ["kept", "groceries"], ["unknown", "custom-not-pulled-yet"]]))
+    expect((await store.fetchRecurringRules())[0]!.categoryId).toBe(OTHER_EXPENSE_ID)
+  })
+
+  it("the repair after a pull writes nothing when nothing points at a deleted category", async () => {
+    const expense = sampleData().transactions.find((t) => t.kind === "expense")!
+    const store = new InMemoryStore({ transactions: [{ ...expense, categoryId: "groceries" }] })
+    let writes = 0
+    const counted = Object.assign(Object.create(store) as InMemoryStore, {
+      saveTransaction: async () => void writes++,
+      saveRecurringRule: async () => void writes++,
+      atomically: async () => void writes++,
+    })
+    expect(await reassignDeletedCategories(counted, new Set(["custom-boat"]))).toBe(0)
+    expect(await reassignDeletedCategories(counted, new Set())).toBe(0)
+    expect(writes).toBe(0)
   })
 
   it("listing returns the picker order", async () => {
