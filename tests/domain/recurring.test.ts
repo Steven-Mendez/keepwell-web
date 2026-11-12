@@ -23,6 +23,7 @@ import {
   setRecurringRulePaused,
   subscriptionsCharged,
   subscriptionsPerMonth,
+  subscriptionsTotal,
   upcoming,
   type RecurringRuleDraft,
 } from "@/lib/domain"
@@ -131,6 +132,29 @@ describe("Recurring schedule", () => {
     const overview = recurringOverview([rule(), rule({ id: crypto.randomUUID(), isSubscription: false, kind: "income", categoryId: "salary" })], currencies)
     expect(overview.sections.map((section) => section.kind)).toEqual(["subscriptions", "income"])
     expect(overview.subscriptionsPerYear.amount.toString()).toBe("120")
+    expect(overview.excludedSubscriptions).toEqual([])
+  })
+
+  it("subscriptions in a currency the settings can't convert are counted apart, by currency", () => {
+    const currencies = { principal: "USD", second: "NIO", rate: "36.6243" }
+    const rules = [
+      rule({ id: crypto.randomUUID(), amount: "10" }),
+      rule({ id: crypto.randomUUID(), amount: "8", currency: "GBP" }),
+      rule({ id: crypto.randomUUID(), amount: "5", currency: "EUR" }),
+      rule({ id: crypto.randomUUID(), amount: "7", currency: "EUR", frequency: "yearly" }),
+      rule({ id: crypto.randomUUID(), amount: "9", currency: "EUR", isPaused: true }),
+      rule({ id: crypto.randomUUID(), amount: "9", currency: "EUR", isSubscription: false }),
+    ]
+    const total = subscriptionsTotal(rules, currencies)
+    expect(total.perMonth).toEqual({ amount: d(10), currency: "USD" })
+    expect(total.excluded).toEqual([
+      { currency: "EUR", count: 2 },
+      { currency: "GBP", count: 1 },
+    ])
+    expect(subscriptionsPerMonth(rules, currencies)).toEqual(total.perMonth)
+    const overview = recurringOverview(rules, { principal: "USD", rate: "1" })
+    expect(overview.subscriptionsPerMonth).toEqual({ amount: d(10), currency: "USD" })
+    expect(overview.excludedSubscriptions).toEqual(total.excluded)
   })
 
   it("upcoming lists the next occurrences within the window, soonest first", () => {
