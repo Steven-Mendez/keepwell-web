@@ -1,4 +1,6 @@
 import { db, LOCAL_SETTINGS_COLUMNS, SYNC_TABLES, toWire } from "@/lib/db"
+import { reassignDeletedCategories } from "@/lib/domain/categories"
+import { ledgerStore } from "@/lib/repositories/ledger-store"
 import { applyRemote, stampAfter } from "@/lib/repositories/shared"
 import { SYNC_ENTITIES, type SyncEntity } from "@/lib/schema"
 import { newID } from "@/lib/schema/id"
@@ -407,8 +409,18 @@ async function syncRound(transport: SyncTransport, options: { userId?: string })
     await setMeta(CURSOR, String(cursor))
     if (!page.has_more) break
   }
+  await repairDeletedCategories()
   await setMeta(LAST_SYNC, new Date().toISOString())
   return { pushed, pulled }
+}
+
+/**
+ * A movement edited here before the pull brought its category's deletion keeps the deleted id (its
+ * later edit won). It moves to "Other" now, through the outbox, so the account gets the repair too.
+ */
+async function repairDeletedCategories() {
+  const tombstones = await db.categories.filter((row) => row.deleted_at !== null).primaryKeys()
+  await reassignDeletedCategories(ledgerStore, new Set(tombstones))
 }
 
 async function settle(entity: SyncEntity, entityId: string, result: PushResult) {
