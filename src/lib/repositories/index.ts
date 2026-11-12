@@ -12,3 +12,4 @@ export { DeferredDeletions, movementDeletions, UNDO_WINDOW_MS, type DeletionStor
 export { syncOutboxRepository } from "./sync-outbox"
 export { ledgerStore, profileStore, eraseAllData } from "./ledger-store"
 export { notificationStateRepository, type NotificationState } from "./notification-states"
+export { exportBackup, importBackup, ledgerIsEmpty, LedgerNotEmptyError } from "./backup"
