@@ -55,6 +55,7 @@ import { cn } from "@/lib/utils"
 import { ForecastSection } from "./home-forecast"
 import { DebtsSection } from "./home-debts"
 import { GoalsSection } from "./home-goals"
+import { homeStatusText, ledgerHomeStatus } from "./home-status"
 import { UpcomingSection } from "./home-upcoming"
 
 const MASK = BALANCE_MASK
@@ -89,6 +90,10 @@ export function HomeScreen() {
     () => (ledger ? homeOverview(ledger, now) : undefined),
     [ledger, now]
   )
+  const status = useMemo(
+    () => (ledger ? homeStatusText(t, ledgerHomeStatus(ledger, now)) : undefined),
+    [ledger, now, t]
+  )
 
   if (!ledger || !overview || !display) return <HomeSkeleton />
 
@@ -105,6 +110,7 @@ export function HomeScreen() {
         overview={overview}
         name={name}
         now={now}
+        status={status}
         hidden={hidden}
         onToggleHidden={toggleHidden}
         month={
@@ -557,6 +563,7 @@ function Hero({
   overview,
   name,
   now,
+  status,
   hidden,
   onToggleHidden,
   month,
@@ -566,6 +573,8 @@ function Hero({
   overview: HomeOverview
   name: string | undefined
   now: Date
+  /** What needs attention today, under the greeting ("2 payments to confirm · 1 due tomorrow"). */
+  status: string | undefined
   hidden: boolean
   onToggleHidden: () => void
   month: React.ReactNode
@@ -595,6 +604,11 @@ function Hero({
           <h1 className="type-title-sm text-foreground">
             {greeting(t, name, now)}
           </h1>
+          {status ? (
+            <p className="type-label font-normal text-brand-foreground">
+              {status}
+            </p>
+          ) : null}
         </div>
         <div className="flex w-full flex-col items-center gap-5 lg:col-span-2 lg:row-start-2 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-x-6 xl:grid-cols-[auto_minmax(0,1fr)] xl:gap-x-12">
           <div className="flex flex-col items-center gap-2 lg:items-start">
