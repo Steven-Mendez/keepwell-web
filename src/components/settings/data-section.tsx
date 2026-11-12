@@ -1,12 +1,13 @@
 "use client"
 
-import { HardDriveIcon } from "lucide-react"
+import { ArchiveRestoreIcon, DownloadIcon, HardDriveIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 
 import { toast } from "@/components/ui/toast"
 import type { Translator } from "@/lib/i18n"
 import { signOut } from "@/lib/api/account"
+import { downloadBackup, restoreBackupFile, type RestoreOutcome } from "@/lib/platform/backup-file"
 import { downloadCsvExport } from "@/lib/platform/csv-download"
 import { requestPersistentStorage, type StoragePersistence } from "@/lib/platform/persistent-storage"
 import { eraseAllData } from "@/lib/repositories"
@@ -24,11 +25,44 @@ async function exportCsv(t: Translator) {
   }
 }
 
+/** Downloads the full JSON backup. */
+async function exportBackup(t: Translator) {
+  try {
+    await downloadBackup()
+  } catch {
+    toast.add({ title: t.in("settings", "We couldn't create the file. Try again."), type: "error" })
+  }
+}
+
+function restoreFailure(t: Translator, outcome: Extract<RestoreOutcome, { ok: false }>): string {
+  switch (outcome.error.code) {
+    case "not_empty":
+      return t.in("settings", "A backup can only be restored when there's no data yet. Delete all your data first.")
+    case "newer_version":
+      return t.in("settings", "This backup is from a newer version of Keepwell. Update the app and try again.")
+    case "not_backup":
+    case "invalid":
+      return t.in("settings", "This file isn't a Keepwell backup, or it's damaged. Nothing was restored.")
+  }
+}
+
+/** Restores a chosen backup file; only into an empty ledger, and all or nothing. */
+async function restoreBackup(t: Translator, file: File) {
+  try {
+    const outcome = await restoreBackupFile(file)
+    if (outcome.ok) toast.add({ title: t.in("settings", "Backup restored"), type: "success" })
+    else toast.add({ title: restoreFailure(t, outcome), type: "error" })
+  } catch {
+    toast.add({ title: t.in("settings", "We couldn't restore the backup. Try again."), type: "error" })
+  }
+}
+
 /**
- * "Data & sync": the account's sync (when signed in), CSV export (the one way to keep a copy by hand) and the browser's storage status, since the data lives here.
+ * "Data & sync": the account's sync (when signed in), CSV export, the full JSON backup and its restore and the browser's storage status, since the data lives here.
  */
 export function DataSection({ t, syncRows }: { t: Translator; syncRows?: ReactNode }) {
   const [persistence, setPersistence] = useState<StoragePersistence>()
+  const fileInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     requestPersistentStorage().then(setPersistence, () => setPersistence("unsupported"))
@@ -38,6 +72,19 @@ export function DataSection({ t, syncRows }: { t: Translator; syncRows?: ReactNo
     <SettingsSection id="data" title={t.in("settings", "Data & sync")} footnote={t.in("web", "Your data lives in this browser. Export a CSV now and then to keep a copy.")}>
       {syncRows}
       <SettingsLinkRow icon="share" label={t.in("settings", "Export CSV")} description={t.in("settings", "A copy of every movement")} onClick={() => void exportCsv(t)} />
+      <SettingsLinkRow icon={<DownloadIcon strokeWidth={2} />} label={t.in("settings", "Export backup")} description={t.in("settings", "Everything, in a file you can restore")} onClick={() => void exportBackup(t)} />
+      <SettingsLinkRow icon={<ArchiveRestoreIcon strokeWidth={2} />} label={t.in("settings", "Restore backup")} description={t.in("settings", "Only when there's no data yet")} onClick={() => fileInput.current?.click()} />
+      <input
+        ref={fileInput}
+        type="file"
+        accept="application/json,.json"
+        hidden
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          event.target.value = ""
+          if (file) void restoreBackup(t, file)
+        }}
+      />
       <SettingsRow icon={<HardDriveIcon strokeWidth={2} />} label={t.in("web", "Storage")} description={t.in("web", "Stored in this browser")}>
         {persistence === "persisted" ? (
           <StatusPill tone="positive">{t.in("web", "Kept by the browser")}</StatusPill>

@@ -1,7 +1,7 @@
 import { exportCsvFrom } from "@/lib/domain/csv"
 import { ledgerStore } from "@/lib/repositories"
 
-function download(text: string, name: string, type: string) {
+export function download(text: string, name: string, type: string) {
   const url = URL.createObjectURL(new Blob([text], { type }))
   const link = document.createElement("a")
   link.href = url
@@ -10,7 +10,7 @@ function download(text: string, name: string, type: string) {
   URL.revokeObjectURL(url)
 }
 
-const today = () => {
+export const today = () => {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
 }
