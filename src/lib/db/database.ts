@@ -186,6 +186,8 @@ export interface PersonalDebtRow extends AuditColumns {
   note: string | null
   settled_at: string | null
   transaction_id: string | null
+  /** `PersonalDebt.dueDate`. Optional because rows stored or pulled before it lack it. No index, so no new Dexie version. */
+  due_date?: string | null
 }
 
 export interface PersonalDebtRepaymentRow extends AuditColumns {

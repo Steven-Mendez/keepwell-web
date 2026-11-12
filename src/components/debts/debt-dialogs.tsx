@@ -9,6 +9,7 @@ import {
   KWSegmented,
   KWValueRow,
 } from "@/components/kw/design"
+import { KWSwitch } from "@/components/movement-editor/flow-parts"
 import { ConfirmDialog } from "@/components/settings/confirm-dialog"
 import { SETTINGS_INPUT } from "@/components/settings/settings-rows"
 import {
@@ -21,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import {
+  addDays,
   decimalText,
   debtRemaining,
   deletePersonalDebt,
@@ -31,8 +33,11 @@ import {
   settlePersonalDebt,
 } from "@/lib/domain"
 import { formatAmount, formatNumber, parseAmount } from "@/lib/domain/format"
+import type { TimeZone } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
+import { cn } from "@/lib/utils"
 import {
   MAX_DEBT_NAME_LENGTH,
   type CurrencySettings,
@@ -40,7 +45,12 @@ import {
   type PersonalDebt,
 } from "@/lib/schema"
 
-import { dateFieldValue, dateFromField, dayText } from "./debt-format"
+import {
+  dateFieldValue,
+  dateFromField,
+  dayText,
+  debtDueText,
+} from "./debt-format"
 
 const DIALOG =
   "max-h-[90svh] gap-5 overflow-y-auto rounded-2xl bg-card p-6 ring-1 ring-border/60 sm:max-w-lg"
@@ -50,12 +60,35 @@ const FOOTER =
 function debtError(t: Translator, thrown: unknown): string {
   if (isDomainError(thrown, "missingName"))
     return t.in("debts", "Write who it's with.")
+  if (isDomainError(thrown, "invalidDueDate"))
+    return t.in("debts", "The due date can't be before the debt's date.")
   if (isDomainError(thrown, "invalidAmount"))
     return t.in("debts", "It can't be less than what was already paid back.")
   return t.in("debts", "We couldn't save the debt. Try again.")
 }
 
-/** Money lent or borrowed: which way, who, how much, when and a note. Only tracked, never a movement. */
+/** "Due Nov 28", "Due today" or "Overdue · 3 days": always said in words, the color only adds to it. */
+export function DebtDueLine({
+  due,
+}: {
+  due: { text: string; overdue: boolean } | undefined
+}) {
+  if (!due) return null
+  return (
+    <span
+      className={cn(
+        "type-caption",
+        due.overdue ? "text-negative" : "text-muted-foreground"
+      )}
+    >
+      {due.text}
+    </span>
+  )
+}
+
+const DEFAULT_DUE_DAYS = 30
+
+/** Money lent or borrowed: which way, who, how much, when, an optional due date and a note. Only tracked, never a movement. */
 export function DebtEditorDialog({
   t,
   debt,
@@ -83,6 +116,9 @@ export function DebtEditorDialog({
     debt ? new Date(debt.date) : new Date()
   )
   const [note, setNote] = useState(debt?.note ?? "")
+  const [dueDate, setDueDate] = useState<Date | undefined>(() =>
+    debt?.dueDate ? new Date(debt.dueDate) : undefined
+  )
   const [error, setError] = useState<string>()
   const [isSaving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -115,6 +151,7 @@ export function DebtEditorDialog({
         currency,
         date,
         note,
+        dueDate,
       })
     )
   }
@@ -223,6 +260,42 @@ export function DebtEditorDialog({
                 />
               </label>
             </div>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary px-3.5 py-2.5">
+                <label htmlFor="debt-due" className="type-body text-foreground">
+                  {t.in("debts", "Set a due date")}
+                </label>
+                <KWSwitch
+                  id="debt-due"
+                  checked={dueDate !== undefined}
+                  label={t.in("debts", "Set a due date")}
+                  onChange={(checked) => {
+                    setDueDate(
+                      checked
+                        ? addDays(date, DEFAULT_DUE_DAYS, deviceTimeZone())
+                        : undefined
+                    )
+                    setError(undefined)
+                  }}
+                />
+              </div>
+              {dueDate ? (
+                <label className="flex flex-col gap-1.5">
+                  <span className="type-label text-text-secondary">
+                    {t.in("debts", "Due date")}
+                  </span>
+                  <Input
+                    type="date"
+                    className={SETTINGS_INPUT}
+                    value={dateFieldValue(dueDate)}
+                    onChange={(event) => {
+                      setDueDate(dateFromField(event.target.value, dueDate))
+                      setError(undefined)
+                    }}
+                  />
+                </label>
+              ) : null}
+            </div>
             <p className="type-caption text-muted-foreground">
               {t.in(
                 "debts",
@@ -274,12 +347,16 @@ export function DebtDialog({
   t,
   debt,
   hidden,
+  now,
+  zone,
   onEdit,
   onClose,
 }: {
   t: Translator
   debt: PersonalDebt
   hidden: boolean
+  now: Date
+  zone: TimeZone
   onEdit: () => void
   onClose: () => void
 }) {
@@ -350,6 +427,7 @@ export function DebtDialog({
                 {t.in("debts", "Settled on %@", dayText(t, debt.settledAt))}
               </span>
             ) : null}
+            <DebtDueLine due={debtDueText(t, debt, now, zone)} />
             <span className="type-caption text-muted-foreground">
               {t.in(
                 "debts",

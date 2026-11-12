@@ -359,6 +359,8 @@ export function personalDebtToRow(debt: PersonalDebt): Columns<PersonalDebtRow> 
     note: orNull(debt.note),
     settled_at: orNull(debt.settledAt),
     transaction_id: orNull(debt.transactionId),
+    // Always sent, null for none: removing the date has to clear it on the other devices.
+    due_date: orNull(debt.dueDate),
   }
 }
 
@@ -386,6 +388,7 @@ export function rowToPersonalDebt(row: PersonalDebtRow, repayments: PersonalDebt
       .map((repayment) => ({ id: repayment.id, amount: repayment.amount, date: repayment.date })),
     ...present("settledAt", row.settled_at),
     ...present("transactionId", row.transaction_id),
+    ...present("dueDate", row.due_date ?? null),
   }
 }
 
