@@ -1,10 +1,14 @@
-// The bell's and the Notifications page's content: reminders that apply now plus Claude's proposals,
-// never the drafts (Home keeps those).
-import { describe, expect, it } from "vitest"
+// Notifications (ADR 0012 in keepwell-api): ids per occurrence, the inbox with read and deleted
+// state, and how each one reads.
+import "fake-indexeddb/auto"
 
-import { buildNotifications, proposedRules } from "@/components/notifications/notifications"
-import { loadLedger } from "@/lib/domain"
+import { beforeEach, describe, expect, it } from "vitest"
+
+import { buildInbox } from "@/components/notifications/notifications"
+import { db } from "@/lib/db"
+import { ledgerNotifications, loadLedger, notificationDay } from "@/lib/domain"
 import { makeTranslator } from "@/lib/i18n"
+import { notificationStateRepository } from "@/lib/repositories"
 import type { RecurringRule } from "@/lib/schema"
 
 import { IDs, referenceDate, sampleStore } from "./domain/fixtures"
@@ -30,36 +34,91 @@ const proposal = (overrides: Partial<RecurringRule> = {}): RecurringRule =>
     ...overrides,
   }) as RecurringRule
 
-describe("Notifications", () => {
-  it("leaves drafts out and keeps what applies now", async () => {
-    const store = sampleStore()
-    const ledger = await loadLedger(store)
-    // The sample has drafts due on the 24th and later; on the 25th they are due today.
-    const due = new Date(2026, 9, 25, 12)
-    const result = buildNotifications(t, ledger, due, false)
-    expect(result.reminders.some((reminder) => reminder.id.startsWith("planned-"))).toBe(false)
-    expect(result.proposed).toEqual([])
-    expect(result.count).toBe(result.reminders.length)
-  })
-
-  it("says a card payment is due today on its due day instead of in 0 days", async () => {
+describe("ledgerNotifications", () => {
+  it("names each card payment by its due day, so next month's is a new notification", async () => {
     const ledger = await loadLedger(sampleStore())
-    // The sample's card is due on the 15th.
-    const payment = (now: Date) =>
-      buildNotifications(t, ledger, now, false).reminders.find((reminder) => reminder.id.startsWith("payment-"))
-    expect(payment(new Date(2026, 10, 15, 12))?.title).toMatch(/: due today$/)
-    expect(payment(new Date(2026, 10, 13, 12))?.title).toMatch(/: payment in 2 days$/)
+    // The sample's Visa is due on the 15th.
+    const november = ledgerNotifications(ledger, new Date(2026, 10, 13, 12)).find((n) => n.kind === "payment")
+    const december = ledgerNotifications(ledger, new Date(2026, 11, 13, 12)).find((n) => n.kind === "payment")
+    expect(november?.id).toBe(`payment:${IDs.visa}:2026-11-15`)
+    expect(december?.id).toBe(`payment:${IDs.visa}:2026-12-15`)
   })
 
-  it("counts proposals made through MCP that are still paused", async () => {
-    const store = sampleStore()
-    const ledger = await loadLedger(store)
+  it("gives the same ids on any hour of the same day", async () => {
+    const ledger = await loadLedger(sampleStore())
+    const ids = (now: Date) => ledgerNotifications(ledger, now).map((n) => n.id).sort()
+    expect(ids(new Date(2026, 10, 13, 0, 5))).toEqual(ids(new Date(2026, 10, 13, 23, 55)))
+  })
+
+  it("lists assistant proposals that are still paused, and only those", async () => {
+    const ledger = await loadLedger(sampleStore())
     const withRules = {
       ...ledger,
       recurringRules: [proposal(), proposal({ id: "rule-2", isPaused: false }), proposal({ id: "rule-3", source: "app" })],
     }
-    expect(proposedRules(withRules).map((rule) => rule.id)).toEqual(["rule-1"])
-    const result = buildNotifications(t, withRules, new Date(2026, 9, 25, 12), false)
-    expect(result.count).toBe(result.reminders.length + 1)
+    const proposals = ledgerNotifications(withRules, new Date(2026, 9, 25, 12)).filter((n) => n.kind === "proposal")
+    expect(proposals.map((n) => n.id)).toEqual(["proposal:rule-1"])
+  })
+
+  it("reads the day back from an id, for pruning", () => {
+    expect(notificationDay("payment:x:2026-11-15")).toEqual(new Date(2026, 10, 15))
+    expect(notificationDay("expiry:x:2026-11")).toEqual(new Date(2026, 10, 1))
+    expect(notificationDay("budget:groceries:2026-11:near")).toEqual(new Date(2026, 10, 1))
+    expect(notificationDay("installment:x:3")).toBeUndefined()
+  })
+})
+
+describe("Inbox", () => {
+  beforeEach(async () => {
+    await db.notification_states.clear()
+    await db.sync_outbox.clear()
+  })
+
+  it("leaves drafts to Home and says a payment is due today on its due day", async () => {
+    const ledger = await loadLedger(sampleStore())
+    const inbox = buildInbox(t, ledger, [], new Date(2026, 10, 15, 12), false)
+    expect(inbox.entries.some((entry) => entry.notification.kind === "planned")).toBe(false)
+    expect(inbox.entries.find((entry) => entry.notification.kind === "payment")?.title).toMatch(/: due today$/)
+    expect(inbox.unread).toBe(inbox.entries.length)
+  })
+
+  it("marks read, unread, deletes and restores, and every change goes to the outbox", async () => {
+    const ledger = await loadLedger(sampleStore())
+    const now = new Date(2026, 10, 13, 12)
+    const id = `payment:${IDs.visa}:2026-11-15`
+    const inbox = async () => buildInbox(t, ledger, await notificationStateRepository.list(), now, false)
+
+    await notificationStateRepository.markRead([id])
+    expect((await inbox()).entries.find((entry) => entry.notification.id === id)?.read).toBe(true)
+
+    await notificationStateRepository.markUnread([id])
+    expect((await inbox()).entries.find((entry) => entry.notification.id === id)?.read).toBe(false)
+
+    await notificationStateRepository.dismiss([id])
+    expect((await inbox()).entries.some((entry) => entry.notification.id === id)).toBe(false)
+
+    await notificationStateRepository.restore([id])
+    const restored = (await inbox()).entries.find((entry) => entry.notification.id === id)
+    expect(restored?.read).toBe(true)
+
+    const events = await db.sync_outbox.orderBy("created_at").toArray()
+    expect(events.map((event) => [event.entity, event.operation])).toEqual([
+      ["notificationState", "create"],
+      ["notificationState", "update"],
+      ["notificationState", "update"],
+      ["notificationState", "update"],
+    ])
+  })
+
+  it("doesn't write when nothing changes", async () => {
+    await notificationStateRepository.markRead(["price:x"])
+    await notificationStateRepository.markRead(["price:x"])
+    expect(await db.sync_outbox.count()).toBe(1)
+  })
+
+  it("tombstones state rows whose day is long past", async () => {
+    await notificationStateRepository.markRead(["payment:a:2026-01-15", "payment:a:2026-11-15", "price:x"])
+    await notificationStateRepository.prune(new Date(2026, 10, 20))
+    expect((await notificationStateRepository.list()).map((state) => state.id).sort()).toEqual(["payment:a:2026-11-15", "price:x"])
   })
 })
