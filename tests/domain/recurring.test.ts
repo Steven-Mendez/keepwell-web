@@ -15,6 +15,7 @@ import {
   materializeRecurring,
   monthlyEquivalent,
   occurrence,
+  pendingDraftOf,
   recurringOverview,
   ruleRepeating,
   saveRecurringRule,
@@ -351,5 +352,43 @@ describe("Recurring rule actions", () => {
 describe("Recurring rules in memory", () => {
   it("an InMemoryStore starts with no rules", async () => {
     expect(await new InMemoryStore().fetchRecurringRules()).toEqual([])
+  })
+})
+
+describe("A rule's pending draft", () => {
+  const today = date(2026, 11, 12, 15)
+  const draft = (day: Date, overrides: { recurringId?: string | undefined; status?: "planned" | "confirmed" } = {}) => ({
+    ...transaction({ amount: "10", status: overrides.status ?? "planned", date: day }),
+    ...("recurringId" in overrides ? (overrides.recurringId === undefined ? {} : { recurringId: overrides.recurringId }) : { recurringId: RULE_ID }),
+  })
+
+  it("is none without a draft due today or before", () => {
+    expect(pendingDraftOf(rule(), [], today)).toBeUndefined()
+    expect(pendingDraftOf(rule(), [draft(date(2026, 11, 13, 9))], today)).toBeUndefined()
+  })
+
+  it("ignores confirmed movements, other rules' drafts and drafts with no rule", () => {
+    const movements = [
+      draft(date(2026, 11, 10), { status: "confirmed" }),
+      draft(date(2026, 11, 10), { recurringId: "00000000-0000-0000-0000-00000000e002" }),
+      draft(date(2026, 11, 10), { recurringId: undefined }),
+    ]
+    expect(pendingDraftOf(rule(), movements, today)).toBeUndefined()
+  })
+
+  it("is today's draft, zero days overdue, whatever its time of day", () => {
+    const later = draft(date(2026, 11, 12, 23))
+    expect(pendingDraftOf(rule(), [later], today)).toEqual({ transaction: later, daysOverdue: 0 })
+  })
+
+  it("is the oldest overdue draft, with the calendar days since its date", () => {
+    const older = draft(date(2026, 11, 9, 23))
+    const newer = draft(date(2026, 11, 11, 1))
+    expect(pendingDraftOf(rule(), [newer, older, draft(date(2026, 11, 20))], today)).toEqual({ transaction: older, daysOverdue: 3 })
+  })
+
+  it("counts calendar days across a month end", () => {
+    const old = draft(date(2026, 10, 31, 9))
+    expect(pendingDraftOf(rule(), [old], date(2026, 11, 2, 8))?.daysOverdue).toBe(2)
   })
 })

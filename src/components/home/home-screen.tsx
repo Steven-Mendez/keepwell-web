@@ -16,9 +16,9 @@ import { AnimatedList, SpringFill } from "@/components/kw/motion"
 import { KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
 import { CategoryBadge, Page, PAGE_COLUMN } from "@/components/kw/primitives"
 import { TransactionRow } from "@/components/kw/transaction-row"
-import { toast } from "@/components/ui/toast"
 import { HomeSkeleton } from "@/components/kw/skeletons"
-import { confirmDraft as confirmDraftWithUndo, deleteMovement } from "@/components/transactions/undoable-actions"
+import { deleteMovement } from "@/components/transactions/undoable-actions"
+import { useConfirmDraft } from "@/components/transactions/use-confirm-draft"
 import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
 import {
   useLedger,
@@ -188,32 +188,6 @@ export function HomeScreen() {
       </Page>
     </div>
   )
-}
-
-/** Drafts being confirmed slide out of the list before the ledger drops them (iOS animates removal). */
-function useConfirmDraft(t: Translator) {
-  const [confirming, setConfirming] = useState<ReadonlySet<string>>(new Set())
-  const confirmDraft = (planned: Transaction) => {
-    const id = planned.id
-    setConfirming((current) => new Set(current).add(id))
-    window.setTimeout(() => {
-      confirmDraftWithUndo(t, planned)
-        .catch(() =>
-          toast.add({
-            title: t.in("home", "We couldn't confirm it. Try again."),
-            type: "error",
-          })
-        )
-        .finally(() =>
-          setConfirming((current) => {
-            const next = new Set(current)
-            next.delete(id)
-            return next
-          })
-        )
-    }, 200)
-  }
-  return { confirming, confirmDraft }
 }
 
 /** "Log first expense" at the end of onboarding lands here with the editor open. */
