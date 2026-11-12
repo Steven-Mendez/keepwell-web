@@ -2,10 +2,10 @@
 
 import { HardDriveIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 
 import { toast } from "@/components/ui/toast"
-import { exportCsvFrom, importCsv } from "@/lib/domain/csv"
+import { exportCsvFrom } from "@/lib/domain/csv"
 import type { Translator } from "@/lib/i18n"
 import { signOut } from "@/lib/api/account"
 import { requestPersistentStorage, type StoragePersistence } from "@/lib/platform/persistent-storage"
@@ -29,25 +29,6 @@ const today = () => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
 }
 
-/** Pick one file through a hidden input, the browser's stand-in for the iOS document picker. */
-function useFilePicker(accept: string, onFile: (file: File) => void) {
-  const input = useRef<HTMLInputElement>(null)
-  const element = (
-    <input
-      ref={input}
-      type="file"
-      accept={accept}
-      className="hidden"
-      onChange={(event) => {
-        const file = event.target.files?.[0]
-        event.target.value = ""
-        if (file) onFile(file)
-      }}
-    />
-  )
-  return { open: () => input.current?.click(), element }
-}
-
 /** Downloads a CSV of every movement. */
 async function exportCsv(t: Translator) {
   try {
@@ -57,29 +38,8 @@ async function exportCsv(t: Translator) {
   }
 }
 
-async function importCsvFile(t: Translator, file: File) {
-  let text: string
-  try {
-    text = await file.text()
-  } catch {
-    toast.add({ title: t.in("settings", "We couldn't read that file. Export it again as CSV (UTF-8)."), type: "error" })
-    return
-  }
-  try {
-    const result = await importCsv(ledgerStore, text)
-    toast.add({
-      title: t.in("settings", "%lld transactions imported", result.imported),
-      ...(result.skipped > 0 ? { description: t.in("settings", "%lld rows skipped", result.skipped) } : {}),
-      type: result.imported > 0 ? "success" : "info",
-    })
-  } catch {
-    toast.add({ title: t.in("settings", "We couldn't import the file. Try again."), type: "error" })
-  }
-}
-
 /**
- * "Data & sync": the account's sync (when signed in), CSV in and out (the one way to keep a copy or
- * move movements by hand) and the browser's storage status, since the data lives here.
+ * "Data & sync": the account's sync (when signed in), CSV export (the one way to keep a copy by hand) and the browser's storage status, since the data lives here.
  */
 export function DataSection({ t, syncRows }: { t: Translator; syncRows?: ReactNode }) {
   const [persistence, setPersistence] = useState<StoragePersistence>()
@@ -88,14 +48,10 @@ export function DataSection({ t, syncRows }: { t: Translator; syncRows?: ReactNo
     requestPersistentStorage().then(setPersistence, () => setPersistence("unsupported"))
   }, [])
 
-  const csvPicker = useFilePicker("text/csv,.csv", (file) => void importCsvFile(t, file))
-
   return (
     <SettingsSection id="data" title={t.in("settings", "Data & sync")} footnote={t.in("web", "Your data lives in this browser. Export a CSV now and then to keep a copy.")}>
       {syncRows}
       <SettingsLinkRow icon="share" label={t.in("settings", "Export CSV")} description={t.in("settings", "A copy of every movement")} onClick={() => void exportCsv(t)} />
-      <SettingsLinkRow icon="download" label={t.in("settings", "Import CSV")} description={t.in("settings", "Add movements from a spreadsheet")} onClick={csvPicker.open} />
-      {csvPicker.element}
       <SettingsRow icon={<HardDriveIcon strokeWidth={2} />} label={t.in("web", "Storage")} description={t.in("web", "Stored in this browser")}>
         {persistence === "persisted" ? (
           <StatusPill tone="positive">{t.in("web", "Kept by the browser")}</StatusPill>

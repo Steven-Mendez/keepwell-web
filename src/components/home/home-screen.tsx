@@ -51,12 +51,10 @@ import {
 } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
 
-import { AssistantRulesSection } from "./home-assistant"
 import type { Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
 import { ForecastSection } from "./home-forecast"
-import { homeReminders, type Reminder } from "./home-reminders"
 import { DebtsSection } from "./home-debts"
 import { GoalsSection } from "./home-goals"
 import { UpcomingSection } from "./home-upcoming"
@@ -97,7 +95,6 @@ export function HomeScreen() {
   if (!ledger || !overview || !display) return <HomeSkeleton />
 
   const hasCredit = ledger.accounts.some((account) => account.kind === "credit")
-  const reminders = homeReminders(t, ledger, overview, now, hidden)
   const recent = ledger.transactions
     .filter((transaction) => transaction.status === "confirmed")
     .slice(0, 8)
@@ -128,8 +125,6 @@ export function HomeScreen() {
       <Page className="pt-2 md:pt-2">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="flex min-w-0 flex-col gap-6">
-            {reminders.length > 0 ? <Reminders reminders={reminders} /> : null}
-
             <RecentSection
               t={t}
               recent={recent}
@@ -137,8 +132,6 @@ export function HomeScreen() {
               now={now}
               onSelect={onSelect}
             />
-
-            {ledger ? <AssistantRulesSection t={t} ledger={ledger} /> : null}
 
             {overview.planned.length > 0 ? (
               <DraftsSection
@@ -279,42 +272,6 @@ function HeroActions({ t, hasCredit }: { t: Translator; hasCredit: boolean }) {
         disabled={!hasCredit}
         onClick={() => openEditor({ mode: "create", type: "cardPayment" })}
       />
-    </div>
-  )
-}
-
-/** iOS's notifications, shown in place as cards above the recent movements. */
-function Reminders({ reminders }: { reminders: readonly Reminder[] }) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {reminders.map((reminder) => (
-        <div key={reminder.id} className="flex gap-3 rounded-2xl bg-card p-4">
-          <span
-            className={cn(
-              "flex size-10 shrink-0 items-center justify-center rounded-full",
-              REMINDER_TONES[reminder.tone]
-            )}
-          >
-            <KWIcon name={reminder.icon} size={20} />
-          </span>
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <p className="type-label text-foreground">{reminder.title}</p>
-            <p className="type-caption text-muted-foreground">
-              {reminder.body}
-            </p>
-            {reminder.action ? (
-              <KWButton
-                size="mini"
-                variant="primary"
-                className="mt-2 self-start"
-                onClick={reminder.action.run}
-              >
-                {reminder.action.label}
-              </KWButton>
-            ) : null}
-          </div>
-        </div>
-      ))}
     </div>
   )
 }
@@ -611,12 +568,6 @@ function QuickLog({
 /** A KWGroupedCard holding rows: one surface, 1 px dividers, rows edge to edge. */
 const GROUPED_LIST =
   "flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card"
-
-const REMINDER_TONES = {
-  pending: "bg-pending-tint text-pending",
-  accent: "bg-accent-tint text-link",
-  negative: "bg-negative-tint text-negative",
-} as const
 
 function SeeAll({ href, label }: { href: string; label: string }) {
   return (

@@ -2,13 +2,10 @@
 
 import { KWButton, KWSection } from "@/components/kw/design"
 import { toast } from "@/components/ui/toast"
-import {
-  deleteRecurringRule,
-  setRecurringRulePaused,
-  type Ledger,
-} from "@/lib/domain"
+import { deleteRecurringRule, setRecurringRulePaused } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
+import type { RecurringRule } from "@/lib/schema"
 
 /**
  * Recurring payments an assistant set up through MCP wait paused until the person confirms them
@@ -16,14 +13,12 @@ import { ledgerStore } from "@/lib/repositories"
  */
 export function AssistantRulesSection({
   t,
-  ledger,
+  rules: proposed,
 }: {
   t: Translator
-  ledger: Ledger
+  /** The paused MCP proposals (`proposedRules`). */
+  rules: readonly RecurringRule[]
 }) {
-  const proposed = ledger.recurringRules.filter(
-    (rule) => rule.source === "mcp" && rule.isPaused
-  )
   if (proposed.length === 0) return null
 
   const act = (work: Promise<void>) =>

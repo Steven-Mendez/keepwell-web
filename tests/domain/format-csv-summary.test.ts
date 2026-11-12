@@ -1,5 +1,5 @@
 // Ports of keepwell-ios CoreTests (AmountInput, CurrencyFormatter) and the Settings/Summary domain:
-// CSV export/import, cash flow, category breakdown and spending pace.
+// CSV export, cash flow, category breakdown and spending pace.
 import { describe, expect, it } from "vitest"
 
 import {
@@ -21,12 +21,11 @@ import {
 import {
   escapeCsvField,
   exportCsv,
-  importCsv,
   parseCsvRows,
 } from "@/lib/domain/csv"
 import { DEFAULT_CATEGORIES } from "@/lib/schema"
 
-import { IDs, d, date, referenceDate, sampleData, sampleStore, transaction } from "./fixtures"
+import { d, date, referenceDate, sampleData, transaction } from "./fixtures"
 
 describe("Amount input", () => {
   it.each([
@@ -112,25 +111,6 @@ describe("CSV", () => {
     const withdrawal = rows.find((row) => row[3] === "Cardless withdrawal")!
     expect(withdrawal).toEqual(["2026-10-04", "confirmed", "transfer", "Cardless withdrawal", "", "1200", "NIO", "Bank One Savings", "", "Wallet", "33.15", "36.6243", "no", "", ""])
     expect(rows[1]?.[0]).toBe("2026-09-08")
-  })
-
-  it("importing the exported file twice changes nothing", async () => {
-    const store = sampleStore()
-    const csv = exportCsv(await store.fetchTransactions(), await store.fetchAccounts(), await store.fetchCards(), await store.fetchCategories())
-    const result = await importCsv(store, csv)
-    expect(result).toEqual({ imported: 0, skipped: sampleData().transactions.length })
-  })
-
-  it("imports new rows into existing accounts and skips unknown ones", async () => {
-    const store = sampleStore()
-    const csv = ["date,amount,account,category,type,currency,card_last_four", "2026-10-20,12.5,Bank One Savings,Restaurants,expense,usd,1234", "2026-10-20,3,Nowhere,,expense,USD,", "bad,1,Wallet,,expense,NIO,"].join("\n")
-    const result = await importCsv(store, csv)
-    expect(result).toEqual({ imported: 1, skipped: 2 })
-    const added = (await store.fetchTransactions()).find((t) => t.amount === "12.5")!
-    expect(added.accountId).toBe(IDs.savings)
-    expect(added.cardId).toBe(IDs.savingsDebit)
-    expect(added.categoryId).toBe("restaurants")
-    expect(added.currency).toBe("USD")
   })
 })
 

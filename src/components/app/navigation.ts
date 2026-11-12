@@ -1,4 +1,4 @@
-import { CalendarCheckIcon, ChartColumnIcon, HandCoinsIcon, HouseIcon, ListIcon, PiggyBankIcon, RepeatIcon, SettingsIcon, WalletCardsIcon, type LucideIcon } from "lucide-react"
+import { BellIcon, CalendarCheckIcon, ChartColumnIcon, HandCoinsIcon, HouseIcon, ListIcon, PiggyBankIcon, RepeatIcon, SettingsIcon, WalletCardsIcon, type LucideIcon } from "lucide-react"
 
 import type { KWIconName } from "@/components/kw/kw-icon-data"
 import type { Namespace } from "@/lib/i18n"
@@ -41,6 +41,12 @@ export const SECTION_NAV: readonly NavItem[] = [RECURRING_NAV, GOALS_NAV, DEBTS_
 
 /** Reached from home on iOS; on a wide screen it sits at the foot of the sidebar. */
 export const SETTINGS_NAV: NavItem = { title: "Settings", ns: "settings", href: "/settings", icon: SettingsIcon, kwIcon: "settings", key: "," }
+
+/**
+ * Reminders and Claude's proposals, behind the bell (sidebar header, top bar) rather than a sidebar row,
+ * so it isn't in MAIN_NAV: it only names the page for the top bar's title and the command palette.
+ */
+export const NOTIFICATIONS_NAV: NavItem = { title: "Notifications", ns: "web", href: "/notifications", icon: BellIcon, kwIcon: "clock", key: "b" }
 
 export const ONBOARDING_PATH = "/welcome"
 

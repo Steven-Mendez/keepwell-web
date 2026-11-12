@@ -28,7 +28,6 @@ import {
 } from "@/lib/domain"
 import {
   exportCsv,
-  importCsv,
   parseCsvRows,
 } from "@/lib/domain/csv"
 import {
@@ -206,23 +205,6 @@ describe("Categorization rules", () => {
     expect(store.transactions.find((t) => t.description === "Uber to work")?.categoryId).toBe("transport")
     expect(await pastMatchCount(store, first)).toBe(0)
   })
-
-  it("CSV import fills rows without a known category from the first matching rule", async () => {
-    const store = sampleStore()
-    store.categorizationRules = [uber]
-    const csv = [
-      "date,amount,account,category,type,currency,description",
-      "2026-10-20,71.11,Bank One Savings,,expense,USD,UBER 123",
-      "2026-10-20,81.11,Bank One Savings,Restaurants,expense,USD,Uber eats",
-      "2026-10-20,91.11,Bank One Savings,,expense,USD,Bus",
-    ].join("\n")
-    expect(await importCsv(store, csv)).toEqual({ imported: 3, skipped: 0 })
-    const byAmount = (amount: string) => store.transactions.find((t) => t.amount === amount)!
-    expect(byAmount("71.11")).toMatchObject({ categoryId: "transport", tags: ["trabajo"] })
-    expect(byAmount("81.11").categoryId).toBe("restaurants")
-    expect(byAmount("81.11")).not.toHaveProperty("tags")
-    expect(byAmount("91.11").categoryId).toBe("other-expense")
-  })
 })
 
 
@@ -238,27 +220,11 @@ describe("filtering by tag", () => {
     expect(filterTransactions([boda, viaje], query("boda"), text).map((tx) => tx.id)).toEqual(["b"])
   })
 
-  it("CSV tags go out as the last column and come back", async () => {
+  it("CSV tags go out as the last column", async () => {
     const tagged = transaction({ amount: "900", currency: "NIO", account: IDs.cash, category: "travel", description: "Hotel" })
     const csv = exportCsv([{ ...tagged, tags: ["viaje-mexico", "boda"] }], sampleData().accounts, [], DEFAULT_CATEGORIES)
     const rows = parseCsvRows(csv)
     expect(rows[0]?.at(-1)).toBe("tags")
     expect(rows[1]?.at(-1)).toBe("#viaje-mexico #boda")
-    const store = sampleStore()
-    expect(await importCsv(store, csv)).toEqual({ imported: 1, skipped: 0 })
-    expect(store.transactions.find((t) => t.description === "Hotel")?.tags).toEqual(["viaje-mexico", "boda"])
-  })
-
-  it("CSV import splits tags on spaces or commas and normalizes them, the file's before the rule's", async () => {
-    const store = sampleStore()
-    store.categorizationRules = [{ id: "r-taxi", match: "taxi", categoryId: "transport", kind: "expense", tags: ["trabajo"] }]
-    const csv = [
-      "date,type,description,category,amount,currency,account,Tags",
-      '2026-10-04,expense,Flowers,Gifts,50,NIO,Wallet,"#Boda, Viaje  #boda"',
-      "2026-10-04,expense,Taxi,,70,NIO,Wallet,#viaje",
-    ].join("\n")
-    expect(await importCsv(store, csv)).toEqual({ imported: 2, skipped: 0 })
-    expect(store.transactions.find((t) => t.description === "Flowers")?.tags).toEqual(["boda", "viaje"])
-    expect(store.transactions.find((t) => t.description === "Taxi")?.tags).toEqual(["viaje", "trabajo"])
   })
 })
