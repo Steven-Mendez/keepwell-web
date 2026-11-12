@@ -63,6 +63,8 @@ export function RecurringScreen() {
     [ledger]
   )
   const add = () => openRuleEditor({ mode: "create" })
+  const addSubscription = () =>
+    openRuleEditor({ mode: "create", subscription: true })
 
   return (
     <Page>
@@ -75,6 +77,13 @@ export function RecurringScreen() {
               label={t.in("recurring", hidden ? "Show amounts" : "Hide amounts")}
               onClick={toggleHidden}
             />
+            <KWButton
+              variant="surface"
+              icon="subscription"
+              onClick={addSubscription}
+            >
+              {t.in("recurring", "New subscription")}
+            </KWButton>
             <KWButton icon="plus" onClick={add}>
               {t.in("recurring", "Add recurring")}
             </KWButton>
