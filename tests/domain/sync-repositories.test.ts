@@ -147,4 +147,23 @@ describe("sync-ready repositories", () => {
     const id = await getClientId()
     expect(await getClientId()).toBe(id)
   })
+
+  it("lists categorization rules with the same sort_index by id, whatever order they arrived in", async () => {
+    const rule = (id: string, sort_index: number) => ({
+      id,
+      match: id.slice(0, 4),
+      category_id: "food",
+      kind: "expense" as const,
+      tags: [],
+      sort_index,
+      created_at: at,
+      updated_at: at,
+      deleted_at: null,
+    })
+    const first = "aaaaaaaa-0000-4000-8000-000000000000"
+    const tiedLow = "bbbbbbbb-0000-4000-8000-000000000000"
+    const tiedHigh = "cccccccc-0000-4000-8000-000000000000"
+    await db.categorization_rules.bulkAdd([rule(tiedHigh, 1), rule(first, 0), rule(tiedLow, 1)])
+    expect((await categorizationRuleRepository.list()).map((r) => r.id)).toEqual([first, tiedLow, tiedHigh])
+  })
 })

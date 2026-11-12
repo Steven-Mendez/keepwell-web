@@ -20,11 +20,16 @@ async function write(row: CategorizationRuleRow, operation: "create" | "update" 
 
 const tables = () => [db.categorization_rules, db.sync_outbox]
 
+/** Two offline devices can give rules the same `sort_index`; the `id` breaks the tie the same way everywhere. */
+function byPlace(a: CategorizationRuleRow, b: CategorizationRuleRow): number {
+  return a.sort_index - b.sort_index || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+}
+
 export const categorizationRuleRepository = {
   /** Alive rules in the person's order, which decides the one that wins. */
   async list(): Promise<CategorizationRule[]> {
-    const rows = await db.categorization_rules.orderBy("sort_index").filter(isAlive).toArray()
-    return rows.map(rowToCategorizationRule)
+    const rows = await db.categorization_rules.filter(isAlive).toArray()
+    return rows.sort(byPlace).map(rowToCategorizationRule)
   },
 
   /** A new id goes after the existing ones; an existing one keeps its place. */
