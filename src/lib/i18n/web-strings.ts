@@ -10,6 +10,22 @@ export type WebStrings = Record<
 
 export const WEB_STRINGS_CORE: WebStrings = {
   "More actions": { es: "Más acciones" },
+  Notifications: { es: "Notificaciones" },
+  "Notifications, %lld pending": {
+    en: {
+      one: "Notifications, %lld pending",
+      other: "Notifications, %lld pending",
+    },
+    es: {
+      one: "Notificaciones, %lld pendiente",
+      other: "Notificaciones, %lld pendientes",
+    },
+  },
+  "You're all caught up": { es: "Estás al día" },
+  "Payment reminders, budget warnings and proposals from Claude show up here.":
+    {
+      es: "Aquí aparecen los recordatorios de pago, los avisos de presupuesto y las propuestas de Claude.",
+    },
   "Search or jump to…": { es: "Busca o ve a…" },
   "No results.": { es: "Sin resultados." },
   "Toggle sidebar": { es: "Mostrar u ocultar la barra lateral" },

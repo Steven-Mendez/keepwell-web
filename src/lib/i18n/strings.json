@@ -1451,6 +1451,9 @@
     "other": "%@: cuota en %lld días"
    }
   },
+  "%@: due today": {
+   "es": "%@: vence hoy"
+  },
   "%@: payment in %lld days": {
    "en": {
     "one": "%@: payment in %lld day",
@@ -1890,9 +1893,6 @@
   "Hide amounts when leaving": {
    "es": "Ocultar montos al salir"
   },
-  "Import movements only (.csv)": {
-   "es": "Importar solo movimientos (.csv)"
-  },
   "In the app switcher": {
    "es": "En el selector de apps"
   },
@@ -2247,26 +2247,6 @@
     "other": "%lld movimientos actualizados."
    }
   },
-  "%lld rows skipped": {
-   "en": {
-    "one": "%lld row skipped",
-    "other": "%lld rows skipped"
-   },
-   "es": {
-    "one": "%lld fila omitida",
-    "other": "%lld filas omitidas"
-   }
-  },
-  "%lld transactions imported": {
-   "en": {
-    "one": "%lld transaction imported",
-    "other": "%lld transactions imported"
-   },
-   "es": {
-    "one": "%lld movimiento importado",
-    "other": "%lld movimientos importados"
-   }
-  },
   "A copy of every movement": {
    "es": "Una copia de todos tus movimientos"
   },
@@ -2275,9 +2255,6 @@
   },
   "Add a bank account or a card from Accounts to see it here.": {
    "es": "Agrega una cuenta de banco o una tarjeta desde Cuentas para verla aquí."
-  },
-  "Add movements from a spreadsheet": {
-   "es": "Agrega movimientos desde una hoja de cálculo"
   },
   "App language": {
    "es": "Idioma de la app"
@@ -2395,9 +2372,6 @@
   },
   "Immediately": {
    "es": "De inmediato"
-  },
-  "Import CSV": {
-   "es": "Importar CSV"
   },
   "Income": {
    "es": "Ingresos"
@@ -2604,9 +2578,6 @@
   "We couldn't delete your data. Try again.": {
    "es": "No pudimos eliminar tus datos. Inténtalo de nuevo."
   },
-  "We couldn't import the file. Try again.": {
-   "es": "No pudimos importar el archivo. Inténtalo de nuevo."
-  },
   "We couldn't load your categories.": {
    "es": "No pudimos cargar tus categorías."
   },
@@ -2618,9 +2589,6 @@
   },
   "We couldn't look at your movements. Try again.": {
    "es": "No pudimos revisar tus movimientos. Inténtalo de nuevo."
-  },
-  "We couldn't read that file. Export it again as CSV (UTF-8).": {
-   "es": "No pudimos leer ese archivo. Expórtalo de nuevo como CSV (UTF-8)."
   },
   "We couldn't restore the default categories. Try again.": {
    "es": "No pudimos restaurar las categorías predeterminadas. Inténtalo de nuevo."
