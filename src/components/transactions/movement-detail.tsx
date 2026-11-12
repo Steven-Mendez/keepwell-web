@@ -33,8 +33,6 @@ import { toast } from "@/components/ui/toast"
 import { useLedger, useTransactionDisplay } from "@/hooks/use-ledger"
 import {
   bankRate,
-  confirmPlannedTransaction,
-  deleteTransaction,
   rateHasSecondCurrency,
 } from "@/lib/domain"
 import {
@@ -43,13 +41,13 @@ import {
 } from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
 import type { TransactionDisplay } from "@/lib/presentation/display"
-import { ledgerStore } from "@/lib/repositories"
 import type { RecurringRule, Transaction } from "@/lib/schema"
 import { frequencyText } from "@/components/recurring/recurring-format"
 import { cn } from "@/lib/utils"
 
 import { movementReference } from "./row-menu-model"
 import { useShowTag } from "./show-tag"
+import { confirmDraft, deleteMovement } from "./undoable-actions"
 
 function kindText(t: Translator, transaction: Transaction): string {
   return t.in("transactions", `kind.${transaction.kind}`)
@@ -382,24 +380,17 @@ export function MovementDetail() {
       )
     : undefined
 
-  async function remove() {
+  function remove() {
     if (!transaction) return
-    try {
-      await deleteTransaction(ledgerStore, transaction.id)
-      setConfirmingDelete(false)
-      showDetail(undefined)
-    } catch {
-      toast.add({
-        title: t.in("transactions", "We couldn't save the change. Try again."),
-        type: "error",
-      })
-    }
+    deleteMovement(t, transaction)
+    setConfirmingDelete(false)
+    showDetail(undefined)
   }
 
   async function confirm() {
     if (!transaction) return
     try {
-      await confirmPlannedTransaction(ledgerStore, transaction.id)
+      await confirmDraft(t, transaction)
     } catch {
       toast.add({
         title: t.in("home", "We couldn't confirm it. Try again."),
@@ -465,7 +456,7 @@ export function MovementDetail() {
         t={t}
         open={confirmingDelete}
         onOpenChange={setConfirmingDelete}
-        onDelete={() => void remove()}
+        onDelete={remove}
       />
     </>
   )

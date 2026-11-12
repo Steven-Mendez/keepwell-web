@@ -18,6 +18,7 @@ import { CategoryBadge, Page, PAGE_COLUMN } from "@/components/kw/primitives"
 import { TransactionRow } from "@/components/kw/transaction-row"
 import { toast } from "@/components/ui/toast"
 import { HomeSkeleton } from "@/components/kw/skeletons"
+import { confirmDraft as confirmDraftWithUndo, deleteMovement } from "@/components/transactions/undoable-actions"
 import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
 import {
   useLedger,
@@ -25,8 +26,6 @@ import {
   useTransactionDisplay,
 } from "@/hooks/use-ledger"
 import {
-  confirmPlannedTransaction,
-  deleteTransaction,
   homeOverview,
   roundedHalfUp,
   savingsRate,
@@ -49,7 +48,6 @@ import {
   monthName,
   type TransactionDisplay,
 } from "@/lib/presentation/display"
-import { ledgerStore } from "@/lib/repositories"
 
 import type { Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
@@ -195,17 +193,11 @@ export function HomeScreen() {
 /** Drafts being confirmed slide out of the list before the ledger drops them (iOS animates removal). */
 function useConfirmDraft(t: Translator) {
   const [confirming, setConfirming] = useState<ReadonlySet<string>>(new Set())
-  const confirmDraft = (id: string, description: string) => {
+  const confirmDraft = (planned: Transaction) => {
+    const id = planned.id
     setConfirming((current) => new Set(current).add(id))
     window.setTimeout(() => {
-      confirmPlannedTransaction(ledgerStore, id)
-        .then(() =>
-          toast.add({
-            title: t.in("createtransaction", "Confirmed"),
-            description,
-            type: "success",
-          })
-        )
+      confirmDraftWithUndo(t, planned)
         .catch(() =>
           toast.add({
             title: t.in("home", "We couldn't confirm it. Try again."),
@@ -350,7 +342,7 @@ function DraftsSection({
   now: Date
   hidden: boolean
   confirming: ReadonlySet<string>
-  onConfirm: (id: string, description: string) => void
+  onConfirm: (planned: Transaction) => void
   onSelect: (transaction: Transaction) => void
 }) {
   return (
@@ -386,11 +378,7 @@ function DraftsSection({
                       size="mini"
                       variant="secondary"
                       disabled={confirming.has(transaction.id)}
-                      onClick={() =>
-                        void deleteTransaction(ledgerStore, transaction.id).catch(() =>
-                          toast.add({ title: t.in("web", "Couldn't save the change. Try again."), type: "error" })
-                        )
-                      }
+                      onClick={() => deleteMovement(t, transaction)}
                     >
                       {t.in("home", "Discard")}
                     </KWButton>
@@ -398,9 +386,7 @@ function DraftsSection({
                   <KWButton
                     size="mini"
                     disabled={confirming.has(transaction.id)}
-                    onClick={() =>
-                      onConfirm(transaction.id, transaction.description)
-                    }
+                    onClick={() => onConfirm(transaction)}
                   >
                     {t.in("home", "Confirm")}
                   </KWButton>
