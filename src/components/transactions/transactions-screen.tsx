@@ -132,17 +132,32 @@ export function TransactionsScreen() {
   const ledger = useLedger()
   const display = useTransactionDisplay(ledger)
   const { openEditor, showDetail, detailId } = useAppActions()
-  const { filter, setFilter, scope, setScope, text, setText, search } =
-    useTransactionFilters()
+  const {
+    filter,
+    setFilter,
+    scope,
+    setScope,
+    amount,
+    setAmount,
+    origin,
+    setOrigin,
+    text,
+    setText,
+    search,
+  } = useTransactionFilters()
 
   const filtered = useMemo(() => {
     if (!ledger || !display) return []
     return filterTransactions(
       newestFirst(ledger.transactions),
-      { kind: filter, scope, text },
-      (transaction) => display.searchableText(transaction)
+      { kind: filter, scope, text, amount, origin },
+      (transaction) => display.searchableText(transaction),
+      {
+        principal: ledger.settings.currencies.principal,
+        rules: ledger.recurringRules,
+      }
     )
-  }, [ledger, display, filter, scope, text])
+  }, [ledger, display, filter, scope, text, amount, origin])
 
   const principal = ledger?.settings.currencies.principal ?? "USD"
   const totals = useMemo(
@@ -159,6 +174,10 @@ export function TransactionsScreen() {
 
   const scopedAccount = scopedAccountOf(ledger, scope)
   const tag = searchedTag(text)
+  const narrowed =
+    amount.min !== undefined ||
+    amount.max !== undefined ||
+    origin.kind !== "any"
 
   return (
     <Page>
@@ -195,6 +214,16 @@ export function TransactionsScreen() {
             onScopeChange={setScope}
             filter={filter}
             onFilterChange={setFilter}
+            more={{
+              value: { amount, origin },
+              onChange: (next) => {
+                setAmount(next.amount)
+                setOrigin(next.origin)
+              },
+              principal,
+              second: ledger.settings.currencies.second,
+              rules: ledger.recurringRules,
+            }}
           />
 
           {scopedAccount ? (
@@ -221,12 +250,12 @@ export function TransactionsScreen() {
           ) : null}
 
           {groups.length === 0 ? (
-            <NoMatches t={t} searching={text !== ""} />
+            <NoMatches t={t} searching={text !== "" || narrowed} />
           ) : (
             <MovementList
               t={t}
               list={list}
-              viewKey={`${filter}|${scope.kind === "account" ? scope.id : "all"}|${text}`}
+              viewKey={`${filter}|${scope.kind === "account" ? scope.id : "all"}|${text}|${amount.min?.toFixed() ?? ""}-${amount.max?.toFixed() ?? ""}|${origin.kind === "rule" ? origin.id : origin.kind}`}
               groups={groups}
               totals={totals}
               principal={principal}

@@ -8,7 +8,7 @@ import {
   type RuleEditorRequest,
 } from "@/components/app/app-actions"
 import { AnimatedNumber } from "@/components/kw/animated-number"
-import { KWButton, KWEmptyState, KWSegmented } from "@/components/kw/design"
+import { KWButton, KWEmptyState, KWSegmented, KWTextAction } from "@/components/kw/design"
 import { OptionSelect } from "@/components/kw/pickers"
 import { TransactionRow } from "@/components/kw/transaction-row"
 import {
@@ -29,6 +29,7 @@ import {
 } from "@/components/movement-editor/flow-parts"
 import type { MovementEditorModel } from "@/components/movement-editor/use-movement-editor"
 import { ConfirmDialog } from "@/components/settings/confirm-dialog"
+import { useShowRuleMovements } from "@/components/transactions/show-tag"
 import {
   Dialog,
   DialogContent,
@@ -533,6 +534,7 @@ function RuleSummary({
   const { fields, form, review } = editor
   const display = useTransactionDisplay(ledger)
   const { showDetail } = useAppActions()
+  const showRuleMovements = useShowRuleMovements()
   const produced = rule
     ? ledger.transactions
         .filter((transaction) => transaction.recurringId === rule.id)
@@ -600,9 +602,19 @@ function RuleSummary({
 
       {rule && display && produced.length > 0 ? (
         <section className="flex flex-col gap-2">
-          <h3 className="type-label text-muted-foreground">
-            {t.in("recurring", "Recorded")}
-          </h3>
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="type-label text-muted-foreground">
+              {t.in("recurring", "Recorded")}
+            </h3>
+            <KWTextAction
+              onClick={() => {
+                onClose()
+                showRuleMovements(rule.id)
+              }}
+            >
+              {t.in("recurring", "See all")}
+            </KWTextAction>
+          </div>
           <div className="flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card">
             {produced.map((transaction) => (
               <TransactionRow
