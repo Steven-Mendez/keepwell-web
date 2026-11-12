@@ -21,6 +21,7 @@ import {
 import {
   escapeCsvField,
   exportCsv,
+  neutralizeCsvFormula,
   parseCsvRows,
 } from "@/lib/domain/csv"
 import { DEFAULT_CATEGORIES } from "@/lib/schema"
@@ -111,6 +112,35 @@ describe("CSV", () => {
     const withdrawal = rows.find((row) => row[3] === "Cardless withdrawal")!
     expect(withdrawal).toEqual(["2026-10-04", "confirmed", "transfer", "Cardless withdrawal", "", "1200", "NIO", "Bank One Savings", "", "Wallet", "33.15", "36.6243", "no", "", ""])
     expect(rows[1]?.[0]).toBe("2026-09-08")
+  })
+
+  it("neutralizes formulas in free text, and leaves amounts alone", () => {
+    expect(neutralizeCsvFormula('=HYPERLINK("http://x")')).toBe(`'=HYPERLINK("http://x")`)
+    expect(escapeCsvField(neutralizeCsvFormula('=HYPERLINK("http://x")'))).toBe(`"'=HYPERLINK(""http://x"")"`)
+    for (const start of ["+", "-", "@", "\t", "\r"]) expect(neutralizeCsvFormula(`${start}1`)).toBe(`'${start}1`)
+    expect(neutralizeCsvFormula("Lunch = 5")).toBe("Lunch = 5")
+    expect(neutralizeCsvFormula("")).toBe("")
+
+    const sample = sampleData()
+    const [account] = sample.accounts
+    const [category] = DEFAULT_CATEGORIES
+    const movement = {
+      ...transaction({ amount: "-12.5", account: account!.id, category: category!.id, description: '=HYPERLINK("http://x")' }),
+      note: "@SUM(A1)",
+    }
+    const csv = exportCsv(
+      [movement],
+      [{ ...account!, bank: "", name: "+Cash" }],
+      [],
+      [{ ...category!, name: "-Food" }]
+    )
+    expect(csv.split("\n")[1]).toContain(`"'=HYPERLINK(""http://x"")"`)
+    const row = parseCsvRows(csv)[1]!
+    expect(row[3]).toBe(`'=HYPERLINK("http://x")`)
+    expect(row[4]).toBe("'-Food")
+    expect(row[5]).toBe("-12.5")
+    expect(row[7]).toBe("'+Cash")
+    expect(row[13]).toBe("'@SUM(A1)")
   })
 })
 
