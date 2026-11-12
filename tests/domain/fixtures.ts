@@ -1,6 +1,6 @@
 import type { Account, Card, ExchangeRate, Settings, Transaction, TransactionKind, TransactionStatus } from "@/lib/schema"
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "@/lib/schema"
-import { Decimal, InMemoryStore, monthInterval, yearMonthContaining } from "@/lib/domain"
+import { Decimal, InMemoryStore, monthInterval, yearMonthContaining, type Ledger } from "@/lib/domain"
 
 // Ports of keepwell-ios DomainTests/Fixtures.swift and DomainSamples/SampleData.
 
@@ -11,6 +11,24 @@ export const usdNio: ExchangeRate = { principal: "USD", second: "NIO", rate: "36
 export const single = (code: string): ExchangeRate => ({ principal: code, second: code, rate: "1" })
 
 export const d = (value: string | number) => new Decimal(value)
+
+/** A ledger with nothing in it but what's given, read in `ZONE`. */
+export function ledgerWith(overrides: Partial<Ledger> = {}): Ledger {
+  return {
+    settings: DEFAULT_SETTINGS,
+    accounts: [],
+    cards: [],
+    transactions: [],
+    categories: [],
+    recurringRules: [],
+    savingsGoals: [],
+    loans: [],
+    personalDebts: [],
+    categorizationRules: [],
+    timeZone: ZONE,
+    ...overrides,
+  }
+}
 
 /** Noon by default, in the test time zone (America/Managua, like iOS Fixtures.calendar). */
 export function date(year: number, month: number, day: number, hour = 12): Date {
