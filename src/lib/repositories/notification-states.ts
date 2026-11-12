@@ -2,7 +2,7 @@ import { db, type NotificationStateRow } from "@/lib/db"
 import { NOTIFICATION_STATE_RETENTION_DAYS, notificationDay } from "@/lib/domain/notifications"
 import { nowIso } from "@/lib/schema"
 
-import { enqueue, isAlive } from "./shared"
+import { enqueue, isAlive, stampAfter } from "./shared"
 
 /** What the person did with a notification; absent means unread and in the inbox. */
 export interface NotificationState {
@@ -32,18 +32,19 @@ async function apply(ids: readonly string[], change: (row: NotificationStateRow 
       // A tombstone is final (ADR 0005); the id is long past and won't be computed again.
       if (existing && !alive) continue
       const patch = change(alive, now)
+      const updatedAt = stampAfter(alive?.updated_at)
       const row: NotificationStateRow = {
         id,
         read_at: alive?.read_at ?? null,
         dismissed_at: alive?.dismissed_at ?? null,
         ...patch,
         created_at: alive?.created_at ?? now,
-        updated_at: now,
+        updated_at: updatedAt,
         deleted_at: null,
       }
       if (alive && row.read_at === alive.read_at && row.dismissed_at === alive.dismissed_at) continue
       await db.notification_states.put(row)
-      await enqueue("notificationState", id, alive ? "update" : "create", row, now)
+      await enqueue("notificationState", id, alive ? "update" : "create", row, updatedAt)
     }
   })
 }
@@ -69,10 +70,10 @@ export const notificationStateRepository = {
     const limit = now.getTime() - NOTIFICATION_STATE_RETENTION_DAYS * 86_400_000
     await db.transaction("rw", tables(), async () => {
       const rows = await db.notification_states.filter(isAlive).toArray()
-      const stamp = nowIso()
       for (const row of rows) {
         const day = notificationDay(row.id)
         if (!day || day.getTime() >= limit) continue
+        const stamp = stampAfter(row.updated_at)
         const tombstone = { ...row, updated_at: stamp, deleted_at: stamp }
         await db.notification_states.put(tombstone)
         await enqueue("notificationState", row.id, "delete", tombstone, stamp)

@@ -4,9 +4,9 @@ import {
   rowToCategorizationRule,
   type CategorizationRuleRow,
 } from "@/lib/db"
-import { CategorizationRule, nowIso } from "@/lib/schema"
+import { CategorizationRule } from "@/lib/schema"
 
-import { NotFoundError, enqueue, isAlive } from "./shared"
+import { NotFoundError, enqueue, isAlive, stampAfter } from "./shared"
 
 async function nextSortIndex(): Promise<number> {
   const last = await db.categorization_rules.orderBy("sort_index").last()
@@ -32,7 +32,7 @@ export const categorizationRuleRepository = {
     const rule = CategorizationRule.parse(input)
     await db.transaction("rw", tables(), async () => {
       const existing = await db.categorization_rules.get(rule.id)
-      const now = nowIso()
+      const now = stampAfter(existing?.updated_at)
       const sortIndex = existing?.sort_index ?? (await nextSortIndex())
       await write(
         { ...categorizationRuleToRow(rule, sortIndex), created_at: existing?.created_at ?? now, updated_at: now, deleted_at: null },
@@ -47,7 +47,7 @@ export const categorizationRuleRepository = {
     await db.transaction("rw", tables(), async () => {
       const existing = await db.categorization_rules.get(id)
       if (!existing || !isAlive(existing)) throw new NotFoundError(id)
-      const now = nowIso()
+      const now = stampAfter(existing.updated_at)
       await write({ ...existing, updated_at: now, deleted_at: now }, "delete")
     })
   },
@@ -61,10 +61,9 @@ export const categorizationRuleRepository = {
       })
       const rows = await db.categorization_rules.orderBy("sort_index").toArray()
       const listed = rows.filter((row) => rank.has(row.id)).sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0))
-      const now = nowIso()
       const ordered = [...listed, ...rows.filter((row) => !rank.has(row.id))]
       for (const [index, row] of ordered.entries()) {
-        if (row.sort_index !== index) await write({ ...row, sort_index: index, updated_at: now }, "update")
+        if (row.sort_index !== index) await write({ ...row, sort_index: index, updated_at: stampAfter(row.updated_at) }, "update")
       }
     })
   },
