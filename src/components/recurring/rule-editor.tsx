@@ -43,6 +43,7 @@ import { useLedger, useTransactionDisplay } from "@/hooks/use-ledger"
 import {
   Decimal,
   getTransactionContext,
+  pickerContext,
   type Ledger,
   type TransactionContext,
 } from "@/lib/domain"
@@ -95,7 +96,12 @@ function RuleEditorBody({
 }) {
   const t = useT()
   const { openAddAccount } = useAppActions()
-  const context = useLiveQuery(() => getTransactionContext(ledgerStore), [])
+  const ruleId = request.mode === "edit" ? request.ruleId : undefined
+  // Pickers offer open accounts only; an edited rule keeps its own, even closed.
+  const context = useLiveQuery(async () => {
+    const edited = ruleId ? (await ledgerStore.fetchRecurringRules()).find((candidate) => candidate.id === ruleId) : undefined
+    return pickerContext(await getTransactionContext(ledgerStore), [edited?.accountId, edited?.destinationAccountId])
+  }, [ruleId])
   const ledger = useLedger()
   const rule =
     request.mode === "edit"

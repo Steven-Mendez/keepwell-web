@@ -581,7 +581,8 @@ export function accountRow(
   const balance = context.balances.get(account.id)
   return {
     title: accountName(account),
-    subtitle: accountCardLabel(t, account, context),
+    // Only the edited movement's own account can be closed here (`pickerContext`).
+    subtitle: account.closedAt ? t.in("sharedpresentation", "Closed") : accountCardLabel(t, account, context),
     trailing: balance
       ? balance
           .map((money) => formatMoney(money, { fractionDigits: 0 }))

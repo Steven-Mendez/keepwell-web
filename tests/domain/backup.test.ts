@@ -122,6 +122,22 @@ describe("backup", () => {
     expect(settings?.hasCompletedOnboarding).toBe(true)
   })
 
+  it("keeps a closed account closed through export and restore", async () => {
+    await seedLedger()
+    const savings = (await ledgerStore.fetchAccounts())[0]!
+    const closedAt = "2026-10-20T18:00:00.000Z"
+    await ledgerStore.saveAccount({ ...savings, closedAt })
+    const text = serializeBackup(await exportBackup())
+    expect(JSON.parse(text).entities.account.find((row: { id: string }) => row.id === savings.id).closed_at).toBe(closedAt)
+    await emptyAndOnboard()
+    const parsed = parseBackup(text)
+    if (!parsed.ok) throw new Error("unreadable")
+    await importBackup(parsed.backup)
+    const accounts = await ledgerStore.fetchAccounts()
+    expect(accounts.find((account) => account.id === savings.id)?.closedAt).toBe(closedAt)
+    expect(accounts.filter((account) => account.closedAt !== undefined)).toHaveLength(1)
+  })
+
   it("restores through the outbox: one valid event per row, parents first, stamped after the backup", async () => {
     await seedLedger()
     const backup = await exportBackup()
@@ -222,6 +238,22 @@ describe("backup file", () => {
     const parsed = parseBackup(typeof changed === "string" ? changed : JSON.stringify(changed))
     expect(parsed.ok).toBe(false)
     if (!parsed.ok) expect(parsed.error.code).toBe(code)
+  })
+
+  it("still reads a version 1 file, whose accounts have no closing", async () => {
+    const backup = await valid()
+    const accounts = backup.entities.account.map((row) => {
+      const { closed_at: _closed, ...rest } = row as Record<string, unknown>
+      return rest
+    })
+    const parsed = parseBackup(JSON.stringify({ ...backup, version: 1, entities: { ...backup.entities, account: accounts } }))
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.backup.version).toBe(BACKUP_VERSION)
+    await emptyAndOnboard()
+    await importBackup(parsed.backup)
+    expect((await ledgerStore.fetchAccounts()).every((account) => account.closedAt === undefined)).toBe(true)
+    expect(await ledgerStore.fetchAccounts()).toHaveLength(accounts.length)
   })
 
   it("reads a file without an entity as having none of it", async () => {

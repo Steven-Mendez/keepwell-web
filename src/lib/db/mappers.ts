@@ -58,6 +58,8 @@ export function accountToRow(account: Account): Columns<AccountRow> {
     limit_currency: orNull(account.creditTerms?.limit?.currency),
     cutoff_day: orNull(account.creditTerms?.cutoffDay),
     due_day: orNull(account.creditTerms?.dueDay),
+    // Always sent, null while open: reopening has to clear it on the other devices.
+    closed_at: orNull(account.closedAt),
   }
 }
 
@@ -83,6 +85,7 @@ export function rowToAccount(row: AccountRow): Account {
             ...present("dueDay", row.due_day),
           },
         }),
+    ...present("closedAt", row.closed_at ?? null),
   }
 }
 

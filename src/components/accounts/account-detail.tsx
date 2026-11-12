@@ -53,6 +53,7 @@ import { ledgerStore } from "@/lib/repositories"
 import { DURATION, EASE_OUT_IOS } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 
+import { ClosedAccountBanner, CloseAccountDialog } from "./close-account-dialog"
 import { creditDayValue } from "./credit-format"
 import { ColorSwatches } from "./form-parts"
 import {
@@ -93,35 +94,45 @@ export function AccountDetail({
         title={t.in("accounts", "We couldn't load this account.")}
       />
     )
-  switch (account.kind) {
-    case "deposit":
-      return (
-        <DebitDetail
-          ledger={ledger}
-          display={display}
-          account={account}
-          onDeleted={onDeleted}
-        />
-      )
-    case "cash":
-      return (
-        <CashDetail
-          ledger={ledger}
-          display={display}
-          account={account}
-          onDeleted={onDeleted}
-        />
-      )
-    case "credit":
-      return (
-        <CreditDetail
-          ledger={ledger}
-          display={display}
-          account={account}
-          onDeleted={onDeleted}
-        />
-      )
-  }
+  return (
+    <div className="flex flex-col gap-4">
+      <ClosedAccountBanner ledger={ledger} account={account} />
+      <AccountKindDetail
+        ledger={ledger}
+        display={display}
+        account={account}
+        onDeleted={onDeleted}
+      />
+    </div>
+  )
+}
+
+function AccountKindDetail(props: {
+  ledger: Ledger
+  display: TransactionDisplay
+  account: Account
+  onDeleted: () => void
+}) {
+  const [closing, setClosing] = useState(false)
+  const lifecycle = { ...props, onCloseRequest: () => setClosing(true) }
+  return (
+    <>
+      {props.account.kind === "deposit" ? (
+        <DebitDetail {...lifecycle} />
+      ) : props.account.kind === "cash" ? (
+        <CashDetail {...lifecycle} />
+      ) : (
+        <CreditDetail {...lifecycle} />
+      )}
+      <CloseAccountDialog
+        key={`${props.account.id}:${String(closing)}`}
+        ledger={props.ledger}
+        account={props.account}
+        open={closing}
+        onOpenChange={setClosing}
+      />
+    </>
+  )
 }
 
 /** KWSectionHeader over its content; `large` for the "Manage" groups, as iOS titles them. */
@@ -298,11 +309,13 @@ function DebitDetail({
   display,
   account,
   onDeleted,
+  onCloseRequest,
 }: {
   ledger: Ledger
   display: TransactionDisplay
   account: Account
   onDeleted: () => void
+  onCloseRequest: () => void
 }) {
   const t = useT()
   const owner = usePreferredName()
@@ -423,7 +436,12 @@ function DebitDetail({
                     />
                   </KWGroupedCard>
                 </Section>
-                <DeleteButton t={t} onClick={() => setOpen("delete")} />
+                <LifecycleButtons
+                  t={t}
+                  account={account}
+                  onClose={onCloseRequest}
+                  onDelete={() => setOpen("delete")}
+                />
               </>
             ),
           },
@@ -451,6 +469,7 @@ function DebitDetail({
         open={open === "delete"}
         onOpenChange={toggle("delete")}
         onDeleted={onDeleted}
+        onCloseInstead={onCloseRequest}
       />
     </>
   )
@@ -461,11 +480,13 @@ function CashDetail({
   display,
   account,
   onDeleted,
+  onCloseRequest,
 }: {
   ledger: Ledger
   display: TransactionDisplay
   account: Account
   onDeleted: () => void
+  onCloseRequest: () => void
 }) {
   const t = useT()
   const [open, setOpen] = useState<Open>()
@@ -568,7 +589,12 @@ function CashDetail({
                     />
                   </KWGroupedCard>
                 </Section>
-                <DeleteButton t={t} onClick={() => setOpen("delete")} />
+                <LifecycleButtons
+                  t={t}
+                  account={account}
+                  onClose={onCloseRequest}
+                  onDelete={() => setOpen("delete")}
+                />
               </>
             ),
           },
@@ -586,6 +612,7 @@ function CashDetail({
         open={open === "delete"}
         onOpenChange={toggle("delete")}
         onDeleted={onDeleted}
+        onCloseInstead={onCloseRequest}
       />
     </>
   )
@@ -596,11 +623,13 @@ function CreditDetail({
   display,
   account,
   onDeleted,
+  onCloseRequest,
 }: {
   ledger: Ledger
   display: TransactionDisplay
   account: Account
   onDeleted: () => void
+  onCloseRequest: () => void
 }) {
   const t = useT()
   const owner = usePreferredName()
@@ -639,18 +668,20 @@ function CreditDetail({
         balance={<CreditBalance t={t} detail={detail} />}
         actions={
           <Actions>
-            <KWActionButton
-              icon="arrowUp"
-              variant="prominent"
-              title={t.in("creditcard", "Pay")}
-              onClick={() =>
-                openEditor({
-                  mode: "create",
-                  type: "cardPayment",
-                  accountId: account.id,
-                })
-              }
-            />
+            {account.closedAt ? null : (
+              <KWActionButton
+                icon="arrowUp"
+                variant="prominent"
+                title={t.in("creditcard", "Pay")}
+                onClick={() =>
+                  openEditor({
+                    mode: "create",
+                    type: "cardPayment",
+                    accountId: account.id,
+                  })
+                }
+              />
+            )}
             <KWActionButton
               icon="pencil"
               title={t.in("creditcard", "Edit name")}
@@ -696,6 +727,7 @@ function CreditDetail({
                 account={account}
                 holder={holder}
                 onOpen={setOpen}
+                onCloseRequest={onCloseRequest}
               />
             ),
           },
@@ -708,6 +740,7 @@ function CreditDetail({
         open={open}
         onOpen={setOpen}
         onDeleted={onDeleted}
+        onCloseRequest={onCloseRequest}
       />
     </>
   )
@@ -829,11 +862,13 @@ function CreditManage({
   account,
   holder,
   onOpen,
+  onCloseRequest,
 }: {
   t: Translator
   account: Account
   holder: Card | undefined
   onOpen: (open: Open) => void
+  onCloseRequest: () => void
 }) {
   return (
     <>
@@ -851,7 +886,12 @@ function CreditManage({
           ) : null}
         </KWGroupedCard>
       </Section>
-      <DeleteButton t={t} onClick={() => onOpen("delete")} />
+      <LifecycleButtons
+        t={t}
+        account={account}
+        onClose={onCloseRequest}
+        onDelete={() => onOpen("delete")}
+      />
     </>
   )
 }
@@ -901,6 +941,7 @@ function CreditDialogs({
   open,
   onOpen,
   onDeleted,
+  onCloseRequest,
 }: {
   account: Account
   detail: CreditCardDetail
@@ -908,6 +949,7 @@ function CreditDialogs({
   open: Open
   onOpen: (open: Open) => void
   onDeleted: () => void
+  onCloseRequest: () => void
 }) {
   const { holder } = detail
   const toggle = (value: Open) => (next: boolean) =>
@@ -946,16 +988,37 @@ function CreditDialogs({
         open={open === "delete"}
         onOpenChange={toggle("delete")}
         onDeleted={onDeleted}
+        onCloseInstead={onCloseRequest}
       />
     </>
   )
 }
 
-/** iOS "Delete account": a full-width destructive pill at the foot of the screen. */
-function DeleteButton({ t, onClick }: { t: Translator; onClick: () => void }) {
+/**
+ * The foot of the screen: "Close account" before iOS's full-width destructive "Delete account". A
+ * closed account reopens from the banner at the top instead.
+ */
+function LifecycleButtons({
+  t,
+  account,
+  onClose,
+  onDelete,
+}: {
+  t: Translator
+  account: Account
+  onClose: () => void
+  onDelete: () => void
+}) {
   return (
-    <KWButton variant="destructive" icon="trash" fill onClick={onClick}>
-      {t.in("accounts", "Delete account")}
-    </KWButton>
+    <div className="flex flex-col gap-2">
+      {account.closedAt ? null : (
+        <KWButton variant="secondary" fill onClick={onClose}>
+          {t.in("sharedpresentation", "Close account")}
+        </KWButton>
+      )}
+      <KWButton variant="destructive" icon="trash" fill onClick={onDelete}>
+        {t.in("accounts", "Delete account")}
+      </KWButton>
+    </div>
   )
 }
