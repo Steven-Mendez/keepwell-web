@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils"
 import { BrowserNotificationsCard } from "./browser-notifications-card"
 import type { InboxEntry } from "./notifications"
 import { useNotifications } from "./use-notifications"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 const TONES = {
   pending: "bg-pending-tint text-pending",
@@ -48,7 +49,7 @@ export function targetHref(target: NotificationTarget): string {
 }
 
 function dayTitle(t: Translator, day: Date, now: Date): string {
-  const today = startOfDay(now).getTime()
+  const today = startOfDay(now, deviceTimeZone()).getTime()
   if (day.getTime() === today) return t.in("sharedpresentation", "Today")
   if (day.getTime() === today - 86_400_000) return t.in("web", "Yesterday")
   return new Intl.DateTimeFormat(t.locale, {

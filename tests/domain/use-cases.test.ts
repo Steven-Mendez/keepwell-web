@@ -66,7 +66,7 @@ import {
 import type { Account, RecurringRule } from "@/lib/schema"
 import { DEFAULT_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES, OTHER_EXPENSE_ID, OTHER_INCOME_ID, orderedCategories } from "@/lib/schema"
 
-import { IDs, d, referenceDate, sampleData, sampleStore, transaction } from "./fixtures"
+import { d, IDs, referenceDate, sampleData, sampleStore, transaction, ZONE } from "./fixtures"
 
 async function expectDomainError(work: () => Promise<unknown>, code: DomainError["code"], detail?: string) {
   const error = await work().then(
@@ -98,7 +98,7 @@ describe("Category actions", () => {
   })
 
   it("creating trims the name and keeps icon and color", async () => {
-    const store = new InMemoryStore()
+    const store = new InMemoryStore(ZONE)
     const created = await saveCategory(store, { name: "  Boat  ", kind: "expense", icon: "sailboat", color: "blue" })
     expect(created.name).toBe("Boat")
     expect(created.id.startsWith("custom-")).toBe(true)
@@ -109,18 +109,18 @@ describe("Category actions", () => {
   })
 
   it("creating rejects empty and duplicate names, and transfers", async () => {
-    const store = new InMemoryStore()
+    const store = new InMemoryStore(ZONE)
     await expectDomainError(() => saveCategory(store, { name: "   ", kind: "expense" }), "missingName")
     await expectDomainError(() => saveCategory(store, { name: "groceries", kind: "expense" }), "duplicateCategoryName", "groceries")
     await expectDomainError(() => saveCategory(store, { name: "Moves", kind: "transfer" }), "unsupportedTransactionKind")
   })
 
   it("the same name is fine for the other kind", async () => {
-    expect((await saveCategory(new InMemoryStore(), { name: "Gifts", kind: "income" })).kind).toBe("income")
+    expect((await saveCategory(new InMemoryStore(ZONE), { name: "Gifts", kind: "income" })).kind).toBe("income")
   })
 
   it("editing keeps the id and kind", async () => {
-    const store = new InMemoryStore()
+    const store = new InMemoryStore(ZONE)
     const created = await saveCategory(store, { name: "Boat", kind: "expense" })
     const renamed = await saveCategory(store, { id: created.id, name: "Sailing", kind: "income", icon: "sailboat" })
     expect(renamed.id).toBe(created.id)
@@ -129,7 +129,7 @@ describe("Category actions", () => {
   })
 
   it("renaming a default stops translating it and the shipped name restores it", async () => {
-    const store = new InMemoryStore()
+    const store = new InMemoryStore(ZONE)
     const untouched = (await store.fetchCategories()).find((c) => c.id === "groceries")!
     expect(translatesById(untouched)).toBe(true)
     const renamed = await saveCategory(store, { id: "groceries", name: "Market", kind: "expense", icon: "basket", color: "green" })
@@ -143,7 +143,7 @@ describe("Category actions", () => {
   })
 
   it("fallbacks can be renamed but not deleted", async () => {
-    const store = new InMemoryStore()
+    const store = new InMemoryStore(ZONE)
     for (const id of [OTHER_EXPENSE_ID, OTHER_INCOME_ID]) await expectDomainError(() => deleteCategory(store, id), "fallbackCategoryCantBeDeleted", id)
     const renamed = await saveCategory(store, { id: OTHER_EXPENSE_ID, name: "Misc", kind: "expense" })
     expect(renamed.isRenamed).toBe(true)
@@ -151,7 +151,7 @@ describe("Category actions", () => {
 
   it("deleting a default moves its movements and it stays deleted", async () => {
     const expense = sampleData().transactions.find((t) => t.kind === "expense")!
-    const store = new InMemoryStore({ transactions: [{ ...expense, categoryId: "groceries" }] })
+    const store = new InMemoryStore(ZONE, { transactions: [{ ...expense, categoryId: "groceries" }] })
     await deleteCategory(store, "groceries")
     expect((await getCategories(store)).some((c) => c.id === "groceries")).toBe(false)
     expect((await store.fetchTransactions()).map((t) => t.categoryId)).toEqual([OTHER_EXPENSE_ID])
@@ -159,7 +159,7 @@ describe("Category actions", () => {
   })
 
   it("restoring brings back deleted defaults and undoes edits but keeps yours", async () => {
-    const store = new InMemoryStore()
+    const store = new InMemoryStore(ZONE)
     const boat = await saveCategory(store, { name: "Boat", kind: "expense" })
     await saveCategory(store, { id: "transport", name: "Car", kind: "expense", icon: "car", color: "blue" })
     await deleteCategory(store, "groceries")
@@ -171,7 +171,7 @@ describe("Category actions", () => {
   })
 
   it("reordering keeps the new order", async () => {
-    const store = new InMemoryStore()
+    const store = new InMemoryStore(ZONE)
     await reorderCategories(store, ["taxes", "groceries"])
     expect((await getCategories(store)).slice(0, 2).map((c) => c.id)).toEqual(["taxes", "groceries"])
   })
@@ -179,7 +179,7 @@ describe("Category actions", () => {
   it("deleting a created category moves its movements to Other", async () => {
     const boat = { id: "custom-boat", name: "Boat", kind: "expense" as const, isRenamed: false }
     const expense = sampleData().transactions.find((t) => t.kind === "expense")!
-    const store = new InMemoryStore({ transactions: [{ ...expense, categoryId: boat.id }], categories: [...DEFAULT_CATEGORIES, boat] })
+    const store = new InMemoryStore(ZONE, { transactions: [{ ...expense, categoryId: boat.id }], categories: [...DEFAULT_CATEGORIES, boat] })
     await deleteCategory(store, boat.id)
     expect(await store.fetchCategories()).not.toContainEqual(boat)
     expect((await store.fetchTransactions()).map((t) => t.categoryId)).toEqual([OTHER_EXPENSE_ID])
@@ -190,7 +190,7 @@ describe("Category actions", () => {
     const expense = sample.transactions.find((t) => t.kind === "expense")!
     const income = sample.transactions.find((t) => t.kind === "income")!
     const rule = { id: "rule-1", kind: "expense", categoryId: "custom-boat" } as RecurringRule
-    const store = new InMemoryStore({
+    const store = new InMemoryStore(ZONE, {
       transactions: [
         { ...expense, categoryId: "custom-boat" },
         { ...income, id: "income-1", categoryId: "custom-bonus" },
@@ -207,7 +207,7 @@ describe("Category actions", () => {
 
   it("the repair after a pull writes nothing when nothing points at a deleted category", async () => {
     const expense = sampleData().transactions.find((t) => t.kind === "expense")!
-    const store = new InMemoryStore({ transactions: [{ ...expense, categoryId: "groceries" }] })
+    const store = new InMemoryStore(ZONE, { transactions: [{ ...expense, categoryId: "groceries" }] })
     let writes = 0
     const counted = Object.assign(Object.create(store) as InMemoryStore, {
       saveTransaction: async () => void writes++,
@@ -221,7 +221,7 @@ describe("Category actions", () => {
 
   it("listing returns the picker order", async () => {
     const boat = { id: "custom-boat", name: "Boat", kind: "expense" as const, isRenamed: false }
-    const listed = await getCategories(new InMemoryStore({ categories: [boat, ...DEFAULT_CATEGORIES] }))
+    const listed = await getCategories(new InMemoryStore(ZONE, { categories: [boat, ...DEFAULT_CATEGORIES] }))
     const expense = listed.filter((c) => c.kind === "expense").map((c) => c.id)
     expect(expense[0]).toBe(boat.id)
     expect(expense.at(-1)).toBe(OTHER_EXPENSE_ID)
@@ -256,7 +256,7 @@ describe("One bank account, one card", () => {
     const account: Account = { id: crypto.randomUUID(), name: "Main", kind: "deposit", openingBalances: [{ amount: "0", currency: "USD" }], openingDate: new Date(0).toISOString() }
     const old = { id: crypto.randomUUID(), accountId: account.id, kind: "debit" as const, lastFour: "1111" }
     const used = { id: crypto.randomUUID(), accountId: account.id, kind: "debit" as const, lastFour: "2222" }
-    const store = new InMemoryStore({
+    const store = new InMemoryStore(ZONE, {
       accounts: [account],
       cards: [old, used, { id: crypto.randomUUID(), accountId: account.id, kind: "transfer" }],
       transactions: [
@@ -279,7 +279,7 @@ describe("One bank account, one card", () => {
 
   it("an account without cards gets a debit card and a transfer channel", async () => {
     const account: Account = { id: crypto.randomUUID(), name: "Bare", kind: "deposit", openingBalances: [{ amount: "0", currency: "USD" }], openingDate: new Date(0).toISOString() }
-    const store = new InMemoryStore({ accounts: [account] })
+    const store = new InMemoryStore(ZONE, { accounts: [account] })
     await normalizeBankCards(store)
     expect((await store.fetchCards()).map((c) => c.kind).sort()).toEqual(["debit", "transfer"])
     expect(await normalizeBankCards(store)).toBe(false)
@@ -366,7 +366,7 @@ describe("Transaction actions", () => {
     const balances = async () => {
       const accounts = await store.fetchAccounts()
       const transactions = await store.fetchTransactions()
-      return accounts.map((account) => balanceOf(account, transactions).map((m) => `${m.amount.toString()} ${m.currency}`))
+      return accounts.map((account) => balanceOf(account, transactions, ZONE).map((m) => `${m.amount.toString()} ${m.currency}`))
     }
     const before = await balances()
     await confirmPlannedTransaction(store, planned.id, referenceDate)
@@ -565,7 +565,7 @@ describe("Overviews", () => {
     expect(home.balances.map((line) => line.account.kind)).toEqual(["deposit", "deposit", "cash"])
     expect(home.accountCount).toBe(3)
     expect(home.cardCount).toBe(4)
-    expect(home.month.month).toEqual(yearMonthContaining(referenceDate))
+    expect(home.month.month).toEqual(yearMonthContaining(referenceDate, ZONE))
   })
 
   it("net worth leaves out balances in a currency the settings no longer convert", async () => {
@@ -573,7 +573,7 @@ describe("Overviews", () => {
     sample.settings.currencies = { principal: "USD", rate: "1" }
     const ledger = await loadLedger(sampleStore(sample))
     const home = homeOverview(ledger, referenceDate)
-    const usd = ledger.accounts.flatMap((account) => balanceOf(account, ledger.transactions)).filter((balance) => balance.currency === "USD")
+    const usd = ledger.accounts.flatMap((account) => balanceOf(account, ledger.transactions, ZONE)).filter((balance) => balance.currency === "USD")
     expect(home.netWorth.amount.toFixed()).toBe(usd.reduce((total, balance) => total.plus(balance.amount), d(0)).toFixed())
   })
 
@@ -589,7 +589,7 @@ describe("Overviews", () => {
 
   it("accounts are grouped by kind; a dual card shows the second currency first", async () => {
     const sample = sampleData()
-    const result = accountsOverview(sample.accounts, sample.cards, sample.transactions, sample.settings.currencies)
+    const result = accountsOverview(sample.accounts, sample.cards, sample.transactions, sample.settings.currencies, ZONE)
     expect([result.creditCards.length, result.deposits.length, result.cash.length]).toEqual([2, 2, 1])
     const mastercard = result.creditCards.find((c) => c.account.id === IDs.mastercard)!
     expect(mastercard.balances.map((b) => b.currency)).toEqual(["NIO", "USD"])
@@ -599,13 +599,13 @@ describe("Overviews", () => {
     // 7,500 opening + 1,200 withdrawal − 250 lunch − 60 bus.
     expect(result.cash[0]!.balance.amount.toFixed()).toBe("8390")
     expect(result.cash[0]!.principalEquivalent?.currency).toBe("USD")
-    const all = sample.accounts.flatMap((a) => balanceOf(a, sample.transactions))
+    const all = sample.accounts.flatMap((a) => balanceOf(a, sample.transactions, ZONE))
     expect(result.netWorth.amount.toFixed()).toBe(netWorth(all, sample.settings.currencies).amount.toFixed())
   })
 
   it("a deposit with only a transfer channel has no card yet", () => {
     const account: Account = { id: crypto.randomUUID(), name: "Savings", bank: "Bank", kind: "deposit", openingBalances: [{ amount: "10", currency: "USD" }], openingDate: referenceDate.toISOString() }
-    const result = accountsOverview([account], [{ id: crypto.randomUUID(), accountId: account.id, kind: "transfer" }], [], sampleData().settings.currencies)
+    const result = accountsOverview([account], [{ id: crypto.randomUUID(), accountId: account.id, kind: "transfer" }], [], sampleData().settings.currencies, ZONE)
     expect(result.deposits[0]?.debitCard).toBeUndefined()
   })
 
@@ -706,7 +706,7 @@ describe("Complete onboarding", () => {
   const when = new Date(1_790_000_000_000)
   const account = (overrides: Partial<OnboardingAccountDraft>): OnboardingAccountDraft => ({ id: crypto.randomUUID(), kind: "bank", name: "Savings", currency: "USD", balance: d(0), secondBalance: d(0), ...overrides })
   const run = async (accounts: OnboardingAccountDraft[], overrides: Partial<Parameters<typeof completeOnboarding>[2]> = {}, cur = currencies) => {
-    const store = new InMemoryStore()
+    const store = new InMemoryStore(ZONE)
     const settings = await completeOnboarding(store, store, { currencies: cur, accounts, locksWithBiometrics: false, hasPasscode: false, hidesAmountsInAppSwitcher: true, backsUpToICloud: false, ...overrides }, when)
     return { store, settings }
   }

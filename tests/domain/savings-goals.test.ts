@@ -14,6 +14,7 @@ import {
 } from "@/lib/domain"
 import { savingsGoalRepository, settingsRepository } from "@/lib/repositories"
 import { DEFAULT_SETTINGS, type SavingsGoal } from "@/lib/schema"
+import { ZONE } from "./fixtures"
 
 const NOV_2026 = new Date(2026, 10, 6, 12)
 
@@ -39,33 +40,33 @@ async function expectDomainError(work: () => Promise<unknown>, code: DomainError
 
 describe("Savings goal progress", () => {
   it("splits what's left over the months to the target month, both counted", () => {
-    const progress = savingsGoalProgress(goal(), NOV_2026)
+    const progress = savingsGoalProgress(goal(), NOV_2026, ZONE)
     expect(progress.monthsLeft).toBe(2)
     expect(progress.monthlyAmount?.toString()).toBe("7500")
     expect(progress.isOverdue).toBe(false)
   })
 
   it("rounds the monthly amount up to the cent", () => {
-    const progress = savingsGoalProgress(goal({ target: { amount: "100", currency: "NIO" }, targetMonth: { month: 1, year: 2027 } }), NOV_2026)
+    const progress = savingsGoalProgress(goal({ target: { amount: "100", currency: "NIO" }, targetMonth: { month: 1, year: 2027 } }), NOV_2026, ZONE)
     expect(progress.monthsLeft).toBe(3)
     expect(progress.monthlyAmount?.toString()).toBe("33.34")
   })
 
   it("asks for everything left in the target month itself", () => {
-    const progress = savingsGoalProgress(goal({ saved: "14000", targetMonth: { month: 11, year: 2026 } }), NOV_2026)
+    const progress = savingsGoalProgress(goal({ saved: "14000", targetMonth: { month: 11, year: 2026 } }), NOV_2026, ZONE)
     expect(progress.monthsLeft).toBe(1)
     expect(progress.monthlyAmount?.toString()).toBe("1000")
   })
 
   it("is overdue once the month passed with money to go, and has no monthly amount", () => {
-    const progress = savingsGoalProgress(goal({ saved: "100", targetMonth: { month: 10, year: 2026 } }), NOV_2026)
+    const progress = savingsGoalProgress(goal({ saved: "100", targetMonth: { month: 10, year: 2026 } }), NOV_2026, ZONE)
     expect(progress.isOverdue).toBe(true)
     expect(progress.monthlyAmount).toBeUndefined()
     expect(progress.remaining.toString()).toBe("14900")
   })
 
   it("is reached at the target, with nothing left even past it", () => {
-    const progress = savingsGoalProgress(goal({ saved: "16000", targetMonth: { month: 10, year: 2026 } }), NOV_2026)
+    const progress = savingsGoalProgress(goal({ saved: "16000", targetMonth: { month: 10, year: 2026 } }), NOV_2026, ZONE)
     expect(progress.isReached).toBe(true)
     expect(progress.isOverdue).toBe(false)
     expect(progress.remaining.isZero()).toBe(true)
@@ -75,7 +76,7 @@ describe("Savings goal progress", () => {
 
   it("has no monthly amount without a date", () => {
     const { targetMonth: _, ...undated } = goal()
-    expect(savingsGoalProgress(undated, NOV_2026).monthlyAmount).toBeUndefined()
+    expect(savingsGoalProgress(undated, NOV_2026, ZONE).monthlyAmount).toBeUndefined()
   })
 
   it("orders open goals by deadline, undated after, reached last", () => {
@@ -87,7 +88,7 @@ describe("Savings goal progress", () => {
         goal({ id: "later", name: "Car", targetMonth: { month: 6, year: 2027 } }),
         goal({ id: "soon", name: "Trip" }),
       ],
-      NOV_2026,
+      NOV_2026, ZONE,
     )
     expect(ordered.map((g) => g.id)).toEqual(["soon", "later", "u", "done"])
   })
@@ -97,7 +98,7 @@ describe("Savings goal use cases", () => {
   const settings = { ...DEFAULT_SETTINGS, currencies: { principal: "NIO", second: "USD", rate: "36.6" } }
 
   it("creates with nothing saved, in one of the person's currencies", async () => {
-    const store = new InMemoryStore({ settings })
+    const store = new InMemoryStore(ZONE, { settings })
     const created = await saveSavingsGoal(store, { name: "  Trip ", targetAmount: "15000", currency: "NIO", targetMonth: { month: 12, year: 2026 } })
     expect(created).toMatchObject({ name: "Trip", saved: "0", target: { amount: "15000", currency: "NIO" } })
     await expectDomainError(() => saveSavingsGoal(store, { name: "Euro", targetAmount: "10", currency: "EUR" }), "invalidCurrency")
@@ -106,7 +107,7 @@ describe("Savings goal use cases", () => {
   })
 
   it("editing keeps what's saved and the currency, and can drop the date", async () => {
-    const store = new InMemoryStore({ settings })
+    const store = new InMemoryStore(ZONE, { settings })
     const created = await saveSavingsGoal(store, { name: "Trip", targetAmount: "15000", currency: "NIO", targetMonth: { month: 12, year: 2026 } })
     await addToSavingsGoal(store, created.id, "2500.50")
     const edited = await saveSavingsGoal(store, { id: created.id, name: "Big trip", targetAmount: "20000", currency: "USD" })
@@ -115,7 +116,7 @@ describe("Savings goal use cases", () => {
   })
 
   it("adds and withdraws, never below zero", async () => {
-    const store = new InMemoryStore({ settings, savingsGoals: [goal()] })
+    const store = new InMemoryStore(ZONE, { settings, savingsGoals: [goal()] })
     await addToSavingsGoal(store, goal().id, "100")
     expect((await withdrawFromSavingsGoal(store, goal().id, "40")).saved).toBe("60")
     await expectDomainError(() => withdrawFromSavingsGoal(store, goal().id, "60.01"), "invalidAmount")

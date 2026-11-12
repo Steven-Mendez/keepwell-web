@@ -26,7 +26,7 @@ import {
 } from "@/lib/domain/csv"
 import { DEFAULT_CATEGORIES } from "@/lib/schema"
 
-import { d, date, referenceDate, sampleData, transaction } from "./fixtures"
+import { d, date, referenceDate, sampleData, transaction, ZONE } from "./fixtures"
 
 describe("Amount input", () => {
   it.each([
@@ -105,7 +105,7 @@ describe("CSV", () => {
 
   it("exports every movement with the iOS columns, oldest first", () => {
     const sample = sampleData()
-    const csv = exportCsv(sample.transactions, sample.accounts, sample.cards, DEFAULT_CATEGORIES)
+    const csv = exportCsv(sample.transactions, sample.accounts, sample.cards, DEFAULT_CATEGORIES, ZONE)
     const rows = parseCsvRows(csv)
     expect(rows[0]).toEqual(["date", "status", "type", "description", "category", "amount", "currency", "account", "card_last_four", "destination_account", "debited_principal", "rate", "shared", "note", "tags"])
     expect(rows).toHaveLength(sample.transactions.length + 1)
@@ -132,7 +132,7 @@ describe("CSV", () => {
       [movement],
       [{ ...account!, bank: "", name: "+Cash" }],
       [],
-      [{ ...category!, name: "-Food" }]
+      [{ ...category!, name: "-Food" }], ZONE
     )
     expect(csv.split("\n")[1]).toContain(`"'=HYPERLINK(""http://x"")"`)
     const row = parseCsvRows(csv)[1]!
@@ -168,7 +168,7 @@ describe("Summary", () => {
       transaction({ amount: "30", date: date(2026, 9, 3) }),
       transaction({ amount: "100", date: date(2026, 9, 25) }),
     ]
-    const pace = spendingPace({ year: 2026, month: 10 }, transactions, date(2026, 10, 10))
+    const pace = spendingPace({ year: 2026, month: 10 }, transactions, date(2026, 10, 10), ZONE)
     expect(paceComparisonDay(pace)).toBe(10)
     expect(paceSpentSoFar(pace).toFixed()).toBe("10")
     expect(pacePreviousBySameDay(pace).toFixed()).toBe("30")
@@ -176,7 +176,7 @@ describe("Summary", () => {
   })
 
   it("the report has six months, oldest first, ending with the current one", () => {
-    const report = summaryReport(sampleData().transactions, "USD", referenceDate)
+    const report = summaryReport(sampleData().transactions, "USD", ZONE, referenceDate)
     expect(report.months).toHaveLength(6)
     expect(report.months.at(-1)?.month).toEqual({ year: 2026, month: 10 })
     expect(report.months[0]?.month).toEqual({ year: 2026, month: 5 })

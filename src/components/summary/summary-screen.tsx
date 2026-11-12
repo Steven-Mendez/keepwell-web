@@ -223,7 +223,7 @@ export function SummaryScreen() {
   const report = useMemo(
     () =>
       ledger
-        ? summaryReport(ledger.transactions, currency, new Date())
+        ? summaryReport(ledger.transactions, currency, ledger.timeZone, new Date())
         : undefined,
     [ledger, currency]
   )
@@ -234,6 +234,7 @@ export function SummaryScreen() {
             ledger.accounts,
             ledger.transactions,
             ledger.settings.currencies,
+            ledger.timeZone,
             new Date()
           )
         : [],

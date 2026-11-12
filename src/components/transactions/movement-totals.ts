@@ -1,5 +1,6 @@
 import { Decimal, amountIn, dayKey } from "@/lib/domain"
 import type { Transaction } from "@/lib/schema"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 export interface MovementTotals {
   moneyIn: Decimal
@@ -37,7 +38,7 @@ export function groupByDay(
 ): [string, Transaction[]][] {
   const byDay = new Map<string, Transaction[]>()
   for (const transaction of transactions) {
-    const key = dayKey(new Date(transaction.date))
+    const key = dayKey(new Date(transaction.date), deviceTimeZone())
     byDay.set(key, [...(byDay.get(key) ?? []), transaction])
   }
   return [...byDay.entries()]

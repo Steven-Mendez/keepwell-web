@@ -16,7 +16,7 @@ import {
 } from "@/lib/domain"
 import type { Account, AccountKind, CurrencySettings, RecurringFrequency, RecurringRule, Transaction, TransactionKind } from "@/lib/schema"
 
-import { date, transaction } from "./fixtures"
+import { date, transaction, ZONE } from "./fixtures"
 
 describe("Balance forecast", () => {
   // Today is Nov 6 2026 (30 days, 24 left), in America/Managua like the iOS fixture.
@@ -122,7 +122,7 @@ describe("Balance forecast", () => {
   ]
 
   it("forecasts the shared fixture", () => {
-    const forecast = balanceForecast(accounts, transactions, rules, settings, now)
+    const forecast = balanceForecast(accounts, transactions, rules, settings, ZONE, now)
     expect(forecast.currency).toBe("USD")
     expect(forecast.availableToday.toString()).toBe("4030")
     expect(forecast.draftIncome.toString()).toBe("300")
@@ -138,18 +138,18 @@ describe("Balance forecast", () => {
 
   it("the statement is what closed less what was paid since", () => {
     const due = date(2026, 11, 10, 0)
-    expect(cardAmountDue(due, accounts[2]!, transactions, settings).toString()).toBe("250")
+    expect(cardAmountDue(due, accounts[2]!, transactions, settings, ZONE).toString()).toBe("250")
     // Without a cutoff day the whole debt is due.
-    expect(cardAmountDue(due, accounts[4]!, transactions, settings).toString()).toBe("60")
+    expect(cardAmountDue(due, accounts[4]!, transactions, settings, ZONE).toString()).toBe("60")
   })
 
   it("the statement cutoff is the last one before the due day", () => {
-    expect(dayKey(statementCutoff(date(2026, 11, 10), 20))).toBe("2026-10-20")
-    expect(dayKey(statementCutoff(date(2026, 11, 25), 5))).toBe("2026-11-05")
+    expect(dayKey(statementCutoff(date(2026, 11, 10), 20, ZONE), ZONE)).toBe("2026-10-20")
+    expect(dayKey(statementCutoff(date(2026, 11, 25), 5, ZONE), ZONE)).toBe("2026-11-05")
   })
 
   it("usual spending averages only months with spending", () => {
-    const forecast = balanceForecast([account(IDs.bank, "deposit", "0", "USD")], [movement("expense", "600", date(2026, 10, 10))], [], settings, now)
+    const forecast = balanceForecast([account(IDs.bank, "deposit", "0", "USD")], [movement("expense", "600", date(2026, 10, 10))], [], settings, ZONE, now)
     expect(forecast.usualSpending.toString()).toBe("480")
     expect(forecastTotal(forecast).toString()).toBe("-1080")
   })
@@ -204,7 +204,7 @@ describe("Price increases", () => {
         charge("Hardware store", "5", date(2026, 10, 10)),
         charge("Hardware store", "50", date(2026, 10, 11)),
       ],
-      now,
+      ZONE, now,
     )
     expect(found.map((increase) => increase.name)).toEqual(["netflix ", "Gym club"])
     expect(found[0]?.previous.amount.toString()).toBe("9.99")

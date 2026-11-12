@@ -37,7 +37,7 @@ import {
   type Transaction,
 } from "@/lib/schema"
 
-import { IDs, d, date, referenceDate, sampleData, sampleStore, transaction } from "./fixtures"
+import { d, date, IDs, referenceDate, sampleData, sampleStore, transaction, ZONE } from "./fixtures"
 
 async function expectDomainError(work: () => unknown, code: DomainError["code"]) {
   const error = await Promise.resolve()
@@ -194,7 +194,7 @@ describe("Categorization rules", () => {
   })
 
   it("saves, orders and applies rules to past movements", async () => {
-    const store = new InMemoryStore({ transactions: [transaction({ amount: "8", description: "Uber to work" }), transaction({ amount: "9", description: "Uber eats", category: "restaurants" })] })
+    const store = new InMemoryStore(ZONE, { transactions: [transaction({ amount: "8", description: "Uber to work" }), transaction({ amount: "9", description: "Uber eats", category: "restaurants" })] })
     const first = await saveCategorizationRule(store, { match: " Uber ", categoryId: "transport", kind: "expense" })
     const second = await saveCategorizationRule(store, { match: "eats", categoryId: "restaurants", kind: "expense" })
     await reorderCategorizationRules(store, [second.id])
@@ -222,7 +222,7 @@ describe("filtering by tag", () => {
 
   it("CSV tags go out as the last column", async () => {
     const tagged = transaction({ amount: "900", currency: "NIO", account: IDs.cash, category: "travel", description: "Hotel" })
-    const csv = exportCsv([{ ...tagged, tags: ["viaje-mexico", "boda"] }], sampleData().accounts, [], DEFAULT_CATEGORIES)
+    const csv = exportCsv([{ ...tagged, tags: ["viaje-mexico", "boda"] }], sampleData().accounts, [], DEFAULT_CATEGORIES, ZONE)
     const rows = parseCsvRows(csv)
     expect(rows[0]?.at(-1)).toBe("tags")
     expect(rows[1]?.at(-1)).toBe("#viaje-mexico #boda")

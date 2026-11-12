@@ -206,7 +206,8 @@ function useWalletCards(ledger: Ledger | undefined) {
             ledger.accounts,
             ledger.cards,
             ledger.transactions,
-            ledger.settings.currencies
+            ledger.settings.currencies,
+            ledger.timeZone
           )
         : undefined,
     [ledger]

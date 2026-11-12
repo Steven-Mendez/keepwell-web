@@ -48,7 +48,7 @@ import {
 import type { Account } from "@/lib/schema"
 import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "@/lib/schema"
 
-import { d, date, single, transaction, usdNio } from "./fixtures"
+import { d, date, single, transaction, usdNio, ZONE } from "./fixtures"
 
 const m = (amount: string | number, currency: string): Money => ({ amount: d(amount), currency })
 const plain = (list: Money[]) => list.map((value) => `${value.amount.toFixed()} ${value.currency}`)
@@ -78,50 +78,50 @@ describe("Account balances (rules 1, 3, 4, 5)", () => {
     const result = balanceOf(account, [
       transaction({ kind: "expense", amount: "30", account: account.id }),
       transaction({ kind: "income", amount: "12.5", account: account.id }),
-    ])
+    ], ZONE)
     expect(plain(result)).toEqual(["82.5 USD"])
   })
 
   it("planned movements do not count", () => {
     const account = deposit("100")
-    expect(plain(balanceOf(account, [transaction({ amount: "3500", currency: "NIO", account: account.id, status: "planned" })]))).toEqual(["100 USD"])
+    expect(plain(balanceOf(account, [transaction({ amount: "3500", currency: "NIO", account: account.id, status: "planned" })], ZONE))).toEqual(["100 USD"])
   })
 
   it("confirming a planned movement makes it count", () => {
     const account = deposit("100")
     const planned = transaction({ amount: "40", account: account.id, status: "planned" })
-    expect(plain(balanceOf(account, [{ ...planned, status: "confirmed" }]))).toEqual(["60 USD"])
+    expect(plain(balanceOf(account, [{ ...planned, status: "confirmed" }], ZONE))).toEqual(["60 USD"])
   })
 
   it("movements before the opening date are already in the opening balance", () => {
     const account = deposit("100")
-    expect(plain(balanceOf(account, [transaction({ amount: "40", account: account.id, date: date(2026, 8, 31) })]))).toEqual(["100 USD"])
+    expect(plain(balanceOf(account, [transaction({ amount: "40", account: account.id, date: date(2026, 8, 31) })], ZONE))).toEqual(["100 USD"])
   })
 
   it("ignores other accounts' movements", () => {
-    expect(plain(balanceOf(deposit("100"), [transaction({ amount: "40" })]))).toEqual(["100 USD"])
+    expect(plain(balanceOf(deposit("100"), [transaction({ amount: "40" })], ZONE))).toEqual(["100 USD"])
   })
 
   it("a second-currency purchase on a principal account uses the real debit", () => {
     const account = deposit("100")
     const dinner = transaction({ amount: "879", currency: "NIO", account: account.id, actualDebited: "24.28" })
-    expect(plain(balanceOf(account, [dinner]))).toEqual(["75.72 USD"])
+    expect(plain(balanceOf(account, [dinner], ZONE))).toEqual(["75.72 USD"])
   })
 
   it("an ATM withdrawal moves the second currency into cash and the real debit out of the bank", () => {
     const bank = deposit("100")
     const cash = deposit("0", "NIO")
     const withdrawal = transaction({ kind: "transfer", amount: "1200", currency: "NIO", account: bank.id, destination: cash.id, actualDebited: "33.15" })
-    expect(plain(balanceOf(bank, [withdrawal]))).toEqual(["66.85 USD"])
-    expect(plain(balanceOf(cash, [withdrawal]))).toEqual(["1200 NIO"])
+    expect(plain(balanceOf(bank, [withdrawal], ZONE))).toEqual(["66.85 USD"])
+    expect(plain(balanceOf(cash, [withdrawal], ZONE))).toEqual(["1200 NIO"])
   })
 
   it("transfers are neither expense nor income but move money", () => {
     const from = deposit("500")
     const to = deposit("0")
     const move = transaction({ kind: "transfer", amount: "200", account: from.id, destination: to.id })
-    expect(plain(balanceOf(from, [move]))).toEqual(["300 USD"])
-    expect(plain(balanceOf(to, [move]))).toEqual(["200 USD"])
+    expect(plain(balanceOf(from, [move], ZONE))).toEqual(["300 USD"])
+    expect(plain(balanceOf(to, [move], ZONE))).toEqual(["200 USD"])
   })
 
   it("a dual credit card books each purchase in its currency", () => {
@@ -140,7 +140,7 @@ describe("Account balances (rules 1, 3, 4, 5)", () => {
       transaction({ amount: "190", currency: "NIO", account: card.id }),
       transaction({ amount: "10.30", currency: "USD", account: card.id }),
       transaction({ amount: "7.02", currency: "NIO", account: card.id }),
-    ])
+    ], ZONE)
     expect(plain(result)).toEqual(["-16.79 USD", "-197.02 NIO"])
   })
 
@@ -157,13 +157,13 @@ describe("Account balances (rules 1, 3, 4, 5)", () => {
       openingDate: opening,
     }
     const payment = transaction({ kind: "transfer", amount: "500", currency: "NIO", account: bank.id, destination: card.id, actualDebited: "13.70" })
-    expect(plain(balanceOf(card, [payment]))).toEqual(["0 USD", "0 NIO"])
-    expect(plain(balanceOf(bank, [payment]))).toEqual(["86.3 USD"])
+    expect(plain(balanceOf(card, [payment], ZONE))).toEqual(["0 USD", "0 NIO"])
+    expect(plain(balanceOf(bank, [payment], ZONE))).toEqual(["86.3 USD"])
   })
 
   it("a single-currency credit card converts everything to its currency", () => {
     const card: Account = { id: crypto.randomUUID(), name: "Visa", kind: "credit", openingBalances: [{ amount: "-941.3", currency: "NIO" }], openingDate: opening }
-    const result = balanceOf(card, [transaction({ amount: "10", currency: "USD", account: card.id })])
+    const result = balanceOf(card, [transaction({ amount: "10", currency: "USD", account: card.id })], ZONE)
     expect(cents(result[0]!.amount)).toBe("-1307.54")
   })
 })
@@ -216,7 +216,7 @@ describe("Currency conversion (rule 2)", () => {
 
 describe("Monthly summary (rule 7)", () => {
   const october = yearMonth(2026, 10)!
-  const summary = (list: Parameters<typeof monthlySummary>[1]) => monthlySummary(october, list, "USD")
+  const summary = (list: Parameters<typeof monthlySummary>[1]) => monthlySummary(october, list, "USD", ZONE)
 
   it("totals income, expense, savings and rate", () => {
     const result = summary([transaction({ kind: "income", amount: "2452.24", category: "salary" }), transaction({ amount: "709.58", category: "tools" })])
@@ -262,13 +262,13 @@ describe("Monthly summary (rule 7)", () => {
       transaction({ amount: "47.13", date: date(2026, 9, 10) }),
       transaction({ amount: "709.58", date: date(2026, 10, 10) }),
       transaction({ kind: "income", amount: "3.02", date: date(2026, 8, 10) }),
-    ])
+    ], ZONE)
     expect(cents(average!)).toBe("378.36")
-    expect(averageMonthlyTotal("expense", [])).toBeUndefined()
+    expect(averageMonthlyTotal("expense", [], ZONE)).toBeUndefined()
   })
 
   it("the monthly series fills empty months, oldest first", () => {
-    const series = monthlyTotals("expense", october, 6, [transaction({ amount: "47.13", date: date(2026, 9, 10) })])
+    const series = monthlyTotals("expense", october, 6, [transaction({ amount: "47.13", date: date(2026, 9, 10) })], ZONE)
     expect(series.map((entry) => entry.month.month)).toEqual([5, 6, 7, 8, 9, 10])
     expect(series.map((entry) => entry.total.toFixed())).toEqual(["0", "0", "0", "0", "47.13", "0"])
   })
@@ -322,30 +322,30 @@ describe("Net worth (rule 6)", () => {
 
 describe("Billing cycle", () => {
   it("runs from the day after the cutoff through the cutoff", () => {
-    const cycle = billingCycle(date(2026, 10, 2), 28)
-    expect(cycle.start).toEqual(startOfDay(date(2026, 9, 29)))
-    expect(cycle.end).toEqual(startOfDay(date(2026, 10, 29)))
+    const cycle = billingCycle(date(2026, 10, 2), 28, ZONE)
+    expect(cycle.start).toEqual(startOfDay(date(2026, 9, 29), ZONE))
+    expect(cycle.end).toEqual(startOfDay(date(2026, 10, 29), ZONE))
   })
 
   it("a date after the cutoff belongs to the next cycle", () => {
-    const cycle = billingCycle(date(2026, 10, 29), 28)
-    expect(cycle.start).toEqual(startOfDay(date(2026, 10, 29)))
-    expect(cycle.end).toEqual(startOfDay(date(2026, 11, 29)))
+    const cycle = billingCycle(date(2026, 10, 29), 28, ZONE)
+    expect(cycle.start).toEqual(startOfDay(date(2026, 10, 29), ZONE))
+    expect(cycle.end).toEqual(startOfDay(date(2026, 11, 29), ZONE))
   })
 
   it("the cutoff day clamps to short months", () => {
-    const cycle = billingCycle(date(2026, 2, 20), 31)
-    expect(cycle.start).toEqual(startOfDay(date(2026, 2, 1)))
-    expect(cycle.end).toEqual(startOfDay(date(2026, 3, 1)))
+    const cycle = billingCycle(date(2026, 2, 20), 31, ZONE)
+    expect(cycle.start).toEqual(startOfDay(date(2026, 2, 1), ZONE))
+    expect(cycle.end).toEqual(startOfDay(date(2026, 3, 1), ZONE))
   })
 
   it("no cutoff means the calendar month", () => {
-    expect(billingCycle(date(2026, 10, 15), undefined).start).toEqual(startOfDay(date(2026, 10, 1)))
+    expect(billingCycle(date(2026, 10, 15), undefined, ZONE).start).toEqual(startOfDay(date(2026, 10, 1), ZONE))
   })
 
   it("the next occurrence rolls to the next month", () => {
-    expect(nextOccurrence(15, date(2026, 10, 15))).toEqual(startOfDay(date(2026, 10, 15)))
-    expect(nextOccurrence(15, date(2026, 10, 16))).toEqual(startOfDay(date(2026, 11, 15)))
+    expect(nextOccurrence(15, date(2026, 10, 15), ZONE)).toEqual(startOfDay(date(2026, 10, 15), ZONE))
+    expect(nextOccurrence(15, date(2026, 10, 16), ZONE)).toEqual(startOfDay(date(2026, 11, 15), ZONE))
   })
 })
 
@@ -364,7 +364,7 @@ describe("Subscriptions", () => {
       charge("Amazon Digital", "2026-10-28"),
       charge("Higgsfield", "2026-10-10"),
       charge("Higgsfield", "2026-10-11"),
-    ])
+    ], ZONE)
     expect(found).toEqual(["openai ", "Apple Music"])
   })
 
@@ -373,7 +373,7 @@ describe("Subscriptions", () => {
       subscriptionsCharged(card, [
         charge("Netflix", "2026-09-05", { category: "subscriptions", card: crypto.randomUUID() }),
         charge("Spotify", "2026-11-05", { category: "subscriptions", status: "planned" }),
-      ]),
+      ], ZONE),
     ).toEqual([])
   })
 })
@@ -509,7 +509,7 @@ describe("Entities", () => {
   })
 
   it("expiry reminds on the first of its month", () => {
-    const day = expiryReminderDay(cardExpiry(5, 2029))
+    const day = expiryReminderDay(cardExpiry(5, 2029), ZONE)
     expect([day.getFullYear(), day.getMonth() + 1, day.getDate()]).toEqual([2029, 5, 1])
     expect(compareExpiry(cardExpiry(2, 2028), cardExpiry(9, 2028))).toBeLessThan(0)
   })

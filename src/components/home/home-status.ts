@@ -55,7 +55,7 @@ export function homeStatus(
 export function ledgerHomeStatus(ledger: Ledger, now: Date): HomeStatus {
   return homeStatus(
     ledgerNotifications(ledger, now),
-    orderedLoans(ledger.loans, now)
+    orderedLoans(ledger.loans, now, ledger.timeZone)
   )
 }
 

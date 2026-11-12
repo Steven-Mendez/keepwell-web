@@ -13,7 +13,7 @@ import {
   type Money,
   type SavingsGoalProgress,
 } from "@/lib/domain"
-import { debtTotals, type DebtTotals } from "@/lib/domain"
+import { debtTotals, type DebtTotals, type TimeZone } from "@/lib/domain"
 import type { RecurringRule, SavingsGoal } from "@/lib/schema"
 
 /** What the Plan hub's three cards show; computed once so the screen only draws it. */
@@ -45,15 +45,16 @@ export interface PlanSummary {
 /** The soonest next occurrence among active (not paused, not finished) rules; ties keep the name order. */
 export function nextRecurring(
   rules: readonly RecurringRule[],
-  now: Date
+  now: Date,
+  zone: TimeZone
 ): { rule: RecurringRule; date: Date } | undefined {
   let best: { rule: RecurringRule; date: Date } | undefined
   for (const rule of rules) {
-    if (!isActive(rule)) continue
+    if (!isActive(rule, zone)) continue
     // The stored next date, or today if it already passed (not recorded yet): never a past day, as iOS.
     const stored = new Date(rule.nextDate)
-    const today = startOfDay(now)
-    const date = occurrencesFrom(rule, stored > today ? stored : today, 1)[0]
+    const today = startOfDay(now, zone)
+    const date = occurrencesFrom(rule, stored > today ? stored : today, 1, zone)[0]
     if (!date) continue
     if (
       !best ||
@@ -66,28 +67,29 @@ export function nextRecurring(
 }
 
 export function planSummary(ledger: Ledger, now: Date): PlanSummary {
-  const goals = orderedGoals(ledger.savingsGoals, now)
+  const goals = orderedGoals(ledger.savingsGoals, now, ledger.timeZone)
   const first = goals[0]
   const totals = debtTotals(ledger.loans, ledger.personalDebts)
-  const nextLoan = orderedLoans(ledger.loans, now).find((entry) => entry.next)
-  const next = nextRecurring(ledger.recurringRules, now)
+  const nextLoan = orderedLoans(ledger.loans, now, ledger.timeZone).find((entry) => entry.next)
+  const next = nextRecurring(ledger.recurringRules, now, ledger.timeZone)
   return {
     recurring: {
       ruleCount: ledger.recurringRules.length,
       subscriptionCount: ledger.recurringRules.filter(
         (rule) =>
-          rule.isSubscription && rule.kind === "expense" && isActive(rule)
+          rule.isSubscription && rule.kind === "expense" && isActive(rule, ledger.timeZone)
       ).length,
       subscriptionsPerMonth: subscriptionsPerMonth(
         ledger.recurringRules,
-        ledger.settings.currencies
+        ledger.settings.currencies,
+        ledger.timeZone
       ),
       ...(next ? { next } : {}),
     },
     goals: {
       count: goals.length,
       ...(first
-        ? { first: { goal: first, progress: savingsGoalProgress(first, now) } }
+        ? { first: { goal: first, progress: savingsGoalProgress(first, now, ledger.timeZone) } }
         : {}),
     },
     debts: {

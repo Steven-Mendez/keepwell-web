@@ -15,6 +15,7 @@ import {
 import { formatMoney } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { accountName, cardNumber, debitTitle, methodTitle, networkName } from "@/lib/presentation/display"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 // Ports of the CreateTransaction view model's display logic (CreateTransactionViewModel+Display,
 // +Accounts, +Review and NewMovementMenuViewModel), kept free of React.
@@ -143,7 +144,7 @@ function currencyList(t: Translator, account: Account): string {
 
 export function usedLabel(t: Translator, date: Date | undefined, now: Date = new Date()): string | undefined {
   if (!date) return undefined
-  const days = Math.round((startOfDay(now).getTime() - startOfDay(date).getTime()) / 86_400_000)
+  const days = Math.round((startOfDay(now, deviceTimeZone()).getTime() - startOfDay(date, deviceTimeZone()).getTime()) / 86_400_000)
   if (days < 1) return ct(t, "Used today")
   if (days === 1) return ct(t, "Used yesterday")
   return ct(t, "Used %lld days ago", days)

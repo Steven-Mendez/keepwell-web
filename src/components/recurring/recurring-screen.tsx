@@ -59,7 +59,7 @@ export function RecurringScreen() {
   const overview = useMemo(
     () =>
       ledger
-        ? recurringOverview(ledger.recurringRules, ledger.settings.currencies)
+        ? recurringOverview(ledger.recurringRules, ledger.settings.currencies, ledger.timeZone)
         : undefined,
     [ledger]
   )
@@ -211,16 +211,16 @@ function RuleRow({
   const category = ledger.categories.find(
     (candidate) => candidate.id === rule.categoryId
   )
-  const pending = pendingDraftOf(rule, ledger.transactions, now)
-  const next = nextOccurrenceOf(rule)
+  const pending = pendingDraftOf(rule, ledger.transactions, now, ledger.timeZone)
+  const next = nextOccurrenceOf(rule, ledger.timeZone)
   const status = pending
     ? pendingDraftText(t, pending, now)
     : rule.isPaused
       ? t.in("recurring", "Paused")
-      : isFinished(rule) || !next
+      : isFinished(rule, ledger.timeZone) || !next
         ? t.in("recurring", "Ended")
         : nextDateText(t, next, now)
-  const inactive = !pending && (rule.isPaused || isFinished(rule))
+  const inactive = !pending && (rule.isPaused || isFinished(rule, ledger.timeZone))
   const style = rule.kind
   return (
     <ListItem>

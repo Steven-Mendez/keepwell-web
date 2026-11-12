@@ -61,7 +61,7 @@ export function DebtsScreen() {
   const [now] = useState(() => new Date())
   const [open, setOpen] = useState<Open>()
   const loans = useMemo(
-    () => (ledger ? orderedLoans(ledger.loans, now) : undefined),
+    () => (ledger ? orderedLoans(ledger.loans, now, ledger.timeZone) : undefined),
     [ledger, now]
   )
   const debts = useMemo(

@@ -62,7 +62,8 @@ function LoadedReceipt({
           transaction,
           context.accounts,
           context.transactions,
-          context.currencies.principal
+          context.currencies.principal,
+          context.zone
         ),
         context
       )

@@ -57,7 +57,7 @@ function ScopedAccountCard({
   account: Account
   onShowAll: () => void
 }) {
-  const balances = balanceOf(account, ledger.transactions)
+  const balances = balanceOf(account, ledger.transactions, ledger.timeZone)
   return (
     <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl bg-card p-4">
       <div className="flex flex-col gap-0.5">

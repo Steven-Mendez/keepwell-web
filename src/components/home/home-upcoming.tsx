@@ -29,7 +29,7 @@ export function UpcomingSection({
   hidden: boolean
 }) {
   const { openRuleEditor } = useAppActions()
-  const next = upcoming(ledger.recurringRules, now, HOME_UPCOMING_DAYS).slice(
+  const next = upcoming(ledger.recurringRules, now, HOME_UPCOMING_DAYS, ledger.timeZone).slice(
     0,
     HOME_UPCOMING_COUNT
   )
