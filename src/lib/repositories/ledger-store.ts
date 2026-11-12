@@ -10,7 +10,7 @@ import { savingsGoalRepository } from "./savings-goals"
 import { settingsRepository } from "./settings"
 import { transactionRepository } from "./transactions"
 
-const allTables = () => [db.accounts, db.cards, db.categories, db.transactions, db.recurring_rules, db.savings_goals, db.loans, db.loan_payments, db.personal_debts, db.personal_debt_repayments, db.categorization_rules, db.settings, db.sync_outbox]
+const allTables = () => [db.accounts, db.cards, db.categories, db.transactions, db.recurring_rules, db.savings_goals, db.loans, db.loan_payments, db.personal_debts, db.personal_debt_repayments, db.categorization_rules, db.settings, db.notification_states, db.sync_outbox]
 
 /** What `meta` keeps through "Delete all my data": this browser's sync identity and its account. */
 const KEPT_META = ["client_id", "sync_user"]

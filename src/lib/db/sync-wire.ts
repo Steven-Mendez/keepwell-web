@@ -16,6 +16,7 @@ export const SYNC_TABLES: Record<SyncEntity, string> = {
   personalDebtRepayment: "personal_debt_repayments",
   categorizationRule: "categorization_rules",
   settings: "settings",
+  notificationState: "notification_states",
 }
 
 /** Settings columns that are this device's alone and never leave it. */
