@@ -76,6 +76,7 @@ export async function enableBrowserPush(): Promise<BrowserPushStatus> {
 }
 
 export async function disableBrowserPush(): Promise<void> {
+  if (!browserPushSupported()) return
   const worker = await registration()
   const subscription = await worker?.pushManager.getSubscription()
   const clientId = await getClientId()
