@@ -233,6 +233,18 @@ describe("Materialize recurring movements", () => {
     expect(store.recurringRules[0]!.isPaused).toBe(true)
   })
 
+  it("an occurrence in Other takes the categorization rule that matches; one in a chosen category stays", async () => {
+    const netflix = rule({ name: "Netflix", categoryId: "other-expense", nextDate: occurrence(rule(), 9, ZONE).toISOString() })
+    const food = rule({ id: crypto.randomUUID(), name: "Netflix and pizza", categoryId: "groceries", nextDate: occurrence(rule(), 9, ZONE).toISOString() })
+    const store = storeWith([netflix, food])
+    store.categorizationRules = [{ id: "r-netflix", match: "netflix", categoryId: "subscriptions", kind: "expense", tags: ["tv"] }]
+    const created = await materializeRecurring(store, date(2026, 10, 31, 20))
+    expect(created.map((tx) => [tx.description, tx.categoryId, tx.tags])).toEqual([
+      ["Netflix", "subscriptions", ["tv"]],
+      ["Netflix and pizza", "groceries", undefined],
+    ])
+  })
+
   it("a rule whose category is gone is left for later instead of failing the run", async () => {
     const store = storeWith([rule({ categoryId: "nope", nextDate: occurrence(rule(), 9, ZONE).toISOString() }), rule({ id: crypto.randomUUID(), name: "Gym", nextDate: occurrence(rule(), 9, ZONE).toISOString() })])
     const created = await materializeRecurring(store, date(2026, 10, 31, 20))
