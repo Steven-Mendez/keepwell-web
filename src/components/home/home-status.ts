@@ -18,7 +18,7 @@ export interface HomeStatus {
   overdue: number
   /** Card payments and installments due today. */
   dueToday: number
-  /** Card payments and installments due tomorrow, and subscriptions renewing tomorrow. */
+  /** Card payments and installments due tomorrow, subscriptions renewing tomorrow and bills due tomorrow. */
   dueTomorrow: number
 }
 
@@ -43,6 +43,7 @@ export function homeStatus(
         else if (notification.params.daysLeft === 1) status.dueTomorrow++
         break
       case "renewal":
+      case "bill":
         status.dueTomorrow++
         break
     }
