@@ -45,6 +45,7 @@ import { accountName } from "@/lib/presentation/display"
 import { cn } from "@/lib/utils"
 
 import { useAppActions } from "./app-actions"
+import { NotificationsBell } from "@/components/notifications/notifications-bell"
 import { MAIN_NAV, PLAN_NAV, SECTION_NAV, SETTINGS_NAV, type NavItem } from "./navigation"
 
 /**
@@ -106,20 +107,23 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
           </Link>
           {/* The toggle lives here while the sidebar is open, so pages don't spend a bar on it (Linear, Copilot). */}
           {isMobile ? null : (
-            <KWCircleButton
-              icon={
-                <PanelLeftIcon
-                  className="size-[18px]"
-                  strokeWidth={2}
-                  aria-hidden
-                />
-              }
-              label={t.in("web", "Toggle sidebar")}
-              shortcut="⌘B"
-              size={32}
-              variant="translucent"
-              onClick={toggleSidebar}
-            />
+            <div className="flex items-center gap-2">
+              <NotificationsBell size={32} />
+              <KWCircleButton
+                icon={
+                  <PanelLeftIcon
+                    className="size-[18px]"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                }
+                label={t.in("web", "Toggle sidebar")}
+                shortcut="⌘B"
+                size={32}
+                variant="translucent"
+                onClick={toggleSidebar}
+              />
+            </div>
           )}
         </div>
         {/* Logging lives on N, Home's actions and each page's +; the sidebar only navigates. */}
