@@ -47,6 +47,8 @@ export interface AccountRow extends AuditColumns {
   limit_currency: string | null
   cutoff_day: number | null
   due_day: number | null
+  /** `Account.closedAt`. Optional because rows stored or pulled before it lack it. No index, so no new Dexie version. */
+  closed_at?: string | null
 }
 
 export interface CardRow extends AuditColumns {

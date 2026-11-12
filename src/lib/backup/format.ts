@@ -5,11 +5,15 @@ import { SYNC_ENTITIES, SYNC_WIRE, type SyncEntity, type SyncRow } from "@/lib/s
 // the same file. Device-only settings (unlock, relock, hiding amounts, iCloud) and the preferred
 // name never go in it, as they never sync.
 //
-// Version 1 holds sync format v1 rows. A later version may add entities or columns; this app refuses
-// a version it doesn't know instead of dropping what it can't read.
+// Version 1 holds sync format v1 rows. Version 2 adds `account.closed_at`: a column that changes what
+// the person sees raises the version, so an app that predates it refuses the file instead of
+// reopening closed accounts without a word. This app reads both (a version 1 file has no closed
+// accounts) and refuses a version it doesn't know instead of dropping what it can't read.
 
 export const BACKUP_FORMAT = "keepwell-backup"
-export const BACKUP_VERSION = 1
+export const BACKUP_VERSION = 2
+/** The oldest version this app still reads. */
+export const OLDEST_BACKUP_VERSION = 1
 
 export type BackupRows = { [E in SyncEntity]: SyncRow<E>[] }
 
@@ -55,7 +59,7 @@ export function parseBackup(text: string): ParsedBackup {
   }
   if (!isObject(raw) || raw.format !== BACKUP_FORMAT) return { ok: false, error: { code: "not_backup" } }
   const invalid = (reason: string): ParsedBackup => ({ ok: false, error: { code: "invalid", reason } })
-  if (typeof raw.version !== "number" || !Number.isInteger(raw.version) || raw.version < 1) return invalid("version")
+  if (typeof raw.version !== "number" || !Number.isInteger(raw.version) || raw.version < OLDEST_BACKUP_VERSION) return invalid("version")
   if (raw.version > BACKUP_VERSION) return { ok: false, error: { code: "newer_version", version: raw.version } }
   if (typeof raw.exported_at !== "string") return invalid("exported_at")
   if (!isObject(raw.entities)) return invalid("entities")

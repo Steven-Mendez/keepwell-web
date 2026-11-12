@@ -75,7 +75,8 @@ function saveError(t: Translator, thrown: unknown): string {
     return t.in("recurring", "It can't end before it starts.")
   if (
     isDomainError(thrown, "invalidAmount") ||
-    isDomainError(thrown, "invalidTransferDestination")
+    isDomainError(thrown, "invalidTransferDestination") ||
+    isDomainError(thrown, "accountClosed")
   )
     return errorMessage(t, thrown.code)
   return t.in("recurring", "We couldn't save it. Try again.")

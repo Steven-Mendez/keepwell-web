@@ -103,10 +103,13 @@ function AccountSelect({
         { value: "", label: t.in("transactions", "All accounts") },
         ...options.map(({ account, card }) => ({
           value: account.id,
-          label:
+          // Closed accounts come last (`scopeOptions`), marked, so their history stays reachable.
+          label: [
             card && account.kind === "credit"
               ? `${accountName(account)} · ${cardShortName(t, card)}`
               : accountName(account),
+            ...(account.closedAt ? [t.in("sharedpresentation", "Closed")] : []),
+          ].join(" · "),
         })),
       ]}
     />

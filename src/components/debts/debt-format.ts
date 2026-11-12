@@ -1,6 +1,7 @@
 import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import {
   dayKey,
+  openAccounts,
   debtDueStatus,
   debtRemaining,
   parseDayKey,
@@ -156,7 +157,7 @@ export function paymentMethods(
   t: Translator,
   ledger: Pick<Ledger, "accounts" | "cards">
 ): MethodOption[] {
-  return ledger.accounts.flatMap((account): MethodOption[] => {
+  return openAccounts(ledger.accounts).flatMap((account): MethodOption[] => {
     const cards = ledger.cards.filter((card) => card.accountId === account.id)
     if (cards.length === 0)
       return [

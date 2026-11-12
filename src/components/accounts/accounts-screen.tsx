@@ -36,7 +36,8 @@ import {
   joinedMoney,
 } from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
-import { accountName, cardKindLabel } from "@/lib/presentation/display"
+import { accountName, cardKindLabel, shortDate } from "@/lib/presentation/display"
+import { cn } from "@/lib/utils"
 import { DURATION, EASE_OUT_IOS } from "@/lib/motion"
 
 import { AccountDetail } from "./account-detail"
@@ -304,6 +305,12 @@ function Accounts() {
               onSelect={select}
               fit={isWide}
             />
+            <ClosedAccounts
+              t={t}
+              closed={overview.closed}
+              selectedId={current}
+              onSelect={select}
+            />
           </div>
           {isWide ? (
             <DetailPanel t={t} panelKey={current ?? "none"}>
@@ -323,6 +330,51 @@ function Accounts() {
         </DetailSheet>
       ) : null}
     </Page>
+  )
+}
+
+/** "Closed (n)", folded at the foot of the wallet: name and closing day, opening the detail. */
+function ClosedAccounts({
+  t,
+  closed,
+  selectedId,
+  onSelect,
+}: {
+  t: Translator
+  closed: AccountsOverview["closed"]
+  selectedId: string | undefined
+  onSelect: (id: string) => void
+}) {
+  if (closed.length === 0) return null
+  return (
+    <details className="group rounded-2xl bg-card">
+      <summary className="cursor-pointer list-none px-4 py-3 type-label text-muted-foreground">
+        {t.in("sharedpresentation", "Closed (%lld)", closed.length)}
+      </summary>
+      <ul className="flex flex-col divide-y divide-divider border-t border-divider">
+        {closed.map(({ account }) => (
+          <li key={account.id}>
+            <button
+              type="button"
+              onClick={() => onSelect(account.id)}
+              className={cn(
+                "flex w-full flex-col items-start px-4 py-3 text-left",
+                selectedId === account.id && "bg-muted"
+              )}
+            >
+              <span className="type-body text-foreground">{accountName(account)}</span>
+              <span className="type-caption text-muted-foreground">
+                {t.in(
+                  "sharedpresentation",
+                  "Closed on %@",
+                  shortDate(t, new Date(account.closedAt ?? ""))
+                )}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </details>
   )
 }
 
