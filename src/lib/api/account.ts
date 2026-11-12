@@ -1,3 +1,5 @@
+import { disableBrowserPush } from "@/lib/push/web-push"
+
 import { api, API_URL, ApiError } from "./client"
 
 export interface AccountUser {
@@ -48,6 +50,9 @@ export async function claimInvitation(code: string): Promise<void> {
 }
 
 export async function signOut(): Promise<void> {
+  // This browser stops being one of the account's push devices first, while the session can still
+  // say whose (ADR 0012); otherwise its registration outlives the session. Never blocks signing out.
+  await disableBrowserPush().catch(() => undefined)
   await api("/api/auth/sign-out", { method: "POST", body: "{}" })
 }
 
