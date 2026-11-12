@@ -42,3 +42,49 @@ const serwist = new Serwist({
 })
 
 serwist.addEventListeners()
+
+// Push (ADR 0012 in keepwell-api). The API words each notification in the person's language, so the
+// worker only shows it; `tag` is the notification's id, so a second send replaces instead of
+// stacking, and "clear" closes the ones read or deleted on another device.
+type PushMessage =
+  | { type: "notification"; id: string; title: string; body: string }
+  | { type: "clear"; ids: string[] }
+
+self.addEventListener("push", (event) => {
+  const message = event.data?.json() as PushMessage | undefined
+  if (!message) return
+  if (message.type === "clear") {
+    event.waitUntil(
+      self.registration.getNotifications().then((shown) => {
+        for (const notification of shown) if (message.ids.includes(notification.tag)) notification.close()
+      })
+    )
+    return
+  }
+  event.waitUntil(
+    self.registration.showNotification(message.title, {
+      body: message.body,
+      tag: message.id,
+      icon: "/icon-192.png",
+      data: { id: message.id },
+    })
+  )
+})
+
+// Opens the inbox on that notification: the page marks it read (which syncs) and goes where it leads.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close()
+  const id = (event.notification.data as { id?: string } | undefined)?.id
+  const url = id ? `/notifications?open=${encodeURIComponent(id)}` : "/notifications"
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (windows) => {
+      const open = windows[0]
+      if (open) {
+        await open.focus()
+        await open.navigate(url)
+      } else {
+        await self.clients.openWindow(url)
+      }
+    })
+  )
+})

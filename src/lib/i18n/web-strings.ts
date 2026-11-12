@@ -11,15 +11,45 @@ export type WebStrings = Record<
 export const WEB_STRINGS_CORE: WebStrings = {
   "More actions": { es: "Más acciones" },
   Notifications: { es: "Notificaciones" },
-  "Notifications, %lld pending": {
+  "Notifications, %lld unread": {
     en: {
-      one: "Notifications, %lld pending",
-      other: "Notifications, %lld pending",
+      one: "Notifications, %lld unread",
+      other: "Notifications, %lld unread",
     },
     es: {
-      one: "Notificaciones, %lld pendiente",
-      other: "Notificaciones, %lld pendientes",
+      one: "Notificaciones, %lld sin leer",
+      other: "Notificaciones, %lld sin leer",
     },
+  },
+  "Mark as read": { es: "Marcar como leída" },
+  "Mark as unread": { es: "Marcar como no leída" },
+  "Mark all as read": { es: "Marcar todas como leídas" },
+  "Delete read": { es: "Eliminar las leídas" },
+  "Delete notification": { es: "Eliminar notificación" },
+  "Notification deleted": { es: "Notificación eliminada" },
+  "%lld notifications deleted": {
+    en: { one: "%lld notification deleted", other: "%lld notifications deleted" },
+    es: { one: "%lld notificación eliminada", other: "%lld notificaciones eliminadas" },
+  },
+  Undo: { es: "Deshacer" },
+  Unread: { es: "Sin leer" },
+  Yesterday: { es: "Ayer" },
+  "Notification options": { es: "Opciones de notificaciones" },
+  "Get them in this browser": { es: "Recíbelas en este navegador" },
+  "Payments, renewals and budgets reach you even with Keepwell closed.": {
+    es: "Pagos, renovaciones y presupuestos te llegan aunque Keepwell esté cerrado.",
+  },
+  "Turn on": { es: "Activar" },
+  "Notifications are blocked for this site. Allow them in the browser's site settings.": {
+    es: "Las notificaciones están bloqueadas para este sitio. Permítelas en la configuración del sitio del navegador.",
+  },
+  "Notifications are on in this browser.": { es: "Las notificaciones están activadas en este navegador." },
+  "Turn off": { es: "Desactivar" },
+  "Sign in with your account to get notifications in this browser.": {
+    es: "Inicia sesión con tu cuenta para recibir notificaciones en este navegador.",
+  },
+  "We couldn't turn on notifications. Try again.": {
+    es: "No pudimos activar las notificaciones. Inténtalo de nuevo.",
   },
   "You're all caught up": { es: "Estás al día" },
   "Payment reminders, budget warnings and proposals from Claude show up here.":

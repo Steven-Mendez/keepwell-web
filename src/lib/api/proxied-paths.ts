@@ -7,6 +7,7 @@ export const API_PATHS = [
   "/api/auth/:path*",
   "/me",
   "/sync/:path*",
+  "/push/:path*",
   "/mcp",
   "/mcp/:path*",
   "/entitlements/:path*",

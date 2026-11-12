@@ -196,6 +196,16 @@ export interface PersonalDebtRepaymentRow extends AuditColumns {
 }
 
 /**
+ * What the person did with one notification (ADR 0012 in keepwell-api), keyed by the notification's
+ * id. Only touched notifications have a row; no row means unread and in the inbox.
+ */
+export interface NotificationStateRow extends AuditColumns {
+  id: string
+  read_at: string | null
+  dismissed_at: string | null
+}
+
+/**
  * A single row, like iOS `SettingsRecord`. Only the currencies, reminder days and onboarding flag
  * sync (`SettingsWire`); unlock, relock, hiding amounts and the iCloud switch are this device's.
  */
@@ -254,6 +264,7 @@ export class KeepwellDatabase extends Dexie {
   meta!: EntityTable<MetaRow, "key">
   categorization_rules!: EntityTable<CategorizationRuleRow, "id">
   settings!: EntityTable<SettingsRow, "id">
+  notification_states!: EntityTable<NotificationStateRow, "id">
   sync_outbox!: EntityTable<SyncOutboxRow, "id">
 
   constructor() {
@@ -382,10 +393,28 @@ export class KeepwellDatabase extends Dexie {
             row.created_at ??= row.updated_at ?? now
             row.deleted_at ??= null
           })
-        await rebuildOutbox(tx, now)
+        // The entities that had tables at version 6: later ones (notification states) start empty.
+        await rebuildOutbox(tx, now, SYNC_ENTITIES_AT_V6)
       })
+    // Read and deleted notifications, synced (ADR 0012). A new table, so nothing to upgrade.
+    this.version(7).stores({ notification_states: "id, updated_at, deleted_at" })
   }
 }
+
+const SYNC_ENTITIES_AT_V6: readonly SyncEntity[] = [
+  "account",
+  "card",
+  "category",
+  "transaction",
+  "recurringRule",
+  "savingsGoal",
+  "loan",
+  "loanPayment",
+  "personalDebt",
+  "personalDebtRepayment",
+  "categorizationRule",
+  "settings",
+]
 
 /** One connection per tab. Dexie opens lazily, so importing this on the server touches nothing. */
 export const db = new KeepwellDatabase()
