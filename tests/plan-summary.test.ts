@@ -5,6 +5,7 @@ import { nextRecurring, planSummary } from "@/components/plan/plan-summary"
 import type { Ledger } from "@/lib/domain"
 import { makeTranslator } from "@/lib/i18n"
 import { DEFAULT_SETTINGS, type Loan, type PersonalDebt, type RecurringRule, type SavingsGoal } from "@/lib/schema"
+import { ZONE } from "./domain/fixtures"
 
 const NOW = new Date(2026, 10, 6, 12)
 
@@ -61,14 +62,14 @@ describe("nextRecurring", () => {
   it("is the soonest active rule, skipping paused ones", () => {
     const soon = rule({ id: "00000000-0000-0000-0000-00000000e002", name: "Gym", nextDate: new Date(2026, 10, 8).toISOString(), isPaused: true })
     const later = rule({ id: "00000000-0000-0000-0000-00000000e003", name: "Rent", nextDate: new Date(2026, 10, 12).toISOString() })
-    expect(nextRecurring([rule(), soon, later], NOW)?.rule.name).toBe("Streaming")
-    expect(nextRecurring([soon], NOW)).toBeUndefined()
+    expect(nextRecurring([rule(), soon, later], NOW, ZONE)?.rule.name).toBe("Streaming")
+    expect(nextRecurring([soon], NOW, ZONE)).toBeUndefined()
   })
 
   it("never shows a date before today, as iOS", () => {
     // Stored next date Nov 10 hasn't been recorded yet; on Nov 20 the next one is Dec 10.
     const monthly = rule({ nextDate: new Date(2026, 10, 10, 9).toISOString() })
-    const next = nextRecurring([monthly], new Date(2026, 10, 20, 12))
+    const next = nextRecurring([monthly], new Date(2026, 10, 20, 12), ZONE)
     expect(next?.date.getMonth()).toBe(11)
     expect(next?.date.getDate()).toBe(10)
   })

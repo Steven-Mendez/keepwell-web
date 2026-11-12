@@ -4,6 +4,9 @@ import { Decimal, InMemoryStore, monthInterval, yearMonthContaining } from "@/li
 
 // Ports of keepwell-ios DomainTests/Fixtures.swift and DomainSamples/SampleData.
 
+/** The zone the suites run in (`TZ` in package.json), passed to the domain explicitly. */
+export const ZONE = "America/Managua"
+
 export const usdNio: ExchangeRate = { principal: "USD", second: "NIO", rate: "36.6243" }
 export const single = (code: string): ExchangeRate => ({ principal: code, second: code, rate: "1" })
 
@@ -75,8 +78,8 @@ export interface Sample {
 }
 
 export function sampleData(reference: Date = referenceDate): Sample {
-  const month = yearMonthContaining(reference)
-  const monthStart = monthInterval(month).start
+  const month = yearMonthContaining(reference, ZONE)
+  const monthStart = monthInterval(month, ZONE).start
   const opening = new Date(monthStart.getFullYear(), monthStart.getMonth() - 2, 1)
   const day = (number: number, offset = 0) => new Date(monthStart.getFullYear(), monthStart.getMonth() + offset, number, 12)
   const accounts: Account[] = [
@@ -159,5 +162,5 @@ export function sampleData(reference: Date = referenceDate): Sample {
 }
 
 export function sampleStore(sample: Sample = sampleData()): InMemoryStore {
-  return new InMemoryStore({ ...sample, categories: [...DEFAULT_CATEGORIES] })
+  return new InMemoryStore(ZONE, { ...sample, categories: [...DEFAULT_CATEGORIES] })
 }

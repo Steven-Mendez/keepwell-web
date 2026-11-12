@@ -44,6 +44,7 @@ import {
   ruleIsSubscription,
   type SubscriptionPeriod,
 } from "./rule-draft"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 /** The movement form's fields for an existing rule: its first occurrence stands in for the date. */
 function seedFrom(rule: RecurringRule, context: TransactionContext) {
@@ -112,7 +113,7 @@ export function useRuleEditor(
   )
   const [intervalText, setIntervalText] = useState(String(rule?.interval ?? 1))
   const [endsText, setEndsText] = useState(
-    rule?.endDate ? dayKey(new Date(rule.endDate)) : ""
+    rule?.endDate ? dayKey(new Date(rule.endDate), deviceTimeZone()) : ""
   )
   const [hasEnd, setHasEnd] = useState(rule?.endDate !== undefined)
   // A new rule follows its category until the person flips the switch.
@@ -131,9 +132,9 @@ export function useRuleEditor(
     Number.isInteger(interval) &&
     interval >= 1 &&
     interval <= MAX_RECURRING_INTERVAL
-  const endDate = hasEnd ? parseDayKey(endsText) : undefined
+  const endDate = hasEnd ? parseDayKey(endsText, deviceTimeZone()) : undefined
   const endValid =
-    !hasEnd || (endDate !== undefined && dayKey(endDate) >= dayKey(form.date))
+    !hasEnd || (endDate !== undefined && dayKey(endDate, deviceTimeZone()) >= dayKey(form.date, deviceTimeZone()))
   const isSubscription = ruleIsSubscription(
     form.kind,
     fields.categoryId,
@@ -154,8 +155,9 @@ export function useRuleEditor(
   const nextDates = intervalValid
     ? occurrencesFrom(
         schedule,
-        keepsSchedule ? new Date(rule.nextDate) : firstNextDate(schedule),
-        3
+        keepsSchedule ? new Date(rule.nextDate) : firstNextDate(schedule, deviceTimeZone()),
+        3,
+        deviceTimeZone()
       )
     : []
   const canSave =
@@ -256,7 +258,8 @@ export function useRuleEditor(
     defaultEnd: () => {
       const start = form.date
       return dayKey(
-        new Date(start.getFullYear() + 1, start.getMonth(), start.getDate())
+        new Date(start.getFullYear() + 1, start.getMonth(), start.getDate()),
+        deviceTimeZone()
       )
     },
     autoConfirm,

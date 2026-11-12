@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import type { LedgerStore, ProfileStore } from "@/lib/domain/store"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 import { accountRepository, cardRepository } from "./accounts"
 import { categorizationRuleRepository } from "./categorization-rules"
@@ -17,6 +18,10 @@ const KEPT_META = ["client_id", "sync_user"]
 
 /** The domain's storage contract over IndexedDB: every write goes through the repositories (audit + outbox). */
 export const ledgerStore: LedgerStore = {
+  get timeZone() {
+    return deviceTimeZone()
+  },
+
   fetchAccounts: () => accountRepository.list(),
   saveAccount: async (account) => void (await accountRepository.save(account)),
   deleteAccount: (id) => accountRepository.remove(id),

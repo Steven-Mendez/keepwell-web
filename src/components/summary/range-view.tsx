@@ -10,6 +10,8 @@ import type { Transaction, TransactionCategory } from "@/lib/schema"
 
 import { CategoriesCard, CategoryTrendsCard, HighlightsCard, MonthlyFlowCard, SavingsCard, TrendKpis, YearsCard } from "./range-cards"
 import type { SummaryFormat } from "./summary-format"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
+import type { TimeZone } from "@/lib/domain/calendar"
 
 /** One month (the stepper and pace) or a span of months read as one period. */
 export type Period = "month" | "thisYear" | "last12" | "custom"
@@ -22,14 +24,14 @@ const parseKey = (key: string): YearMonth => {
   return { year: year ?? 1970, month: month ?? 1 }
 }
 
-function rangeFor(period: Exclude<Period, "month">, custom: CustomRange | undefined, now: Date): MonthRange {
+function rangeFor(period: Exclude<Period, "month">, custom: CustomRange | undefined, now: Date, zone: TimeZone): MonthRange {
   switch (period) {
     case "thisYear":
-      return yearToDate(now)
+      return yearToDate(now, zone)
     case "last12":
-      return lastMonths(12, now)
+      return lastMonths(12, now, zone)
     case "custom": {
-      const fallback = lastMonths(6, now)
+      const fallback = lastMonths(6, now, zone)
       return monthRange(custom ? parseKey(custom.start) : fallback.start, custom ? parseKey(custom.end) : fallback.end)
     }
   }
@@ -43,10 +45,11 @@ export function useRangeSummary(transactions: readonly Transaction[] | undefined
   return useMemo(() => {
     if (!transactions || period === "month") return undefined
     const now = new Date()
+    const zone = deviceTimeZone()
     return {
-      report: trendReport(transactions, currency, rangeFor(period, custom, now), now),
-      activity: activityRange(transactions, now) ?? lastMonths(12, now),
-      years: yearTotals(transactions, currency, now),
+      report: trendReport(transactions, currency, rangeFor(period, custom, now, zone), zone, now),
+      activity: activityRange(transactions, now, zone) ?? lastMonths(12, now, zone),
+      years: yearTotals(transactions, currency, zone, now),
     }
   }, [transactions, currency, period, custom])
 }

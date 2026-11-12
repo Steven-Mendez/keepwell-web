@@ -15,6 +15,7 @@ import {
 } from "@/lib/domain"
 import { categoryRepository, settingsRepository } from "@/lib/repositories"
 import { DEFAULT_SETTINGS, type TransactionCategory } from "@/lib/schema"
+import { ZONE } from "./fixtures"
 
 const expense = (id: string, budget?: string, currency = "NIO"): TransactionCategory => ({
   id,
@@ -90,7 +91,7 @@ describe("Budgets in another currency", () => {
 
 describe("Saving a budget", () => {
   it("keeps it on expense categories and drops it on income", async () => {
-    const store = new InMemoryStore()
+    const store = new InMemoryStore(ZONE)
     const boat = await saveCategory(store, { name: "Boat", kind: "expense", monthlyBudget: { amount: "1500.50", currency: "NIO" } })
     expect(boat.monthlyBudget).toEqual({ amount: "1500.5", currency: "NIO" })
     const tips = await saveCategory(store, { name: "Tips", kind: "income", monthlyBudget: { amount: "10", currency: "NIO" } })
@@ -100,7 +101,7 @@ describe("Saving a budget", () => {
   })
 
   it("refuses zero", async () => {
-    const error = await saveCategory(new InMemoryStore(), {
+    const error = await saveCategory(new InMemoryStore(ZONE), {
       name: "Boat",
       kind: "expense",
       monthlyBudget: { amount: "0", currency: "NIO" },

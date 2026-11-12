@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import { monthKey, netWorthChange, netWorthHistory } from "@/lib/domain"
 import type { Account, AccountKind, CurrencySettings, ExchangeRate, Transaction, TransactionKind } from "@/lib/schema"
 
-import { date, transaction } from "./fixtures"
+import { date, transaction, ZONE } from "./fixtures"
 
 describe("Net worth history", () => {
   // Today is Nov 6 2026, in America/Managua like the iOS fixture; 36.5 NIO per USD, and October's
@@ -68,7 +68,7 @@ describe("Net worth history", () => {
   ]
 
   it("values each month end at its rate", () => {
-    const points = netWorthHistory(accounts, transactions, settings, now)
+    const points = netWorthHistory(accounts, transactions, settings, ZONE, now)
     // Months before July, when the first account opened, are left out.
     expect(points.map((point) => monthKey(point.month))).toEqual(["2026-07", "2026-08", "2026-09", "2026-10", "2026-11"])
     expect(points.every((point) => point.total.currency === "USD")).toBe(true)
@@ -77,7 +77,7 @@ describe("Net worth history", () => {
   })
 
   it("keeps the last twelve months", () => {
-    const points = netWorthHistory([account(IDs.bank, "deposit", "100", "USD", date(2024, 3, 1, 0))], [], settings, now)
+    const points = netWorthHistory([account(IDs.bank, "deposit", "100", "USD", date(2024, 3, 1, 0))], [], settings, ZONE, now)
     expect(points).toHaveLength(12)
     expect(monthKey(points[0]!.month)).toBe("2025-12")
     expect(monthKey(points.at(-1)!.month)).toBe("2026-11")
@@ -87,11 +87,11 @@ describe("Net worth history", () => {
   })
 
   it("falls back to today's rate without movements", () => {
-    const points = netWorthHistory([account(IDs.wallet, "cash", "3650", "NIO", date(2026, 10, 1, 0))], [], settings, now)
+    const points = netWorthHistory([account(IDs.wallet, "cash", "3650", "NIO", date(2026, 10, 1, 0))], [], settings, ZONE, now)
     expect(points.map((point) => point.total.amount.toFixed(2))).toEqual(["100.00", "100.00"])
   })
 
   it("has no months without accounts", () => {
-    expect(netWorthHistory([], [], settings, now)).toEqual([])
+    expect(netWorthHistory([], [], settings, ZONE, now)).toEqual([])
   })
 })

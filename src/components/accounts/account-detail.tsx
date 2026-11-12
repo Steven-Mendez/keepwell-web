@@ -471,7 +471,7 @@ function CashDetail({
   const [open, setOpen] = useState<Open>()
   const [tab, setTab] = useState("movements")
   const currencies = ledger.settings.currencies
-  const balance = balanceOf(account, ledger.transactions)[0] ?? {
+  const balance = balanceOf(account, ledger.transactions, ledger.timeZone)[0] ?? {
     amount: undefined,
     currency: currencies.principal,
   }

@@ -26,4 +26,17 @@ export const settingsRepository = {
     })
     return settings
   },
+
+  /**
+   * Sets the home zone to `zone` when the settings have none yet; changes nothing otherwise. The zone
+   * is set once and then only by hand, so devices in different zones don't keep flipping it. Only
+   * after onboarding, and called after a sync, so an account's zone set elsewhere arrives first.
+   * Returns whether it wrote.
+   */
+  async fillMissingTimeZone(zone: string): Promise<boolean> {
+    const settings = await this.load()
+    if (!settings?.hasCompletedOnboarding || settings.timeZone) return false
+    await this.save({ ...settings, timeZone: zone })
+    return true
+  },
 }

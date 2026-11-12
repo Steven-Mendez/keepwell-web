@@ -1,5 +1,6 @@
 import { db, type NotificationStateRow } from "@/lib/db"
 import { NOTIFICATION_STATE_RETENTION_DAYS, notificationDay } from "@/lib/domain/notifications"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 import { nowIso } from "@/lib/schema"
 
 import { enqueue, isAlive, stampAfter } from "./shared"
@@ -71,7 +72,7 @@ export const notificationStateRepository = {
     await db.transaction("rw", tables(), async () => {
       const rows = await db.notification_states.filter(isAlive).toArray()
       for (const row of rows) {
-        const day = notificationDay(row.id)
+        const day = notificationDay(row.id, deviceTimeZone())
         if (!day || day.getTime() >= limit) continue
         const stamp = stampAfter(row.updated_at)
         const tombstone = { ...row, updated_at: stamp, deleted_at: stamp }

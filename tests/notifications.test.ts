@@ -11,7 +11,7 @@ import { makeTranslator } from "@/lib/i18n"
 import { notificationStateRepository } from "@/lib/repositories"
 import type { RecurringRule } from "@/lib/schema"
 
-import { IDs, referenceDate, sampleStore } from "./domain/fixtures"
+import { IDs, referenceDate, sampleStore, ZONE } from "./domain/fixtures"
 
 const t = makeTranslator("en")
 
@@ -92,11 +92,11 @@ describe("ledgerNotifications", () => {
   })
 
   it("reads the day back from an id, for pruning", () => {
-    expect(notificationDay("bill:x:2026-11-13")).toEqual(new Date(2026, 10, 13))
-    expect(notificationDay("payment:x:2026-11-15")).toEqual(new Date(2026, 10, 15))
-    expect(notificationDay("expiry:x:2026-11")).toEqual(new Date(2026, 10, 1))
-    expect(notificationDay("budget:groceries:2026-11:near")).toEqual(new Date(2026, 10, 1))
-    expect(notificationDay("installment:x:3")).toBeUndefined()
+    expect(notificationDay("bill:x:2026-11-13", ZONE)).toEqual(new Date(2026, 10, 13))
+    expect(notificationDay("payment:x:2026-11-15", ZONE)).toEqual(new Date(2026, 10, 15))
+    expect(notificationDay("expiry:x:2026-11", ZONE)).toEqual(new Date(2026, 10, 1))
+    expect(notificationDay("budget:groceries:2026-11:near", ZONE)).toEqual(new Date(2026, 10, 1))
+    expect(notificationDay("installment:x:3", ZONE)).toBeUndefined()
   })
 })
 

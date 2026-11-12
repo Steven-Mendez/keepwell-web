@@ -220,6 +220,12 @@ export interface SettingsRow {
   is_icloud_backup_enabled: boolean
   payment_reminder_days_before: number
   has_completed_onboarding: boolean
+  /**
+   * The person's home zone (`Settings.timeZone`). Left out, not null, while it has none, so a save
+   * never sends a null that would clear the account's zone; a row pulled before it was set carries
+   * null. No index, so no new Dexie version.
+   */
+  time_zone?: string | null
   /** Added in version 6, with `deleted_at`, so settings follow the same sync rules as every row. */
   created_at: string
   updated_at: string

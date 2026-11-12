@@ -12,6 +12,7 @@ import type { Ledger } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { accountName, methodTitle } from "@/lib/presentation/display"
 import type { PersonalDebt } from "@/lib/schema"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 export const SELECT_CLASS =
   "h-10 w-full appearance-none rounded-xl border-0 bg-secondary px-3 type-body shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -26,9 +27,9 @@ export function dayText(t: Translator, date: Date | string): string {
 }
 
 /** The value of a date field, and back: the day at noon, so no time zone moves it. */
-export const dateFieldValue = (date: Date) => dayKey(date)
+export const dateFieldValue = (date: Date) => dayKey(date, deviceTimeZone())
 export const dateFromField = (text: string, fallback: Date) =>
-  parseDayKey(text) ?? fallback
+  parseDayKey(text, deviceTimeZone()) ?? fallback
 
 /** "C$19,166.70 · $40.00", one amount per currency, or "Nothing". */
 export function totalsText(

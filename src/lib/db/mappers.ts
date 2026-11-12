@@ -401,6 +401,7 @@ export function settingsToRow(settings: Settings, updatedAt: string, createdAt: 
     is_icloud_backup_enabled: settings.isICloudBackupEnabled,
     payment_reminder_days_before: settings.paymentReminderDaysBefore,
     has_completed_onboarding: settings.hasCompletedOnboarding,
+    ...(settings.timeZone ? { time_zone: settings.timeZone } : {}),
     created_at: createdAt,
     updated_at: updatedAt,
     deleted_at: null,
@@ -419,5 +420,6 @@ export function rowToSettings(row: SettingsRow): Settings {
     isICloudBackupEnabled: row.is_icloud_backup_enabled,
     paymentReminderDaysBefore: row.payment_reminder_days_before,
     hasCompletedOnboarding: row.has_completed_onboarding,
+    ...(row.time_zone ? { timeZone: row.time_zone } : {}),
   }
 }

@@ -7,7 +7,7 @@ import { homeOverview, ledgerNotifications, loadLedger, startOfDay, type Ledger,
 import { makeTranslator } from "@/lib/i18n"
 import type { Loan } from "@/lib/schema"
 
-import { sampleStore } from "./domain/fixtures"
+import { sampleStore, ZONE } from "./domain/fixtures"
 
 const en = makeTranslator("en")
 const es = makeTranslator("es")
@@ -28,8 +28,8 @@ const loan: Loan = {
 describe("homeStatus", () => {
   it("counts exactly the drafts Home lists as late or for today, from the same notifications", async () => {
     const ledger = await loadLedger(sampleStore())
-    const today = startOfDay(NOW).getTime()
-    const lateDrafts = homeOverview(ledger, NOW).planned.filter((draft) => startOfDay(new Date(draft.date)).getTime() <= today)
+    const today = startOfDay(NOW, ZONE).getTime()
+    const lateDrafts = homeOverview(ledger, NOW).planned.filter((draft) => startOfDay(new Date(draft.date), ZONE).getTime() <= today)
     const status = ledgerHomeStatus(ledger, NOW)
 
     expect(lateDrafts).toHaveLength(2)
