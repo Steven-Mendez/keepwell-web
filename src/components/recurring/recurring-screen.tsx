@@ -123,6 +123,19 @@ export function RecurringScreen() {
                   : formatMoney(overview.subscriptionsPerYear)
               )}
             </span>
+            {overview.excludedSubscriptions.map(({ currency, count }) => (
+              <span
+                key={currency}
+                className="type-caption text-muted-foreground tabular-nums"
+              >
+                {t.in(
+                  "recurring",
+                  "Not including %lld subscriptions in %@",
+                  count,
+                  currency
+                )}
+              </span>
+            ))}
           </section>
           <div className="grid gap-6 lg:grid-cols-2">
             {overview.sections.map((section) => (
