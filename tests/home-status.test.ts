@@ -59,7 +59,7 @@ describe("homeStatus", () => {
     )
   })
 
-  it("sorts payments, installments and renewals by the day they are due", () => {
+  it("sorts payments, installments, renewals and bills by the day they are due", () => {
     const base = { date: NOW, target: { screen: "debts" as const } }
     const amount = { amount: "1", currency: "USD" } as never
     const status = homeStatus(
@@ -69,9 +69,10 @@ describe("homeStatus", () => {
         { ...base, id: "c", kind: "renewal", params: { ruleId: "r", name: "R", amount, accountId: "x" } },
         { ...base, id: "d", kind: "payment", params: { accountId: "y", dueDay: 29, dueDate: NOW, daysLeft: 3 } },
         { ...base, id: "e", kind: "cutoff", params: { accountId: "x" } },
+        { ...base, id: "f", kind: "bill", params: { ruleId: "s", name: "S", amount, accountId: "x" } },
       ],
       [] as LoanProgress[],
     )
-    expect(status).toEqual({ toConfirm: 0, overdue: 0, dueToday: 1, dueTomorrow: 2 })
+    expect(status).toEqual({ toConfirm: 0, overdue: 0, dueToday: 1, dueTomorrow: 3 })
   })
 })

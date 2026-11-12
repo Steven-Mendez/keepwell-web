@@ -60,7 +60,39 @@ describe("ledgerNotifications", () => {
     expect(proposals.map((n) => n.id)).toEqual(["proposal:rule-1"])
   })
 
+  it("reminds the day before a recurring expense recorded as a draft, and not one recorded on its own or an income", async () => {
+    const ledger = await loadLedger(sampleStore())
+    const now = new Date(2026, 10, 12, 12)
+    const due = new Date(2026, 10, 13, 9).toISOString()
+    const rule = (id: string, overrides: Partial<RecurringRule>) =>
+      proposal({ id, name: "Rent", source: "app", isPaused: false, startDate: due, nextDate: due, ...overrides })
+    const withRules = {
+      ...ledger,
+      recurringRules: [
+        rule("rent", {}),
+        rule("auto", { autoConfirm: true }),
+        rule("salary", { kind: "income" }),
+        rule("gym", { isSubscription: true }),
+        rule("later", { startDate: new Date(2026, 10, 14, 9).toISOString(), nextDate: new Date(2026, 10, 14, 9).toISOString() }),
+      ],
+    }
+    const found = ledgerNotifications(withRules, now).filter((n) => n.kind === "bill" || n.kind === "renewal")
+    expect(found.map((n) => n.id).sort()).toEqual(["bill:rent:2026-11-13", "renewal:gym:2026-11-13"])
+    const bill = found.find((n) => n.kind === "bill")
+    // A target every installed app already decodes, so an older app still opens a pushed bill.
+    expect(bill?.target).toEqual({ screen: "recurring" })
+    expect(bill?.date).toEqual(new Date(2026, 10, 12))
+
+    const inbox = buildInbox(t, withRules, [], now, false)
+    const entry = inbox.entries.find((candidate) => candidate.notification.kind === "bill")
+    expect(entry?.title).toBe("Rent is due tomorrow")
+    expect(buildInbox(makeTranslator("es"), withRules, [], now, false).entries.find((candidate) => candidate.notification.kind === "bill")?.title).toBe(
+      "Rent vence mañana"
+    )
+  })
+
   it("reads the day back from an id, for pruning", () => {
+    expect(notificationDay("bill:x:2026-11-13")).toEqual(new Date(2026, 10, 13))
     expect(notificationDay("payment:x:2026-11-15")).toEqual(new Date(2026, 10, 15))
     expect(notificationDay("expiry:x:2026-11")).toEqual(new Date(2026, 10, 1))
     expect(notificationDay("budget:groceries:2026-11:near")).toEqual(new Date(2026, 10, 1))
