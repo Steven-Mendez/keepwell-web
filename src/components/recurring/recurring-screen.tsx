@@ -13,9 +13,10 @@ import {
   KWSection,
   KWTransactionIcon,
 } from "@/components/kw/design"
+import { BrandOrCategoryBadge } from "@/components/kw/brand-mark"
 import { transactionAmountClass } from "@/components/kw/design-styles"
 import { AnimatedList, ListItem } from "@/components/kw/motion"
-import { CategoryBadge, Page } from "@/components/kw/primitives"
+import { Page } from "@/components/kw/primitives"
 import { SkeletonList } from "@/components/kw/skeletons"
 import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
 import { useConfirmDraft } from "@/components/transactions/use-confirm-draft"
@@ -237,7 +238,7 @@ function RuleRow({
           {rule.kind === "transfer" ? (
             <KWTransactionIcon style="transfer" />
           ) : (
-            <CategoryBadge category={category} />
+            <BrandOrCategoryBadge text={rule.name} category={category} />
           )}
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="truncate type-body font-semibold text-foreground">
