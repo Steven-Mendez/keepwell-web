@@ -25,7 +25,7 @@ describe("IndexedDB upgrade from version 1", () => {
 
     const upgraded = new KeepwellDatabase()
     await upgraded.open()
-    expect(upgraded.verno).toBe(6)
+    expect(upgraded.verno).toBe(7)
     const row = await upgraded.transactions.get("t1")
     expect(row?.amount).toBe("10")
     expect(row?.recurring_id).toBeNull()
@@ -66,7 +66,7 @@ describe("IndexedDB upgrade from version 4", () => {
 
     const upgraded = new KeepwellDatabase()
     await upgraded.open()
-    expect(upgraded.verno).toBe(6)
+    expect(upgraded.verno).toBe(7)
     expect((await upgraded.savings_goals.get("g1"))?.saved).toBe("10")
     expect(await upgraded.loans.count()).toBe(0)
     expect(await upgraded.personal_debts.count()).toBe(0)
@@ -134,7 +134,7 @@ describe("IndexedDB upgrade from version 5 (sync-ready rows)", () => {
 
     const upgraded = new KeepwellDatabase()
     await upgraded.open()
-    expect(upgraded.verno).toBe(6)
+    expect(upgraded.verno).toBe(7)
     const payments = await upgraded.loan_payments.where("loan_id").equals(loanId).sortBy("number")
     expect(payments.map((p) => [p.id, p.number])).toEqual([
       [loanPaymentId(loanId, 1), 1],
