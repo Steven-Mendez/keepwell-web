@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useAppActions } from "@/components/app/app-actions"
 import { KWSection, KWTransactionIcon } from "@/components/kw/design"
 import { transactionAmountClass } from "@/components/kw/design-styles"
-import { CategoryBadge } from "@/components/kw/primitives"
+import { BrandOrCategoryBadge } from "@/components/kw/brand-mark"
 import { nextDateText } from "@/components/recurring/recurring-format"
 import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import { upcoming, type Ledger } from "@/lib/domain"
@@ -61,7 +61,7 @@ export function UpcomingSection({
               {rule.kind === "transfer" ? (
                 <KWTransactionIcon style="transfer" className="size-8" />
               ) : (
-                <CategoryBadge category={category} size="sm" />
+                <BrandOrCategoryBadge text={rule.name} category={category} size="sm" />
               )}
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate type-label text-foreground">

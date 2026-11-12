@@ -7,8 +7,11 @@ import type {
   TransactionStyle,
 } from "@/lib/presentation/display"
 import { useT } from "@/lib/i18n"
+import { brandFor } from "@/lib/presentation/brands"
+import { categoryColor } from "@/lib/presentation/display"
 import { cn } from "@/lib/utils"
 
+import { BrandMark } from "./brand-mark"
 import { KWTransactionIcon } from "./design"
 import { ListItem } from "./motion"
 import { CategoryBadge } from "./primitives"
@@ -26,6 +29,7 @@ export function TransactionRow({
   trailing,
   dateLabel,
   columns = false,
+  brandLogo = false,
   wrap,
   className: extraClassName,
 }: {
@@ -40,14 +44,21 @@ export function TransactionRow({
    * category and the account get columns of their own instead of sharing the subtitle.
    */
   columns?: boolean
+  /** The brand's logo instead of the kind icon when the description names a known brand (the movement list). */
+  brandLogo?: boolean
   /** Wraps the row where it stands, for a menu around it. */
   wrap?: (row: React.ReactNode) => React.ReactNode
   className?: string | undefined
 }) {
   const style = display.style(transaction)
+  const brand = brandLogo && transaction.kind !== "transfer" ? brandFor(transaction.description) : undefined
   const content = (
     <>
-      <KWTransactionIcon style={style} />
+      {brand ? (
+        <BrandMark brand={brand} color={categoryColor(display.category(transaction))} />
+      ) : (
+        <KWTransactionIcon style={style} />
+      )}
       <TransactionText
         transaction={transaction}
         display={display}
