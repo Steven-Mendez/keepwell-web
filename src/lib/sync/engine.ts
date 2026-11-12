@@ -1,5 +1,5 @@
 import { db, LOCAL_SETTINGS_COLUMNS, SYNC_TABLES, toWire } from "@/lib/db"
-import { applyRemote } from "@/lib/repositories/shared"
+import { applyRemote, stampAfter } from "@/lib/repositories/shared"
 import { SYNC_ENTITIES, type SyncEntity } from "@/lib/schema"
 import { newID } from "@/lib/schema/id"
 
@@ -280,11 +280,6 @@ export function takeAccountData(transport: SyncTransport, userId?: string): Prom
   })
 }
 
-/** A moment after `at` and not before now, so a row sent to replace the account's is the newest. */
-function laterThan(at: string, now: number): string {
-  return new Date(Math.max(now, Date.parse(at) + 1)).toISOString()
-}
-
 /**
  * "Keep this browser's data": the account ends up holding exactly what is here. Through the normal
  * push: a delete for every live row of the account that this browser doesn't have alive, and every
@@ -320,7 +315,7 @@ async function replaceAccountData(transport: SyncTransport): Promise<void> {
           await add(entity, row, "delete")
           continue
         }
-        const sent = remote ? { ...row, updated_at: laterThan(remote.updated_at, now) } : row
+        const sent = remote ? { ...row, updated_at: stampAfter(remote.updated_at, now) } : row
         if (sent !== row) await table.put(sent)
         await add(entity, sent, remote ? "update" : "create")
       }
@@ -328,7 +323,7 @@ async function replaceAccountData(transport: SyncTransport): Promise<void> {
       if (entity === "settings") continue
       for (const remote of theirs.values()) {
         if (remote.deleted_at || here.has(remote.id)) continue
-        const at = laterThan(remote.updated_at, now)
+        const at = stampAfter(remote.updated_at, now)
         await add(entity, { ...remote, updated_at: at, deleted_at: at }, "delete")
       }
     }
