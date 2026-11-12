@@ -2051,6 +2051,9 @@
   "Amount": {
    "es": "Monto"
   },
+  "Billing day": {
+   "es": "Día de cobro"
+  },
   "Bills and other expenses": {
    "es": "Facturas y otros gastos"
   },
@@ -2099,6 +2102,9 @@
   "Give it a name.": {
    "es": "Ponle un nombre."
   },
+  "Half-yearly": {
+   "es": "Semestral"
+  },
   "Hide amounts": {
    "es": "Ocultar montos"
   },
@@ -2120,11 +2126,20 @@
   "Monthly": {
    "es": "Mensual"
   },
+  "More options": {
+   "es": "Más opciones"
+  },
   "Name": {
    "es": "Nombre"
   },
   "New recurring": {
    "es": "Nuevo recurrente"
+  },
+  "New subscription": {
+   "es": "Nueva suscripción"
+  },
+  "Next charge": {
+   "es": "Próximo cobro"
   },
   "Next dates": {
    "es": "Próximas fechas"
@@ -2152,6 +2167,9 @@
   },
   "Proposed by Claude · resume to confirm": {
    "es": "Propuesto por Claude · reanúdalo para confirmar"
+  },
+  "Quarterly": {
+   "es": "Trimestral"
   },
   "Record automatically": {
    "es": "Registrar automáticamente"

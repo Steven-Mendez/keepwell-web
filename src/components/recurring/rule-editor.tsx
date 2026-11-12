@@ -53,6 +53,7 @@ import type { RecurringFrequency, RecurringRule } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
 import { frequencyText, frequencyUnit, nextDateText } from "./recurring-format"
+import { SUBSCRIPTION_PERIODS, periodTitle } from "./rule-draft"
 import { useRuleEditor, type RuleEditorModel } from "./use-rule-editor"
 
 /** Movements a rule created, listed in its detail. */
@@ -62,6 +63,8 @@ const PRODUCED_COUNT = 5
  * A recurring rule, new or existing, in the movement editor's dialog: the same amount, method,
  * category and account pickers on the left; on the right what it will save, its next dates and,
  * for an existing rule, the movements it created, Pause/Resume and Delete. Full screen on phones.
+ * "New subscription" opens the same form short: name, amount, period and billing day, with the rest
+ * one "More options" away.
  */
 export function RuleEditor() {
   const { ruleEditor, closeRuleEditor } = useAppActions()
@@ -99,9 +102,15 @@ function RuleEditorBody({
           (candidate) => candidate.id === request.ruleId
         )
       : undefined
+  const isNewSubscription =
+    request.mode === "create" && request.subscription === true
   const title = t.in(
     "recurring",
-    request.mode === "edit" ? "Edit recurring" : "New recurring"
+    request.mode === "edit"
+      ? "Edit recurring"
+      : isNewSubscription
+        ? "New subscription"
+        : "New recurring"
   )
 
   if (!context || !ledger || (request.mode === "edit" && !rule)) {
@@ -139,12 +148,13 @@ function RuleEditorBody({
 
   return (
     <RuleForm
-      key={rule?.id ?? "new"}
+      key={rule?.id ?? (isNewSubscription ? "new-subscription" : "new")}
       t={t}
       title={title}
       context={context}
       ledger={ledger}
       rule={rule}
+      isNewSubscription={isNewSubscription}
       onClose={onClose}
     />
   )
@@ -156,6 +166,7 @@ function RuleForm({
   context,
   ledger,
   rule,
+  isNewSubscription,
   onClose,
 }: {
   t: Translator
@@ -163,9 +174,11 @@ function RuleForm({
   context: TransactionContext
   ledger: Ledger
   rule: RecurringRule | undefined
+  isNewSubscription: boolean
   onClose: () => void
 }) {
-  const model = useRuleEditor(t, context, rule, onClose)
+  const model = useRuleEditor(t, context, rule, onClose, isNewSubscription)
+  const { showsAllFields } = model
   const { editor } = model
   // A rule has no "charged by the bank": each occurrence is converted with that day's rate.
   const shown: MovementEditorModel = {
@@ -218,7 +231,7 @@ function RuleForm({
               {typeSubtitle(t, editor.fields.type)}
             </DialogDescription>
           </div>
-          {types.length > 1 ? (
+          {showsAllFields && types.length > 1 ? (
             <div className="-mx-1 overflow-x-auto px-1 pb-0.5">
               <KWSegmented
                 className="min-w-max"
@@ -241,14 +254,34 @@ function RuleForm({
 
         <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,1fr)_360px] md:overflow-hidden">
           <div className="flex flex-col gap-8 px-(--gutter) py-6 md:overflow-y-auto md:px-6">
-            {movesBetweenAccounts ? (
-              <TransferAccountsSection editor={shown} />
-            ) : null}
-            <AmountSection editor={shown} />
-            {!movesBetweenAccounts ? <CategorySection editor={shown} /> : null}
-            {!movesBetweenAccounts ? <MethodSection editor={shown} /> : null}
-            <ScheduleSection t={t} model={model} />
-            <RuleDetailsSection t={t} model={model} />
+            {showsAllFields ? (
+              <>
+                {movesBetweenAccounts ? (
+                  <TransferAccountsSection editor={shown} />
+                ) : null}
+                <AmountSection editor={shown} />
+                {!movesBetweenAccounts ? (
+                  <CategorySection editor={shown} />
+                ) : null}
+                {!movesBetweenAccounts ? (
+                  <MethodSection editor={shown} />
+                ) : null}
+                <ScheduleSection t={t} model={model} />
+                <RuleDetailsSection t={t} model={model} />
+              </>
+            ) : (
+              <>
+                <AmountSection editor={shown} />
+                <NameField t={t} model={model} />
+                {model.shortFormNeedsChoices ? (
+                  <>
+                    <CategorySection editor={shown} />
+                    <MethodSection editor={shown} />
+                  </>
+                ) : null}
+                <SubscriptionScheduleSection t={t} model={model} />
+              </>
+            )}
           </div>
           <RuleSummary t={t} model={model} ledger={ledger} onClose={onClose} />
         </div>
@@ -381,26 +414,79 @@ function SwitchRow({
   )
 }
 
+/** The short subscription form's schedule: four periods, the billing day and the next charge it gives. */
+function SubscriptionScheduleSection({ t, model }: SectionProps) {
+  const { editor } = model
+  const next = model.nextDates[0]
+  return (
+    <section className="flex flex-col gap-4">
+      <KWSegmented
+        aria-label={t.in("recurring", "Repeats")}
+        value={model.period}
+        onChange={model.setPeriod}
+        options={SUBSCRIPTION_PERIODS.map((period) => ({
+          value: period,
+          title: periodTitle(t, period),
+        }))}
+      />
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel htmlFor="rule-start">
+          {t.in("recurring", "Billing day")}
+        </FieldLabel>
+        <Input
+          id="rule-start"
+          type="date"
+          value={editor.fields.dateText.slice(0, 10)}
+          onChange={(event) =>
+            editor.update({
+              dateText: withDay(editor.fields.dateText, event.target.value),
+            })
+          }
+          className={cn(KW_FIELD, "[color-scheme:dark]")}
+        />
+      </div>
+      {next ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary px-3.5 py-2.5">
+          <span className="type-body text-text-secondary">
+            {t.in("recurring", "Next charge")}
+          </span>
+          <span className="type-body font-semibold text-foreground">
+            {nextDateText(t, next)}
+          </span>
+        </div>
+      ) : null}
+      <KWButton variant="surface" fill onClick={model.showMoreOptions}>
+        {t.in("recurring", "More options")}
+      </KWButton>
+    </section>
+  )
+}
+
+function NameField({ t, model }: SectionProps) {
+  const { editor } = model
+  return (
+    <div className="flex flex-col gap-1.5">
+      <FieldLabel htmlFor="editor-description">
+        {t.in("recurring", "Name")}
+      </FieldLabel>
+      <Input
+        id="editor-description"
+        value={editor.fields.description}
+        onChange={(event) => editor.update({ description: event.target.value })}
+        placeholder={t.in("recurring", "Rent, Netflix…")}
+        autoComplete="off"
+        className={KW_FIELD}
+      />
+    </div>
+  )
+}
+
 /** Name, the subscription and auto-record switches, and the note copied to each movement. */
 function RuleDetailsSection({ t, model }: SectionProps) {
   const { editor } = model
     return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="editor-description">
-          {t.in("recurring", "Name")}
-        </FieldLabel>
-        <Input
-          id="editor-description"
-          value={editor.fields.description}
-          onChange={(event) =>
-            editor.update({ description: event.target.value })
-          }
-          placeholder={t.in("recurring", "Rent, Netflix…")}
-          autoComplete="off"
-          className={KW_FIELD}
-        />
-      </div>
+      <NameField t={t} model={model} />
       {editor.form.kind === "expense" ? (
         <SwitchRow
           id="rule-subscription"

@@ -37,6 +37,14 @@ import {
   type RecurringRule,
 } from "@/lib/schema"
 
+import {
+  periodOf,
+  periodSchedule,
+  recurringDraft,
+  ruleIsSubscription,
+  type SubscriptionPeriod,
+} from "./rule-draft"
+
 /** The movement form's fields for an existing rule: its first occurrence stands in for the date. */
 function seedFrom(rule: RecurringRule, context: TransactionContext) {
   const amount = dec(rule.amount)
@@ -76,15 +84,29 @@ function saveError(t: Translator, thrown: unknown): string {
  * The rule editor's view model: the movement form (amount, method, category or accounts, name, start
  * and note, through `useMovementEditor`) plus how it repeats, when it ends, whether it's a
  * subscription and whether it records itself; saving, pausing and deleting.
+ *
+ * `isNewSubscription` starts a new rule as an expense in "Subscriptions", marked as one, on the short
+ * form (name, amount, period and billing day) until `showMoreOptions` shows every field.
  */
 export function useRuleEditor(
   t: Translator,
   context: TransactionContext,
   rule: RecurringRule | undefined,
-  onClose: () => void
+  onClose: () => void,
+  isNewSubscription = false
 ) {
   const [seed] = useState(() => (rule ? seedFrom(rule, context) : undefined))
-  const editor = useMovementEditor({ mode: "create" }, context, onClose, seed, false)
+  const subscription = isNewSubscription && !rule
+  const editor = useMovementEditor(
+    subscription
+      ? { mode: "create", type: "expense", categoryId: SUBSCRIPTIONS_CATEGORY_ID }
+      : { mode: "create" },
+    context,
+    onClose,
+    seed,
+    false
+  )
+  const [showsAllFields, setShowsAllFields] = useState(!subscription)
   const [frequency, setFrequency] = useState<RecurringFrequency>(
     rule?.frequency ?? "monthly"
   )
@@ -95,7 +117,7 @@ export function useRuleEditor(
   const [hasEnd, setHasEnd] = useState(rule?.endDate !== undefined)
   // A new rule follows its category until the person flips the switch.
   const [subscriptionChoice, setSubscription] = useState<boolean | undefined>(
-    rule?.isSubscription
+    subscription ? true : rule?.isSubscription
   )
   const [autoConfirm, setAutoConfirm] = useState(rule?.autoConfirm ?? false)
   const [busy, setBusy] = useState(false)
@@ -112,10 +134,11 @@ export function useRuleEditor(
   const endDate = hasEnd ? parseDayKey(endsText) : undefined
   const endValid =
     !hasEnd || (endDate !== undefined && dayKey(endDate) >= dayKey(form.date))
-  // Only an expense can be a subscription; a new rule follows its category until the switch is flipped.
-  const isSubscription =
-    form.kind === "expense" &&
-    (subscriptionChoice ?? fields.categoryId === SUBSCRIPTIONS_CATEGORY_ID)
+  const isSubscription = ruleIsSubscription(
+    form.kind,
+    fields.categoryId,
+    subscriptionChoice
+  )
   const hasName = fields.description.trim() !== ""
   const schedule = {
     frequency,
@@ -153,25 +176,17 @@ export function useRuleEditor(
     editor.setError(undefined)
     const { draft } = form
     try {
-      await saveRecurringRule(ledgerStore, {
-        ...(rule ? { id: rule.id } : {}),
-        name: draft.description,
-        kind: draft.kind,
-        amount: draft.amount,
-        currency: draft.currency,
-        ...(draft.categoryId ? { categoryId: draft.categoryId } : {}),
-        ...(draft.source ? { source: draft.source } : {}),
-        ...(draft.destinationAccountId
-          ? { destinationAccountId: draft.destinationAccountId }
-          : {}),
-        frequency,
-        interval,
-        startDate: draft.date,
-        ...(endDate ? { endDate } : {}),
-        isSubscription,
-        autoConfirm,
-        note: draft.note,
-      })
+      await saveRecurringRule(
+        ledgerStore,
+        recurringDraft(draft, {
+          ...(rule ? { id: rule.id } : {}),
+          frequency,
+          interval,
+          ...(endDate ? { endDate } : {}),
+          isSubscription,
+          autoConfirm,
+        })
+      )
       toast.add({
         title: t.in("createtransaction", "Saved"),
         description: `${draft.description.trim()} · ${formatMoney({ amount: draft.amount, currency: draft.currency })}`,
@@ -207,6 +222,18 @@ export function useRuleEditor(
   return {
     editor,
     rule,
+    isNewSubscription: subscription,
+    showsAllFields,
+    showMoreOptions: () => setShowsAllFields(true),
+    /** The short form hides only what already has a value: a method, and the category it opened with. */
+    shortFormNeedsChoices: !fields.source || !form.category,
+    /** The schedule as one of the short form's four periods; monthly while another one is chosen. */
+    period: periodOf(frequency, intervalValid ? interval : Number.NaN) ?? "monthly",
+    setPeriod: (period: SubscriptionPeriod) => {
+      const schedule = periodSchedule(period)
+      setFrequency(schedule.frequency)
+      setIntervalText(String(schedule.interval))
+    },
     frequency,
     setFrequency,
     intervalText,
