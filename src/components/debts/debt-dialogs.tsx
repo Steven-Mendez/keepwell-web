@@ -5,6 +5,7 @@ import { useState } from "react"
 import { AmountInput } from "@/components/accounts/form-parts"
 import {
   KWButton,
+  KWCircleButton,
   KWGroupedCard,
   KWSegmented,
   KWValueRow,
@@ -25,6 +26,7 @@ import {
   addDays,
   decimalText,
   debtRemaining,
+  deleteDebtRepayment,
   deletePersonalDebt,
   isDomainError,
   reopenPersonalDebt,
@@ -38,14 +40,18 @@ import type { Translator } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
 import { deviceTimeZone } from "@/lib/platform/time-zone"
 import { cn } from "@/lib/utils"
+import { accountName } from "@/lib/presentation/display"
 import {
   MAX_DEBT_NAME_LENGTH,
+  type Account,
   type CurrencySettings,
   type DebtDirection,
+  type DebtRepayment,
   type PersonalDebt,
 } from "@/lib/schema"
 
 import {
+  SELECT_CLASS,
   dateFieldValue,
   dateFromField,
   dayText,
@@ -351,10 +357,14 @@ export function DebtEditorDialog({
   )
 }
 
-/** One personal debt: what is left, its repayments, "Record repayment", "Mark as settled" or "Reopen". */
+/**
+ * One personal debt: what is left, its repayments, "Record repayment" (optionally deposited into an
+ * account), "Mark as settled" or "Reopen".
+ */
 export function DebtDialog({
   t,
   debt,
+  accounts,
   hidden,
   now,
   zone,
@@ -363,6 +373,8 @@ export function DebtDialog({
 }: {
   t: Translator
   debt: PersonalDebt
+  /** Where a repayment can be deposited: the open bank and cash accounts. */
+  accounts: readonly Account[]
   hidden: boolean
   now: Date
   zone: TimeZone
@@ -370,9 +382,16 @@ export function DebtDialog({
   onClose: () => void
 }) {
   const [repaymentText, setRepaymentText] = useState("")
+  /** "" records the repayment only, as before; an id also deposits it there. */
+  const [depositAccountId, setDepositAccountId] = useState("")
   const [failed, setFailed] = useState(false)
   const [isSaving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deletingRepayment, setDeletingRepayment] = useState<DebtRepayment>()
+  const canDeposit = debt.direction === "theyOweMe" && accounts.length > 0
+  const depositAccount = canDeposit
+    ? accounts.find((account) => account.id === depositAccountId)
+    : undefined
   const remaining = debtRemaining(debt)
   const repayment = parseAmount(repaymentText)
   const tooMuch = repayment !== undefined && repayment.gt(remaining)
@@ -455,7 +474,10 @@ export function DebtDialog({
                       ledgerStore,
                       debt.id,
                       decimalText(repayment),
-                      new Date()
+                      new Date(),
+                      depositAccount
+                        ? { accountId: depositAccount.id }
+                        : undefined
                     )
                     setRepaymentText("")
                   })
@@ -480,6 +502,40 @@ export function DebtDialog({
                   {t.in("debts", "That's more than what's left.")}
                 </span>
               ) : null}
+              {canDeposit ? (
+                <>
+                  <label
+                    htmlFor="debt-repayment-deposit"
+                    className="type-label text-text-secondary"
+                  >
+                    {t.in("web", "Deposit into account")}
+                  </label>
+                  <select
+                    id="debt-repayment-deposit"
+                    className={SELECT_CLASS}
+                    value={depositAccountId}
+                    onChange={(event) =>
+                      setDepositAccountId(event.target.value)
+                    }
+                  >
+                    <option value="">{t.in("web", "Don't deposit")}</option>
+                    {accounts.map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {accountName(account)}
+                      </option>
+                    ))}
+                  </select>
+                  {depositAccount ? (
+                    <span className="type-caption text-muted-foreground">
+                      {t.in(
+                        "web",
+                        "Records an income in %@. It changes the balance but doesn't count as income: the money only came back.",
+                        accountName(depositAccount)
+                      )}
+                    </span>
+                  ) : null}
+                </>
+              ) : null}
               <KWButton type="submit" disabled={!canRepay}>
                 {t.in("debts", "Record repayment")}
               </KWButton>
@@ -498,10 +554,29 @@ export function DebtDialog({
               <KWGroupedCard className="bg-secondary/40">
                 {debt.repayments.map((row, index) => (
                   <KWValueRow
-                    key={index}
-                    label={dayText(t, row.date)}
+                    key={row.id ?? index}
+                    label={
+                      row.transactionId
+                        ? t.in(
+                            "web",
+                            "%@ · deposited",
+                            dayText(t, row.date)
+                          )
+                        : dayText(t, row.date)
+                    }
                     value={
                       <span className="tabular-nums">{money(row.amount)}</span>
+                    }
+                    trailing={
+                      row.id ? (
+                        <KWCircleButton
+                          icon="trash"
+                          size={28}
+                          label={t.in("web", "Delete repayment")}
+                          disabled={isSaving}
+                          onClick={() => setDeletingRepayment(row)}
+                        />
+                      ) : null
                     }
                   />
                 ))}
@@ -551,11 +626,40 @@ export function DebtDialog({
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
         title={t.in("debts", "Delete this debt?")}
+        description={
+          debt.repayments.some((row) => row.transactionId)
+            ? t.in(
+                "web",
+                "Repayments you deposited stay as movements in their accounts."
+              )
+            : undefined
+        }
         action={t.in("debts", "Delete")}
         destructive
         onConfirm={() =>
           void run(() => deletePersonalDebt(ledgerStore, debt.id), true)
         }
+      />
+      <ConfirmDialog
+        open={deletingRepayment !== undefined}
+        onOpenChange={(open) => !open && setDeletingRepayment(undefined)}
+        title={t.in("web", "Delete this repayment?")}
+        description={
+          deletingRepayment?.transactionId
+            ? t.in(
+                "web",
+                "The income it deposited is deleted too, and the balance goes back."
+              )
+            : undefined
+        }
+        action={t.in("debts", "Delete")}
+        destructive
+        onConfirm={() => {
+          const row = deletingRepayment
+          setDeletingRepayment(undefined)
+          if (row?.id)
+            void run(() => deleteDebtRepayment(ledgerStore, debt.id, row.id!))
+        }}
       />
     </>
   )

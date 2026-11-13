@@ -223,7 +223,14 @@ export function SummaryScreen() {
   const report = useMemo(
     () =>
       ledger
-        ? summaryReport(ledger.transactions, currency, ledger.timeZone, new Date())
+        ? summaryReport(
+            ledger.transactions,
+            currency,
+            ledger.timeZone,
+            new Date(),
+            SUMMARY_MONTH_COUNT,
+            ledger.personalDebts
+          )
         : undefined,
     [ledger, currency]
   )
@@ -244,7 +251,13 @@ export function SummaryScreen() {
   const [mode, setMode] = useState<CategoryMode>("expenses")
   const [period, setPeriod] = useState<Period>("month")
   const [custom, setCustom] = useState<CustomRange>()
-  const range = useRangeSummary(ledger?.transactions, currency, period, custom)
+  const range = useRangeSummary(
+    ledger?.transactions,
+    currency,
+    period,
+    custom,
+    ledger?.personalDebts
+  )
   const last = (report?.months.length ?? SUMMARY_MONTH_COUNT) - 1
   const { selectedIndex, direction, pick } = useMonthPick(last)
   const f = summaryFormat(t, currency)

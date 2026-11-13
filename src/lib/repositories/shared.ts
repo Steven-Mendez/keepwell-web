@@ -120,7 +120,8 @@ export async function syncChildren<Row extends AuditColumns & { id: string }>(
   for (const row of rows) {
     const existing = current.find((candidate) => candidate.id === row.id)
     if (existing && !isAlive(existing)) continue
-    const changed = !existing || Object.entries(row).some(([key, value]) => JSON.stringify(existing[key as keyof Row]) !== JSON.stringify(value))
+    // A column the stored row lacks (saved before it existed) reads as null, so it alone isn't a change.
+    const changed = !existing || Object.entries(row).some(([key, value]) => JSON.stringify(existing[key as keyof Row] ?? null) !== JSON.stringify(value ?? null))
     if (changed) await upsert(table, entity, row)
   }
   for (const existing of current) {

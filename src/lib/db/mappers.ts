@@ -412,6 +412,8 @@ export function repaymentsToRows(debt: PersonalDebt): Columns<PersonalDebtRepaym
     debt_id: debt.id,
     amount: repayment.amount,
     date: repayment.date,
+    // Always sent, null for none, like the merchant links.
+    transaction_id: orNull(repayment.transactionId),
   }))
 }
 
@@ -426,7 +428,12 @@ export function rowToPersonalDebt(row: PersonalDebtRow, repayments: PersonalDebt
     repayments: repayments
       .filter((repayment) => repayment.debt_id === row.id && repayment.deleted_at === null)
       .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.created_at < b.created_at ? -1 : 1))
-      .map((repayment) => ({ id: repayment.id, amount: repayment.amount, date: repayment.date })),
+      .map((repayment) => ({
+        id: repayment.id,
+        amount: repayment.amount,
+        date: repayment.date,
+        ...present("transactionId", repayment.transaction_id ?? null),
+      })),
     ...present("settledAt", row.settled_at),
     ...present("transactionId", row.transaction_id),
     ...present("dueDate", row.due_date ?? null),

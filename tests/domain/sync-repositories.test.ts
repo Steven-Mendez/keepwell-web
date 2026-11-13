@@ -55,6 +55,33 @@ describe("sync-ready repositories", () => {
     expect((await outbox()).map((e) => e.entity)).toEqual(["personalDebt", "personalDebtRepayment"])
   })
 
+  it("sends a repayment's deposit link, null for none, and doesn't re-send rows stored before the column", async () => {
+    const movementId = "33333333-3333-4333-8333-333333333333"
+    const debt = {
+      id: "22222222-2222-4222-8222-222222222222",
+      person: "Ana",
+      direction: "theyOweMe" as const,
+      amount: { amount: "50", currency: "USD" },
+      date: at,
+      repayments: [
+        { id: "44444444-4444-4444-8444-444444444444", amount: "20", date: at, transactionId: movementId },
+        { id: "55555555-5555-4555-8555-555555555555", amount: "10", date: at },
+      ],
+    }
+    await personalDebtRepository.save(debt)
+    const payloads = (await outbox()).filter((e) => e.entity === "personalDebtRepayment").map((e) => e.payload as Record<string, unknown>)
+    expect(payloads.map((p) => p.transaction_id)).toEqual([movementId, null])
+    for (const event of await outbox()) expect(parseSyncPayload(event).success).toBe(true)
+    expect((await personalDebtRepository.list())[0]!.repayments.map((r) => r.transactionId)).toEqual([movementId, undefined])
+    // A row stored before the column lacks it: saving the debt again doesn't count that as a change.
+    const { transaction_id: _, ...older } = (await db.personal_debt_repayments.get("55555555-5555-4555-8555-555555555555"))!
+    await db.personal_debt_repayments.put(older)
+    expect("transaction_id" in (await db.personal_debt_repayments.get(older.id))!).toBe(false)
+    await db.sync_outbox.clear()
+    await personalDebtRepository.save(debt)
+    expect(await outbox()).toEqual([])
+  })
+
   it("never brings a deleted row back with a local save (delete wins)", async () => {
     await loanRepository.save(loan)
     await softDelete(db.loans, "loan", loan.id)

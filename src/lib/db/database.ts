@@ -218,6 +218,8 @@ export interface PersonalDebtRepaymentRow extends AuditColumns {
   debt_id: string
   amount: string
   date: string
+  /** The income movement that deposited it. Optional because rows stored or pulled before it lack it. No index, so no new Dexie version. */
+  transaction_id?: string | null
 }
 
 /**

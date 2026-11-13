@@ -8,7 +8,9 @@ import { SYNC_ENTITIES, SYNC_WIRE, type SyncEntity, type SyncRow } from "@/lib/s
 // Version 1 holds sync format v1 rows. Version 2 adds `account.closed_at`: a column that changes what
 // the person sees raises the version, so an app that predates it refuses the file instead of
 // reopening closed accounts without a word. Version 3 adds merchants (their own entity, and the
-// links on movements, recurring rules and categorization rules), which an older app would drop. This
+// links on movements, recurring rules and categorization rules) and the movement a debt repayment
+// deposited (`personal_debt_repayments.transaction_id`, which keeps that income out of the totals),
+// which an older app would drop. This
 // app reads all three (an older file has no closed accounts and no merchants) and refuses a version
 // it doesn't know instead of dropping what it can't read.
 
