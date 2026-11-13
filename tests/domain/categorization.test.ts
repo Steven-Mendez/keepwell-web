@@ -207,6 +207,15 @@ describe("Categorization rules", () => {
     expect(store.transactions.find((t) => t.description === "Uber to work")?.categoryId).toBe("transport")
     expect(await pastMatchCount(store, first)).toBe(0)
   })
+
+  it("keeps an edited rule's business this device doesn't have yet, and refuses a new unknown one", async () => {
+    const store = new InMemoryStore(ZONE, { categorizationRules: [{ id: "r1", match: "uber", categoryId: "transport", kind: "expense", merchantId: "m-elsewhere" }] })
+    const edited = await saveCategorizationRule(store, { id: "r1", match: "uber eats", categoryId: "transport", kind: "expense", merchantId: "m-elsewhere" })
+    expect(edited.merchantId).toBe("m-elsewhere")
+    expect((await store.fetchCategorizationRules())[0]).toMatchObject({ match: "uber eats", merchantId: "m-elsewhere" })
+    await expectDomainError(() => saveCategorizationRule(store, { id: "r1", match: "uber", categoryId: "transport", kind: "expense", merchantId: "m-other" }), "notFound")
+    await expectDomainError(() => saveCategorizationRule(store, { match: "lyft", categoryId: "transport", kind: "expense", merchantId: "m-elsewhere" }), "notFound")
+  })
 })
 
 

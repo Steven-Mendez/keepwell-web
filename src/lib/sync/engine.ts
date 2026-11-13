@@ -1,4 +1,4 @@
-import { db, LOCAL_SETTINGS_COLUMNS, SYNC_TABLES, toWire } from "@/lib/db"
+import { db, LOCAL_SETTINGS_COLUMNS, MERCHANT_LINK_COLUMNS, MERCHANT_LINKED_ENTITIES, MERCHANT_REFETCH_KEY, SYNC_CURSOR_KEY, SYNC_TABLES, toWire, type MerchantLinkedEntity, type SyncOutboxRow } from "@/lib/db"
 import { reassignDeletedCategories } from "@/lib/domain/categories"
 import { unlinkDeletedMerchants } from "@/lib/domain/merchants"
 import { ledgerStore } from "@/lib/repositories/ledger-store"
@@ -21,7 +21,7 @@ import { ApiError, type PulledChange, type PushResult, type SyncTransport } from
 // - Switching accounts on one browser treats unsent changes as this browser's data: the new account
 //   starts with a first sync, which prompts when the new account has data and uploads when it's empty.
 
-const CURSOR = "sync_cursor"
+const CURSOR = SYNC_CURSOR_KEY
 const REJECTED = "sync_rejected"
 const LAST_SYNC = "sync_last_at"
 /** The account this browser syncs with; another account starts over with a first sync. */
@@ -30,8 +30,10 @@ const SYNC_USER = "sync_user"
 const CHOICE = "sync_choice"
 /** Older installs left this key behind while a download was under way; it is only ever deleted now. */
 const DOWNLOADING = "sync_downloading"
+/** The merchants and their links still have to come down once (set by the version 8 upgrade). */
+const MERCHANT_REFETCH = MERCHANT_REFETCH_KEY
 /** Everything about the sync with one account; `client_id` is this browser's and stays. */
-const ACCOUNT_SYNC_KEYS = [CURSOR, REJECTED, LAST_SYNC, CHOICE, DOWNLOADING]
+const ACCOUNT_SYNC_KEYS = [CURSOR, REJECTED, LAST_SYNC, CHOICE, DOWNLOADING, MERCHANT_REFETCH]
 const PUSH_BATCH = 200
 const MAX_REJECTED_KEPT = 50
 
@@ -201,7 +203,7 @@ async function downloadAccount(transport: SyncTransport, userId?: string) {
       const defaults = { unlock_method: "biometrics", relock_after_seconds: 60, hides_amounts_in_app_switcher: true, is_icloud_backup_enabled: true }
       await table.put({ ...defaults, ...local, ...incoming })
     }
-    await db.meta.bulkDelete([REJECTED, CHOICE, LAST_SYNC, DOWNLOADING])
+    await db.meta.bulkDelete([REJECTED, CHOICE, LAST_SYNC, DOWNLOADING, MERCHANT_REFETCH])
     await setMeta(CURSOR, String(serverSeq))
     if (userId) await setMeta(SYNC_USER, userId)
   })
@@ -330,7 +332,8 @@ async function replaceAccountData(transport: SyncTransport): Promise<void> {
         await add(entity, { ...remote, updated_at: at, deleted_at: at }, "delete")
       }
     }
-    await db.meta.bulkDelete([REJECTED, CHOICE])
+    // This browser's rows are what the account keeps: nothing of the account's is merged into them.
+    await db.meta.bulkDelete([REJECTED, CHOICE, MERCHANT_REFETCH])
     await setMeta(CURSOR, String(serverSeq))
     if (choice?.userId) await setMeta(SYNC_USER, choice.userId)
   })
@@ -346,7 +349,14 @@ export function syncOnce(transport: SyncTransport, options: { userId?: string } 
 
 async function syncRound(transport: SyncTransport, options: { userId?: string }): Promise<{ pushed: number; pulled: number }> {
   await followUser(options.userId)
-  if ((await meta(CURSOR)) === undefined) await beginFirstSync(transport, options.userId)
+  if ((await meta(CURSOR)) === undefined) {
+    await beginFirstSync(transport, options.userId)
+    // A first sync takes or sends everything, merchants included: nothing older to catch up on.
+    await db.meta.delete(MERCHANT_REFETCH)
+  } else {
+    // Before anything goes up: a push of a row whose links this browser never saw would clear them.
+    await refetchMerchantLinks(transport)
+  }
   const clientId = await getClientId()
   let pushed = 0
   for (;;) {
@@ -414,6 +424,81 @@ async function syncRound(transport: SyncTransport, options: { userId?: string })
   await repairDeletedMerchants()
   await setMeta(LAST_SYNC, new Date().toISOString())
   return { pushed, pulled }
+}
+
+const MERCHANT_REFETCHED: readonly SyncEntity[] = ["merchant", ...MERCHANT_LINKED_ENTITIES]
+
+type LinkColumns = Record<string, string | null>
+
+const linksOf = (entity: MerchantLinkedEntity, row: Record<string, unknown>): LinkColumns =>
+  Object.fromEntries(MERCHANT_LINK_COLUMNS[entity].map((column) => [column, (row[column] as string | null | undefined) ?? null]))
+
+const sameLinks = (a: LinkColumns, b: LinkColumns) => Object.keys(a).every((column) => a[column] === b[column])
+
+const noLinks = (links: LinkColumns) => Object.values(links).every((id) => id === null)
+
+/**
+ * Once, on a browser that synced before it knew merchants (`MERCHANT_REFETCH`, set by the version 8
+ * upgrade): the API shipped merchants first, so the older build's snapshot skipped the `merchant`
+ * rows and each of its saves rewrote a movement or rule without the links the server holds. This
+ * build always sends both links, `null` for none, so its first save of such a row would unlink it
+ * for every device. The account's merchants, movements, recurring rules and categorization rules
+ * are read whole first (a failure changes nothing and nothing is pushed), then one transaction:
+ * - adds the merchants, as a pull would (a local change still waiting wins; a local delete stays);
+ * - gives each movement and rule without a pending change the server's links, nothing else of it;
+ * - leaves a row with a pending change as it is (its push decides, ADR 0005), except a row that had
+ *   no link columns at the upgrade and still names no merchant: what this build wrote there is a
+ *   `null` it never chose, so the row and its waiting events take the server's links (none on a
+ *   transfer, which never names one).
+ * The cursor stays: the pull goes on from where it was.
+ */
+async function refetchMerchantLinks(transport: SyncTransport) {
+  const text = await meta(MERCHANT_REFETCH)
+  if (text === undefined) return
+  const listed = JSON.parse(text) as Partial<Record<MerchantLinkedEntity, string[]>>
+  const { rows } = await cloudRows(transport, MERCHANT_REFETCHED)
+  const tables = MERCHANT_REFETCHED.map((entity) => db.table(SYNC_TABLES[entity]))
+  await db.transaction("rw", [...tables, db.sync_outbox, db.meta], async () => {
+    const pending = new Map<string, SyncOutboxRow[]>()
+    for (const event of await db.sync_outbox.where("entity").anyOf([...MERCHANT_REFETCHED]).toArray()) {
+      const key = `${event.entity}:${event.entity_id}`
+      pending.set(key, [...(pending.get(key) ?? []), event])
+    }
+    const eventsFor = (entity: SyncEntity, id: string) => pending.get(`${entity}:${id}`) ?? []
+    type StoredRow = Record<string, unknown> & { id: string; deleted_at: string | null }
+    const merchants = db.table<StoredRow, string>(SYNC_TABLES.merchant)
+    for (const remote of rows.get("merchant") ?? []) {
+      if (eventsFor("merchant", remote.id).length > 0 || (await merchants.get(remote.id))?.deleted_at) continue
+      await merchants.put(remote)
+    }
+    for (const entity of MERCHANT_LINKED_ENTITIES) {
+      const table = db.table<StoredRow, string>(SYNC_TABLES[entity])
+      const unlinked = new Set(listed[entity] ?? [])
+      for (const remote of rows.get(entity) ?? []) {
+        const events = eventsFor(entity, remote.id)
+        const local = await table.get(remote.id)
+        if (local?.deleted_at) continue
+        if (!local) {
+          if (events.length === 0) await table.put(remote)
+          continue
+        }
+        const theirs = linksOf(entity, remote)
+        if (events.length === 0) {
+          if (!sameLinks(linksOf(entity, local), theirs)) await table.put({ ...local, ...theirs })
+          continue
+        }
+        if (!unlinked.has(remote.id) || !noLinks(linksOf(entity, local)) || local.kind === "transfer" || noLinks(theirs)) continue
+        await table.put({ ...local, ...theirs })
+        for (const event of events) {
+          const payload = event.payload as Record<string, unknown>
+          if (event.operation !== "delete" && payload.kind !== "transfer" && noLinks(linksOf(entity, payload))) {
+            await db.sync_outbox.update(event.id, { payload: { ...payload, ...theirs } })
+          }
+        }
+      }
+    }
+    await db.meta.delete(MERCHANT_REFETCH)
+  })
 }
 
 /**

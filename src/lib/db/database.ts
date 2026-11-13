@@ -3,6 +3,7 @@ import { Dexie, type EntityTable } from "dexie"
 import { legacyRepaymentId, loanPaymentId } from "@/lib/schema/id"
 
 import { rebuildOutbox } from "./outbox-rebuild"
+import { SYNC_TABLES } from "./sync-wire"
 
 import type {
   AccountKind,
@@ -430,10 +431,48 @@ export class KeepwellDatabase extends Dexie {
     // Read and deleted notifications, synced (ADR 0012). A new table, so nothing to upgrade.
     this.version(7).stores({ notification_states: "id, updated_at, deleted_at" })
     // Merchants (businesses and platforms). A new table; the links on movements and rules are plain
-    // columns without an index, absent on older rows, so nothing to upgrade.
-    this.version(8).stores({ merchants: "id, updated_at, deleted_at" })
+    // columns without an index, absent on older rows. The API shipped merchants before this build, so
+    // a browser that already synced may have missed them: the older build's snapshot never asked for
+    // `merchant` rows, and every save it made rewrote a movement or rule without the links the server
+    // holds. Such a browser re-downloads them before its next push (`MERCHANT_REFETCH` in the engine);
+    // the rows that lack the links now are listed, so a save made here before that download, which
+    // sends `null` for a link it never saw, takes the server's link instead of clearing it.
+    this.version(8)
+      .stores({ merchants: "id, updated_at, deleted_at" })
+      .upgrade(async (tx) => {
+        if ((await tx.table<MetaRow, string>("meta").get(SYNC_CURSOR_KEY)) === undefined) return
+        const unlinked: Record<MerchantLinkedEntity, string[]> = { transaction: [], recurringRule: [], categorizationRule: [] }
+        for (const entity of MERCHANT_LINKED_ENTITIES) {
+          await tx
+            .table(SYNC_TABLES[entity])
+            .toCollection()
+            .each((row: { id: string; deleted_at: string | null } & Record<string, unknown>) => {
+              if (row.deleted_at === null && MERCHANT_LINK_COLUMNS[entity].some((column) => !(column in row))) unlinked[entity].push(row.id)
+            })
+        }
+        await tx.table<MetaRow, string>("meta").put({ key: MERCHANT_REFETCH_KEY, value: JSON.stringify(unlinked) })
+      })
   }
 }
+
+/** The meta key of the sync cursor (`CURSOR` in the engine): present once this browser has synced. */
+export const SYNC_CURSOR_KEY = "sync_cursor"
+
+/**
+ * Set by the version 8 upgrade on a browser that had synced: the merchants and their links still have
+ * to be downloaded. Its value lists, per entity, the ids of the rows that had no link columns then.
+ */
+export const MERCHANT_REFETCH_KEY = "sync_merchant_refetch"
+
+/** The entities whose rows name merchants, and the columns that do. */
+export const MERCHANT_LINK_COLUMNS = {
+  transaction: ["merchant_id", "via_merchant_id"],
+  recurringRule: ["merchant_id", "via_merchant_id"],
+  categorizationRule: ["merchant_id"],
+} as const satisfies Partial<Record<SyncEntity, readonly string[]>>
+
+export type MerchantLinkedEntity = keyof typeof MERCHANT_LINK_COLUMNS
+export const MERCHANT_LINKED_ENTITIES = Object.keys(MERCHANT_LINK_COLUMNS) as MerchantLinkedEntity[]
 
 const SYNC_ENTITIES_AT_V6: readonly SyncEntity[] = [
   "account",

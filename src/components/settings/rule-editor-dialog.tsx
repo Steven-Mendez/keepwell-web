@@ -212,6 +212,13 @@ export function RuleEditorDialog({
                   onChange={(event) => setMerchantId(event.target.value)}
                 >
                   <option value="">{t.in("web", "None")}</option>
+                  {/* The rule's business before this browser has it: shown, and kept on save. */}
+                  {merchantId &&
+                  !merchants.some((merchant) => merchant.id === merchantId) ? (
+                    <option value={merchantId}>
+                      {t.in("web", "A business not on this device yet")}
+                    </option>
+                  ) : null}
                   {merchants.map((merchant) => (
                     <option key={merchant.id} value={merchant.id}>
                       {merchant.name}
