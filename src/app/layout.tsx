@@ -60,10 +60,16 @@ export default function RootLayout({
       )}
     >
       <body>
-        {/* The service worker would cache dev bundles and hide changes, so it only runs in production. */}
+        {/* The service worker would cache dev bundles and hide changes, so it only runs in production.
+            A classic worker (the bundle has no imports): Chrome fetches a module worker without
+            cookies, which Vercel's preview protection redirects, and a redirected script can't
+            register. No reload when the connection returns: the data is local, the sync
+            scheduler already runs on "online", and a reload would drop a half-written form. */}
         <SerwistProvider
           swUrl="/sw.js"
           disable={process.env.NODE_ENV === "development"}
+          options={{ type: "classic" }}
+          reloadOnOnline={false}
         >
           <AppBootstrap />
           {/* Providers the shadcn tooltip and toast need, once for the whole app. */}

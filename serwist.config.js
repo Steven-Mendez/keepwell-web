@@ -1,13 +1,11 @@
 // @ts-check
-import { spawnSync } from "node:child_process"
-
 import { serwist } from "@serwist/next/config"
 
-// Versions the offline page, which Serwist can't hash on its own; the build's assets carry hashes.
-const revision = spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).stdout?.trim() || crypto.randomUUID()
-
+// Every prerendered page (`.next/server/app/**/*.html`, `/~offline` among them) is precached with a
+// hash of its HTML as the revision (`precachePrerendered`, on by default), so the offline page needs
+// no entry of its own: adding one listed `/~offline` twice with two revisions, and Serwist refused
+// to start the worker. scripts/check-sw-precache.mjs fails the build if a URL is ever repeated.
 export default serwist({
   swSrc: "src/app/sw.ts",
   swDest: "public/sw.js",
-  additionalPrecacheEntries: [{ url: "/~offline", revision }],
 })
