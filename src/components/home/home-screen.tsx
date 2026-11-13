@@ -12,6 +12,7 @@ import {
   KWSection,
 } from "@/components/kw/design"
 import { AnimatedNumber } from "@/components/kw/animated-number"
+import { UnconvertedNote } from "@/components/kw/unconverted-note"
 import { AnimatedList, SpringFill } from "@/components/kw/motion"
 import { KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
 import { CategoryBadge, Page, PAGE_COLUMN } from "@/components/kw/primitives"
@@ -695,6 +696,7 @@ function MonthCard({
             />
           </div>
         ))}
+        <UnconvertedNote t={t} ns="home" excluded={month.excluded} />
       </div>
       {top.length > 0 ? (
         glass ? (
