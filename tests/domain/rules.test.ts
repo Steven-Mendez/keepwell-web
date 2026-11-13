@@ -36,6 +36,9 @@ import {
   savings,
   savingsRate,
   secondAmount,
+  spendingPace,
+  paceSpentSoFar,
+  storedAmountIn,
   settingsRate,
   singleRate,
   startOfDay,
@@ -214,6 +217,60 @@ describe("Currency conversion (rule 2)", () => {
   })
 })
 
+describe("Monthly summary after the main currency changes", () => {
+  // Recorded as USD + NIO, then the person swapped to NIO, or changed it to EUR elsewhere.
+  const october = yearMonth(2026, 10)!
+  const summary = (list: Parameters<typeof monthlySummary>[1], currency: string) => monthlySummary(october, list, currency, ZONE)
+
+  it("converts each movement with the rate it stored when that rate reaches the new currency", () => {
+    const result = summary([
+      transaction({ amount: "100", category: "tools" }),
+      transaction({ amount: "250", currency: "NIO", category: "restaurants" }),
+      transaction({ kind: "income", amount: "50", category: "salary" }),
+    ], "NIO")
+    expect(cents(result.expense)).toBe("3912.43")
+    expect(cents(result.income)).toBe("1831.22")
+    expect(result.currency).toBe("NIO")
+    expect(result.excluded).toEqual([])
+  })
+
+  it("uses the real debit when converting", () => {
+    expect(summary([transaction({ amount: "20", currency: "USD", actualDebited: "20.42" })], "NIO").expense.toFixed(2)).toBe("747.87")
+  })
+
+  it("leaves out and counts by currency what its stored rate can't convert, never relabelling it", () => {
+    const result = summary([
+      transaction({ amount: "100" }),
+      transaction({ amount: "250", currency: "NIO" }),
+      transaction({ kind: "income", amount: "50", category: "salary" }),
+      transaction({ amount: "9", rate: single("EUR"), currency: "EUR" }),
+      transaction({ kind: "transfer", amount: "1200", currency: "NIO", actualDebited: "33.15" }),
+      transaction({ amount: "7", status: "planned" }),
+    ], "EUR")
+    expect(result.expense.toFixed()).toBe("9")
+    expect(result.income.toFixed()).toBe("0")
+    expect(result.excluded).toEqual([
+      { currency: "NIO", count: 1 },
+      { currency: "USD", count: 2 },
+    ])
+  })
+
+  it("monthly totals, averages and the pace follow the same rule", () => {
+    const list = [transaction({ amount: "100", date: date(2026, 9, 10) }), transaction({ amount: "9", rate: single("EUR"), currency: "EUR", date: date(2026, 9, 12) })]
+    expect(monthlyTotals("expense", october, 2, list, "EUR", ZONE).map((entry) => entry.total.toFixed())).toEqual(["9", "0"])
+    expect(averageMonthlyTotal("expense", list, "EUR", ZONE)!.toFixed()).toBe("9")
+    expect(paceSpentSoFar(spendingPace(yearMonth(2026, 9)!, list, "EUR", date(2026, 9, 30), ZONE)).toFixed()).toBe("9")
+  })
+
+  it("storedAmountIn converts only within the stored rate", () => {
+    const lunch = transaction({ amount: "250", currency: "NIO" })
+    expect(cents(storedAmountIn(lunch, "USD")!)).toBe("6.83")
+    expect(storedAmountIn(lunch, "NIO")!.toFixed()).toBe("250")
+    expect(storedAmountIn(lunch, "EUR")).toBeUndefined()
+    expect(storedAmountIn(transaction({ amount: "3", rate: single("USD") }), "NIO")).toBeUndefined()
+  })
+})
+
 describe("Monthly summary (rule 7)", () => {
   const october = yearMonth(2026, 10)!
   const summary = (list: Parameters<typeof monthlySummary>[1]) => monthlySummary(october, list, "USD", ZONE)
@@ -262,15 +319,19 @@ describe("Monthly summary (rule 7)", () => {
       transaction({ amount: "47.13", date: date(2026, 9, 10) }),
       transaction({ amount: "709.58", date: date(2026, 10, 10) }),
       transaction({ kind: "income", amount: "3.02", date: date(2026, 8, 10) }),
-    ], ZONE)
+    ], "USD", ZONE)
     expect(cents(average!)).toBe("378.36")
-    expect(averageMonthlyTotal("expense", [], ZONE)).toBeUndefined()
+    expect(averageMonthlyTotal("expense", [], "USD", ZONE)).toBeUndefined()
   })
 
   it("the monthly series fills empty months, oldest first", () => {
-    const series = monthlyTotals("expense", october, 6, [transaction({ amount: "47.13", date: date(2026, 9, 10) })], ZONE)
+    const series = monthlyTotals("expense", october, 6, [transaction({ amount: "47.13", date: date(2026, 9, 10) })], "USD", ZONE)
     expect(series.map((entry) => entry.month.month)).toEqual([5, 6, 7, 8, 9, 10])
     expect(series.map((entry) => entry.total.toFixed())).toEqual(["0", "0", "0", "0", "47.13", "0"])
+  })
+
+  it("an empty month leaves nothing out", () => {
+    expect(summary([transaction({ amount: "5" })]).excluded).toEqual([])
   })
 
   it("year-month wraps across years", () => {

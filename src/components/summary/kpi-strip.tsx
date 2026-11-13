@@ -5,6 +5,7 @@ import type { ReactNode } from "react"
 
 import { AnimatedNumber } from "@/components/kw/animated-number"
 import { Surface } from "@/components/kw/primitives"
+import { UnconvertedNote } from "@/components/kw/unconverted-note"
 import { cashFlowOutcome, type SummaryReport } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
@@ -28,21 +29,24 @@ export function KpiStrip({ t, f, report, selectedIndex }: { t: Translator; f: Su
   const windowTone: Tone = outcome.kind === "saved" ? "positive" : outcome.kind === "overspent" ? "negative" : "neutral"
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-      <Tile
-        dot="bg-positive"
-        label={t.in("summary", "Came in")}
-        value={f.money(selected.income)}
-        caption={report.averageIncome ? t.in("summary", "Average %@ / month", f.money(report.averageIncome)) : t.in("summary", "No income")}
-      />
-      <Tile
-        dot="bg-negative"
-        label={t.in("summary", "Went out")}
-        value={f.money(selected.expense)}
-        caption={report.averageExpense ? t.in("summary", "Average %@ / month", f.money(report.averageExpense)) : t.in("summary", "No spending")}
-      />
-      <Tile label={head.title} value={head.amount} tone={head.tone} caption={head.detail} />
-      <Tile label={t.in("summary", "Last %lld months", count)} value={windowAmount} tone={windowTone} caption={t.in("summary", "You saved in %lld of %lld months", trend.monthsSaved, count)} />
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <Tile
+          dot="bg-positive"
+          label={t.in("summary", "Came in")}
+          value={f.money(selected.income)}
+          caption={report.averageIncome ? t.in("summary", "Average %@ / month", f.money(report.averageIncome)) : t.in("summary", "No income")}
+        />
+        <Tile
+          dot="bg-negative"
+          label={t.in("summary", "Went out")}
+          value={f.money(selected.expense)}
+          caption={report.averageExpense ? t.in("summary", "Average %@ / month", f.money(report.averageExpense)) : t.in("summary", "No spending")}
+        />
+        <Tile label={head.title} value={head.amount} tone={head.tone} caption={head.detail} />
+        <Tile label={t.in("summary", "Last %lld months", count)} value={windowAmount} tone={windowTone} caption={t.in("summary", "You saved in %lld of %lld months", trend.monthsSaved, count)} />
+      </div>
+      <UnconvertedNote t={t} ns="summary" excluded={selected.excluded} className="px-1" />
     </div>
   )
 }

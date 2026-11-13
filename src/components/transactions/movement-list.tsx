@@ -6,6 +6,7 @@ import { KWSectionHeader } from "@/components/kw/design"
 import { AnimatedNumber } from "@/components/kw/animated-number"
 import { AnimatedList, ListItem } from "@/components/kw/motion"
 import { TransactionRow } from "@/components/kw/transaction-row"
+import { UnconvertedNote } from "@/components/kw/unconverted-note"
 import { formatMoney } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { dayLabel, type TransactionDisplay } from "@/lib/presentation/display"
@@ -48,22 +49,30 @@ function TotalsStrip({
     },
   ]
   return (
-    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-divider sm:grid-cols-4">
-      {cells.map((cell) => (
-        <div
-          key={cell.label}
-          className="flex flex-col gap-0.5 bg-card px-4 py-3"
-        >
-          <dt className="type-caption text-muted-foreground">{cell.label}</dt>
-          <dd>
-            <AnimatedNumber
-              value={cell.value}
-              className={cn("type-amount-sm", cell.tone)}
-            />
-          </dd>
-        </div>
-      ))}
-    </dl>
+    <div className="flex flex-col gap-2">
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-divider sm:grid-cols-4">
+        {cells.map((cell) => (
+          <div
+            key={cell.label}
+            className="flex flex-col gap-0.5 bg-card px-4 py-3"
+          >
+            <dt className="type-caption text-muted-foreground">{cell.label}</dt>
+            <dd>
+              <AnimatedNumber
+                value={cell.value}
+                className={cn("type-amount-sm", cell.tone)}
+              />
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <UnconvertedNote
+        t={t}
+        ns="transactions"
+        excluded={totals.excluded}
+        className="px-1"
+      />
+    </div>
   )
 }
 
