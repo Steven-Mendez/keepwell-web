@@ -3,7 +3,8 @@
 import { useLiveQuery } from "dexie-react-hooks"
 import { useMemo, useSyncExternalStore } from "react"
 
-import { loadLedger, type Ledger } from "@/lib/domain"
+import { fetchMerchants, loadLedger, type Ledger } from "@/lib/domain"
+import type { Merchant } from "@/lib/schema"
 import { useT } from "@/lib/i18n"
 import { TransactionDisplay } from "@/lib/presentation/display"
 import type { LedgerStore } from "@/lib/domain/store"
@@ -54,10 +55,16 @@ export function useLedgerLoad(): { ledger?: Ledger; failed: boolean } {
   return result ?? { failed: false }
 }
 
-/** How movements read, for the current language and ledger. */
+/** The person's merchants by name, live. `undefined` while the first read is in flight. */
+export function useMerchants(): Merchant[] | undefined {
+  return useLiveQuery(() => fetchMerchants(ledgerStore), [])
+}
+
+/** How movements read, for the current language and ledger (and the merchants they name). */
 export function useTransactionDisplay(ledger: Ledger | undefined): TransactionDisplay | undefined {
   const t = useT()
-  return useMemo(() => (ledger ? new TransactionDisplay(t, ledger) : undefined), [t, ledger])
+  const merchants = useMerchants()
+  return useMemo(() => (ledger ? new TransactionDisplay(t, { ...ledger, merchants: merchants ?? [] }) : undefined), [t, ledger, merchants])
 }
 
 function subscribeProfile(onChange: () => void) {

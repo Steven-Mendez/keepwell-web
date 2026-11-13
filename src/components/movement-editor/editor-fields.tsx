@@ -19,6 +19,7 @@ import {
 } from "./editor-model"
 import { accountRow, availableText, withDay } from "./editor-state"
 import { FieldLabel, KWSwitch, KW_FIELD, KW_TEXTAREA } from "./flow-parts"
+import { MerchantField, choiceKey } from "./merchant-field"
 import { NewCategoryDialog } from "./new-category-dialog"
 import { AccountPicker, CategoryPicker, MethodPicker } from "./pickers"
 import {
@@ -315,6 +316,49 @@ export function TagsSection({ editor }: SectionProps) {
     <section className="flex flex-col gap-1.5">
       <FieldLabel htmlFor="editor-tags">{ct("Tags")}</FieldLabel>
       <TagEditor id="editor-tags" tags={editor.tags} onChange={editor.setTags} usage={editor.tagUsage} />
+    </section>
+  )
+}
+
+/** KW_FIELD's look on the combobox's input group. */
+const MERCHANT_FIELD = "rounded-xl border-0 bg-secondary shadow-none dark:bg-secondary"
+
+/**
+ * Expenses and incomes: the business it was with and, optionally, the platform it went through
+ * ("Subway", via "Uber Eats"). A new movement's description suggests the business; clearing it stays.
+ */
+export function MerchantSection({ editor }: SectionProps) {
+  const { t } = useCreateTransactionT()
+  const { context, merchant, via } = editor
+  const businessId = merchant?.type === "merchant" ? merchant.id : undefined
+  return (
+    <section className="grid gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel htmlFor="editor-merchant">{t.in("web", "Business")}</FieldLabel>
+        <MerchantField
+          key={choiceKey(merchant)}
+          id="editor-merchant"
+          value={merchant}
+          merchants={context.merchants}
+          placeholder={t.in("web", "Search or add a business")}
+          onChange={editor.chooseBusiness}
+          className={MERCHANT_FIELD}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel htmlFor="editor-via">{t.in("web", "Via (optional)")}</FieldLabel>
+        <MerchantField
+          key={choiceKey(via)}
+          id="editor-via"
+          role="via"
+          value={via}
+          merchants={context.merchants}
+          excludeId={businessId}
+          placeholder={t.in("web", "Uber Eats, App Store…")}
+          onChange={editor.chooseVia}
+          className={MERCHANT_FIELD}
+        />
+      </div>
     </section>
   )
 }

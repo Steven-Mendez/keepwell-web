@@ -55,6 +55,33 @@ describe("sync-ready repositories", () => {
     expect((await outbox()).map((e) => e.entity)).toEqual(["personalDebt", "personalDebtRepayment"])
   })
 
+  it("sends a repayment's deposit link, null for none, and doesn't re-send rows stored before the column", async () => {
+    const movementId = "33333333-3333-4333-8333-333333333333"
+    const debt = {
+      id: "22222222-2222-4222-8222-222222222222",
+      person: "Ana",
+      direction: "theyOweMe" as const,
+      amount: { amount: "50", currency: "USD" },
+      date: at,
+      repayments: [
+        { id: "44444444-4444-4444-8444-444444444444", amount: "20", date: at, transactionId: movementId },
+        { id: "55555555-5555-4555-8555-555555555555", amount: "10", date: at },
+      ],
+    }
+    await personalDebtRepository.save(debt)
+    const payloads = (await outbox()).filter((e) => e.entity === "personalDebtRepayment").map((e) => e.payload as Record<string, unknown>)
+    expect(payloads.map((p) => p.transaction_id)).toEqual([movementId, null])
+    for (const event of await outbox()) expect(parseSyncPayload(event).success).toBe(true)
+    expect((await personalDebtRepository.list())[0]!.repayments.map((r) => r.transactionId)).toEqual([movementId, undefined])
+    // A row stored before the column lacks it: saving the debt again doesn't count that as a change.
+    const { transaction_id: _, ...older } = (await db.personal_debt_repayments.get("55555555-5555-4555-8555-555555555555"))!
+    await db.personal_debt_repayments.put(older)
+    expect("transaction_id" in (await db.personal_debt_repayments.get(older.id))!).toBe(false)
+    await db.sync_outbox.clear()
+    await personalDebtRepository.save(debt)
+    expect(await outbox()).toEqual([])
+  })
+
   it("never brings a deleted row back with a local save (delete wins)", async () => {
     await loanRepository.save(loan)
     await softDelete(db.loans, "loan", loan.id)
@@ -165,5 +192,68 @@ describe("sync-ready repositories", () => {
     const tiedHigh = "cccccccc-0000-4000-8000-000000000000"
     await db.categorization_rules.bulkAdd([rule(tiedHigh, 1), rule(first, 0), rule(tiedLow, 1)])
     expect((await categorizationRuleRepository.list()).map((r) => r.id)).toEqual([first, tiedLow, tiedHigh])
+  })
+})
+
+describe("applying a pulled row that lacks an optional column (absent keeps)", () => {
+  const audit = { created_at: at, deleted_at: null }
+  const later = (minutes: number) => new Date(Date.parse(at) + minutes * 60_000).toISOString()
+  const table = (name: string) => db.table<Record<string, unknown>, string>(name)
+
+  it("keeps a repayment's deposit link when the row lacks the key, and clears it on null", async () => {
+    const id = "66666666-6666-4666-8666-666666666666"
+    const row = { id, debt_id: "22222222-2222-4222-8222-222222222222", amount: "20", date: at, ...audit }
+    await table("personal_debt_repayments").put({ ...row, transaction_id: "77777777-7777-4777-8777-777777777777", updated_at: at })
+    expect(await applyRemote("personalDebtRepayment", { ...row, amount: "25", updated_at: later(1) })).toBe("applied")
+    expect(await table("personal_debt_repayments").get(id)).toMatchObject({ amount: "25", transaction_id: "77777777-7777-4777-8777-777777777777" })
+    await applyRemote("personalDebtRepayment", { ...row, transaction_id: null, updated_at: later(2) })
+    expect((await table("personal_debt_repayments").get(id))!.transaction_id).toBeNull()
+    expect(await db.sync_outbox.count()).toBe(0)
+  })
+
+  it("keeps a movement's, a recurring rule's and a categorization rule's merchant links one by one", async () => {
+    const id = "88888888-8888-4888-8888-888888888888"
+    const links = { merchant_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", via_merchant_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" }
+    for (const [entity, name] of [["transaction", "transactions"], ["recurringRule", "recurring_rules"]] as const) {
+      await table(name).put({ id, description: "Before", ...links, ...audit, updated_at: at })
+      await applyRemote(entity, { id, description: "After", ...audit, updated_at: later(1) })
+      expect(await table(name).get(id)).toMatchObject({ description: "After", ...links })
+      await applyRemote(entity, { id, description: "After", merchant_id: null, ...audit, updated_at: later(2) })
+      expect(await table(name).get(id)).toMatchObject({ merchant_id: null, via_merchant_id: links.via_merchant_id })
+    }
+    await table("categorization_rules").put({ id, keyword: "uber", merchant_id: links.merchant_id, ...audit, updated_at: at })
+    await applyRemote("categorizationRule", { id, keyword: "uber eats", ...audit, updated_at: later(1) })
+    expect(await table("categorization_rules").get(id)).toMatchObject({ keyword: "uber eats", merchant_id: links.merchant_id })
+  })
+
+  it("a new row stays without the key, and a required column is still the server's", async () => {
+    const id = "99999999-9999-4999-8999-999999999999"
+    await applyRemote("personalDebtRepayment", { id, debt_id: "x", amount: "5", date: at, ...audit, updated_at: at })
+    expect("transaction_id" in (await table("personal_debt_repayments").get(id))!).toBe(false)
+    await table("loans").put({ id, name: "Old", lender: "Bank", ...audit, updated_at: at })
+    await applyRemote("loan", { id, name: "New", ...audit, updated_at: later(1) })
+    expect(await table("loans").get(id)).not.toHaveProperty("lender")
+  })
+})
+
+describe("deposits of deleted debts", () => {
+  it("are still read from the repayments' tombstones", async () => {
+    const movementId = "33333333-3333-4333-8333-333333333333"
+    const debt = {
+      id: "22222222-2222-4222-8222-222222222222",
+      person: "Ana",
+      direction: "theyOweMe" as const,
+      amount: { amount: "50", currency: "USD" },
+      date: at,
+      repayments: [
+        { id: "44444444-4444-4444-8444-444444444444", amount: "20", date: at, transactionId: movementId },
+        { id: "55555555-5555-4555-8555-555555555555", amount: "10", date: at },
+      ],
+    }
+    await personalDebtRepository.save(debt)
+    expect(await personalDebtRepository.depositIds()).toEqual([movementId])
+    await personalDebtRepository.remove(debt.id)
+    expect(await personalDebtRepository.list()).toEqual([])
+    expect(await personalDebtRepository.depositIds()).toEqual([movementId])
   })
 })

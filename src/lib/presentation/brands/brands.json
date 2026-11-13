@@ -281,6 +281,39 @@
       "exactAliases": []
     },
     {
+      "id": "higgsfield",
+      "name": "Higgsfield",
+      "domain": "higgsfield.ai",
+      "aliases": [
+        "higgsfield",
+        "higgsfield ai"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "grok",
+      "name": "Grok",
+      "domain": "grok.com",
+      "aliases": [
+        "grok",
+        "supergrok",
+        "super grok"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "xai",
+      "name": "xAI",
+      "domain": "x.ai",
+      "aliases": [
+        "x ai",
+        "xai llc"
+      ],
+      "exactAliases": [
+        "xai"
+      ]
+    },
+    {
       "id": "cursor",
       "name": "Cursor",
       "domain": "cursor.com",
@@ -315,6 +348,15 @@
       "domain": "figma.com",
       "aliases": [
         "figma"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "mobbin",
+      "name": "Mobbin",
+      "domain": "mobbin.com",
+      "aliases": [
+        "mobbin"
       ],
       "exactAliases": []
     },
@@ -617,6 +659,39 @@
       ]
     },
     {
+      "id": "riot-games",
+      "name": "Riot Games",
+      "domain": "riotgames.com",
+      "aliases": [
+        "riot games",
+        "riotgames",
+        "riot"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "league-of-legends",
+      "name": "League of Legends",
+      "domain": "leagueoflegends.com",
+      "aliases": [
+        "league of legends",
+        "leagueoflegends"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "valorant",
+      "name": "Valorant",
+      "domain": "playvalorant.com",
+      "aliases": [
+        "valorant",
+        "playvalorant",
+        "riot games valorant",
+        "riot valorant"
+      ],
+      "exactAliases": []
+    },
+    {
       "id": "uber",
       "name": "Uber",
       "domain": "uber.com",
@@ -844,6 +919,40 @@
       "exactAliases": []
     },
     {
+      "id": "subway",
+      "name": "Subway",
+      "domain": "subway.com",
+      "aliases": [
+        "subway"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "little-caesars",
+      "name": "Little Caesars",
+      "domain": "littlecaesars.com",
+      "aliases": [
+        "little caesars",
+        "little caesar s",
+        "little caesar",
+        "littlecaesars"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "carls-jr",
+      "name": "Carl's Jr.",
+      "domain": "carlsjr.com",
+      "aliases": [
+        "carls jr",
+        "carl s jr",
+        "carlsjr",
+        "carls junior",
+        "carl s junior"
+      ],
+      "exactAliases": []
+    },
+    {
       "id": "claro",
       "name": "Claro",
       "domain": "claro.com.ni",
@@ -862,6 +971,27 @@
         "tigo",
         "tigo nicaragua",
         "tigo money"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "lafise",
+      "name": "LAFISE",
+      "domain": "lafise.com",
+      "aliases": [
+        "lafise",
+        "banco lafise",
+        "bancentro"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "banpro",
+      "name": "Banpro",
+      "domain": "banpro.com.ni",
+      "aliases": [
+        "banpro",
+        "banco de la produccion"
       ],
       "exactAliases": []
     }

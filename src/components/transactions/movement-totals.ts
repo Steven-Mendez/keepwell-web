@@ -16,8 +16,10 @@ export interface MovementTotals {
 }
 
 /**
- * Confirmed income and spending in the principal currency, each converted with its stored rate;
- * transfers, drafts and movements that rate can't convert don't count, as in the monthly summary.
+ * The cash flow of the listed movements: confirmed money in and out in the principal currency, each
+ * converted with its stored rate, at its full amount. Unlike the monthly summary it doesn't take the
+ * others' shares out of a split expense or leave out a deposited repayment: it adds up the movements
+ * as listed. Transfers, drafts and movements that rate can't convert don't count.
  */
 export function movementTotals(
   transactions: readonly Transaction[],

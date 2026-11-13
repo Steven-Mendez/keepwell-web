@@ -53,6 +53,7 @@ import {
   yearMonthContaining,
   bankRate,
   currencySettings,
+  applicableDebit,
   draftFrom,
   type CreditCardDraft,
   type TransactionDraft,
@@ -483,6 +484,61 @@ describe("Create transaction", () => {
     expect(saved.transaction.amount).toBe("300")
     expect(saved.transaction.exchangeRate).toEqual(original.exchangeRate)
     expect(await store.fetchTransactions()).toHaveLength(count)
+  })
+})
+
+describe("Editing a movement charged in the principal currency", () => {
+  const movies = async (store: ReturnType<typeof sampleStore>) => (await store.fetchTransactions()).find((t) => t.description === "Movies")!
+
+  it("keeps the charge when nothing it was charged for changes", async () => {
+    const store = sampleStore()
+    const original = await movies(store)
+    expect(original.actualDebitedPrincipal).toBe("20.42")
+    const draft = draftFrom(original)
+    expect(draft.debitedFor).toEqual({ amount: d("739.32"), currency: "NIO", accountId: IDs.savings })
+    const saved = await saveTransaction(store, { ...draft, description: "Cinema", note: "with Ana", source: { type: "account", id: IDs.savings } })
+    expect(saved.transaction.actualDebitedPrincipal).toBe("20.42")
+  })
+
+  it("drops the charge when the amount changes", async () => {
+    const store = sampleStore()
+    const saved = await saveTransaction(store, { ...draftFrom(await movies(store)), amount: d(800) })
+    expect(saved.transaction.amount).toBe("800")
+    expect(saved.transaction.actualDebitedPrincipal).toBeUndefined()
+  })
+
+  it("drops the charge when the currency changes", async () => {
+    const store = sampleStore()
+    const draft = draftFrom(await movies(store))
+    const saved = await saveTransaction(store, { ...draft, currency: "USD" })
+    expect(saved.transaction.actualDebitedPrincipal).toBeUndefined()
+    // Even to a currency that isn't the principal one: the charge was for córdobas.
+    expect(applicableDebit({ ...draft, currency: "EUR" }, { principal: "USD" }, IDs.savings)).toBeUndefined()
+    expect(applicableDebit(draft, { principal: "USD" }, IDs.savings)?.toFixed()).toBe("20.42")
+  })
+
+  it("drops the charge when the account changes to one in another currency", async () => {
+    const store = sampleStore()
+    const draft = { ...draftFrom(await movies(store)), source: { type: "account" as const, id: IDs.cash } }
+    const context = await getTransactionContext(store)
+    expect(previewMovement(context, draft, await movies(store))?.leaving).toEqual({ amount: d("739.32"), currency: "NIO" })
+    const saved = await saveTransaction(store, draft)
+    expect(saved.transaction.accountId).toBe(IDs.cash)
+    expect(saved.transaction.actualDebitedPrincipal).toBeUndefined()
+  })
+
+  it("keeps a charge typed for the new amount", async () => {
+    const store = sampleStore()
+    const { debitedFor: _carried, ...draft } = draftFrom(await movies(store))
+    const saved = await saveTransaction(store, { ...draft, amount: d(800), actualDebitedPrincipal: d("22.10") })
+    expect(saved.transaction.actualDebitedPrincipal).toBe("22.1")
+  })
+
+  it("a movement in the principal currency never carries one", () => {
+    const stored = transaction({ amount: "20", currency: "USD", account: IDs.savings, actualDebited: "21" })
+    const draft = draftFrom(stored)
+    expect(draft.actualDebitedPrincipal).toBeUndefined()
+    expect(draft.debitedFor).toBeUndefined()
   })
 })
 

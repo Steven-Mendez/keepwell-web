@@ -16,6 +16,7 @@ import { useHiddenBalances } from "@/hooks/use-hidden-balances"
 import { useLedger } from "@/hooks/use-ledger"
 import {
   SUMMARY_MONTH_COUNT,
+  ledgerDebtLinks,
   netWorthHistory,
   summaryReport,
 } from "@/lib/domain"
@@ -219,13 +220,25 @@ export function SummaryScreen() {
   const ledger = useLedger()
   const { openEditor } = useAppActions()
   const currency = ledger?.settings.currencies.principal ?? "USD"
+  // Shares split from expenses and repayment deposits, deleted debts' included.
+  const links = useMemo(
+    () => (ledger ? ledgerDebtLinks(ledger) : undefined),
+    [ledger]
+  )
   // Recomputed on every ledger change; "now" is read then, so a new month rolls the window over.
   const report = useMemo(
     () =>
       ledger
-        ? summaryReport(ledger.transactions, currency, ledger.timeZone, new Date())
+        ? summaryReport(
+            ledger.transactions,
+            currency,
+            ledger.timeZone,
+            new Date(),
+            SUMMARY_MONTH_COUNT,
+            links
+          )
         : undefined,
-    [ledger, currency]
+    [ledger, currency, links]
   )
   const netWorth = useMemo(
     () =>
@@ -244,7 +257,13 @@ export function SummaryScreen() {
   const [mode, setMode] = useState<CategoryMode>("expenses")
   const [period, setPeriod] = useState<Period>("month")
   const [custom, setCustom] = useState<CustomRange>()
-  const range = useRangeSummary(ledger?.transactions, currency, period, custom)
+  const range = useRangeSummary(
+    ledger?.transactions,
+    currency,
+    period,
+    custom,
+    links
+  )
   const last = (report?.months.length ?? SUMMARY_MONTH_COUNT) - 1
   const { selectedIndex, direction, pick } = useMonthPick(last)
   const f = summaryFormat(t, currency)

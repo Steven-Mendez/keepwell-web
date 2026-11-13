@@ -189,7 +189,7 @@ describe("Categorization rules", () => {
     const income = movement("Uber refund", "other-income", "income")
     const matches = pastMatches({ ...uber, tags: ["trabajo"] }, [other, none, categorized, unrelated, income])
     expect(matches.map((t) => t.id)).toEqual([other.id, none.id])
-    const applied = applyingRule(uber, other)
+    const applied = applyingRule(uber, other, [])
     expect(applied.categoryId).toBe("transport")
     expect(applied.tags).toEqual(["boda", "trabajo"])
     expect(applied.id).toBe(other.id)
@@ -206,6 +206,15 @@ describe("Categorization rules", () => {
     expect(await applyRuleToPast(store, first)).toBe(1)
     expect(store.transactions.find((t) => t.description === "Uber to work")?.categoryId).toBe("transport")
     expect(await pastMatchCount(store, first)).toBe(0)
+  })
+
+  it("keeps an edited rule's business this device doesn't have yet, and refuses a new unknown one", async () => {
+    const store = new InMemoryStore(ZONE, { categorizationRules: [{ id: "r1", match: "uber", categoryId: "transport", kind: "expense", merchantId: "m-elsewhere" }] })
+    const edited = await saveCategorizationRule(store, { id: "r1", match: "uber eats", categoryId: "transport", kind: "expense", merchantId: "m-elsewhere" })
+    expect(edited.merchantId).toBe("m-elsewhere")
+    expect((await store.fetchCategorizationRules())[0]).toMatchObject({ match: "uber eats", merchantId: "m-elsewhere" })
+    await expectDomainError(() => saveCategorizationRule(store, { id: "r1", match: "uber", categoryId: "transport", kind: "expense", merchantId: "m-other" }), "notFound")
+    await expectDomainError(() => saveCategorizationRule(store, { match: "lyft", categoryId: "transport", kind: "expense", merchantId: "m-elsewhere" }), "notFound")
   })
 })
 
@@ -228,20 +237,20 @@ describe("Categorization rules on every path", () => {
 
   it("a new movement in Other takes the rule's category and tags; a chosen category and a transfer stay", () => {
     const other: Transaction = { ...transaction({ amount: "5", category: "other-expense", description: "Uber home" }), tags: ["boda"] }
-    const categorized = autoCategorized(other, [uber])
+    const categorized = autoCategorized(other, [uber], [])
     expect(categorized.categoryId).toBe("transport")
     expect(categorized.tags).toEqual(["boda", "trabajo"])
     const chosen = transaction({ amount: "5", category: "restaurants", description: "Uber eats" })
-    expect(autoCategorized(chosen, [uber])).toBe(chosen)
+    expect(autoCategorized(chosen, [uber], [])).toBe(chosen)
     const transfer: Transaction = { ...transaction({ amount: "5", description: "Uber" }), kind: "transfer" }
     delete (transfer as Partial<Transaction>).categoryId
-    expect(autoCategorized(transfer, [uber])).toBe(transfer)
+    expect(autoCategorized(transfer, [uber], [])).toBe(transfer)
   })
 
   it("with two matching rules the first in the person's order wins", () => {
     const other = transaction({ amount: "5", category: "other-expense", description: "Uber trip" })
-    expect(autoCategorized(other, [anyTrip, uber]).categoryId).toBe("travel")
-    expect(autoCategorized(other, [uber, anyTrip]).categoryId).toBe("transport")
+    expect(autoCategorized(other, [anyTrip, uber], []).categoryId).toBe("travel")
+    expect(autoCategorized(other, [uber, anyTrip], []).categoryId).toBe("transport")
   })
 
   it("saving a new movement without a category takes the rule, or Other when none matches", async () => {

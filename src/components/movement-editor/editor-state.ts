@@ -127,10 +127,36 @@ function editedState(
     date: draft.date,
     note: draft.note,
     isDraft: draft.isDraft,
-    debitedText: draft.actualDebitedPrincipal
-      ? formatNumber(draft.actualDebitedPrincipal)
-      : "",
+    debitedText: carriedDebitText(request.transaction),
   }
+}
+
+/** The charge in the principal currency an edit opens with: the one its movement was saved with, if any. */
+export function carriedDebitText(transaction: Transaction): string {
+  const charged = draftFrom(transaction).actualDebitedPrincipal
+  return charged ? formatNumber(charged) : ""
+}
+
+/**
+ * `patch`, also clearing the charge an edit opened with (`carried`) when it changes the amount or the
+ * currency: the bank charged that for the old ones (the domain's `debitedFor`). One the person typed stays.
+ */
+export function clearingStaleDebit(
+  fields: EditorFields,
+  patch: Partial<EditorFields>,
+  carried: string
+): Partial<EditorFields> {
+  if (carried === "" || fields.debitedText !== carried || "debitedText" in patch) return patch
+  const amountChanged =
+    patch.amountText !== undefined && !sameAmountText(patch.amountText, fields.amountText)
+  const currencyChanged = patch.currency !== undefined && patch.currency !== fields.currency
+  return amountChanged || currencyChanged ? { ...patch, debitedText: "" } : patch
+}
+
+/** Whether two amount texts say the same amount ("24.5" and "24.50"). */
+function sameAmountText(a: string, b: string): boolean {
+  const [first, second] = [parseAmount(a), parseAmount(b)]
+  return first && second ? first.eq(second) : a.trim() === b.trim()
 }
 
 function initialState(

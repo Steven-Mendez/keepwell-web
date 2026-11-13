@@ -24,6 +24,7 @@ import { useHiddenBalances } from "@/hooks/use-hidden-balances"
 import { useLedgerLoad } from "@/hooks/use-ledger"
 import {
   debtTotals,
+  openAccounts,
   orderedLoans,
   orderedPersonalDebts,
   type LoanProgress,
@@ -282,6 +283,10 @@ export function DebtsScreen() {
           key={openDebt.id}
           t={t}
           debt={openDebt}
+          accounts={openAccounts(ledger.accounts).filter(
+            (account) => account.kind !== "credit"
+          )}
+          currencies={ledger.settings.currencies}
           hidden={hidden}
           now={now}
           zone={ledger.timeZone}
