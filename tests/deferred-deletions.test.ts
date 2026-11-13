@@ -92,6 +92,57 @@ describe("Deferred deletions", () => {
     expect(queue.pending().size).toBe(0)
   })
 
+  it("waits for the notice to close, however long it stays open, when scheduled until released", async () => {
+    const queue = deletions()
+    // The pointer rests on the notice: its countdown pauses, so no timer may delete behind it.
+    queue.schedule(movement.id, { untilReleased: true })
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(await transactionRepository.list()).toEqual([movement])
+    expect(queue.undo(movement.id)).toBe(true)
+    // Undo closes the notice, which releases a deletion that no longer exists.
+    await queue.release(movement.id)
+    expect(await transactionRepository.list()).toEqual([movement])
+    expect(await db.sync_outbox.count()).toBe(0)
+  })
+
+  it("deletes when the notice closes on its own", async () => {
+    const queue = deletions()
+    queue.schedule(movement.id, { untilReleased: true })
+    await vi.advanceTimersByTimeAsync(5000)
+    await queue.release(movement.id)
+    expect(await transactionRepository.list()).toEqual([])
+    expect(queue.pending().size).toBe(0)
+    expect(queue.undo(movement.id)).toBe(false)
+  })
+
+  it("keeps waiting for the notice when another tab's deletions arrive", async () => {
+    const queue = deletions()
+    queue.schedule(movement.id, { untilReleased: true })
+    vi.setSystemTime(Date.now() + 60_000)
+    queue.resume()
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(await transactionRepository.list()).toEqual([movement])
+    expect(queue.undo(movement.id)).toBe(true)
+  })
+
+  it("still finishes a deletion held by a notice when the tab closes first", async () => {
+    const storage = memoryStorage()
+    deletions(storage).schedule(movement.id, { untilReleased: true })
+    vi.clearAllTimers()
+    vi.setSystemTime(Date.now() + 60_000)
+    const reopened = deletions(storage)
+    reopened.resume()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(await transactionRepository.list()).toEqual([])
+  })
+
+  it("flush deletes held deletions too, as the page goes away", async () => {
+    const queue = deletions()
+    queue.schedule(movement.id, { untilReleased: true })
+    await queue.flush()
+    expect(await transactionRepository.list()).toEqual([])
+  })
+
   it("forgets a deletion of a movement already gone elsewhere", async () => {
     const queue = deletions()
     queue.schedule(movement.id)

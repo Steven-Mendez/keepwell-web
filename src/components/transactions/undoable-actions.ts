@@ -11,18 +11,24 @@ const failed = (t: Translator) => () =>
 
 /**
  * Deletes a movement with "Undo" for a few seconds. It disappears at once, but its tombstone (and
- * the sync event) is written only when the notice runs out, so undoing leaves no trace.
+ * the sync event) is written only when the notice closes, so undoing leaves no trace. The notice's
+ * countdown pauses while the pointer rests on it, so the deletion follows the notice, not a clock;
+ * if the tab closes first, `movementDeletions` finishes it.
  */
 export function deleteMovement(t: Translator, transaction: Pick<Transaction, "id" | "description">): void {
   const deletions = movementDeletions()
-  deletions.schedule(transaction.id)
-  toast.add({
+  deletions.schedule(transaction.id, { untilReleased: true })
+  const notice = toast.add({
     title: t.in("sharedpresentation", "Transaction deleted"),
     description: transaction.description,
     timeout: UNDO_WINDOW_MS,
+    onClose: () => void deletions.release(transaction.id),
     actionProps: {
       children: t.in("sharedpresentation", "Undo"),
-      onClick: () => void deletions.undo(transaction.id),
+      onClick: () => {
+        deletions.undo(transaction.id)
+        toast.close(notice)
+      },
     },
   })
 }
