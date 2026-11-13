@@ -2,7 +2,8 @@
 // URL appears twice with different revisions. Serwist throws `add-to-cache-list-conflicting-entries`
 // for that while evaluating the worker, so the browser refuses to register it ("ServiceWorker script
 // evaluation failed") and nothing in the build notices. That is how `/~offline` broke the worker
-// from its first commit: precached once as a prerendered page and again as an extra entry.
+// from its first commit: precached once as a prerendered page and again as an extra entry. It also
+// checks the bundle still runs as the classic worker that src/app/layout.tsx registers.
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 
@@ -23,6 +24,16 @@ export function precacheEntries(source) {
 }
 
 /**
+ * Whether the worker can run as a classic script, the way src/app/layout.tsx registers it: no
+ * top-level `import` or `export` statement in the bundle.
+ * @param {string} source the built service worker
+ * @returns {boolean}
+ */
+export function runsAsClassicScript(source) {
+  return !/(^|[;}\n])\s*(import\s*[\w{*"']|export\s*[\w{*])/.test(source)
+}
+
+/**
  * URLs that more than one entry claims with a different revision: Serwist's rule for a conflict.
  * @param {{ url: string, revision: string | null }[]} entries
  * @returns {string[]}
@@ -39,7 +50,8 @@ export function conflictingUrls(entries) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const file = resolve(import.meta.dirname, "..", process.argv[2] ?? "public/sw.js")
-  const entries = precacheEntries(readFileSync(file, "utf-8"))
+  const source = readFileSync(file, "utf-8")
+  const entries = precacheEntries(source)
   if (entries.length === 0) {
     console.error(`${file}: no precache manifest found; did serwist build inject it?`)
     process.exit(1)
@@ -49,5 +61,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`${file}: precached twice with different revisions (Serwist would refuse to start): ${conflicts.join(", ")}`)
     process.exit(1)
   }
-  console.log(`${file}: ${entries.length} precache entries, no URL repeated.`)
+  if (!runsAsClassicScript(source)) {
+    console.error(`${file}: has import/export statements, but it is registered as a classic worker`)
+    process.exit(1)
+  }
+  console.log(`${file}: ${entries.length} precache entries, no URL repeated, runs as a classic worker.`)
 }

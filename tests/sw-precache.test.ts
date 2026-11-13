@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { conflictingUrls, precacheEntries } from "../scripts/check-sw-precache.mjs"
+import { conflictingUrls, precacheEntries, runsAsClassicScript } from "../scripts/check-sw-precache.mjs"
 
 // The worker's precache list comes from `next build` + `serwist build`, which CI runs after the
 // tests; scripts/check-sw-precache.mjs checks the real list at the end of `pnpm build`. These cover
@@ -19,5 +19,11 @@ describe("service worker precache check", () => {
     const built = '[{url:"/",revision:"1"},{revision:"2",url:"/~offline"},{url:"/icon.svg",revision:null}]'
     expect(precacheEntries(built)).toHaveLength(3)
     expect(conflictingUrls(precacheEntries(built))).toEqual([])
+  })
+
+  it("tells a bundle that runs as a classic worker from one with module syntax", () => {
+    expect(runsAsClassicScript('var m=[{revision:null,url:"/a.js"}];self.addEventListener("push",()=>{});')).toBe(true)
+    expect(runsAsClassicScript('import{Serwist}from"serwist";new Serwist({});')).toBe(false)
+    expect(runsAsClassicScript('var a=1;export{a};')).toBe(false)
   })
 })
