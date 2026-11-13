@@ -211,7 +211,7 @@ export function RuleEditorDialog({
                   value={merchantId}
                   onChange={(event) => setMerchantId(event.target.value)}
                 >
-                  <option value="">{t.in("web", "None")}</option>
+                  <option value="">{t.in("web", "business.none")}</option>
                   {/* The rule's business before this browser has it: shown, and kept on save. */}
                   {merchantId &&
                   !merchants.some((merchant) => merchant.id === merchantId) ? (
