@@ -7,7 +7,7 @@ import { useAppActions, type EditorRequest } from "@/components/app/app-actions"
 import { KWButton, KWEmptyState } from "@/components/kw/design"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
-import { getTransactionContext } from "@/lib/domain"
+import { getTransactionContext, pickerContext } from "@/lib/domain"
 import { useT } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
 
@@ -40,14 +40,17 @@ function EditorBody({ request, onClose }: { request: EditorRequest; onClose: () 
   const [attempt, setAttempt] = useState(0)
   // Live: a category created inside the flow, or a balance changed in another tab, shows at once.
   // A failure is caught and shown, never left as an endless spinner.
+  // Pickers offer open accounts only; an edited movement keeps its own, even closed.
+  const keep = request.mode === "edit" ? [request.transaction.accountId, request.transaction.destinationAccountId] : []
+  const keepKey = keep.join(" ")
   const loaded = useLiveQuery(async () => {
     try {
-      return { context: await getTransactionContext(ledgerStore) }
+      return { context: pickerContext(await getTransactionContext(ledgerStore), keepKey.split(" ")) }
     } catch (error) {
       console.error("[Keepwell] couldn't load the movement editor", error)
       return { error: error instanceof Error ? `${error.name}: ${error.message}` : String(error) }
     }
-  }, [attempt])
+  }, [attempt, keepKey])
   // Some browsers leave an IndexedDB read hanging instead of failing; after a while say so.
   const [slow, setSlow] = useState(false)
   useEffect(() => {

@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils"
 import { GoalEditorDialog, type GoalEditorTarget } from "./goal-editor-dialog"
 import { DEFAULT_GOAL_SYMBOL, goalBadge, goalMoney, goalStatus } from "./goal-format"
 import { GoalMoneyDialog, type GoalMoneyMode } from "./goal-money-dialog"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 const TONE_CLASS = {
   positive: "text-positive",
@@ -41,7 +42,7 @@ export function GoalsScreen() {
   const [now] = useState(() => new Date())
   const [editor, setEditor] = useState<GoalEditorTarget>()
   const [money, setMoney] = useState<{ goal: SavingsGoal; mode: GoalMoneyMode }>()
-  const goals = useMemo(() => (ledger ? orderedGoals(ledger.savingsGoals, now) : undefined), [ledger, now])
+  const goals = useMemo(() => (ledger ? orderedGoals(ledger.savingsGoals, now, ledger.timeZone) : undefined), [ledger, now])
   const add = () => setEditor({ mode: "create" })
 
   return (
@@ -136,7 +137,7 @@ function GoalCard({
   onEdit: () => void
   onMoney: (mode: GoalMoneyMode) => void
 }) {
-  const progress = savingsGoalProgress(goal, now)
+  const progress = savingsGoalProgress(goal, now, deviceTimeZone())
   const money = hidden ? () => BALANCE_MASK : goalMoney(goal)
   const status = goalStatus(t, goal, progress, money)
   const percent = Math.round(Math.min(progress.fraction.toNumber(), 1) * 100)

@@ -9,9 +9,9 @@ import { db } from "@/lib/db"
 import { ledgerNotifications, loadLedger, notificationDay } from "@/lib/domain"
 import { makeTranslator } from "@/lib/i18n"
 import { notificationStateRepository } from "@/lib/repositories"
-import type { RecurringRule } from "@/lib/schema"
+import type { PersonalDebt, RecurringRule } from "@/lib/schema"
 
-import { IDs, referenceDate, sampleStore } from "./domain/fixtures"
+import { IDs, referenceDate, sampleStore, ZONE } from "./domain/fixtures"
 
 const t = makeTranslator("en")
 
@@ -60,11 +60,91 @@ describe("ledgerNotifications", () => {
     expect(proposals.map((n) => n.id)).toEqual(["proposal:rule-1"])
   })
 
+  it("reminds the day before a recurring expense recorded as a draft, and not one recorded on its own or an income", async () => {
+    const ledger = await loadLedger(sampleStore())
+    const now = new Date(2026, 10, 12, 12)
+    const due = new Date(2026, 10, 13, 9).toISOString()
+    const rule = (id: string, overrides: Partial<RecurringRule>) =>
+      proposal({ id, name: "Rent", source: "app", isPaused: false, startDate: due, nextDate: due, ...overrides })
+    const withRules = {
+      ...ledger,
+      recurringRules: [
+        rule("rent", {}),
+        rule("auto", { autoConfirm: true }),
+        rule("salary", { kind: "income" }),
+        rule("gym", { isSubscription: true }),
+        rule("later", { startDate: new Date(2026, 10, 14, 9).toISOString(), nextDate: new Date(2026, 10, 14, 9).toISOString() }),
+      ],
+    }
+    const found = ledgerNotifications(withRules, now).filter((n) => n.kind === "bill" || n.kind === "renewal")
+    expect(found.map((n) => n.id).sort()).toEqual(["bill:rent:2026-11-13", "renewal:gym:2026-11-13"])
+    const bill = found.find((n) => n.kind === "bill")
+    // A target every installed app already decodes, so an older app still opens a pushed bill.
+    expect(bill?.target).toEqual({ screen: "recurring" })
+    expect(bill?.date).toEqual(new Date(2026, 10, 12))
+
+    const inbox = buildInbox(t, withRules, [], now, false)
+    const entry = inbox.entries.find((candidate) => candidate.notification.kind === "bill")
+    expect(entry?.title).toBe("Rent is due tomorrow")
+    expect(buildInbox(makeTranslator("es"), withRules, [], now, false).entries.find((candidate) => candidate.notification.kind === "bill")?.title).toBe(
+      "Rent vence mañana"
+    )
+  })
+
+  it("reminds of a personal debt due inside the card window, in either direction, and not after", async () => {
+    const ledger = await loadLedger(sampleStore())
+    // The sample reminds 3 days before.
+    expect(ledger.settings.paymentReminderDaysBefore).toBe(3)
+    const now = new Date(2026, 10, 12, 12)
+    const debt = (id: string, overrides: Partial<PersonalDebt> = {}): PersonalDebt => ({
+      id,
+      person: "Ana",
+      direction: "theyOweMe",
+      amount: { amount: "12", currency: "USD" },
+      date: new Date(2026, 8, 1, 12).toISOString(),
+      repayments: [],
+      dueDate: new Date(2026, 10, 15).toISOString(),
+      ...overrides,
+    })
+    const debts = (personalDebts: PersonalDebt[]) =>
+      ledgerNotifications({ ...ledger, personalDebts }, now).filter((n) => n.kind === "debt")
+
+    const [found, ...rest] = debts([debt("due")])
+    expect(rest).toEqual([])
+    expect(found?.id).toBe("debt:due:2026-11-15")
+    expect(found?.target).toEqual({ screen: "debts" })
+    expect(found?.date).toEqual(new Date(2026, 10, 12))
+    expect(found?.params).toMatchObject({ debtId: "due", person: "Ana", direction: "theyOweMe", daysLeft: 3 })
+
+    const { dueDate: _, ...withoutDate } = debt("no date")
+    expect(
+      debts([
+        debt("four days", { dueDate: new Date(2026, 10, 16).toISOString() }),
+        debt("overdue", { dueDate: new Date(2026, 10, 11).toISOString() }),
+        debt("settled", { settledAt: now.toISOString() }),
+        withoutDate,
+      ])
+    ).toEqual([])
+
+    // A repayment keeps the id and the body says what is left.
+    const repaid = debts([debt("due", { repayments: [{ amount: "5", date: now.toISOString() }] })])
+    expect(repaid.map((n) => n.id)).toEqual(["debt:due:2026-11-15"])
+    const entry = (personalDebts: PersonalDebt[], language: "en" | "es", hidden = false) =>
+      buildInbox(makeTranslator(language), { ...ledger, personalDebts }, [], now, hidden).entries.find((candidate) => candidate.notification.kind === "debt")
+    expect(entry([debt("due", { repayments: [{ amount: "5", date: now.toISOString() }] })], "en")).toMatchObject({ title: "Ana: due in 3 days", body: "They owe you $7.00." })
+    expect(entry([debt("due", { direction: "iOwe" })], "es")).toMatchObject({ title: "Ana: vence en 3 días" })
+    expect(entry([debt("due", { direction: "iOwe" })], "es")?.body).toMatch(/^Le debes /)
+    expect(entry([debt("due")], "en", true)?.body).toBe("They owe you ••••.")
+    expect(entry([debt("due", { dueDate: new Date(2026, 10, 12).toISOString() })], "en")?.title).toBe("Ana: due today")
+  })
+
   it("reads the day back from an id, for pruning", () => {
-    expect(notificationDay("payment:x:2026-11-15")).toEqual(new Date(2026, 10, 15))
-    expect(notificationDay("expiry:x:2026-11")).toEqual(new Date(2026, 10, 1))
-    expect(notificationDay("budget:groceries:2026-11:near")).toEqual(new Date(2026, 10, 1))
-    expect(notificationDay("installment:x:3")).toBeUndefined()
+    expect(notificationDay("debt:x:2026-11-15", ZONE)).toEqual(new Date(2026, 10, 15))
+    expect(notificationDay("bill:x:2026-11-13", ZONE)).toEqual(new Date(2026, 10, 13))
+    expect(notificationDay("payment:x:2026-11-15", ZONE)).toEqual(new Date(2026, 10, 15))
+    expect(notificationDay("expiry:x:2026-11", ZONE)).toEqual(new Date(2026, 10, 1))
+    expect(notificationDay("budget:groceries:2026-11:near", ZONE)).toEqual(new Date(2026, 10, 1))
+    expect(notificationDay("installment:x:3", ZONE)).toBeUndefined()
   })
 })
 

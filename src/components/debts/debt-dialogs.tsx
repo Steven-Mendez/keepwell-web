@@ -9,6 +9,7 @@ import {
   KWSegmented,
   KWValueRow,
 } from "@/components/kw/design"
+import { KWSwitch } from "@/components/movement-editor/flow-parts"
 import { ConfirmDialog } from "@/components/settings/confirm-dialog"
 import { SETTINGS_INPUT } from "@/components/settings/settings-rows"
 import {
@@ -21,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import {
+  addDays,
   decimalText,
   debtRemaining,
   deletePersonalDebt,
@@ -31,8 +33,11 @@ import {
   settlePersonalDebt,
 } from "@/lib/domain"
 import { formatAmount, formatNumber, parseAmount } from "@/lib/domain/format"
+import type { TimeZone } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
+import { cn } from "@/lib/utils"
 import {
   MAX_DEBT_NAME_LENGTH,
   type CurrencySettings,
@@ -40,22 +45,56 @@ import {
   type PersonalDebt,
 } from "@/lib/schema"
 
-import { dateFieldValue, dateFromField, dayText } from "./debt-format"
+import {
+  dateFieldValue,
+  dateFromField,
+  dayText,
+  debtDueText,
+} from "./debt-format"
 
 const DIALOG =
   "max-h-[90svh] gap-5 overflow-y-auto rounded-2xl bg-card p-6 ring-1 ring-border/60 sm:max-w-lg"
 const FOOTER =
   "-mx-6 -mb-6 gap-2 rounded-b-2xl border-divider bg-transparent px-6 pb-6 sm:justify-between"
 
-function debtError(t: Translator, thrown: unknown): string {
-  if (isDomainError(thrown, "missingName"))
-    return t.in("debts", "Write who it's with.")
-  if (isDomainError(thrown, "invalidAmount"))
-    return t.in("debts", "It can't be less than what was already paid back.")
-  return t.in("debts", "We couldn't save the debt. Try again.")
+/** A save's failure, and the field it's about (outlined in red), if any. */
+export interface DebtError {
+  message: string
+  field?: "person" | "amount" | "dueDate"
 }
 
-/** Money lent or borrowed: which way, who, how much, when and a note. Only tracked, never a movement. */
+export function debtError(t: Translator, thrown: unknown): DebtError {
+  if (isDomainError(thrown, "missingName"))
+    return { message: t.in("debts", "Write who it's with."), field: "person" }
+  if (isDomainError(thrown, "invalidDueDate"))
+    return { message: t.in("debts", "The due date can't be before the debt's date."), field: "dueDate" }
+  if (isDomainError(thrown, "invalidAmount"))
+    return { message: t.in("debts", "It can't be less than what was already paid back."), field: "amount" }
+  return { message: t.in("debts", "We couldn't save the debt. Try again.") }
+}
+
+/** "Due Nov 28", "Due today" or "Overdue · 3 days": always said in words, the color only adds to it. */
+export function DebtDueLine({
+  due,
+}: {
+  due: { text: string; overdue: boolean } | undefined
+}) {
+  if (!due) return null
+  return (
+    <span
+      className={cn(
+        "type-caption",
+        due.overdue ? "text-negative" : "text-muted-foreground"
+      )}
+    >
+      {due.text}
+    </span>
+  )
+}
+
+const DEFAULT_DUE_DAYS = 30
+
+/** Money lent or borrowed: which way, who, how much, when, an optional due date and a note. Only tracked, never a movement. */
 export function DebtEditorDialog({
   t,
   debt,
@@ -83,7 +122,10 @@ export function DebtEditorDialog({
     debt ? new Date(debt.date) : new Date()
   )
   const [note, setNote] = useState(debt?.note ?? "")
-  const [error, setError] = useState<string>()
+  const [dueDate, setDueDate] = useState<Date | undefined>(() =>
+    debt?.dueDate ? new Date(debt.dueDate) : undefined
+  )
+  const [error, setError] = useState<DebtError>()
   const [isSaving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const amount = parseAmount(amountText)
@@ -105,7 +147,7 @@ export function DebtEditorDialog({
   function save() {
     if (!canSave) return
     if (!amount?.gt(0))
-      return setError(t.in("debts", "Amounts have to be greater than zero."))
+      return setError({ message: t.in("debts", "Amounts have to be greater than zero."), field: "amount" })
     void run(() =>
       savePersonalDebt(ledgerStore, {
         ...(debt ? { id: debt.id } : {}),
@@ -115,6 +157,7 @@ export function DebtEditorDialog({
         currency,
         date,
         note,
+        dueDate,
       })
     )
   }
@@ -156,6 +199,7 @@ export function DebtEditorDialog({
                 value={person}
                 maxLength={MAX_DEBT_NAME_LENGTH}
                 placeholder={t.in("debts", "Juan")}
+                aria-invalid={error?.field === "person" || undefined}
                 onChange={(event) => {
                   setPerson(event.target.value)
                   setError(undefined)
@@ -194,7 +238,7 @@ export function DebtEditorDialog({
                   setError(undefined)
                 }}
                 currency={currency}
-                invalid={error !== undefined}
+                invalid={error?.field === "amount"}
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -206,9 +250,10 @@ export function DebtEditorDialog({
                   type="date"
                   className={SETTINGS_INPUT}
                   value={dateFieldValue(date)}
-                  onChange={(event) =>
+                  onChange={(event) => {
                     setDate(dateFromField(event.target.value, date))
-                  }
+                    setError(undefined)
+                  }}
                 />
               </label>
               <label className="flex flex-col gap-1.5">
@@ -223,6 +268,43 @@ export function DebtEditorDialog({
                 />
               </label>
             </div>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary px-3.5 py-2.5">
+                <label htmlFor="debt-due" className="type-body text-foreground">
+                  {t.in("debts", "Set a due date")}
+                </label>
+                <KWSwitch
+                  id="debt-due"
+                  checked={dueDate !== undefined}
+                  label={t.in("debts", "Set a due date")}
+                  onChange={(checked) => {
+                    setDueDate(
+                      checked
+                        ? addDays(date, DEFAULT_DUE_DAYS, deviceTimeZone())
+                        : undefined
+                    )
+                    setError(undefined)
+                  }}
+                />
+              </div>
+              {dueDate ? (
+                <label className="flex flex-col gap-1.5">
+                  <span className="type-label text-text-secondary">
+                    {t.in("debts", "Due date")}
+                  </span>
+                  <Input
+                    type="date"
+                    className={SETTINGS_INPUT}
+                    value={dateFieldValue(dueDate)}
+                    aria-invalid={error?.field === "dueDate" || undefined}
+                    onChange={(event) => {
+                      setDueDate(dateFromField(event.target.value, dueDate))
+                      setError(undefined)
+                    }}
+                  />
+                </label>
+              ) : null}
+            </div>
             <p className="type-caption text-muted-foreground">
               {t.in(
                 "debts",
@@ -231,7 +313,7 @@ export function DebtEditorDialog({
             </p>
             {error ? (
               <p role="alert" className="type-caption text-negative">
-                {error}
+                {error.message}
               </p>
             ) : null}
             <DialogFooter className={FOOTER}>
@@ -274,12 +356,16 @@ export function DebtDialog({
   t,
   debt,
   hidden,
+  now,
+  zone,
   onEdit,
   onClose,
 }: {
   t: Translator
   debt: PersonalDebt
   hidden: boolean
+  now: Date
+  zone: TimeZone
   onEdit: () => void
   onClose: () => void
 }) {
@@ -350,6 +436,7 @@ export function DebtDialog({
                 {t.in("debts", "Settled on %@", dayText(t, debt.settledAt))}
               </span>
             ) : null}
+            <DebtDueLine due={debtDueText(t, debt, now, zone)} />
             <span className="type-caption text-muted-foreground">
               {t.in(
                 "debts",

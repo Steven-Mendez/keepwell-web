@@ -11,7 +11,6 @@ import {
   type SyncOperation,
 } from "@/lib/db"
 import { newID } from "@/lib/platform/uuid"
-import { nowIso } from "@/lib/schema"
 
 /** Like iOS `DomainError.notFound`: a delete never succeeds silently on a missing or deleted record. */
 export class NotFoundError extends Error {
@@ -55,6 +54,16 @@ export function nextEventStamp(at: string): string {
 }
 
 /**
+ * The `updated_at` for a write over a row stamped `previous`: now, or 1 ms after `previous` when this
+ * device's clock is behind it. The server keeps the later stamp (ADR 0005), so a clock running behind
+ * would otherwise lose the person's latest edit as `older_than_stored`. A new row gets now.
+ */
+export function stampAfter(previous: string | null | undefined, now: number = Date.now()): string {
+  const floor = previous ? Date.parse(previous) + 1 : now
+  return new Date(Math.max(now, floor)).toISOString()
+}
+
+/**
  * Inserts or replaces the record with the same id in one transaction with its outbox event. A save
  * keeps `created_at` and stamps `updated_at`. A deleted record stays deleted ("delete wins", ADR
  * 0005): saving it again is refused, as the server would refuse it from any device.
@@ -65,9 +74,9 @@ export async function upsert<Row extends AuditColumns & { id: string }>(
   columns: Omit<Row, keyof AuditColumns>
 ): Promise<Row> {
   return db.transaction("rw", table, db.sync_outbox, async () => {
-    const now = nowIso()
     const existing = await table.where("id").equals(columns.id).first()
     if (existing && !isAlive(existing)) throw new NotFoundError(columns.id)
+    const now = stampAfter(existing?.updated_at)
     const row = {
       ...columns,
       created_at: existing?.created_at ?? now,
@@ -89,7 +98,7 @@ export async function softDelete<Row extends AuditColumns & { id: string }>(
   await db.transaction("rw", table, db.sync_outbox, async () => {
     const existing = await table.where("id").equals(id).first()
     if (!existing || !isAlive(existing)) throw new NotFoundError(id)
-    const now = nowIso()
+    const now = stampAfter(existing.updated_at)
     const row = { ...existing, updated_at: now, deleted_at: now }
     await table.put(row)
     await enqueue(entity, id, "delete", row, now)

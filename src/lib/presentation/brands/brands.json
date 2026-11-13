@@ -1,0 +1,869 @@
+{
+  "brands": [
+    {
+      "id": "netflix",
+      "name": "Netflix",
+      "domain": "netflix.com",
+      "aliases": [
+        "netflix"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "domain": "spotify.com",
+      "aliases": [
+        "spotify",
+        "spotify premium"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "domain": "youtube.com",
+      "aliases": [
+        "youtube",
+        "youtube premium",
+        "youtube music",
+        "yt premium"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "disney-plus",
+      "name": "Disney+",
+      "domain": "disneyplus.com",
+      "aliases": [
+        "disney plus",
+        "disneyplus",
+        "disney"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "prime-video",
+      "name": "Prime Video",
+      "domain": "primevideo.com",
+      "aliases": [
+        "prime video",
+        "amazon prime video",
+        "amazon prime"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "max",
+      "name": "Max",
+      "domain": "max.com",
+      "aliases": [
+        "hbo max",
+        "hbomax"
+      ],
+      "exactAliases": [
+        "max",
+        "hbo"
+      ]
+    },
+    {
+      "id": "apple-music",
+      "name": "Apple Music",
+      "domain": "apple.com",
+      "aliases": [
+        "apple music"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "apple-tv",
+      "name": "Apple TV+",
+      "domain": "apple.com",
+      "aliases": [
+        "apple tv",
+        "apple tv plus"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "apple-one",
+      "name": "Apple One",
+      "domain": "apple.com",
+      "aliases": [
+        "apple one"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "apple",
+      "name": "Apple",
+      "domain": "apple.com",
+      "aliases": [
+        "apple com",
+        "apple com bill",
+        "app store",
+        "apple store",
+        "apple developer"
+      ],
+      "exactAliases": [
+        "apple"
+      ]
+    },
+    {
+      "id": "icloud",
+      "name": "iCloud",
+      "domain": "icloud.com",
+      "aliases": [
+        "icloud",
+        "icloud plus",
+        "icloud storage"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "paramount-plus",
+      "name": "Paramount+",
+      "domain": "paramountplus.com",
+      "aliases": [
+        "paramount plus",
+        "paramountplus",
+        "paramount"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "crunchyroll",
+      "name": "Crunchyroll",
+      "domain": "crunchyroll.com",
+      "aliases": [
+        "crunchyroll"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "vix",
+      "name": "ViX",
+      "domain": "vix.com",
+      "aliases": [
+        "vix premium"
+      ],
+      "exactAliases": [
+        "vix"
+      ]
+    },
+    {
+      "id": "twitch",
+      "name": "Twitch",
+      "domain": "twitch.tv",
+      "aliases": [
+        "twitch"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "deezer",
+      "name": "Deezer",
+      "domain": "deezer.com",
+      "aliases": [
+        "deezer"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "tidal",
+      "name": "Tidal",
+      "domain": "tidal.com",
+      "aliases": [
+        "tidal music"
+      ],
+      "exactAliases": [
+        "tidal"
+      ]
+    },
+    {
+      "id": "audible",
+      "name": "Audible",
+      "domain": "audible.com",
+      "aliases": [
+        "audible"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "kindle",
+      "name": "Kindle Unlimited",
+      "domain": "amazon.com",
+      "aliases": [
+        "kindle unlimited",
+        "kindle"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "domain": "amazon.com",
+      "aliases": [
+        "amazon",
+        "amazon com",
+        "amzn"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "patreon",
+      "name": "Patreon",
+      "domain": "patreon.com",
+      "aliases": [
+        "patreon"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "claude",
+      "name": "Claude",
+      "domain": "claude.ai",
+      "aliases": [
+        "claude",
+        "claude ai",
+        "claude pro",
+        "claude max"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "domain": "anthropic.com",
+      "aliases": [
+        "anthropic"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "chatgpt",
+      "name": "ChatGPT",
+      "domain": "chatgpt.com",
+      "aliases": [
+        "chatgpt",
+        "chat gpt",
+        "chatgpt plus"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "domain": "openai.com",
+      "aliases": [
+        "openai",
+        "open ai"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "perplexity",
+      "name": "Perplexity",
+      "domain": "perplexity.ai",
+      "aliases": [
+        "perplexity",
+        "perplexity pro"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "midjourney",
+      "name": "Midjourney",
+      "domain": "midjourney.com",
+      "aliases": [
+        "midjourney"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor",
+      "domain": "cursor.com",
+      "aliases": [
+        "cursor",
+        "cursor pro"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "github",
+      "name": "GitHub",
+      "domain": "github.com",
+      "aliases": [
+        "github",
+        "github copilot"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "notion",
+      "name": "Notion",
+      "domain": "notion.so",
+      "aliases": [
+        "notion"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "figma",
+      "name": "Figma",
+      "domain": "figma.com",
+      "aliases": [
+        "figma"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "canva",
+      "name": "Canva",
+      "domain": "canva.com",
+      "aliases": [
+        "canva",
+        "canva pro"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "adobe",
+      "name": "Adobe",
+      "domain": "adobe.com",
+      "aliases": [
+        "adobe",
+        "adobe creative cloud",
+        "creative cloud"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "slack",
+      "name": "Slack",
+      "domain": "slack.com",
+      "aliases": [
+        "slack"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "zoom",
+      "name": "Zoom",
+      "domain": "zoom.us",
+      "aliases": [
+        "zoom",
+        "zoom us"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "dropbox",
+      "name": "Dropbox",
+      "domain": "dropbox.com",
+      "aliases": [
+        "dropbox"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "google-one",
+      "name": "Google One",
+      "domain": "google.com",
+      "aliases": [
+        "google one",
+        "google storage"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "google",
+      "name": "Google",
+      "domain": "google.com",
+      "aliases": [
+        "google",
+        "google play",
+        "google workspace",
+        "google cloud",
+        "google gemini",
+        "gemini"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "microsoft",
+      "name": "Microsoft 365",
+      "domain": "microsoft.com",
+      "aliases": [
+        "microsoft",
+        "microsoft 365",
+        "office 365",
+        "onedrive"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "linkedin",
+      "name": "LinkedIn",
+      "domain": "linkedin.com",
+      "aliases": [
+        "linkedin",
+        "linkedin premium"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "x",
+      "name": "X",
+      "domain": "x.com",
+      "aliases": [
+        "twitter",
+        "x premium",
+        "twitter blue"
+      ],
+      "exactAliases": [
+        "x"
+      ]
+    },
+    {
+      "id": "duolingo",
+      "name": "Duolingo",
+      "domain": "duolingo.com",
+      "aliases": [
+        "duolingo",
+        "super duolingo"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "1password",
+      "name": "1Password",
+      "domain": "1password.com",
+      "aliases": [
+        "1password"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "bitwarden",
+      "name": "Bitwarden",
+      "domain": "bitwarden.com",
+      "aliases": [
+        "bitwarden"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "nordvpn",
+      "name": "NordVPN",
+      "domain": "nordvpn.com",
+      "aliases": [
+        "nordvpn",
+        "nord vpn"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "expressvpn",
+      "name": "ExpressVPN",
+      "domain": "expressvpn.com",
+      "aliases": [
+        "expressvpn",
+        "express vpn"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "vercel",
+      "name": "Vercel",
+      "domain": "vercel.com",
+      "aliases": [
+        "vercel"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare",
+      "domain": "cloudflare.com",
+      "aliases": [
+        "cloudflare"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "jetbrains",
+      "name": "JetBrains",
+      "domain": "jetbrains.com",
+      "aliases": [
+        "jetbrains"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "raycast",
+      "name": "Raycast",
+      "domain": "raycast.com",
+      "aliases": [
+        "raycast"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "grammarly",
+      "name": "Grammarly",
+      "domain": "grammarly.com",
+      "aliases": [
+        "grammarly"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "todoist",
+      "name": "Todoist",
+      "domain": "todoist.com",
+      "aliases": [
+        "todoist"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "evernote",
+      "name": "Evernote",
+      "domain": "evernote.com",
+      "aliases": [
+        "evernote"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "medium",
+      "name": "Medium",
+      "domain": "medium.com",
+      "aliases": [
+        "medium com"
+      ],
+      "exactAliases": [
+        "medium"
+      ]
+    },
+    {
+      "id": "substack",
+      "name": "Substack",
+      "domain": "substack.com",
+      "aliases": [
+        "substack"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "nytimes",
+      "name": "The New York Times",
+      "domain": "nytimes.com",
+      "aliases": [
+        "new york times",
+        "nytimes"
+      ],
+      "exactAliases": [
+        "nyt"
+      ]
+    },
+    {
+      "id": "xbox",
+      "name": "Xbox",
+      "domain": "xbox.com",
+      "aliases": [
+        "xbox",
+        "xbox game pass",
+        "game pass"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "playstation",
+      "name": "PlayStation",
+      "domain": "playstation.com",
+      "aliases": [
+        "playstation",
+        "playstation plus",
+        "ps plus"
+      ],
+      "exactAliases": [
+        "psn"
+      ]
+    },
+    {
+      "id": "nintendo",
+      "name": "Nintendo",
+      "domain": "nintendo.com",
+      "aliases": [
+        "nintendo",
+        "nintendo switch online",
+        "nintendo eshop"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "steam",
+      "name": "Steam",
+      "domain": "steampowered.com",
+      "aliases": [
+        "steampowered",
+        "steam games"
+      ],
+      "exactAliases": [
+        "steam"
+      ]
+    },
+    {
+      "id": "uber",
+      "name": "Uber",
+      "domain": "uber.com",
+      "aliases": [
+        "uber",
+        "uber trip",
+        "uber one"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "uber-eats",
+      "name": "Uber Eats",
+      "domain": "ubereats.com",
+      "aliases": [
+        "uber eats",
+        "ubereats"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "didi",
+      "name": "DiDi",
+      "domain": "didiglobal.com",
+      "aliases": [
+        "didi"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "indrive",
+      "name": "inDrive",
+      "domain": "indrive.com",
+      "aliases": [
+        "indrive",
+        "indriver"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "pedidosya",
+      "name": "PedidosYa",
+      "domain": "pedidosya.com",
+      "aliases": [
+        "pedidosya",
+        "pedidos ya"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "rappi",
+      "name": "Rappi",
+      "domain": "rappi.com",
+      "aliases": [
+        "rappi"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "airbnb",
+      "name": "Airbnb",
+      "domain": "airbnb.com",
+      "aliases": [
+        "airbnb"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "booking",
+      "name": "Booking.com",
+      "domain": "booking.com",
+      "aliases": [
+        "booking com"
+      ],
+      "exactAliases": [
+        "booking"
+      ]
+    },
+    {
+      "id": "paypal",
+      "name": "PayPal",
+      "domain": "paypal.com",
+      "aliases": [
+        "paypal"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "walmart",
+      "name": "Walmart",
+      "domain": "walmart.com",
+      "aliases": [
+        "walmart"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "pricesmart",
+      "name": "PriceSmart",
+      "domain": "pricesmart.com",
+      "aliases": [
+        "pricesmart",
+        "price smart"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "costco",
+      "name": "Costco",
+      "domain": "costco.com",
+      "aliases": [
+        "costco"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "ebay",
+      "name": "eBay",
+      "domain": "ebay.com",
+      "aliases": [
+        "ebay"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "aliexpress",
+      "name": "AliExpress",
+      "domain": "aliexpress.com",
+      "aliases": [
+        "aliexpress"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "shein",
+      "name": "Shein",
+      "domain": "shein.com",
+      "aliases": [
+        "shein"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "temu",
+      "name": "Temu",
+      "domain": "temu.com",
+      "aliases": [
+        "temu"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "mercado-libre",
+      "name": "Mercado Libre",
+      "domain": "mercadolibre.com",
+      "aliases": [
+        "mercado libre",
+        "mercadolibre"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "ikea",
+      "name": "IKEA",
+      "domain": "ikea.com",
+      "aliases": [
+        "ikea"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "starbucks",
+      "name": "Starbucks",
+      "domain": "starbucks.com",
+      "aliases": [
+        "starbucks"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "mcdonalds",
+      "name": "McDonald's",
+      "domain": "mcdonalds.com",
+      "aliases": [
+        "mcdonalds",
+        "mcdonald s"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "burger-king",
+      "name": "Burger King",
+      "domain": "bk.com",
+      "aliases": [
+        "burger king"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "kfc",
+      "name": "KFC",
+      "domain": "kfc.com",
+      "aliases": [],
+      "exactAliases": [
+        "kfc"
+      ]
+    },
+    {
+      "id": "pizza-hut",
+      "name": "Pizza Hut",
+      "domain": "pizzahut.com",
+      "aliases": [
+        "pizza hut"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "dominos",
+      "name": "Domino's",
+      "domain": "dominos.com",
+      "aliases": [
+        "dominos",
+        "domino s"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "claro",
+      "name": "Claro",
+      "domain": "claro.com.ni",
+      "aliases": [
+        "claro",
+        "claro nicaragua",
+        "claro ni"
+      ],
+      "exactAliases": []
+    },
+    {
+      "id": "tigo",
+      "name": "Tigo",
+      "domain": "tigo.com.ni",
+      "aliases": [
+        "tigo",
+        "tigo nicaragua",
+        "tigo money"
+      ],
+      "exactAliases": []
+    }
+  ]
+}

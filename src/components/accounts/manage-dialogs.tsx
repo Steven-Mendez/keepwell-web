@@ -524,6 +524,7 @@ export function DeleteAccountDialog({
   open,
   onOpenChange,
   onDeleted,
+  onCloseInstead,
 }: {
   account: Account
   displayName: string
@@ -531,9 +532,12 @@ export function DeleteAccountDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
   onDeleted: () => void
+  /** Offered when the account has a history worth keeping and is still open. */
+  onCloseInstead?: () => void
 }) {
   const t = useT()
   const [busy, setBusy] = useState(false)
+  const closeInstead = onCloseInstead && movementCount > 0 && !account.closedAt ? onCloseInstead : undefined
   const message =
     movementCount === 0
       ? t.in(
@@ -554,6 +558,12 @@ export function DeleteAccountDialog({
           </AlertDialogTitle>
           <AlertDialogDescription className="type-body text-muted-foreground">
             {message}
+            {closeInstead ? (
+              <>
+                {" "}
+                {t.in("sharedpresentation", "To keep its history, close it instead.")}
+              </>
+            ) : null}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="-mx-6 -mb-6 rounded-b-2xl border-divider bg-transparent px-6 pb-6">
@@ -567,6 +577,17 @@ export function DeleteAccountDialog({
           >
             {t.in("web", "Cancel")}
           </AlertDialogCancel>
+          {closeInstead ? (
+            <KWButton
+              variant="secondary"
+              onClick={() => {
+                onOpenChange(false)
+                closeInstead()
+              }}
+            >
+              {t.in("sharedpresentation", "Close instead")}
+            </KWButton>
+          ) : null}
           <KWButton
             variant="destructive"
             icon="trash"

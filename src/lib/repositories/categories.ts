@@ -8,7 +8,7 @@ import {
   shippedCategory,
 } from "@/lib/schema"
 
-import { enqueue, isAlive } from "./shared"
+import { enqueue, isAlive, stampAfter } from "./shared"
 
 /** "Other" and "Other income" receive a deleted category's movements, so they stay (iOS rule). */
 export class FallbackCategoryError extends Error {
@@ -49,7 +49,7 @@ export const categoryRepository = {
       }
       for (const row of rows.values()) {
         if (isFallbackCategory(row.id) && !isAlive(row)) {
-          await write({ ...row, updated_at: now, deleted_at: null }, "update")
+          await write({ ...row, updated_at: stampAfter(row.updated_at), deleted_at: null }, "update")
         }
       }
     })
@@ -60,7 +60,7 @@ export const categoryRepository = {
     const category = TransactionCategory.parse(input)
     await db.transaction("rw", db.categories, db.sync_outbox, async () => {
       const existing = await db.categories.get(category.id)
-      const now = nowIso()
+      const now = stampAfter(existing?.updated_at)
       const sortIndex = existing?.sort_index ?? (await nextSortIndex())
       await write(
         { ...categoryToRow(category, sortIndex), created_at: existing?.created_at ?? now, updated_at: now, deleted_at: null },
@@ -75,7 +75,7 @@ export const categoryRepository = {
     if (isFallbackCategory(id)) throw new FallbackCategoryError(`Category ${id} can't be deleted`)
     await db.transaction("rw", db.categories, db.sync_outbox, async () => {
       const existing = await db.categories.get(id)
-      const now = nowIso()
+      const now = stampAfter(existing?.updated_at)
       if (existing) {
         if (!isAlive(existing)) return
         await write({ ...existing, updated_at: now, deleted_at: now }, "delete")
@@ -97,10 +97,9 @@ export const categoryRepository = {
       })
       const rows = await db.categories.orderBy("sort_index").toArray()
       const listed = rows.filter((row) => rank.has(row.id)).sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0))
-      const now = nowIso()
       const ordered = [...listed, ...rows.filter((row) => !rank.has(row.id))]
       for (const [index, row] of ordered.entries()) {
-        if (row.sort_index !== index) await write({ ...row, sort_index: index, updated_at: now }, "update")
+        if (row.sort_index !== index) await write({ ...row, sort_index: index, updated_at: stampAfter(row.updated_at) }, "update")
       }
     })
   },
@@ -110,9 +109,9 @@ export const categoryRepository = {
     await db.transaction("rw", db.categories, db.sync_outbox, async () => {
       const rows = await db.categories.orderBy("sort_index").toArray()
       const byId = new Map(rows.map((row) => [row.id, row]))
-      const now = nowIso()
       for (const [index, category] of DEFAULT_CATEGORIES.entries()) {
         const existing = byId.get(category.id)
+        const now = stampAfter(existing?.updated_at)
         await write(
           { ...categoryToRow(category, index), created_at: existing?.created_at ?? now, updated_at: now, deleted_at: null },
           existing ? "update" : "create",
@@ -121,7 +120,7 @@ export const categoryRepository = {
       const created = rows.filter((row) => !shippedCategory(row.id))
       for (const [offset, row] of created.entries()) {
         const sortIndex = DEFAULT_CATEGORIES.length + offset
-        if (row.sort_index !== sortIndex) await write({ ...row, sort_index: sortIndex, updated_at: now }, "update")
+        if (row.sort_index !== sortIndex) await write({ ...row, sort_index: sortIndex, updated_at: stampAfter(row.updated_at) }, "update")
       }
     })
   },

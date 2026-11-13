@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it } from "vitest"
 
 import { db } from "@/lib/db"
 import { ApiError } from "@/lib/api/client"
-import { categoryRepository } from "@/lib/repositories"
-import type { SyncEntity } from "@/lib/schema"
+import { categoryRepository, transactionRepository } from "@/lib/repositories"
+import { OTHER_EXPENSE_ID, type SyncEntity } from "@/lib/schema"
 import { rejectedEvents, statusAfter, syncOnce } from "@/lib/sync/engine"
 import type { PulledChange, PushResult, SyncTransport } from "@/lib/sync/transport"
 
@@ -50,6 +50,11 @@ const at = (minute: number) => new Date(Date.UTC(2026, 10, 1, 10, minute)).toISO
 const category = (id: string, name: string, minute: number, deleted = false): Row => ({
   id, name, kind: "expense", icon: null, color: null, is_renamed: false, sort_index: 0, budget_amount: null, budget_currency: null,
   created_at: at(0), updated_at: at(minute), deleted_at: deleted ? at(minute) : null,
+})
+
+const expense = (categoryId: string) => ({
+  date: at(1), status: "confirmed" as const, description: "Croquetas", kind: "expense" as const, categoryId, amount: "12.50", currency: "USD",
+  accountId: "00000000-0000-4000-8000-000000000001", exchangeRate: { principal: "USD", second: "NIO", rate: "36.6" }, isShared: false,
 })
 
 beforeEach(async () => {
@@ -115,6 +120,37 @@ describe("web sync engine", () => {
     expect(await db.sync_outbox.count()).toBe(0)
     expect(await rejectedEvents()).toMatchObject([{ entity: "category", entity_id: "custom-1", reason: "amount: Not an exact decimal" }])
     expect((await db.categories.get("custom-1"))?.name).toBe("Bad")
+  })
+
+  it("moves a movement edited here to Other when another device deleted its category meanwhile", async () => {
+    const server = new FakeServer()
+    await categoryRepository.save({ id: "custom-1", name: "Mascotas", kind: "expense", isRenamed: false })
+    const movement = await transactionRepository.save(expense("custom-1"))
+    await syncOnce(server)
+    // The other device deletes the category, which moves the movement to "Other" there.
+    const sent = server.rows.get(`transaction:${movement.id}`)!
+    server.write("category", { ...server.rows.get("category:custom-1")!, updated_at: at(10), deleted_at: at(10) })
+    server.write("transaction", { ...sent, category_id: OTHER_EXPENSE_ID, updated_at: at(10) })
+    // Before pulling that, this browser edits the movement: its later edit wins and brings the id back.
+    await transactionRepository.save({ ...movement, note: "Vet" })
+    await syncOnce(server)
+
+    const local = (await db.transactions.get(movement.id))!
+    expect(local).toMatchObject({ category_id: OTHER_EXPENSE_ID, note: "Vet" })
+    // The repair travels like any change, so the account and the other devices get it too.
+    await syncOnce(server)
+    expect(server.rows.get(`transaction:${movement.id}`)).toMatchObject({ category_id: OTHER_EXPENSE_ID, note: "Vet" })
+  })
+
+  it("repairs nothing, and enqueues nothing, when no movement points at a deleted category", async () => {
+    const server = new FakeServer()
+    await categoryRepository.save({ id: "custom-1", name: "Mascotas", kind: "expense", isRenamed: false })
+    await categoryRepository.save({ id: "custom-2", name: "Plantas", kind: "expense", isRenamed: false })
+    await transactionRepository.save(expense("custom-1"))
+    await syncOnce(server)
+    server.write("category", { ...server.rows.get("category:custom-2")!, updated_at: at(10), deleted_at: at(10) })
+    await syncOnce(server)
+    expect(await db.sync_outbox.count()).toBe(0)
   })
 
   it("stops on needs_plan and on a lost session, and treats network errors as offline", async () => {
