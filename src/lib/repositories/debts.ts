@@ -51,6 +51,18 @@ export const personalDebtRepository = {
     return rows.map((row) => rowToPersonalDebt(row, repayments))
   },
 
+  /**
+   * Every movement a repayment deposited, read from all repayment rows, tombstones included: a
+   * deleted debt (or repayment) keeps its link, so the movement it left behind still isn't income.
+   */
+  async depositIds(): Promise<string[]> {
+    const ids = new Set<string>()
+    await db.personal_debt_repayments.each((row) => {
+      if (row.transaction_id) ids.add(row.transaction_id)
+    })
+    return [...ids]
+  },
+
   async save(input: PersonalDebt): Promise<PersonalDebt> {
     const debt = PersonalDebt.parse(input)
     await db.transaction("rw", db.personal_debts, db.personal_debt_repayments, db.sync_outbox, async () => {

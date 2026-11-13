@@ -11,6 +11,7 @@ import {
   type SyncOperation,
 } from "@/lib/db"
 import { newID } from "@/lib/platform/uuid"
+import { SYNC_ENTITIES, SYNC_WIRE } from "@/lib/schema"
 
 /** Like iOS `DomainError.notFound`: a delete never succeeds silently on a missing or deleted record. */
 export class NotFoundError extends Error {
@@ -132,12 +133,40 @@ export async function syncChildren<Row extends AuditColumns & { id: string }>(
 export type RemoteResult = "applied" | "ignored"
 
 /**
+ * The columns each wire row may lack (optional, not only nullable: `merchant_id`/`via_merchant_id`,
+ * a repayment's `transaction_id`, `closed_at`, `due_date`, `source`, `imported_id`, `time_zone`):
+ * a row from an app older than the column lacks the key, and the server keeps what it has.
+ */
+const OPTIONAL_WIRE_COLUMNS = Object.fromEntries(
+  SYNC_ENTITIES.map((entity) => [
+    entity,
+    Object.entries(SYNC_WIRE[entity].shape)
+      .filter(([, schema]) => (schema as { safeParse(value: unknown): { success: boolean } }).safeParse(undefined).success)
+      .map(([column]) => column),
+  ])
+) as unknown as Record<SyncEntity, readonly string[]>
+
+/**
+ * `incoming` over `existing` the way the server decides (absent keeps): an optional column the
+ * incoming row lacks keeps the stored value; one it sends, null included, replaces it.
+ */
+export function keepingAbsentColumns(entity: SyncEntity, existing: Record<string, unknown> | undefined, incoming: Record<string, unknown>): Record<string, unknown> {
+  if (!existing) return incoming
+  const kept: Record<string, unknown> = {}
+  for (const column of OPTIONAL_WIRE_COLUMNS[entity]) {
+    if (incoming[column] === undefined && existing[column] !== undefined) kept[column] = existing[column]
+  }
+  return { ...kept, ...Object.fromEntries(Object.entries(incoming).filter(([, value]) => value !== undefined)) }
+}
+
+/**
  * Applies a row that came from the server, without writing to the outbox: the silent write path.
  * Using `upsert` here would push the change straight back (an echo between devices).
  *
  * The server has already arbitrated, so its row wins (ADR 0005), with two exceptions: a local
  * tombstone stays final, and the sync engine never calls this for a row with a pending local
- * change (that change's push settles it). Settings only take the synced columns.
+ * change (that change's push settles it). Settings only take the synced columns. An optional column
+ * the incoming row lacks keeps the stored value (`keepingAbsentColumns`), as the server does.
  */
 export async function applyRemote(entity: SyncEntity, incoming: Record<string, unknown> & { id: string; updated_at: string; deleted_at: string | null }): Promise<RemoteResult> {
   const table = (db as unknown as Record<string, Table<Record<string, unknown> & AuditColumns, string>>)[SYNC_TABLES[entity]]!
@@ -147,10 +176,10 @@ export async function applyRemote(entity: SyncEntity, incoming: Record<string, u
     if (entity === "settings") {
       const local = Object.fromEntries(LOCAL_SETTINGS_COLUMNS.map((column) => [column, (existing as SettingsRow | undefined)?.[column]]))
       const defaults = { unlock_method: "biometrics", relock_after_seconds: 60, hides_amounts_in_app_switcher: true, is_icloud_backup_enabled: true }
-      await table.put({ ...defaults, ...Object.fromEntries(Object.entries(local).filter(([, v]) => v !== undefined)), ...incoming } as never)
+      await table.put({ ...defaults, ...Object.fromEntries(Object.entries(local).filter(([, v]) => v !== undefined)), ...keepingAbsentColumns(entity, existing, incoming) } as never)
       return "applied"
     }
-    await table.put(incoming as never)
+    await table.put(keepingAbsentColumns(entity, existing, incoming) as never)
     return "applied"
   })
 }

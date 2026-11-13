@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input"
 import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import {
   addDays,
+  canDepositRepayment,
   decimalText,
   debtRemaining,
   deleteDebtRepayment,
@@ -365,6 +366,7 @@ export function DebtDialog({
   t,
   debt,
   accounts,
+  currencies,
   hidden,
   now,
   zone,
@@ -375,6 +377,8 @@ export function DebtDialog({
   debt: PersonalDebt
   /** Where a repayment can be deposited: the open bank and cash accounts. */
   accounts: readonly Account[]
+  /** The ledger's currencies: only a debt in one of them can be deposited. */
+  currencies: CurrencySettings
   hidden: boolean
   now: Date
   zone: TimeZone
@@ -388,7 +392,8 @@ export function DebtDialog({
   const [isSaving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deletingRepayment, setDeletingRepayment] = useState<DebtRepayment>()
-  const canDeposit = debt.direction === "theyOweMe" && accounts.length > 0
+  const canDeposit =
+    canDepositRepayment(debt, currencies) && accounts.length > 0
   const depositAccount = canDeposit
     ? accounts.find((account) => account.id === depositAccountId)
     : undefined

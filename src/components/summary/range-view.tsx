@@ -4,11 +4,9 @@ import { useMemo } from "react"
 
 import { KWSegmented } from "@/components/kw/design"
 import { OptionSelect } from "@/components/kw/pickers"
-import { activityRange, compareMonths, lastMonths, monthKey, monthRange, rangeMonths, trendReport, yearToDate, yearTotals, type MonthRange, type TrendReport, type YearMonth } from "@/lib/domain"
+import { activityRange, compareMonths, lastMonths, monthKey, monthRange, rangeMonths, trendReport, yearToDate, yearTotals, NO_DEBT_LINKS, type MonthRange, type SpendingDebts, type TrendReport, type YearMonth } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
-import type { PersonalDebt, Transaction, TransactionCategory } from "@/lib/schema"
-
-const NO_DEBTS: readonly PersonalDebt[] = []
+import type { Transaction, TransactionCategory } from "@/lib/schema"
 
 import { CategoriesCard, CategoryTrendsCard, HighlightsCard, MonthlyFlowCard, SavingsCard, TrendKpis, YearsCard } from "./range-cards"
 import type { SummaryFormat } from "./summary-format"
@@ -48,8 +46,8 @@ export function useRangeSummary(
   currency: string,
   period: Period,
   custom: CustomRange | undefined,
-  /** The ledger's personal debts: split expenses count only the person's part. */
-  debts: readonly PersonalDebt[] = NO_DEBTS,
+  /** The ledger's debt links (`ledgerDebtLinks`): split expenses count only the person's part, deposits don't count. */
+  debts: SpendingDebts = NO_DEBT_LINKS,
 ) {
   return useMemo(() => {
     if (!transactions || period === "month") return undefined

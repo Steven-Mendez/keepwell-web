@@ -8,12 +8,16 @@ import {
   averageUsualSpending,
   balanceOf,
   budgetStatuses,
+  canDepositRepayment,
   debtLinks,
   debtShareIn,
   deleteDebtRepayment,
   homeOverview,
+  InMemoryStore,
   isReimbursement,
   isSplit,
+  ledgerDebtLinks,
+  loadLedger,
   monthlySummary,
   monthlyTotals,
   repaymentCategoryId,
@@ -23,10 +27,12 @@ import {
   spendingAmount,
   spendingAmountIn,
   spendingPace,
+  splitRemaining,
   splitTransaction,
   summaryReport,
   trendReport,
   yearTotals,
+  deletePersonalDebt,
   type DomainError,
 } from "@/lib/domain"
 import { exportCsv } from "@/lib/domain/csv"
@@ -309,5 +315,88 @@ describe("repayments deposited into an account", () => {
     expect(repaymentCategoryId(DEFAULT_CATEGORIES.filter((category) => category.id !== "refunds"))).toBe(OTHER_INCOME_ID)
     expect(repaymentDescription({ person: "Ana" })).toBe("Ana")
     expect(repaymentDescription({ person: "Ana", note: " Cena " })).toBe("Ana · Cena")
+  })
+
+  it("deleting the debt keeps its deposits as movements that still aren't income", async () => {
+    const { store, debt } = await splitLunch()
+    const repaid = await repayPersonalDebt(store, debt.id, "40", referenceDate, { accountId: IDs.cash })
+    const movementId = repaid.repayments[0]!.transactionId!
+    await deletePersonalDebt(store, debt.id)
+    const movement = store.transactions.find((candidate) => candidate.id === movementId)!
+    expect(movement).toBeDefined()
+    expect(await store.fetchPersonalDebts()).not.toContainEqual(expect.objectContaining({ id: debt.id }))
+    expect(await store.fetchRepaymentDepositIds()).toContain(movementId)
+    const ledger = await loadLedger(store)
+    expect(ledger.repaymentDepositIds).toContain(movementId)
+    expect(isReimbursement(movement, ledgerDebtLinks(ledger))).toBe(true)
+    // The alive debts alone no longer know it: that's why totals over a ledger use `ledgerDebtLinks`.
+    expect(isReimbursement(movement, ledger.personalDebts)).toBe(false)
+    const withLinks = monthlySummary(october, store.transactions, "USD", ZONE, ledgerDebtLinks(ledger))
+    const gross = monthlySummary(october, store.transactions, "USD", ZONE)
+    expect(gross.income.minus(withLinks.income).toDecimalPlaces(10).toFixed()).toBe(d(40).div("36.6243").toDecimalPlaces(10).toFixed())
+    expect(homeOverview(ledger, date(2026, 10, 20)).month.income.toFixed()).toBe(withLinks.income.toFixed())
+  })
+
+  it("a repayment dropped by a save keeps its link too, and a store seeded with tombstones knows them", async () => {
+    const { store, debt } = await splitLunch()
+    const repaid = await repayPersonalDebt(store, debt.id, "40", referenceDate, { accountId: IDs.cash })
+    const movementId = repaid.repayments[0]!.transactionId!
+    await store.savePersonalDebt({ ...repaid, repayments: [] })
+    expect(await store.fetchRepaymentDepositIds()).toEqual([movementId])
+    const fresh = new InMemoryStore(ZONE, { deletedRepaymentDepositIds: ["deposit-1"] })
+    expect(await fresh.fetchRepaymentDepositIds()).toEqual(["deposit-1"])
+  })
+
+  it("deposits only a debt in the ledger's currencies", async () => {
+    const store = sampleStore()
+    const currencies = store.settings!.currencies
+    const euros: PersonalDebt = { id: crypto.randomUUID(), person: "Eva", direction: "theyOweMe", amount: { amount: "50", currency: "EUR" }, date: referenceDate.toISOString(), repayments: [] }
+    store.personalDebts = [euros]
+    expect(canDepositRepayment(euros, currencies)).toBe(false)
+    expect(canDepositRepayment({ ...euros, amount: { amount: "50", currency: "NIO" } }, currencies)).toBe(true)
+    expect(canDepositRepayment({ ...euros, direction: "iOwe", amount: { amount: "50", currency: "USD" } }, currencies)).toBe(false)
+    const before = store.transactions.length
+    const error: unknown = await repayPersonalDebt(store, euros.id, "10", referenceDate, { accountId: IDs.cash }).catch((thrown: unknown) => thrown)
+    expect((error as DomainError).code).toBe("invalidCurrency")
+    expect(store.transactions).toHaveLength(before)
+    expect(store.personalDebts[0]!.repayments).toEqual([])
+    // Without a deposit it records as before.
+    expect((await repayPersonalDebt(store, euros.id, "10", referenceDate)).repayments).toHaveLength(1)
+  })
+
+  it("reopens a debt its repayment settled, however the instant was written", async () => {
+    const { store, debt } = await splitLunch()
+    const repaid = await repayPersonalDebt(store, debt.id, "100", referenceDate)
+    const repayment = repaid.repayments[0]!
+    // Another app wrote the settling without milliseconds.
+    const settledAt = referenceDate.toISOString().replace(".000Z", "Z")
+    expect(settledAt).not.toBe(repayment.date)
+    store.personalDebts = store.personalDebts.map((candidate) => (candidate.id === debt.id ? { ...repaid, settledAt } : candidate))
+    const updated = await deleteDebtRepayment(store, debt.id, repayment.id!)
+    expect(updated.settledAt).toBeUndefined()
+  })
+})
+
+describe("splitting an expense twice", () => {
+  it("shares only what earlier splits left, so the shares never exceed the expense", async () => {
+    const store = sampleStore()
+    const lunch = store.transactions.find((movement) => movement.description === "Lunch")!
+    const total = d(lunch.amount)
+    expect(splitRemaining(lunch, [])).toEqual(total)
+    const [ana] = await splitTransaction(store, lunch.id, [{ person: "Ana", amount: total.minus(100) }])
+    expect(splitRemaining(lunch, await store.fetchPersonalDebts()).toFixed()).toBe("100")
+    const error: unknown = await splitTransaction(store, lunch.id, [{ person: "Luis", amount: d(101) }]).catch((thrown: unknown) => thrown)
+    expect((error as DomainError).code).toBe("invalidAmount")
+    await splitTransaction(store, lunch.id, [{ person: "Luis", amount: d(100) }])
+    expect(splitRemaining(lunch, await store.fetchPersonalDebts()).toFixed()).toBe("0")
+    await expect(splitTransaction(store, lunch.id, [{ person: "Eva", amount: d("0.01") }])).rejects.toMatchObject({ code: "invalidAmount" })
+    // A deleted share frees its part.
+    await deletePersonalDebt(store, ana!.id)
+    expect(splitRemaining(lunch, await store.fetchPersonalDebts())).toEqual(total.minus(100))
+  })
+
+  it("only an expense has anything to split", () => {
+    const income = transaction({ kind: "income", amount: "100" })
+    expect(splitRemaining(income, []).toFixed()).toBe("0")
   })
 })

@@ -50,6 +50,7 @@ export const ledgerStore: LedgerStore = {
   fetchPersonalDebts: () => personalDebtRepository.list(),
   savePersonalDebt: async (debt) => void (await personalDebtRepository.save(debt)),
   deletePersonalDebt: (id) => personalDebtRepository.remove(id),
+  fetchRepaymentDepositIds: () => personalDebtRepository.depositIds(),
 
   fetchCategorizationRules: () => categorizationRuleRepository.list(),
   saveCategorizationRule: async (rule) => void (await categorizationRuleRepository.save(rule)),

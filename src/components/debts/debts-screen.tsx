@@ -286,6 +286,7 @@ export function DebtsScreen() {
           accounts={openAccounts(ledger.accounts).filter(
             (account) => account.kind !== "credit"
           )}
+          currencies={ledger.settings.currencies}
           hidden={hidden}
           now={now}
           zone={ledger.timeZone}
