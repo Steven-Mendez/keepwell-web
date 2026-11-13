@@ -17,4 +17,11 @@ describe("proxied API paths", () => {
     expect(isNetworkOnly(logo, false)).toBe(true)
     expect(isNetworkOnly(new URL("https://keepwell.app/summary"), true)).toBe(false)
   })
+
+  it("never caches the API's answers, sync included, on this origin or the API's", () => {
+    for (const path of ["/sync/pull?since=1", "/me", "/api/auth/session", "/api/anything-new", "/push/devices/x"]) {
+      expect(isNetworkOnly(new URL(`https://keepwell.app${path}`), true)).toBe(true)
+    }
+    expect(isNetworkOnly(new URL("https://api.keepwell.app/sync/pull"), false)).toBe(true)
+  })
 })

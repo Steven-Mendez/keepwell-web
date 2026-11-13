@@ -33,8 +33,10 @@ export function isApiPath(pathname: string): boolean {
  * Requests the service worker hands to the network untouched, never to a cache: the API's paths and
  * everything on another origin. That includes Brandfetch's logos (`cdn.brandfetch.io`), which
  * Serwist's `defaultCache` would otherwise keep in its "cross-origin" cache: Brandfetch hasn't
- * allowed storing them, so only the browser's own HTTP cache holds them.
+ * allowed storing them, so only the browser's own HTTP cache holds them. Any same-origin `/api/`
+ * path too: `defaultCache` would answer those from its "apis" cache for a day when the network is
+ * slow, and the app has none of its own, so whatever lives there belongs to the API.
  */
 export function isNetworkOnly(url: URL, sameOrigin: boolean): boolean {
-  return !sameOrigin || isApiPath(url.pathname)
+  return !sameOrigin || isApiPath(url.pathname) || url.pathname.startsWith("/api/")
 }
