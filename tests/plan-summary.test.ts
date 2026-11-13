@@ -121,6 +121,25 @@ describe("planSummary counts", () => {
     expect(summary.recurring.subscriptionsPerMonth.amount.toString()).toBe("20")
   })
 
+  it("leaves out of the count the subscriptions the total can't convert, and names them", () => {
+    const rules = [
+      rule(),
+      rule({ id: "00000000-0000-0000-0000-00000000e002", name: "Music" }),
+      rule({ id: "00000000-0000-0000-0000-00000000e003", name: "Radio", amount: "9", currency: "EUR" }),
+    ]
+    const summary = planSummary(ledger({ recurringRules: rules }), NOW)
+    expect(summary.recurring.subscriptionCount).toBe(2)
+    expect(summary.recurring.subscriptionsPerMonth.amount.toString()).toBe("20")
+    expect(summary.recurring.excludedSubscriptions).toEqual([{ currency: "EUR", count: 1 }])
+    const lines = (lang: "en" | "es") =>
+      summary.recurring.excludedSubscriptions.map(({ currency, count }) =>
+        makeTranslator(lang).in("plan", "Not including %lld in %@", count, currency)
+      )
+    expect(lines("en")).toEqual(["Not including 1 in EUR"])
+    expect(lines("es")).toEqual(["Sin incluir 1 en EUR"])
+    expect(planSummary(ledger({ recurringRules: [rule()] }), NOW).recurring.excludedSubscriptions).toEqual([])
+  })
+
   it("counts open debts to pay and the different people who owe", () => {
     const debts = [
       debt({}),

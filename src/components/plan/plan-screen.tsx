@@ -117,6 +117,14 @@ function RecurringCard({
                 ? t.in("plan", "Per month · %lld subscriptions", recurring.subscriptionCount)
                 : t.in("recurring", "Subscriptions per month")}
             </span>
+            {recurring.excludedSubscriptions.map(({ currency, count }) => (
+              <span
+                key={currency}
+                className="type-caption text-muted-foreground tabular-nums"
+              >
+                {t.in("plan", "Not including %lld in %@", count, currency)}
+              </span>
+            ))}
           </span>
           {recurring.next ? (
             <span className="truncate type-caption text-text-secondary tabular-nums">
