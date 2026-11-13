@@ -142,6 +142,24 @@ describe("CSV", () => {
     expect(row[7]).toBe("'+Cash")
     expect(row[13]).toBe("'@SUM(A1)")
   })
+
+  // The error screens' "Export CSV" exists for a ledger that no longer renders: a damaged row must
+  // not stop the copy. It goes out with what it holds, the rest of the file unchanged.
+  it("exports a damaged movement as it is instead of failing", () => {
+    const sample = sampleData()
+    const [account] = sample.accounts
+    const good = transaction({ amount: "12.5", account: account!.id, description: "Bread", date: date(2026, 10, 2) })
+    const badDate = { ...transaction({ amount: "3", account: account!.id, description: "Bad date" }), date: "not a date" }
+    const badAmount = { ...transaction({ amount: "1", account: account!.id, description: "Bad amount" }), amount: "=1+2", actualDebitedPrincipal: "x" }
+    const badRate = { ...transaction({ amount: "2", account: account!.id, description: "Bad rate" }), exchangeRate: { principal: "USD", second: "NIO", rate: "?" } }
+    const rows = parseCsvRows(exportCsv([badDate, good, badAmount, badRate], sample.accounts, sample.cards, DEFAULT_CATEGORIES, ZONE))
+    expect(rows).toHaveLength(5)
+    expect(rows.find((row) => row[3] === "Bread")![0]).toBe("2026-10-02")
+    expect(rows.find((row) => row[3] === "Bad date")![0]).toBe("not a date")
+    const amountRow = rows.find((row) => row[3] === "Bad amount")!
+    expect([amountRow[5], amountRow[10]]).toEqual(["'=1+2", "x"])
+    expect(rows.find((row) => row[3] === "Bad rate")![11]).toBe("?")
+  })
 })
 
 describe("Summary", () => {
