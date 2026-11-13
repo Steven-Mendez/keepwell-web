@@ -57,14 +57,20 @@ const DIALOG =
 const FOOTER =
   "-mx-6 -mb-6 gap-2 rounded-b-2xl border-divider bg-transparent px-6 pb-6 sm:justify-between"
 
-function debtError(t: Translator, thrown: unknown): string {
+/** A save's failure, and the field it's about (outlined in red), if any. */
+export interface DebtError {
+  message: string
+  field?: "person" | "amount" | "dueDate"
+}
+
+export function debtError(t: Translator, thrown: unknown): DebtError {
   if (isDomainError(thrown, "missingName"))
-    return t.in("debts", "Write who it's with.")
+    return { message: t.in("debts", "Write who it's with."), field: "person" }
   if (isDomainError(thrown, "invalidDueDate"))
-    return t.in("debts", "The due date can't be before the debt's date.")
+    return { message: t.in("debts", "The due date can't be before the debt's date."), field: "dueDate" }
   if (isDomainError(thrown, "invalidAmount"))
-    return t.in("debts", "It can't be less than what was already paid back.")
-  return t.in("debts", "We couldn't save the debt. Try again.")
+    return { message: t.in("debts", "It can't be less than what was already paid back."), field: "amount" }
+  return { message: t.in("debts", "We couldn't save the debt. Try again.") }
 }
 
 /** "Due Nov 28", "Due today" or "Overdue · 3 days": always said in words, the color only adds to it. */
@@ -119,7 +125,7 @@ export function DebtEditorDialog({
   const [dueDate, setDueDate] = useState<Date | undefined>(() =>
     debt?.dueDate ? new Date(debt.dueDate) : undefined
   )
-  const [error, setError] = useState<string>()
+  const [error, setError] = useState<DebtError>()
   const [isSaving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const amount = parseAmount(amountText)
@@ -141,7 +147,7 @@ export function DebtEditorDialog({
   function save() {
     if (!canSave) return
     if (!amount?.gt(0))
-      return setError(t.in("debts", "Amounts have to be greater than zero."))
+      return setError({ message: t.in("debts", "Amounts have to be greater than zero."), field: "amount" })
     void run(() =>
       savePersonalDebt(ledgerStore, {
         ...(debt ? { id: debt.id } : {}),
@@ -193,6 +199,7 @@ export function DebtEditorDialog({
                 value={person}
                 maxLength={MAX_DEBT_NAME_LENGTH}
                 placeholder={t.in("debts", "Juan")}
+                aria-invalid={error?.field === "person" || undefined}
                 onChange={(event) => {
                   setPerson(event.target.value)
                   setError(undefined)
@@ -231,7 +238,7 @@ export function DebtEditorDialog({
                   setError(undefined)
                 }}
                 currency={currency}
-                invalid={error !== undefined}
+                invalid={error?.field === "amount"}
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -243,9 +250,10 @@ export function DebtEditorDialog({
                   type="date"
                   className={SETTINGS_INPUT}
                   value={dateFieldValue(date)}
-                  onChange={(event) =>
+                  onChange={(event) => {
                     setDate(dateFromField(event.target.value, date))
-                  }
+                    setError(undefined)
+                  }}
                 />
               </label>
               <label className="flex flex-col gap-1.5">
@@ -288,6 +296,7 @@ export function DebtEditorDialog({
                     type="date"
                     className={SETTINGS_INPUT}
                     value={dateFieldValue(dueDate)}
+                    aria-invalid={error?.field === "dueDate" || undefined}
                     onChange={(event) => {
                       setDueDate(dateFromField(event.target.value, dueDate))
                       setError(undefined)
@@ -304,7 +313,7 @@ export function DebtEditorDialog({
             </p>
             {error ? (
               <p role="alert" className="type-caption text-negative">
-                {error}
+                {error.message}
               </p>
             ) : null}
             <DialogFooter className={FOOTER}>

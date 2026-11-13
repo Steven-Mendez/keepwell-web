@@ -197,11 +197,14 @@ function defaultAccounts(
   if (movementKind(type) !== "transfer") {
     if (preset) return { source: primarySource(preset.id, context) }
     if (current) return { source: current }
+    // `lastUsed` covers every movement, so it can name a closed account (its closing transfer is
+    // the newest one) or its card: only a source still in the picker can be the default.
     const last = lastUsedSource(context)
     return {
-      source: last
-        ? pickerSource(last, context)
-        : primarySource(context.accounts[0]?.id, context),
+      source:
+        last && isPickable(last, context)
+          ? pickerSource(last, context)
+          : primarySource(context.accounts[0]?.id, context),
     }
   }
   const destinationId =
@@ -213,6 +216,16 @@ function defaultAccounts(
       ? preset.id
       : fallbackSourceId(type, context, destinationId)
   return { ...selectSource(type, context, sourceId, destinationId, currency) }
+}
+
+/** Whether the picker offers this source: its account (or its card) is in the context. */
+function isPickable(
+  source: PaymentSource,
+  context: TransactionContext
+): boolean {
+  return source.type === "card"
+    ? context.cards.some((card) => card.id === source.id)
+    : context.accounts.some((account) => account.id === source.id)
 }
 
 /** The first account that can send this movement, preferring one that isn't the destination. */

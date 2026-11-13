@@ -21,10 +21,16 @@ interface Options {
  * Deletes movements a few seconds late, so "Undo" can take one back without a tombstone or a sync
  * event ever being written. Until then the movement is only hidden (`pending`). Each deletion is
  * kept in `storage` with when it falls due: `resume` finishes the ones a closed tab left behind.
+ *
+ * A deletion scheduled `untilReleased` has no timer in this tab: it waits for `release`, which the
+ * Undo notice calls when it really closes (hovering it pauses its countdown, so a timer of our own
+ * would delete while Undo still shows). Its due time still lets a later start finish it.
  */
 export class DeferredDeletions {
   private readonly due = new Map<string, number>()
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>()
+  /** Deletions that wait for `release` instead of a timer. */
+  private readonly held = new Set<string>()
   /** Deletions whose tombstone is being written: too late to undo. */
   private readonly committing = new Set<string>()
   private readonly listeners = new Set<() => void>()
@@ -51,16 +57,24 @@ export class DeferredDeletions {
     return () => void this.listeners.delete(listener)
   }
 
-  schedule(id: string): void {
+  schedule(id: string, { untilReleased = false }: { untilReleased?: boolean } = {}): void {
     this.due.set(id, this.now() + this.delayMs)
+    if (untilReleased) this.held.add(id)
     this.changed()
     this.arm(id)
+  }
+
+  /** Deletes a deletion scheduled `untilReleased` now, unless it was undone. */
+  async release(id: string): Promise<void> {
+    this.held.delete(id)
+    await this.commit(id)
   }
 
   /** Takes a deletion back; `false` when it already happened. */
   undo(id: string): boolean {
     if (!this.due.has(id) || this.committing.has(id)) return false
     this.disarm(id)
+    this.held.delete(id)
     this.due.delete(id)
     this.changed()
     return true
@@ -96,12 +110,14 @@ export class DeferredDeletions {
     } finally {
       this.committing.delete(id)
     }
+    this.held.delete(id)
     this.due.delete(id)
     this.changed()
   }
 
   private arm(id: string) {
     this.disarm(id)
+    if (this.held.has(id)) return
     const wait = Math.max(0, (this.due.get(id) ?? 0) - this.now())
     this.timers.set(id, setTimeout(() => void this.commit(id), wait))
   }

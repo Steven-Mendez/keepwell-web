@@ -91,3 +91,9 @@ export function homeStatusText(t: Translator, status: HomeStatus): string {
   ].filter((part): part is string => part !== undefined)
   return parts.length > 0 ? parts.join(" · ") : t.in("home", "All caught up")
 }
+
+/** "Spent in November", "Gastado en noviembre": mid-sentence the month keeps its language's case. */
+export function spentInMonthText(t: Translator, month: { year: number; month: number }): string {
+  const name = new Date(month.year, month.month - 1, 1).toLocaleDateString(t.locale, { month: "long" })
+  return t.in("home", "Spent in %@", name)
+}

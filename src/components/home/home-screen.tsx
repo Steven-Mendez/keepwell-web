@@ -44,7 +44,6 @@ import {
   accountName,
   categoryName,
   dayLabel,
-  monthName,
   type TransactionDisplay,
 } from "@/lib/presentation/display"
 
@@ -54,7 +53,7 @@ import { cn } from "@/lib/utils"
 import { ForecastSection } from "./home-forecast"
 import { DebtsSection } from "./home-debts"
 import { GoalsSection } from "./home-goals"
-import { homeStatus, homeStatusText, homeUpcomingPayments } from "./home-status"
+import { homeStatus, homeStatusText, homeUpcomingPayments, spentInMonthText } from "./home-status"
 import { UpcomingSection } from "./home-upcoming"
 
 const MASK = BALANCE_MASK
@@ -642,7 +641,7 @@ function MonthCard({
       >
         <div className="flex flex-col gap-0.5">
           <p className="type-label font-normal text-muted-foreground">
-            {t.in("home", "Spent in %@", monthName(t, month.month))}
+            {spentInMonthText(t, month.month)}
           </p>
           <AnimatedNumber
             value={money(month.expense)}
