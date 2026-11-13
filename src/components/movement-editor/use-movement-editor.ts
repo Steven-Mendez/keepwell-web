@@ -32,6 +32,8 @@ import { ledgerStore } from "@/lib/repositories"
 
 import { errorMessage, sourceTitle } from "./editor-model"
 import {
+  carriedDebitText,
+  clearingStaleDebit,
   deriveForm,
   deriveReview,
   editorTypes,
@@ -134,8 +136,9 @@ export function useMovementEditor(
     return { ...next, categoryId: match ? match.categoryId : before }
   }
 
+  const carriedDebit = useMemo(() => (existing ? carriedDebitText(existing) : ""), [existing])
   const update = (patch: Partial<EditorFields>) => {
-    const next = { ...fields, ...patch }
+    const next = { ...fields, ...clearingStaleDebit(fields, patch, carriedDebit) }
     setFields("description" in patch || "note" in patch ? applyingRules(next) : next)
   }
 
