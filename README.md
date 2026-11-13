@@ -13,6 +13,11 @@ pnpm dev          # http://localhost:3000
 pnpm build && pnpm start   # production, with the offline service worker
 ```
 
+Brand logos (Brandfetch's Logo API, linked live) need `NEXT_PUBLIC_BRANDFETCH_CLIENT_ID` at build time,
+set to the account's public client id (`1idMF4-f4zDduiiadcZ`, not its secret API key). Without it, or with
+`BRAND_LOGOS_ENABLED` off in `src/lib/presentation/brand-logos.ts`, the app makes no request to
+Brandfetch and known brands show a monogram.
+
 ## Checks
 
 ```bash
@@ -31,6 +36,9 @@ pnpm tokens:check # design tokens still match keepwell-ios
   formatting). Pure functions and use cases over a `LedgerStore`; `tests/domain` ports the iOS tests.
 - `src/lib/repositories`, `src/lib/db`: IndexedDB through Dexie, with audit columns, tombstones and a
   sync outbox; `ledgerStore` implements the domain contract.
+- `src/lib/presentation/brands`: the brand table (`brands.json`) and the matching cases, both copied
+  verbatim to keepwell-ios; `tests/brands.test.ts` compares them when `../keepwell-ios` (or
+  `KEEPWELL_IOS`) is there.
 - `src/lib/i18n`: `strings.json` holds the texts of the iOS `Localizable.xcstrings` catalogs, copied
   by hand when iOS adds or changes one; `web-strings*.ts` holds the few desktop-only texts, in English and Spanish.
 - `src/app/tokens.css`: generated from the iOS DesignSystem (`pnpm tokens:sync`). The iOS type scale is

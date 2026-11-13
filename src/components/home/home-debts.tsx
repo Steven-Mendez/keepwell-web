@@ -30,7 +30,7 @@ export function DebtsSection({
   hidden: boolean
 }) {
   const totals = debtTotals(ledger.loans, ledger.personalDebts)
-  const next = orderedLoans(ledger.loans, now).find((progress) => progress.next)
+  const next = orderedLoans(ledger.loans, now, ledger.timeZone).find((progress) => progress.next)
   const text = (lines: readonly Money[]) =>
     lines.length === 0
       ? undefined

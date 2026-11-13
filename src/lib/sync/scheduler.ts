@@ -1,4 +1,6 @@
 import { db } from "@/lib/db"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
+import { settingsRepository } from "@/lib/repositories/settings"
 
 import { statusAfter, syncOnce, type SyncStatus } from "./engine"
 import type { SyncTransport } from "./transport"
@@ -109,6 +111,8 @@ export class SyncScheduler {
     try {
       await syncOnce(this.transport, this.userId ? { userId: this.userId } : {})
       this.failures = 0
+      // Only once the account's settings are here: a zone another device set wins over this one.
+      if (await settingsRepository.fillMissingTimeZone(deviceTimeZone())) this.again = true
     } catch (caught) {
       error = caught
     }

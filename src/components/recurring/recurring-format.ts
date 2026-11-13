@@ -1,4 +1,4 @@
-import type { RecurringSectionKind } from "@/lib/domain"
+import type { PendingRuleDraft, RecurringSectionKind } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { accountName, cardShortName } from "@/lib/presentation/display"
 import type {
@@ -62,6 +62,29 @@ export function nextDateText(
     month: "short",
     ...(date.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }),
   })
+}
+
+/**
+ * A rule's draft waiting on its row in place of the next date: "To confirm · Nov 12" for today's,
+ * "Overdue · 3 days" for an older one.
+ */
+export function pendingDraftText(
+  t: Translator,
+  pending: PendingRuleDraft,
+  now: Date = new Date()
+): string {
+  if (pending.daysOverdue > 0)
+    return t.in("recurring", "Overdue · %lld days", pending.daysOverdue)
+  const date = new Date(pending.transaction.date)
+  return t.in(
+    "recurring",
+    "To confirm · %@",
+    date.toLocaleDateString(t.locale, {
+      day: "numeric",
+      month: "short",
+      ...(date.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }),
+    })
+  )
 }
 
 export function sectionTitle(

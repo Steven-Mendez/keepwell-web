@@ -135,6 +135,7 @@ function DayGroup({
             <TransactionRow
               key={transaction.id}
               columns
+              brandLogo
               transaction={transaction}
               display={display}
               onSelect={(tx) => onSelect(tx.id)}

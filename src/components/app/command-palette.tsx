@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command"
 import { useLedger, useTransactionDisplay } from "@/hooks/use-ledger"
+import { openAccounts } from "@/lib/domain"
 import { useT } from "@/lib/i18n"
 import { accountName } from "@/lib/presentation/display"
 
@@ -76,9 +77,9 @@ export function CommandPalette() {
             </CommandItem>
           ))}
         </CommandGroup>
-        {ledger && ledger.accounts.length > 0 ? (
+        {ledger && openAccounts(ledger.accounts).length > 0 ? (
           <CommandGroup heading={t.in("accounts", "Accounts")}>
-            {ledger.accounts.map((account) => (
+            {openAccounts(ledger.accounts).map((account) => (
               <CommandItem key={account.id} value={`account ${accountName(account)}`} onSelect={() => run(() => router.push(`/accounts?id=${account.id}`))}>
                 <CreditCardIcon />
                 {accountName(account)}

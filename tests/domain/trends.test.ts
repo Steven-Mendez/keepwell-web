@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { activityRange, comparisonShift, lastMonths, monthRange, rangeLength, trendReport, yearToDate, yearTotals } from "@/lib/domain"
 
-import { d, date, single, transaction } from "./fixtures"
+import { d, date, single, transaction, ZONE } from "./fixtures"
 
 const usd = single("USD")
 const expense = (amount: string, when: Date, category = "food") => transaction({ amount, date: when, category, rate: usd })
@@ -13,8 +13,8 @@ describe("Trends", () => {
     const range = monthRange({ year: 2026, month: 8 }, { year: 2026, month: 3 })
     expect(range.start).toEqual({ year: 2026, month: 3 })
     expect(rangeLength(range)).toBe(6)
-    expect(rangeLength(lastMonths(12, date(2026, 11, 5)))).toBe(12)
-    expect(yearToDate(date(2026, 11, 5))).toEqual({ start: { year: 2026, month: 1 }, end: { year: 2026, month: 11 } })
+    expect(rangeLength(lastMonths(12, date(2026, 11, 5), ZONE))).toBe(12)
+    expect(yearToDate(date(2026, 11, 5), ZONE)).toEqual({ start: { year: 2026, month: 1 }, end: { year: 2026, month: 11 } })
   })
 
   it("compares up to a year with the same months a year earlier, and longer spans with the stretch before", () => {
@@ -28,7 +28,7 @@ describe("Trends", () => {
       [income("1000", date(2026, 1, 10)), expense("400", date(2026, 1, 12)), income("1000", date(2026, 2, 10)), expense("1300", date(2026, 2, 12)), expense("100", date(2026, 3, 2))],
       "USD",
       monthRange({ year: 2026, month: 1 }, { year: 2026, month: 4 }),
-      now,
+      ZONE, now,
     )
     expect(report.months).toHaveLength(4)
     expect(report.cashFlow.income.eq(2000)).toBe(true)
@@ -52,7 +52,7 @@ describe("Trends", () => {
       ],
       "USD",
       monthRange({ year: 2026, month: 3 }, { year: 2026, month: 3 }),
-      date(2026, 12, 1),
+      ZONE, date(2026, 12, 1),
     )
     expect(report.hasComparison).toBe(true)
     expect(report.expenseCategories.map((entry) => entry.categoryId)).toEqual(["food", "transport", "gym"])
@@ -70,7 +70,7 @@ describe("Trends", () => {
       [expense("10", date(2026, 11, 3)), expense("20", date(2025, 11, 4)), expense("999", date(2025, 11, 20))],
       "USD",
       monthRange({ year: 2026, month: 10 }, { year: 2027, month: 2 }),
-      now,
+      ZONE, now,
     )
     expect(report.range.end).toEqual({ year: 2026, month: 11 })
     expect(report.isRunning).toBe(true)
@@ -82,7 +82,7 @@ describe("Trends", () => {
       [transaction({ amount: "500", date: date(2026, 5, 1), status: "planned", rate: usd }), transaction({ kind: "transfer", amount: "70", date: date(2026, 5, 2), rate: usd })],
       "USD",
       monthRange({ year: 2026, month: 5 }, { year: 2026, month: 5 }),
-      date(2026, 12, 1),
+      ZONE, date(2026, 12, 1),
     )
     expect(report.cashFlow.expense.isZero()).toBe(true)
     expect(report.bestMonth).toBeUndefined()
@@ -91,8 +91,8 @@ describe("Trends", () => {
   it("totals every year from the first movement", () => {
     const now = date(2026, 11, 5)
     const transactions = [income("100", date(2024, 6, 1)), expense("40", date(2026, 2, 1))]
-    expect(activityRange(transactions, now)?.start).toEqual({ year: 2024, month: 6 })
-    const years = yearTotals(transactions, "USD", now)
+    expect(activityRange(transactions, now, ZONE)?.start).toEqual({ year: 2024, month: 6 })
+    const years = yearTotals(transactions, "USD", ZONE, now)
     expect(years.map((year) => year.year)).toEqual([2024, 2025, 2026])
     expect(years[0]?.cashFlow.income.eq(d(100))).toBe(true)
     expect(years.at(-1)?.isRunning).toBe(true)

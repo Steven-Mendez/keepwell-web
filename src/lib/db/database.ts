@@ -47,6 +47,8 @@ export interface AccountRow extends AuditColumns {
   limit_currency: string | null
   cutoff_day: number | null
   due_day: number | null
+  /** `Account.closedAt`. Optional because rows stored or pulled before it lack it. No index, so no new Dexie version. */
+  closed_at?: string | null
 }
 
 export interface CardRow extends AuditColumns {
@@ -99,6 +101,8 @@ export interface TransactionRow extends AuditColumns {
   tags: string[]
   /** `mcp` when an MCP client recorded it. Added in version 6 (older rows become `app`); never changes. */
   source: RecordSource
+  /** The statement line it was imported from (T28); absent on rows from before, `null` when not imported. No index, so no new version. */
+  imported_id?: string | null
 }
 
 /** A recurring movement or subscription (iOS `RecurringRuleRecord`). */
@@ -186,6 +190,8 @@ export interface PersonalDebtRow extends AuditColumns {
   note: string | null
   settled_at: string | null
   transaction_id: string | null
+  /** `PersonalDebt.dueDate`. Optional because rows stored or pulled before it lack it. No index, so no new Dexie version. */
+  due_date?: string | null
 }
 
 export interface PersonalDebtRepaymentRow extends AuditColumns {
@@ -220,6 +226,12 @@ export interface SettingsRow {
   is_icloud_backup_enabled: boolean
   payment_reminder_days_before: number
   has_completed_onboarding: boolean
+  /**
+   * The person's home zone (`Settings.timeZone`). Left out, not null, while it has none, so a save
+   * never sends a null that would clear the account's zone; a row pulled before it was set carries
+   * null. No index, so no new Dexie version.
+   */
+  time_zone?: string | null
   /** Added in version 6, with `deleted_at`, so settings follow the same sync rules as every row. */
   created_at: string
   updated_at: string

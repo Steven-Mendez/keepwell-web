@@ -28,6 +28,7 @@ import { MAX_GOAL_NAME_LENGTH, type CurrencySettings, type SavingsGoal, type Tar
 import { cn } from "@/lib/utils"
 
 import { DEFAULT_GOAL_SYMBOL, goalBadge } from "./goal-format"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 export type GoalEditorTarget = { mode: "create" } | { mode: "edit"; goal: SavingsGoal }
 
@@ -50,7 +51,7 @@ function TargetMonthPicker({
   value: TargetMonth | undefined
   onChange: (value: TargetMonth | undefined) => void
 }) {
-  const now = yearMonthContaining(new Date())
+  const now = yearMonthContaining(new Date(), deviceTimeZone())
   const firstYear = Math.min(now.year, value?.year ?? now.year)
   const years = Array.from({ length: now.year + YEARS_AHEAD - firstYear + 1 }, (_, index) => firstYear + index)
   const monthName = (month: number) => {

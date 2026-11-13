@@ -27,7 +27,7 @@ import {
   type PersonalDebt,
 } from "@/lib/schema"
 
-import { IDs, d, date, referenceDate, sampleStore } from "./fixtures"
+import { d, date, IDs, referenceDate, sampleStore, ZONE } from "./fixtures"
 
 function loan(overrides: Partial<Loan> = {}): Loan {
   return {
@@ -77,7 +77,7 @@ describe("Loan schedule", () => {
   it("keeps the first due day and clamps it to short months", () => {
     const progress = loanProgress(
       loan({ installmentCount: 4 }),
-      date(2026, 1, 1)
+      date(2026, 1, 1), ZONE
     )
     expect(
       progress.installments.map((row) => [
@@ -99,7 +99,7 @@ describe("Loan schedule", () => {
         frequency: "weekly",
         firstDueDate: date(2026, 11, 2).toISOString(),
       }),
-      date(2026, 11, 1)
+      date(2026, 11, 1), ZONE
     )
     expect(progress.installments.map((row) => row.dueDate.getDate())).toEqual([
       2, 9, 16,
@@ -109,14 +109,14 @@ describe("Loan schedule", () => {
   it("counts what is left from the unpaid installments", () => {
     const progress = loanProgress(
       loan({ payments: paid(1, 2) }),
-      date(2026, 2, 1)
+      date(2026, 2, 1), ZONE
     )
     expect(progress.remaining.toFixed(2)).toBe("19166.70")
     expect(progress.totalToPay.toFixed(2)).toBe("23000.04")
     expect(progress.next?.number).toBe(3)
     expect(progress.isNextOverdue).toBe(false)
     expect(
-      loanProgress(loan({ payments: paid(1, 2) }), date(2026, 4, 1))
+      loanProgress(loan({ payments: paid(1, 2) }), date(2026, 4, 1), ZONE)
         .isNextOverdue
     ).toBe(true)
   })
@@ -141,7 +141,7 @@ describe("Loan schedule", () => {
           firstDueDate: date(2026, 2, 1).toISOString(),
         }),
       ],
-      date(2026, 1, 15)
+      date(2026, 1, 15), ZONE
     )
     expect(ordered.map((row) => row.loan.name)).toEqual([
       "Soon",
@@ -476,7 +476,7 @@ describe("Debts use cases", () => {
   })
 
   it("an InMemoryStore starts with no loans or debts", async () => {
-    const store = new InMemoryStore()
+    const store = new InMemoryStore(ZONE)
     expect(await store.fetchLoans()).toEqual([])
     expect(await store.fetchPersonalDebts()).toEqual([])
   })
