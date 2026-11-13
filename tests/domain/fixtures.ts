@@ -1,13 +1,34 @@
 import type { Account, Card, ExchangeRate, Settings, Transaction, TransactionKind, TransactionStatus } from "@/lib/schema"
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "@/lib/schema"
-import { Decimal, InMemoryStore, monthInterval, yearMonthContaining } from "@/lib/domain"
+import { Decimal, InMemoryStore, monthInterval, yearMonthContaining, type Ledger } from "@/lib/domain"
 
 // Ports of keepwell-ios DomainTests/Fixtures.swift and DomainSamples/SampleData.
+
+/** The zone the suites run in (`TZ` in package.json), passed to the domain explicitly. */
+export const ZONE = "America/Managua"
 
 export const usdNio: ExchangeRate = { principal: "USD", second: "NIO", rate: "36.6243" }
 export const single = (code: string): ExchangeRate => ({ principal: code, second: code, rate: "1" })
 
 export const d = (value: string | number) => new Decimal(value)
+
+/** A ledger with nothing in it but what's given, read in `ZONE`. */
+export function ledgerWith(overrides: Partial<Ledger> = {}): Ledger {
+  return {
+    settings: DEFAULT_SETTINGS,
+    accounts: [],
+    cards: [],
+    transactions: [],
+    categories: [],
+    recurringRules: [],
+    savingsGoals: [],
+    loans: [],
+    personalDebts: [],
+    categorizationRules: [],
+    timeZone: ZONE,
+    ...overrides,
+  }
+}
 
 /** Noon by default, in the test time zone (America/Managua, like iOS Fixtures.calendar). */
 export function date(year: number, month: number, day: number, hour = 12): Date {
@@ -75,8 +96,8 @@ export interface Sample {
 }
 
 export function sampleData(reference: Date = referenceDate): Sample {
-  const month = yearMonthContaining(reference)
-  const monthStart = monthInterval(month).start
+  const month = yearMonthContaining(reference, ZONE)
+  const monthStart = monthInterval(month, ZONE).start
   const opening = new Date(monthStart.getFullYear(), monthStart.getMonth() - 2, 1)
   const day = (number: number, offset = 0) => new Date(monthStart.getFullYear(), monthStart.getMonth() + offset, number, 12)
   const accounts: Account[] = [
@@ -159,5 +180,5 @@ export function sampleData(reference: Date = referenceDate): Sample {
 }
 
 export function sampleStore(sample: Sample = sampleData()): InMemoryStore {
-  return new InMemoryStore({ ...sample, categories: [...DEFAULT_CATEGORIES] })
+  return new InMemoryStore(ZONE, { ...sample, categories: [...DEFAULT_CATEGORIES] })
 }

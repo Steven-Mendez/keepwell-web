@@ -58,6 +58,8 @@ export function accountToRow(account: Account): Columns<AccountRow> {
     limit_currency: orNull(account.creditTerms?.limit?.currency),
     cutoff_day: orNull(account.creditTerms?.cutoffDay),
     due_day: orNull(account.creditTerms?.dueDay),
+    // Always sent, null while open: reopening has to clear it on the other devices.
+    closed_at: orNull(account.closedAt),
   }
 }
 
@@ -83,6 +85,7 @@ export function rowToAccount(row: AccountRow): Account {
             ...present("dueDay", row.due_day),
           },
         }),
+    ...present("closedAt", row.closed_at ?? null),
   }
 }
 
@@ -166,6 +169,8 @@ export function transactionToRow(transaction: Transaction): Columns<TransactionR
     recurring_id: orNull(transaction.recurringId),
     tags: normalizedTags(transaction.tags ?? []),
     source: transaction.source ?? "app",
+    // Always sent, null when it wasn't imported; the server keeps one already set either way.
+    imported_id: orNull(transaction.importedId),
   }
 }
 
@@ -194,6 +199,7 @@ export function rowToTransaction(row: TransactionRow): Transaction {
     ...present("recurringId", row.recurring_id ?? null),
     ...tagsOf(row.tags),
     ...sourceOf(row.source),
+    ...present("importedId", row.imported_id ?? null),
   }
 }
 
@@ -359,6 +365,8 @@ export function personalDebtToRow(debt: PersonalDebt): Columns<PersonalDebtRow> 
     note: orNull(debt.note),
     settled_at: orNull(debt.settledAt),
     transaction_id: orNull(debt.transactionId),
+    // Always sent, null for none: removing the date has to clear it on the other devices.
+    due_date: orNull(debt.dueDate),
   }
 }
 
@@ -386,6 +394,7 @@ export function rowToPersonalDebt(row: PersonalDebtRow, repayments: PersonalDebt
       .map((repayment) => ({ id: repayment.id, amount: repayment.amount, date: repayment.date })),
     ...present("settledAt", row.settled_at),
     ...present("transactionId", row.transaction_id),
+    ...present("dueDate", row.due_date ?? null),
   }
 }
 
@@ -401,6 +410,7 @@ export function settingsToRow(settings: Settings, updatedAt: string, createdAt: 
     is_icloud_backup_enabled: settings.isICloudBackupEnabled,
     payment_reminder_days_before: settings.paymentReminderDaysBefore,
     has_completed_onboarding: settings.hasCompletedOnboarding,
+    ...(settings.timeZone ? { time_zone: settings.timeZone } : {}),
     created_at: createdAt,
     updated_at: updatedAt,
     deleted_at: null,
@@ -419,5 +429,6 @@ export function rowToSettings(row: SettingsRow): Settings {
     isICloudBackupEnabled: row.is_icloud_backup_enabled,
     paymentReminderDaysBefore: row.payment_reminder_days_before,
     hasCompletedOnboarding: row.has_completed_onboarding,
+    ...(row.time_zone ? { timeZone: row.time_zone } : {}),
   }
 }

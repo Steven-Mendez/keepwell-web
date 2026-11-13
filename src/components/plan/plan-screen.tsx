@@ -113,7 +113,9 @@ function RecurringCard({
               className="type-amount-lg text-foreground"
             />
             <span className="type-caption text-muted-foreground">
-              {t.in("recurring", "Subscriptions per month")}
+              {recurring.subscriptionCount > 0
+                ? t.in("plan", "Per month · %lld subscriptions", recurring.subscriptionCount)
+                : t.in("recurring", "Subscriptions per month")}
             </span>
           </span>
           {recurring.next ? (
@@ -219,12 +221,20 @@ function DebtsCard({
         <>
           <span className="grid grid-cols-2 gap-4">
             <Total
-              title={t.in("home", "You owe")}
+              title={
+                debts.youOweCount > 0
+                  ? t.in("plan", "%lld debts to pay", debts.youOweCount)
+                  : t.in("home", "You owe")
+              }
               value={totalsText(t, debts.totals.youOwe, hidden)}
               tone="text-negative"
             />
             <Total
-              title={t.in("home", "Owed to you")}
+              title={
+                debts.peopleOwingCount > 0
+                  ? t.in("plan", "%lld people owe you", debts.peopleOwingCount)
+                  : t.in("home", "Owed to you")
+              }
               value={totalsText(t, debts.totals.owedToYou, hidden)}
               tone="text-positive"
             />

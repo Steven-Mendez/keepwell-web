@@ -30,8 +30,11 @@ export type EditorRequest =
 
 export type AddAccountRequest = { kind?: "debit" | "credit" | "wallet" }
 
-/** The recurring rule editor: a new rule, or an existing one by id (its detail lives in the editor). */
-export type RuleEditorRequest = { mode: "create" } | { mode: "edit"; ruleId: string }
+/**
+ * The recurring rule editor: a new rule, or an existing one by id (its detail lives in the editor).
+ * `subscription` opens a new one on the short subscription form.
+ */
+export type RuleEditorRequest = { mode: "create"; subscription?: boolean } | { mode: "edit"; ruleId: string }
 
 interface AppActions {
   editor: EditorRequest | undefined

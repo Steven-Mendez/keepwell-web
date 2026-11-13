@@ -1,11 +1,11 @@
 import "fake-indexeddb/auto"
 
 import { Dexie } from "dexie"
-import { beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { loanRepository, personalDebtRepository, settingsRepository } from "@/lib/repositories"
-import { applyRemote, NotFoundError, softDelete, upsert, nextEventStamp } from "@/lib/repositories/shared"
+import { categorizationRuleRepository, loanRepository, personalDebtRepository, settingsRepository } from "@/lib/repositories"
+import { applyRemote, NotFoundError, softDelete, stampAfter, upsert, nextEventStamp } from "@/lib/repositories/shared"
 import { DEFAULT_SETTINGS, loanPaymentId, parseSyncPayload, SYNC_WIRE, type Loan } from "@/lib/schema"
 import { getClientId } from "@/lib/sync/client-id"
 
@@ -101,8 +101,69 @@ describe("sync-ready repositories", () => {
     expect(loaded?.unlockMethod).toBe("passcode")
   })
 
+  describe("with this device's clock three minutes behind the stored row", () => {
+    const clock = "2026-11-10T12:00:00.000Z"
+    const stored = "2026-11-10T12:03:00.000Z"
+    // Only Date: Dexie and fake-indexeddb need real timers.
+    beforeEach(() => vi.useFakeTimers({ toFake: ["Date"], now: new Date(clock) }))
+    afterEach(() => vi.useRealTimers())
+
+    it("a new row gets the current time", async () => {
+      await loanRepository.save(loan)
+      expect((await db.loans.get(loan.id))?.updated_at).toBe(clock)
+      expect(stampAfter(undefined)).toBe(clock)
+    })
+
+    it("saving and deleting stamp after the stored row, so the server keeps the edit", async () => {
+      await loanRepository.save(loan)
+      await db.loans.update(loan.id, { updated_at: stored })
+      await loanRepository.save({ ...loan, name: "Moto roja" })
+      const saved = (await db.loans.get(loan.id))!.updated_at
+      expect(saved > stored).toBe(true)
+      const [, event] = await outbox()
+      expect((event!.payload as { updated_at: string }).updated_at).toBe(saved)
+
+      await db.loans.update(loan.id, { updated_at: stored })
+      await softDelete(db.loans, "loan", loan.id)
+      expect((await db.loans.get(loan.id))!.updated_at > stored).toBe(true)
+    })
+
+    it("repositories that stamp on their own follow the same rule", async () => {
+      const rule = { id: "33333333-3333-4333-8333-333333333333", match: "uber", categoryId: "transport", kind: "expense" as const }
+      await categorizationRuleRepository.save(rule)
+      expect((await db.categorization_rules.get(rule.id))?.updated_at).toBe(clock)
+      await db.categorization_rules.update(rule.id, { updated_at: stored })
+      await categorizationRuleRepository.save({ ...rule, match: "taxi" })
+      expect((await db.categorization_rules.get(rule.id))!.updated_at > stored).toBe(true)
+
+      await settingsRepository.save(DEFAULT_SETTINGS)
+      await db.settings.toCollection().modify({ updated_at: stored })
+      await settingsRepository.save({ ...DEFAULT_SETTINGS, paymentReminderDaysBefore: 5 })
+      expect((await db.settings.toArray())[0]!.updated_at > stored).toBe(true)
+    })
+  })
+
   it("keeps one client id per installation", async () => {
     const id = await getClientId()
     expect(await getClientId()).toBe(id)
+  })
+
+  it("lists categorization rules with the same sort_index by id, whatever order they arrived in", async () => {
+    const rule = (id: string, sort_index: number) => ({
+      id,
+      match: id.slice(0, 4),
+      category_id: "food",
+      kind: "expense" as const,
+      tags: [],
+      sort_index,
+      created_at: at,
+      updated_at: at,
+      deleted_at: null,
+    })
+    const first = "aaaaaaaa-0000-4000-8000-000000000000"
+    const tiedLow = "bbbbbbbb-0000-4000-8000-000000000000"
+    const tiedHigh = "cccccccc-0000-4000-8000-000000000000"
+    await db.categorization_rules.bulkAdd([rule(tiedHigh, 1), rule(first, 0), rule(tiedLow, 1)])
+    expect((await categorizationRuleRepository.list()).map((r) => r.id)).toEqual([first, tiedLow, tiedHigh])
   })
 })

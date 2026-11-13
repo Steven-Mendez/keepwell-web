@@ -1,17 +1,21 @@
 import { BALANCE_MASK } from "@/hooks/use-hidden-balances"
 import {
   dayKey,
+  openAccounts,
+  debtDueStatus,
   debtRemaining,
   parseDayKey,
   type LoanProgress,
   type Money,
   type PaymentSource,
+  type TimeZone,
 } from "@/lib/domain"
 import { formatAmount } from "@/lib/domain/format"
 import type { Ledger } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import { accountName, methodTitle } from "@/lib/presentation/display"
 import type { PersonalDebt } from "@/lib/schema"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 export const SELECT_CLASS =
   "h-10 w-full appearance-none rounded-xl border-0 bg-secondary px-3 type-body shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -26,9 +30,9 @@ export function dayText(t: Translator, date: Date | string): string {
 }
 
 /** The value of a date field, and back: the day at noon, so no time zone moves it. */
-export const dateFieldValue = (date: Date) => dayKey(date)
+export const dateFieldValue = (date: Date) => dayKey(date, deviceTimeZone())
 export const dateFromField = (text: string, fallback: Date) =>
-  parseDayKey(text) ?? fallback
+  parseDayKey(text, deviceTimeZone()) ?? fallback
 
 /** "C$19,166.70 · $40.00", one amount per currency, or "Nothing". */
 export function totalsText(
@@ -117,6 +121,31 @@ export function debtAmount(
     : formatAmount(debtRemaining(debt), debt.amount.currency)
 }
 
+/** "Due Nov 28, 2026", "Due today" or "Overdue · 3 days"; `undefined` when there is nothing due. */
+export function debtDueText(
+  t: Translator,
+  debt: PersonalDebt,
+  now: Date,
+  zone: TimeZone
+): { text: string; overdue: boolean } | undefined {
+  const due = debtDueStatus(debt, now, zone)
+  if (!due || !debt.dueDate) return undefined
+  switch (due.state) {
+    case "upcoming":
+      return {
+        text: t.in("debts", "Due %@", dayText(t, debt.dueDate)),
+        overdue: false,
+      }
+    case "today":
+      return { text: t.in("debts", "Due today"), overdue: false }
+    case "overdue":
+      return {
+        text: t.in("debts", "Overdue · %lld days", due.daysLate),
+        overdue: true,
+      }
+  }
+}
+
 export interface MethodOption {
   key: string
   source: PaymentSource
@@ -128,7 +157,7 @@ export function paymentMethods(
   t: Translator,
   ledger: Pick<Ledger, "accounts" | "cards">
 ): MethodOption[] {
-  return ledger.accounts.flatMap((account): MethodOption[] => {
+  return openAccounts(ledger.accounts).flatMap((account): MethodOption[] => {
     const cards = ledger.cards.filter((card) => card.accountId === account.id)
     if (cards.length === 0)
       return [

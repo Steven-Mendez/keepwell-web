@@ -15,6 +15,7 @@ import {
 import { formatMoney } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { accountName, cardNumber, debitTitle, methodTitle, networkName } from "@/lib/presentation/display"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 // Ports of the CreateTransaction view model's display logic (CreateTransactionViewModel+Display,
 // +Accounts, +Review and NewMovementMenuViewModel), kept free of React.
@@ -95,6 +96,7 @@ export function descriptionPlaceholder(t: Translator, type: MovementType, catego
 export function errorMessage(t: Translator, code: string | undefined): string {
   if (code === "invalidAmount") return ct(t, "Check the amount.")
   if (code === "invalidTransferDestination") return ct(t, "Choose a different destination account.")
+  if (code === "accountClosed") return t.in("sharedpresentation", "This account is closed. Reopen it first.")
   return ct(t, "We couldn't save the movement. Try again.")
 }
 
@@ -143,7 +145,7 @@ function currencyList(t: Translator, account: Account): string {
 
 export function usedLabel(t: Translator, date: Date | undefined, now: Date = new Date()): string | undefined {
   if (!date) return undefined
-  const days = Math.round((startOfDay(now).getTime() - startOfDay(date).getTime()) / 86_400_000)
+  const days = Math.round((startOfDay(now, deviceTimeZone()).getTime() - startOfDay(date, deviceTimeZone()).getTime()) / 86_400_000)
   if (days < 1) return ct(t, "Used today")
   if (days === 1) return ct(t, "Used yesterday")
   return ct(t, "Used %lld days ago", days)
@@ -163,7 +165,7 @@ function rowFor(t: Translator, source: PaymentSource, context: TransactionContex
     return {
       source,
       title: account ? accountName(account) : ct(t, "Cash"),
-      subtitle: balance ? ct(t, "%@ available", formatMoney(balance, { fractionDigits: 0 })) : undefined,
+      subtitle: account?.closedAt ? t.in("sharedpresentation", "Closed") : balance ? ct(t, "%@ available", formatMoney(balance, { fractionDigits: 0 })) : undefined,
       thumbnail: { kind: "cash" },
     }
   }
@@ -196,6 +198,11 @@ function rowFor(t: Translator, source: PaymentSource, context: TransactionContex
 }
 
 function groupTitle(t: Translator, account: Account, context: TransactionContext): string {
+  const title = openGroupTitle(t, account, context)
+  return account.closedAt ? `${title} · ${t.in("sharedpresentation", "Closed")}` : title
+}
+
+function openGroupTitle(t: Translator, account: Account, context: TransactionContext): string {
   const holder = account.kind === "credit" ? context.cards.find((card) => card.accountId === account.id && card.kind === "creditHolder") : undefined
   if (holder) return ct(t, "%@ •••• %@ · credit", networkName(t, holder.network), holder.lastFour ?? "")
   return `${accountName(account)} · ${currencyList(t, account)}`

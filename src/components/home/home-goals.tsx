@@ -27,8 +27,8 @@ export function GoalsSection({
   now: Date
   hidden: boolean
 }) {
-  const goal = orderedGoals(ledger.savingsGoals, now)[0]
-  const progress = goal ? savingsGoalProgress(goal, now) : undefined
+  const goal = orderedGoals(ledger.savingsGoals, now, ledger.timeZone)[0]
+  const progress = goal ? savingsGoalProgress(goal, now, ledger.timeZone) : undefined
   return (
     <KWSection
       title={t.in("home", "Savings goals")}

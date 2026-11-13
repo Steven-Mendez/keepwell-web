@@ -35,13 +35,14 @@ import { cn } from "@/lib/utils"
 
 import {
   debtAmount,
+  debtDueText,
   debtLine,
   loanLeft,
   loanLine,
   paidFraction,
   totalsText,
 } from "./debt-format"
-import { DebtDialog, DebtEditorDialog } from "./debt-dialogs"
+import { DebtDialog, DebtDueLine, DebtEditorDialog } from "./debt-dialogs"
 import { LoanDialog, LoanEditorDialog } from "./loan-dialogs"
 
 type Open =
@@ -61,7 +62,8 @@ export function DebtsScreen() {
   const [now] = useState(() => new Date())
   const [open, setOpen] = useState<Open>()
   const loans = useMemo(
-    () => (ledger ? orderedLoans(ledger.loans, now) : undefined),
+    () =>
+      ledger ? orderedLoans(ledger.loans, now, ledger.timeZone) : undefined,
     [ledger, now]
   )
   const debts = useMemo(
@@ -131,7 +133,9 @@ export function DebtsScreen() {
         }
       />
       {failed ? (
-        <p className="type-body text-muted-foreground">{t.in("debts", "We couldn't load your debts.")}</p>
+        <p className="type-body text-muted-foreground">
+          {t.in("debts", "We couldn't load your debts.")}
+        </p>
       ) : !ledger || !loans || !debts || !totals ? (
         <SkeletonList rows={3} />
       ) : (
@@ -219,17 +223,22 @@ export function DebtsScreen() {
                         {debtLine(t, debt)}
                       </span>
                     </span>
-                    <span
-                      className={cn(
-                        "shrink-0 type-body font-semibold tabular-nums",
-                        debt.settledAt
-                          ? "text-muted-foreground"
-                          : debt.direction === "theyOweMe"
-                            ? "text-positive"
-                            : "text-negative"
-                      )}
-                    >
-                      {debtAmount(t, debt, hidden)}
+                    <span className="flex shrink-0 flex-col items-end">
+                      <span
+                        className={cn(
+                          "type-body font-semibold tabular-nums",
+                          debt.settledAt
+                            ? "text-muted-foreground"
+                            : debt.direction === "theyOweMe"
+                              ? "text-positive"
+                              : "text-negative"
+                        )}
+                      >
+                        {debtAmount(t, debt, hidden)}
+                      </span>
+                      <DebtDueLine
+                        due={debtDueText(t, debt, now, ledger.timeZone)}
+                      />
                     </span>
                   </button>
                 ))}
@@ -268,12 +277,14 @@ export function DebtsScreen() {
           onClose={close}
         />
       ) : null}
-      {openDebt ? (
+      {openDebt && ledger ? (
         <DebtDialog
           key={openDebt.id}
           t={t}
           debt={openDebt}
           hidden={hidden}
+          now={now}
+          zone={ledger.timeZone}
           onEdit={() => setOpen({ kind: "debtEditor", debt: openDebt })}
           onClose={close}
         />

@@ -21,11 +21,12 @@ import {
 import {
   escapeCsvField,
   exportCsv,
+  neutralizeCsvFormula,
   parseCsvRows,
 } from "@/lib/domain/csv"
 import { DEFAULT_CATEGORIES } from "@/lib/schema"
 
-import { d, date, referenceDate, sampleData, transaction } from "./fixtures"
+import { d, date, referenceDate, sampleData, transaction, ZONE } from "./fixtures"
 
 describe("Amount input", () => {
   it.each([
@@ -104,13 +105,42 @@ describe("CSV", () => {
 
   it("exports every movement with the iOS columns, oldest first", () => {
     const sample = sampleData()
-    const csv = exportCsv(sample.transactions, sample.accounts, sample.cards, DEFAULT_CATEGORIES)
+    const csv = exportCsv(sample.transactions, sample.accounts, sample.cards, DEFAULT_CATEGORIES, ZONE)
     const rows = parseCsvRows(csv)
     expect(rows[0]).toEqual(["date", "status", "type", "description", "category", "amount", "currency", "account", "card_last_four", "destination_account", "debited_principal", "rate", "shared", "note", "tags"])
     expect(rows).toHaveLength(sample.transactions.length + 1)
     const withdrawal = rows.find((row) => row[3] === "Cardless withdrawal")!
     expect(withdrawal).toEqual(["2026-10-04", "confirmed", "transfer", "Cardless withdrawal", "", "1200", "NIO", "Bank One Savings", "", "Wallet", "33.15", "36.6243", "no", "", ""])
     expect(rows[1]?.[0]).toBe("2026-09-08")
+  })
+
+  it("neutralizes formulas in free text, and leaves amounts alone", () => {
+    expect(neutralizeCsvFormula('=HYPERLINK("http://x")')).toBe(`'=HYPERLINK("http://x")`)
+    expect(escapeCsvField(neutralizeCsvFormula('=HYPERLINK("http://x")'))).toBe(`"'=HYPERLINK(""http://x"")"`)
+    for (const start of ["+", "-", "@", "\t", "\r"]) expect(neutralizeCsvFormula(`${start}1`)).toBe(`'${start}1`)
+    expect(neutralizeCsvFormula("Lunch = 5")).toBe("Lunch = 5")
+    expect(neutralizeCsvFormula("")).toBe("")
+
+    const sample = sampleData()
+    const [account] = sample.accounts
+    const [category] = DEFAULT_CATEGORIES
+    const movement = {
+      ...transaction({ amount: "-12.5", account: account!.id, category: category!.id, description: '=HYPERLINK("http://x")' }),
+      note: "@SUM(A1)",
+    }
+    const csv = exportCsv(
+      [movement],
+      [{ ...account!, bank: "", name: "+Cash" }],
+      [],
+      [{ ...category!, name: "-Food" }], ZONE
+    )
+    expect(csv.split("\n")[1]).toContain(`"'=HYPERLINK(""http://x"")"`)
+    const row = parseCsvRows(csv)[1]!
+    expect(row[3]).toBe(`'=HYPERLINK("http://x")`)
+    expect(row[4]).toBe("'-Food")
+    expect(row[5]).toBe("-12.5")
+    expect(row[7]).toBe("'+Cash")
+    expect(row[13]).toBe("'@SUM(A1)")
   })
 })
 
@@ -138,7 +168,7 @@ describe("Summary", () => {
       transaction({ amount: "30", date: date(2026, 9, 3) }),
       transaction({ amount: "100", date: date(2026, 9, 25) }),
     ]
-    const pace = spendingPace({ year: 2026, month: 10 }, transactions, date(2026, 10, 10))
+    const pace = spendingPace({ year: 2026, month: 10 }, transactions, date(2026, 10, 10), ZONE)
     expect(paceComparisonDay(pace)).toBe(10)
     expect(paceSpentSoFar(pace).toFixed()).toBe("10")
     expect(pacePreviousBySameDay(pace).toFixed()).toBe("30")
@@ -146,7 +176,7 @@ describe("Summary", () => {
   })
 
   it("the report has six months, oldest first, ending with the current one", () => {
-    const report = summaryReport(sampleData().transactions, "USD", referenceDate)
+    const report = summaryReport(sampleData().transactions, "USD", ZONE, referenceDate)
     expect(report.months).toHaveLength(6)
     expect(report.months.at(-1)?.month).toEqual({ year: 2026, month: 10 })
     expect(report.months[0]?.month).toEqual({ year: 2026, month: 5 })

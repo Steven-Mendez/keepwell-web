@@ -16,8 +16,8 @@ import { AnimatedList, SpringFill } from "@/components/kw/motion"
 import { KWIcon, KWMiniCard } from "@/components/kw/kw-icon"
 import { CategoryBadge, Page, PAGE_COLUMN } from "@/components/kw/primitives"
 import { TransactionRow } from "@/components/kw/transaction-row"
-import { toast } from "@/components/ui/toast"
 import { HomeSkeleton } from "@/components/kw/skeletons"
+import { useConfirmDraft } from "@/components/transactions/use-confirm-draft"
 import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
 import {
   useLedger,
@@ -25,8 +25,6 @@ import {
   useTransactionDisplay,
 } from "@/hooks/use-ledger"
 import {
-  confirmPlannedTransaction,
-  deleteTransaction,
   homeOverview,
   roundedHalfUp,
   savingsRate,
@@ -49,7 +47,6 @@ import {
   monthName,
   type TransactionDisplay,
 } from "@/lib/presentation/display"
-import { ledgerStore } from "@/lib/repositories"
 
 import type { Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
@@ -57,6 +54,7 @@ import { cn } from "@/lib/utils"
 import { ForecastSection } from "./home-forecast"
 import { DebtsSection } from "./home-debts"
 import { GoalsSection } from "./home-goals"
+import { homeStatus, homeStatusText, homeUpcomingPayments } from "./home-status"
 import { UpcomingSection } from "./home-upcoming"
 
 const MASK = BALANCE_MASK
@@ -91,8 +89,17 @@ export function HomeScreen() {
     () => (ledger ? homeOverview(ledger, now) : undefined),
     [ledger, now]
   )
+  // One list for "Upcoming" and the line under the greeting, so they never contradict each other.
+  const payments = useMemo(
+    () => (ledger ? homeUpcomingPayments(ledger, now) : undefined),
+    [ledger, now]
+  )
+  const status = useMemo(
+    () => (payments ? homeStatusText(t, homeStatus(payments)) : undefined),
+    [payments, t]
+  )
 
-  if (!ledger || !overview || !display) return <HomeSkeleton />
+  if (!ledger || !overview || !display || !payments) return <HomeSkeleton />
 
   const hasCredit = ledger.accounts.some((account) => account.kind === "credit")
   const recent = ledger.transactions
@@ -107,6 +114,7 @@ export function HomeScreen() {
         overview={overview}
         name={name}
         now={now}
+        status={status}
         hidden={hidden}
         onToggleHidden={toggleHidden}
         month={
@@ -133,18 +141,18 @@ export function HomeScreen() {
               onSelect={onSelect}
             />
 
-            {overview.planned.length > 0 ? (
-              <DraftsSection
-                t={t}
-                overview={overview}
-                display={display}
-                now={now}
-                hidden={hidden}
-                confirming={confirming}
-                onConfirm={confirmDraft}
-                onSelect={onSelect}
-              />
-            ) : null}
+            {/* Drafts live here now, with what else is pending: one list answers one question. */}
+            <UpcomingSection
+              t={t}
+              ledger={ledger}
+              payments={payments}
+              display={display}
+              now={now}
+              hidden={hidden}
+              confirming={confirming}
+              onConfirm={confirmDraft}
+              onSelect={onSelect}
+            />
           </div>
 
           <aside className="flex min-w-0 flex-col gap-6">
@@ -173,8 +181,6 @@ export function HomeScreen() {
               />
             ) : null}
 
-            <UpcomingSection t={t} ledger={ledger} now={now} hidden={hidden} />
-
             <GoalsSection t={t} ledger={ledger} now={now} hidden={hidden} />
 
             <DebtsSection t={t} ledger={ledger} now={now} hidden={hidden} />
@@ -190,38 +196,6 @@ export function HomeScreen() {
       </Page>
     </div>
   )
-}
-
-/** Drafts being confirmed slide out of the list before the ledger drops them (iOS animates removal). */
-function useConfirmDraft(t: Translator) {
-  const [confirming, setConfirming] = useState<ReadonlySet<string>>(new Set())
-  const confirmDraft = (id: string, description: string) => {
-    setConfirming((current) => new Set(current).add(id))
-    window.setTimeout(() => {
-      confirmPlannedTransaction(ledgerStore, id)
-        .then(() =>
-          toast.add({
-            title: t.in("createtransaction", "Confirmed"),
-            description,
-            type: "success",
-          })
-        )
-        .catch(() =>
-          toast.add({
-            title: t.in("home", "We couldn't confirm it. Try again."),
-            type: "error",
-          })
-        )
-        .finally(() =>
-          setConfirming((current) => {
-            const next = new Set(current)
-            next.delete(id)
-            return next
-          })
-        )
-    }, 200)
-  }
-  return { confirming, confirmDraft }
 }
 
 /** "Log first expense" at the end of onboarding lands here with the editor open. */
@@ -328,87 +302,6 @@ function RecentSection({
             ))}
           </AnimatedList>
         )}
-      </div>
-    </KWSection>
-  )
-}
-
-/** iOS drafts section: planned movements with the total and a Confirm button on each row. */
-function DraftsSection({
-  t,
-  overview,
-  display,
-  now,
-  hidden,
-  confirming,
-  onConfirm,
-  onSelect,
-}: {
-  t: Translator
-  overview: HomeOverview
-  display: TransactionDisplay
-  now: Date
-  hidden: boolean
-  confirming: ReadonlySet<string>
-  onConfirm: (id: string, description: string) => void
-  onSelect: (transaction: Transaction) => void
-}) {
-  return (
-    <KWSection
-      title={t.in("home", "Drafts · %lld", overview.plannedSummary.count)}
-      action={
-        <SeeAll
-          href="/transactions?filter=planned"
-          label={t.in("home", "See all")}
-        />
-      }
-    >
-      <div className={GROUPED_LIST}>
-        <p className="px-4 py-3 type-caption text-muted-foreground">
-          {plannedCaption(t, overview, hidden)}
-        </p>
-        <AnimatedList>
-          {overview.planned.map((transaction) => (
-            <TransactionRow
-              key={transaction.id}
-              transaction={transaction}
-              display={display}
-              onSelect={onSelect}
-              dateLabel={dayLabel(t, new Date(transaction.date), now)}
-              className={
-                confirming.has(transaction.id) ? "animate-row-out" : undefined
-              }
-              trailing={
-                <>
-                  {/* An assistant's movement can also be thrown away: it never happened. */}
-                  {transaction.source === "mcp" ? (
-                    <KWButton
-                      size="mini"
-                      variant="secondary"
-                      disabled={confirming.has(transaction.id)}
-                      onClick={() =>
-                        void deleteTransaction(ledgerStore, transaction.id).catch(() =>
-                          toast.add({ title: t.in("web", "Couldn't save the change. Try again."), type: "error" })
-                        )
-                      }
-                    >
-                      {t.in("home", "Discard")}
-                    </KWButton>
-                  ) : null}
-                  <KWButton
-                    size="mini"
-                    disabled={confirming.has(transaction.id)}
-                    onClick={() =>
-                      onConfirm(transaction.id, transaction.description)
-                    }
-                  >
-                    {t.in("home", "Confirm")}
-                  </KWButton>
-                </>
-              }
-            />
-          ))}
-        </AnimatedList>
       </div>
     </KWSection>
   )
@@ -597,6 +490,7 @@ function Hero({
   overview,
   name,
   now,
+  status,
   hidden,
   onToggleHidden,
   month,
@@ -606,6 +500,8 @@ function Hero({
   overview: HomeOverview
   name: string | undefined
   now: Date
+  /** What needs attention today, under the greeting ("2 payments to confirm · 1 due tomorrow"). */
+  status: string | undefined
   hidden: boolean
   onToggleHidden: () => void
   month: React.ReactNode
@@ -635,6 +531,11 @@ function Hero({
           <h1 className="type-title-sm text-foreground">
             {greeting(t, name, now)}
           </h1>
+          {status ? (
+            <p className="type-label font-normal text-brand-foreground">
+              {status}
+            </p>
+          ) : null}
         </div>
         <div className="flex w-full flex-col items-center gap-5 lg:col-span-2 lg:row-start-2 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-x-6 xl:grid-cols-[auto_minmax(0,1fr)] xl:gap-x-12">
           <div className="flex flex-col items-center gap-2 lg:items-start">
@@ -847,31 +748,5 @@ function MonthCard({
         )
       ) : null}
     </div>
-  )
-}
-
-function plannedCaption(
-  t: Translator,
-  overview: HomeOverview,
-  hidden: boolean
-): string {
-  if (hidden)
-    return t.in(
-      "home",
-      "They don't count toward balances until you confirm them · %@",
-      MASK
-    )
-  const summary = overview.plannedSummary
-  const principal = formatAmount(
-    summary.principalTotal,
-    overview.settings.principal
-  )
-  const total = overview.settings.second
-    ? `${formatAmount(summary.secondTotal, overview.settings.second, { fractionDigits: 0 })} (≈ ${principal})`
-    : principal
-  return t.in(
-    "home",
-    "They don't count toward balances until you confirm them · %@",
-    total
   )
 }

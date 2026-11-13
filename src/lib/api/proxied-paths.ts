@@ -28,3 +28,13 @@ const prefixes = API_PATHS.map((path) => path.replace("/:path*", ""))
 export function isApiPath(pathname: string): boolean {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
+
+/**
+ * Requests the service worker hands to the network untouched, never to a cache: the API's paths and
+ * everything on another origin. That includes Brandfetch's logos (`cdn.brandfetch.io`), which
+ * Serwist's `defaultCache` would otherwise keep in its "cross-origin" cache: Brandfetch hasn't
+ * allowed storing them, so only the browser's own HTTP cache holds them.
+ */
+export function isNetworkOnly(url: URL, sameOrigin: boolean): boolean {
+  return !sameOrigin || isApiPath(url.pathname)
+}

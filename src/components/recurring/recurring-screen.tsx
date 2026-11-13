@@ -13,29 +13,35 @@ import {
   KWSection,
   KWTransactionIcon,
 } from "@/components/kw/design"
+import { BrandOrCategoryBadge } from "@/components/kw/brand-mark"
 import { transactionAmountClass } from "@/components/kw/design-styles"
 import { AnimatedList, ListItem } from "@/components/kw/motion"
-import { CategoryBadge, Page } from "@/components/kw/primitives"
+import { Page } from "@/components/kw/primitives"
 import { SkeletonList } from "@/components/kw/skeletons"
 import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
+import { useConfirmDraft } from "@/components/transactions/use-confirm-draft"
 import { useLedgerLoad } from "@/hooks/use-ledger"
 import {
   isFinished,
   nextOccurrenceOf,
+  pendingRuleDrafts,
   recurringOverview,
+  upcomingPayments,
   type Ledger,
+  type PendingRuleDraft,
 } from "@/lib/domain"
 import {
   formatAmount,
   formatMoney,
 } from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
-import type { RecurringRule } from "@/lib/schema"
+import type { RecurringRule, Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
 import {
   frequencyText,
   nextDateText,
+  pendingDraftText,
   rulePaymentText,
   sectionTitle,
 } from "./recurring-format"
@@ -51,14 +57,22 @@ export function RecurringScreen() {
   const { openRuleEditor } = useAppActions()
   const [hidden, toggleHidden] = useHiddenBalances()
   const [now] = useState(() => new Date())
+  const { confirming, confirmDraft } = useConfirmDraft(t)
   const overview = useMemo(
     () =>
       ledger
-        ? recurringOverview(ledger.recurringRules, ledger.settings.currencies)
+        ? recurringOverview(ledger.recurringRules, ledger.settings.currencies, ledger.timeZone)
         : undefined,
     [ledger]
   )
+  // Once for the screen, from the list Home reads: each rule's draft waiting from today or before.
+  const pendingDrafts = useMemo(
+    () => (ledger ? pendingRuleDrafts(upcomingPayments(ledger, now, 0)) : undefined),
+    [ledger, now]
+  )
   const add = () => openRuleEditor({ mode: "create" })
+  const addSubscription = () =>
+    openRuleEditor({ mode: "create", subscription: true })
 
   return (
     <Page>
@@ -71,6 +85,13 @@ export function RecurringScreen() {
               label={t.in("recurring", hidden ? "Show amounts" : "Hide amounts")}
               onClick={toggleHidden}
             />
+            <KWButton
+              variant="surface"
+              icon="subscription"
+              onClick={addSubscription}
+            >
+              {t.in("recurring", "New subscription")}
+            </KWButton>
             <KWButton icon="plus" onClick={add}>
               {t.in("recurring", "Add recurring")}
             </KWButton>
@@ -123,6 +144,19 @@ export function RecurringScreen() {
                   : formatMoney(overview.subscriptionsPerYear)
               )}
             </span>
+            {overview.excludedSubscriptions.map(({ currency, count }) => (
+              <span
+                key={currency}
+                className="type-caption text-muted-foreground tabular-nums"
+              >
+                {t.in(
+                  "recurring",
+                  "Not including %lld subscriptions in %@",
+                  count,
+                  currency
+                )}
+              </span>
+            ))}
           </section>
           <div className="grid gap-6 lg:grid-cols-2">
             {overview.sections.map((section) => (
@@ -138,8 +172,11 @@ export function RecurringScreen() {
                         t={t}
                         rule={rule}
                         ledger={ledger}
+                        pending={pendingDrafts?.get(rule.id)}
                         now={now}
                         hidden={hidden}
+                        confirming={confirming}
+                        onConfirm={confirmDraft}
                         onSelect={() =>
                           openRuleEditor({ mode: "edit", ruleId: rule.id })
                         }
@@ -156,83 +193,116 @@ export function RecurringScreen() {
   )
 }
 
-/** The rule's category (or the transfer icon), name, how often and with what, the amount and its next date. */
+/**
+ * The rule's category (or the transfer icon), name, how often and with what, the amount and its next
+ * date; or, while a draft it made waits from today or before, that draft's state and "Confirm".
+ */
 function RuleRow({
   t,
   rule,
   ledger,
+  pending,
   now,
   hidden,
+  confirming,
+  onConfirm,
   onSelect,
 }: {
   t: Translator
   rule: RecurringRule
   ledger: Ledger
+  pending: PendingRuleDraft | undefined
   now: Date
   hidden: boolean
+  confirming: ReadonlySet<string>
+  onConfirm: (planned: Transaction) => void
   onSelect: () => void
 }) {
   const category = ledger.categories.find(
     (candidate) => candidate.id === rule.categoryId
   )
-  const next = nextOccurrenceOf(rule)
-  const status = rule.isPaused
-    ? t.in("recurring", "Paused")
-    : isFinished(rule) || !next
-      ? t.in("recurring", "Ended")
-      : nextDateText(t, next, now)
-  const inactive = rule.isPaused || isFinished(rule)
+  const next = nextOccurrenceOf(rule, ledger.timeZone)
+  const status = pending
+    ? pendingDraftText(t, pending, now)
+    : rule.isPaused
+      ? t.in("recurring", "Paused")
+      : isFinished(rule, ledger.timeZone) || !next
+        ? t.in("recurring", "Ended")
+        : nextDateText(t, next, now)
+  const inactive = !pending && (rule.isPaused || isFinished(rule, ledger.timeZone))
   const style = rule.kind
   return (
     <ListItem>
-      <button
-        type="button"
-        onClick={onSelect}
+      <div
         className={cn(
-          "flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left press-row outline-none hover:bg-secondary/50 focus-visible:bg-secondary/50",
+          "flex min-h-16 items-center hover:bg-secondary/50 focus-within:bg-secondary/50",
           inactive && "opacity-55"
         )}
       >
-        {rule.kind === "transfer" ? (
-          <KWTransactionIcon style="transfer" />
-        ) : (
-          <CategoryBadge category={category} />
+        <button
+          type="button"
+          onClick={onSelect}
+          className="flex min-h-16 min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left press-row outline-none"
+        >
+          {rule.kind === "transfer" ? (
+            <KWTransactionIcon style="transfer" />
+          ) : (
+            <BrandOrCategoryBadge text={rule.name} category={category} />
+          )}
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate type-body font-semibold text-foreground">
+              {rule.name}
+            </span>
+            <span className="truncate type-caption text-muted-foreground">
+              {[
+                frequencyText(t, rule.frequency, rule.interval),
+                rule.source === "mcp" && rule.isPaused
+                  ? t.in("recurring", "Proposed by Claude · resume to confirm")
+                  : "",
+                rulePaymentText(t, rule, ledger),
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          </span>
+          <span className="flex shrink-0 flex-col items-end gap-0.5">
+            <span
+              className={cn(
+                "type-body font-semibold tabular-nums",
+                transactionAmountClass(style)
+              )}
+            >
+              {hidden ? BALANCE_MASK : formatAmount(rule.amount, rule.currency)}
+            </span>
+            <span
+              className={cn(
+                "type-caption",
+                // Overdue reads in the warning color, and says so in words too.
+                pending && pending.daysOverdue > 0
+                  ? "font-semibold text-pending"
+                  : pending
+                    ? "text-foreground"
+                    : rule.isPaused
+                      ? "text-pending"
+                      : "text-muted-foreground"
+              )}
+            >
+              {status}
+            </span>
+          </span>
+        </button>
+        {pending && (
+          <KWButton
+            size="mini"
+            className="mr-4 shrink-0"
+            disabled={confirming.has(pending.transaction.id)}
+            aria-label={t.in("recurring", "Confirm %@", pending.transaction.description)}
+            onClick={() => onConfirm(pending.transaction)}
+          >
+            {t.in("recurring", "Confirm")}
+          </KWButton>
         )}
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate type-body font-semibold text-foreground">
-            {rule.name}
-          </span>
-          <span className="truncate type-caption text-muted-foreground">
-            {[
-              frequencyText(t, rule.frequency, rule.interval),
-              rule.source === "mcp" && rule.isPaused
-                ? t.in("recurring", "Proposed by Claude · resume to confirm")
-                : "",
-              rulePaymentText(t, rule, ledger),
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </span>
-        </span>
-        <span className="flex shrink-0 flex-col items-end gap-0.5">
-          <span
-            className={cn(
-              "type-body font-semibold tabular-nums",
-              transactionAmountClass(style)
-            )}
-          >
-            {hidden ? BALANCE_MASK : formatAmount(rule.amount, rule.currency)}
-          </span>
-          <span
-            className={cn(
-              "type-caption",
-              rule.isPaused ? "text-pending" : "text-muted-foreground"
-            )}
-          >
-            {status}
-          </span>
-        </span>
-      </button>
+      </div>
     </ListItem>
   )
 }

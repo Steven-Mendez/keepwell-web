@@ -354,7 +354,8 @@ function AccountsList({
     ledger.accounts,
     ledger.cards,
     ledger.transactions,
-    ledger.settings.currencies
+    ledger.settings.currencies,
+    ledger.timeZone
   )
   // The eye on Home hides balances here too, as iOS hides them on every screen.
   const [hidden] = useHiddenBalances()

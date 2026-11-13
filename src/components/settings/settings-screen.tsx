@@ -34,6 +34,7 @@ import { ConnectedAppsSection } from "./connected-apps-section"
 import { CurrencySection } from "./currency-section"
 import { DataSection, EraseDataRow } from "./data-section"
 import { SETTINGS_INPUT, SettingsLinkRow, SettingsRow, SettingsSection, type SettingsIcon } from "./settings-rows"
+import { TimeZoneRow } from "./time-zone-row"
 
 const APP_VERSION = packageJson.version
 
@@ -95,6 +96,7 @@ export function SettingsScreen() {
             <PreferencesSection t={t} />
             <CurrencySection t={t} ledger={ledger}>
               <ReminderRow t={t} ledger={ledger} />
+              <TimeZoneRow t={t} ledger={ledger} />
             </CurrencySection>
             <OrganizationSection t={t} ledger={ledger} />
             <DataSection t={t} syncRows={me ? <SyncRows t={t} me={me} sync={sync} rejected={rejected} /> : undefined} />

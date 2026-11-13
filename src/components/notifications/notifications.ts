@@ -3,6 +3,7 @@ import type { Translator } from "@/lib/i18n"
 import type { NotificationState } from "@/lib/repositories"
 
 import { notificationCopy, type NotificationCopy } from "@/lib/presentation/notification-copy"
+import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 export interface InboxEntry extends NotificationCopy {
   notification: LedgerNotification
@@ -44,7 +45,7 @@ export function buildInbox(t: Translator, ledger: Ledger, states: readonly Notif
   }
   const days: InboxDay[] = []
   for (const entry of entries) {
-    const day = startOfDay(entry.notification.date)
+    const day = startOfDay(entry.notification.date, deviceTimeZone())
     const last = days.at(-1)
     if (last && last.day.getTime() === day.getTime()) last.entries.push(entry)
     else days.push({ day, entries: [entry] })
