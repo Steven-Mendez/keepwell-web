@@ -2,7 +2,7 @@
 // line never says "All caught up" while the list below shows something late.
 import { describe, expect, it } from "vitest"
 
-import { homeStatus, homeStatusText, homeUpcomingPayments, homeUpcomingShown, ledgerHomeStatus } from "@/components/home/home-status"
+import { homeStatus, homeStatusText, homeUpcomingPayments, homeUpcomingShown, ledgerHomeStatus, spentInMonthText } from "@/components/home/home-status"
 import { homeOverview, ledgerNotifications, loadLedger, startOfDay, type Ledger, type UpcomingPayment } from "@/lib/domain"
 import { makeTranslator } from "@/lib/i18n"
 import type { Account, Loan, PersonalDebt, RecurringRule } from "@/lib/schema"
@@ -177,5 +177,12 @@ describe("homeStatus", () => {
     const at = (id: string, status: UpcomingPayment["status"]) => ({ id, status }) as UpcomingPayment
     const payments = [at("a", "overdue"), at("b", "overdue"), at("c", "overdue"), at("d", "overdue"), at("e", "today"), at("f", "upcoming"), at("g", "upcoming"), at("h", "upcoming")]
     expect(homeUpcomingShown(payments).map((payment) => payment.id)).toEqual(["a", "b", "c", "d", "e", "f", "g"])
+  })
+})
+
+describe("Home's spending label", () => {
+  it("keeps the month in its language's case mid-sentence", () => {
+    expect(spentInMonthText(en, { year: 2026, month: 11 })).toBe("Spent in November")
+    expect(spentInMonthText(es, { year: 2026, month: 11 })).toBe("Gastado en noviembre")
   })
 })
