@@ -103,6 +103,9 @@ export interface TransactionRow extends AuditColumns {
   source: RecordSource
   /** The statement line it was imported from (T28); absent on rows from before, `null` when not imported. No index, so no new version. */
   imported_id?: string | null
+  /** The business (`merchants`) and the platform it went through; absent on rows from before, `null` for none. No index. */
+  merchant_id?: string | null
+  via_merchant_id?: string | null
 }
 
 /** A recurring movement or subscription (iOS `RecurringRuleRecord`). */
@@ -128,6 +131,9 @@ export interface RecurringRuleRow extends AuditColumns {
   /** Copied to each movement; empty when none. Added in version 5. */
   tags: string[]
   source: RecordSource
+  /** As on a movement; absent on rows from before, `null` for none. */
+  merchant_id?: string | null
+  via_merchant_id?: string | null
 }
 
 /** A categorization rule (iOS `CategorizationRuleRecord`); `sort_index` is the person's order. */
@@ -138,6 +144,18 @@ export interface CategorizationRuleRow extends AuditColumns {
   kind: "expense" | "income"
   tags: string[]
   sort_index: number
+  /** The business it sets; absent on rows from before, `null` for none. */
+  merchant_id?: string | null
+}
+
+/** A business or platform a movement names (`Merchant`). Added in version 8. */
+export interface MerchantRow extends AuditColumns {
+  id: string
+  name: string
+  domain: string | null
+  brand_id: string | null
+  default_category_id: string | null
+  is_platform: boolean
 }
 
 /** A savings goal (iOS `SavingsGoalRecord`). */
@@ -277,6 +295,7 @@ export class KeepwellDatabase extends Dexie {
   categorization_rules!: EntityTable<CategorizationRuleRow, "id">
   settings!: EntityTable<SettingsRow, "id">
   notification_states!: EntityTable<NotificationStateRow, "id">
+  merchants!: EntityTable<MerchantRow, "id">
   sync_outbox!: EntityTable<SyncOutboxRow, "id">
 
   constructor() {
@@ -410,6 +429,9 @@ export class KeepwellDatabase extends Dexie {
       })
     // Read and deleted notifications, synced (ADR 0012). A new table, so nothing to upgrade.
     this.version(7).stores({ notification_states: "id, updated_at, deleted_at" })
+    // Merchants (businesses and platforms). A new table; the links on movements and rules are plain
+    // columns without an index, absent on older rows, so nothing to upgrade.
+    this.version(8).stores({ merchants: "id, updated_at, deleted_at" })
   }
 }
 

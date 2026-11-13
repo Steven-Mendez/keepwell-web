@@ -20,6 +20,7 @@ export const USER_DATA_ENTITIES = [
   "personalDebtRepayment",
   "savingsGoal",
   "categorizationRule",
+  "merchant",
 ] as const satisfies readonly SyncEntity[]
 
 export type UserDataEntity = (typeof USER_DATA_ENTITIES)[number]

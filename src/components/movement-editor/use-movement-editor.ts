@@ -32,6 +32,14 @@ import { ledgerStore } from "@/lib/repositories"
 
 import { errorMessage, sourceTitle } from "./editor-model"
 import {
+  categoryAfterBusiness,
+  initialMerchantFields,
+  merchantDraftLinks,
+  suggestedBusiness,
+  type MerchantFields,
+} from "./merchant-state"
+import type { MerchantChoice } from "@/lib/presentation/merchants"
+import {
   carriedDebitText,
   clearingStaleDebit,
   deriveForm,
@@ -111,6 +119,9 @@ export function useMovementEditor(
     [usesRules, existing, storedRules, context.categories]
   )
   const usage = useMemo(() => tagUsage(context.transactions), [context.transactions])
+  // "Business" and "Via". The movements a person logs take a suggestion from their text; the
+  // recurring editor (`usesRules` off) leaves a rule's links as they are.
+  const [merchantFields, setMerchantFields] = useState<MerchantFields>(() => initialMerchantFields(existing))
 
   /**
    * iOS `applyRules`: the description or note changed, so the first rule of this kind they match
@@ -136,10 +147,49 @@ export function useMovementEditor(
     return { ...next, categoryId: match ? match.categoryId : before }
   }
 
+  /**
+   * The business the text suggests while the person hasn't chosen one, and the category it brings
+   * when nobody chose one either (no pick, no rule).
+   */
+  function suggestingBusiness(next: EditorFields, ruleChose: boolean): EditorFields {
+    const kind = movementKind(next.type)
+    if (!usesRules || existing || merchantFields.touched || kind === "transfer") return next
+    const choice = suggestedBusiness(merchantFields, next, kind, context.merchants, rules)
+    return withBusiness(next, choice, !categoryPicked && !ruleChose, merchantFields.touched)
+  }
+
+  /** The business changes to `choice`, and the category with it when it may. */
+  function withBusiness(next: EditorFields, choice: MerchantChoice | undefined, mayChoose: boolean, touched: boolean): EditorFields {
+    const kind = movementKind(next.type)
+    const category = categoryAfterBusiness(
+      { categoryId: next.categoryId, suggestedCategory: merchantFields.suggestedCategory },
+      choice,
+      { mayChoose: mayChoose && !existing, kind, merchants: context.merchants, categories: context.categories }
+    )
+    setMerchantFields({ ...merchantFields, merchant: choice, touched, suggestedCategory: category.suggestedCategory })
+    return { ...next, categoryId: category.categoryId }
+  }
+
   const carriedDebit = useMemo(() => (existing ? carriedDebitText(existing) : ""), [existing])
   const update = (patch: Partial<EditorFields>) => {
-    const next = { ...fields, ...clearingStaleDebit(fields, patch, carriedDebit) }
-    setFields("description" in patch || "note" in patch ? applyingRules(next) : next)
+    let next = { ...fields, ...clearingStaleDebit(fields, patch, carriedDebit) }
+    if ("description" in patch || "note" in patch) {
+      next = applyingRules(next)
+      const kind = movementKind(next.type)
+      const ruleChose = kind !== "transfer" && rules.length > 0 && firstMatchingRule(rules, kind, next.description, next.note) !== undefined
+      next = suggestingBusiness(next, ruleChose)
+    }
+    setFields(next)
+  }
+
+  /** The person chose (or cleared) the business: no suggestion replaces it from now on. */
+  function chooseBusiness(choice: MerchantChoice | undefined) {
+    setFields(withBusiness(fields, choice, !categoryPicked && rule.applied === undefined, true))
+    setError(undefined)
+  }
+
+  function chooseVia(choice: MerchantChoice | undefined) {
+    setMerchantFields((current) => ({ ...current, via: choice }))
   }
 
   /** The person chose a category: no rule replaces it from now on. */
@@ -199,7 +249,8 @@ export function useMovementEditor(
     setSaving(true)
     setError(undefined)
     try {
-      const draft = { ...form.draft, id: existing?.id ?? newID(), tags }
+      const links = await merchantDraftLinks(ledgerStore, merchantFields, form.kind)
+      const draft = { ...form.draft, id: existing?.id ?? newID(), tags, ...links }
       const result =
         !existing && repeat !== "none"
           ? await saveRepeatingTransaction(ledgerStore, draft, repeat)
@@ -254,6 +305,10 @@ export function useMovementEditor(
       ? ct("Category from rule: %@", rule.applied.match)
       : undefined,
     pickCategory,
+    merchant: merchantFields.merchant,
+    via: merchantFields.via,
+    chooseBusiness,
+    chooseVia,
     types,
     initialType: initial.fields.type,
     fields,

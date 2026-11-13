@@ -20,7 +20,8 @@ import { Page } from "@/components/kw/primitives"
 import { SkeletonList } from "@/components/kw/skeletons"
 import { BALANCE_MASK, useHiddenBalances } from "@/hooks/use-hidden-balances"
 import { useConfirmDraft } from "@/components/transactions/use-confirm-draft"
-import { useLedgerLoad } from "@/hooks/use-ledger"
+import { useLedgerLoad, useMerchants } from "@/hooks/use-ledger"
+import { movementLogo } from "@/lib/presentation/merchants"
 import {
   isFinished,
   nextOccurrenceOf,
@@ -221,6 +222,7 @@ function RuleRow({
   const category = ledger.categories.find(
     (candidate) => candidate.id === rule.categoryId
   )
+  const merchants = useMerchants()
   const next = nextOccurrenceOf(rule, ledger.timeZone)
   const status = pending
     ? pendingDraftText(t, pending, now)
@@ -247,7 +249,7 @@ function RuleRow({
           {rule.kind === "transfer" ? (
             <KWTransactionIcon style="transfer" />
           ) : (
-            <BrandOrCategoryBadge text={rule.name} category={category} />
+            <BrandOrCategoryBadge text={rule.name} category={category} logo={movementLogo({ description: rule.name, merchantId: rule.merchantId }, merchants ?? [])} />
           )}
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="truncate type-body font-semibold text-foreground">

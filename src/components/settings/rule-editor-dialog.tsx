@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { useMerchants } from "@/hooks/use-ledger"
 import {
   applyRuleToPast,
   deleteCategorizationRule,
@@ -62,6 +63,8 @@ export function RuleEditorDialog({
   const [match, setMatch] = useState(editing?.match ?? "")
   const [categoryId, setCategoryId] = useState(editing?.categoryId ?? "")
   const [tags, setTags] = useState<string[]>(editing?.tags ?? [])
+  const [merchantId, setMerchantId] = useState(editing?.merchantId ?? "")
+  const merchants = useMerchants() ?? []
   const [isSaving, setSaving] = useState(false)
   const [error, setError] = useState<string>()
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -86,6 +89,7 @@ export function RuleEditorDialog({
         categoryId,
         kind,
         tags,
+        ...(merchantId ? { merchantId } : {}),
       })
       onClose()
     } catch {
@@ -197,6 +201,25 @@ export function RuleEditorDialog({
                 ))}
               </select>
             </label>
+            {merchants.length > 0 || merchantId ? (
+              <label className="flex flex-col gap-1.5">
+                <span className="type-label text-text-secondary">
+                  {t.in("web", "Business")}
+                </span>
+                <select
+                  className={SETTINGS_INPUT}
+                  value={merchantId}
+                  onChange={(event) => setMerchantId(event.target.value)}
+                >
+                  <option value="">{t.in("web", "None")}</option>
+                  {merchants.map((merchant) => (
+                    <option key={merchant.id} value={merchant.id}>
+                      {merchant.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <div className="flex flex-col gap-1.5">
               <span className="type-label text-text-secondary">
                 {t.in("settings", "Tags to add")}

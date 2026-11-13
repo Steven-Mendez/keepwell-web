@@ -4,6 +4,7 @@ import type {
   Card,
   CategorizationRule,
   Loan,
+  Merchant,
   PersonalDebt,
   RecordSource,
   RecurringRule,
@@ -20,6 +21,7 @@ import type {
   CategoryRow,
   LoanPaymentRow,
   LoanRow,
+  MerchantRow,
   PersonalDebtRepaymentRow,
   PersonalDebtRow,
   RecurringRuleRow,
@@ -171,6 +173,9 @@ export function transactionToRow(transaction: Transaction): Columns<TransactionR
     source: transaction.source ?? "app",
     // Always sent, null when it wasn't imported; the server keeps one already set either way.
     imported_id: orNull(transaction.importedId),
+    // Always sent, null for none: unlinking has to reach the other devices.
+    merchant_id: orNull(transaction.merchantId),
+    via_merchant_id: orNull(transaction.viaMerchantId),
   }
 }
 
@@ -200,6 +205,8 @@ export function rowToTransaction(row: TransactionRow): Transaction {
     ...tagsOf(row.tags),
     ...sourceOf(row.source),
     ...present("importedId", row.imported_id ?? null),
+    ...present("merchantId", row.merchant_id ?? null),
+    ...present("viaMerchantId", row.via_merchant_id ?? null),
   }
 }
 
@@ -225,6 +232,8 @@ export function recurringRuleToRow(rule: RecurringRule): Columns<RecurringRuleRo
     note: orNull(rule.note),
     tags: normalizedTags(rule.tags ?? []),
     source: rule.source ?? "app",
+    merchant_id: orNull(rule.merchantId),
+    via_merchant_id: orNull(rule.viaMerchantId),
   }
 }
 
@@ -250,6 +259,8 @@ export function rowToRecurringRule(row: RecurringRuleRow): RecurringRule {
     ...present("note", row.note),
     ...tagsOf(row.tags),
     ...sourceOf(row.source),
+    ...present("merchantId", row.merchant_id ?? null),
+    ...present("viaMerchantId", row.via_merchant_id ?? null),
   }
 }
 
@@ -266,6 +277,7 @@ export function categorizationRuleToRow(rule: CategorizationRule, sortIndex: num
     kind: rule.kind,
     tags: normalizedTags(rule.tags ?? []),
     sort_index: sortIndex,
+    merchant_id: orNull(rule.merchantId),
   }
 }
 
@@ -276,6 +288,29 @@ export function rowToCategorizationRule(row: CategorizationRuleRow): Categorizat
     categoryId: row.category_id,
     kind: row.kind,
     ...tagsOf(row.tags),
+    ...present("merchantId", row.merchant_id ?? null),
+  }
+}
+
+export function merchantToRow(merchant: Merchant): Columns<MerchantRow> {
+  return {
+    id: merchant.id,
+    name: merchant.name,
+    domain: orNull(merchant.domain),
+    brand_id: orNull(merchant.brandId),
+    default_category_id: orNull(merchant.defaultCategoryId),
+    is_platform: merchant.isPlatform,
+  }
+}
+
+export function rowToMerchant(row: MerchantRow): Merchant {
+  return {
+    id: row.id,
+    name: row.name,
+    ...present("domain", row.domain),
+    ...present("brandId", row.brand_id),
+    ...present("defaultCategoryId", row.default_category_id),
+    isPlatform: row.is_platform,
   }
 }
 

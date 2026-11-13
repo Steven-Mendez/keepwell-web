@@ -7,11 +7,13 @@ import { SYNC_ENTITIES, SYNC_WIRE, type SyncEntity, type SyncRow } from "@/lib/s
 //
 // Version 1 holds sync format v1 rows. Version 2 adds `account.closed_at`: a column that changes what
 // the person sees raises the version, so an app that predates it refuses the file instead of
-// reopening closed accounts without a word. This app reads both (a version 1 file has no closed
-// accounts) and refuses a version it doesn't know instead of dropping what it can't read.
+// reopening closed accounts without a word. Version 3 adds merchants (their own entity, and the
+// links on movements, recurring rules and categorization rules), which an older app would drop. This
+// app reads all three (an older file has no closed accounts and no merchants) and refuses a version
+// it doesn't know instead of dropping what it can't read.
 
 export const BACKUP_FORMAT = "keepwell-backup"
-export const BACKUP_VERSION = 2
+export const BACKUP_VERSION = 3
 /** The oldest version this app still reads. */
 export const OLDEST_BACKUP_VERSION = 1
 

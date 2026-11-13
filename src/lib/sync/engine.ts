@@ -1,5 +1,6 @@
 import { db, LOCAL_SETTINGS_COLUMNS, SYNC_TABLES, toWire } from "@/lib/db"
 import { reassignDeletedCategories } from "@/lib/domain/categories"
+import { unlinkDeletedMerchants } from "@/lib/domain/merchants"
 import { ledgerStore } from "@/lib/repositories/ledger-store"
 import { applyRemote, stampAfter } from "@/lib/repositories/shared"
 import { SYNC_ENTITIES, type SyncEntity } from "@/lib/schema"
@@ -410,6 +411,7 @@ async function syncRound(transport: SyncTransport, options: { userId?: string })
     if (!page.has_more) break
   }
   await repairDeletedCategories()
+  await repairDeletedMerchants()
   await setMeta(LAST_SYNC, new Date().toISOString())
   return { pushed, pulled }
 }
@@ -421,6 +423,12 @@ async function syncRound(transport: SyncTransport, options: { userId?: string })
 async function repairDeletedCategories() {
   const tombstones = await db.categories.filter((row) => row.deleted_at !== null).primaryKeys()
   await reassignDeletedCategories(ledgerStore, new Set(tombstones))
+}
+
+/** The same for merchants: a link to one deleted elsewhere is removed, through the outbox. */
+async function repairDeletedMerchants() {
+  const tombstones = await db.merchants.filter((row) => row.deleted_at !== null).primaryKeys()
+  await unlinkDeletedMerchants(ledgerStore, new Set(tombstones))
 }
 
 async function settle(entity: SyncEntity, entityId: string, result: PushResult) {

@@ -15,6 +15,7 @@ import type { Ledger, UpcomingPayment } from "@/lib/domain"
 import { formatMoney } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { accountName, type TransactionDisplay } from "@/lib/presentation/display"
+import { movementLogo } from "@/lib/presentation/merchants"
 import type { Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
@@ -201,7 +202,7 @@ function describe(t: Translator, ledger: Ledger, payment: UpcomingPayment, displ
       const { rule } = payment
       const category = ledger.categories.find((candidate) => candidate.id === rule.categoryId)
       return {
-        icon: rule.kind === "transfer" ? <KWTransactionIcon style="transfer" className="size-8" /> : <BrandOrCategoryBadge text={rule.name} category={category} size="sm" />,
+        icon: rule.kind === "transfer" ? <KWTransactionIcon style="transfer" className="size-8" /> : <BrandOrCategoryBadge text={rule.name} category={category} logo={movementLogo({ description: rule.name, merchantId: rule.merchantId }, display.merchants)} size="sm" />,
         title: rule.name,
         subtitle: undefined,
         amountClass: transactionAmountClass(rule.kind),

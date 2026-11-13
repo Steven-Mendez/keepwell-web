@@ -57,10 +57,12 @@ type Ct = (key: string, ...args: (string | number)[]) => string
 
 /** The kind-specific rows: where a transfer went, or what an expense or income was for. */
 function RouteRows({
+  t,
   ct,
   transaction,
   display,
 }: {
+  t: Translator
   ct: Ct
   transaction: Transaction
   display: TransactionDisplay
@@ -79,8 +81,10 @@ function RouteRows({
       </>
     )
   }
+  const merchant = display.merchantLine(transaction)
   return (
     <>
+      {merchant ? <KWValueRow label={t.in("web", "Business")} value={merchant} /> : null}
       <KWValueRow
         label={ct("Category")}
         value={display.categoryName(transaction) ?? "—"}
@@ -163,7 +167,7 @@ function DetailCards({
             timeStyle: "short",
           })}
         />
-        <RouteRows ct={ct} transaction={transaction} display={display} />
+        <RouteRows t={t} ct={ct} transaction={transaction} display={display} />
         <KWValueRow label={t.in("transactions", "Type")} value={kindText(t, transaction)} />
         <KWValueRow
           label={t.in("transactions", "Status")}

@@ -4,25 +4,29 @@ import { useState } from "react"
 
 import { CategoryBadge } from "@/components/kw/primitives"
 import { categoryColor } from "@/lib/presentation/display"
-import { brandFor, brandMonogram, type Brand } from "@/lib/presentation/brands"
+import { brandFor, brandMonogram } from "@/lib/presentation/brands"
+import type { LogoSubject } from "@/lib/presentation/merchants"
 import { brandLogoSession, type BrandLogoEvent } from "@/lib/presentation/brand-logos"
 import type { TransactionCategory } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
 /**
- * A rule's or movement's leading badge: the brand its text names, if the table knows one, or the
- * category's symbol. Only a table brand's domain is ever requested; the text never leaves the device.
+ * A rule's or movement's leading badge: its merchant's logo when given (`logo`), else the brand its
+ * text names, if the table knows one, else the category's symbol. Only a domain is ever requested;
+ * the text never leaves the device.
  */
 export function BrandOrCategoryBadge({
   text,
   category,
+  logo,
   size = "md",
 }: {
   text: string
   category: TransactionCategory | undefined
+  logo?: LogoSubject | undefined
   size?: "sm" | "md"
 }) {
-  const brand = brandFor(text)
+  const brand = logo ?? brandFor(text)
   if (!brand) return <CategoryBadge category={category} size={size} />
   return <BrandMark brand={brand} color={categoryColor(category)} size={size} />
 }
@@ -38,7 +42,8 @@ export function BrandMark({
   size = "md",
   className,
 }: {
-  brand: Brand
+  /** A table brand or a merchant: the name its monogram comes from and the domain of its logo. */
+  brand: LogoSubject
   /** The category's CSS color, for the monogram. */
   color: string
   size?: "sm" | "md"
