@@ -186,7 +186,7 @@ describe("Summary", () => {
       transaction({ amount: "30", date: date(2026, 9, 3) }),
       transaction({ amount: "100", date: date(2026, 9, 25) }),
     ]
-    const pace = spendingPace({ year: 2026, month: 10 }, transactions, date(2026, 10, 10), ZONE)
+    const pace = spendingPace({ year: 2026, month: 10 }, transactions, "USD", date(2026, 10, 10), ZONE)
     expect(paceComparisonDay(pace)).toBe(10)
     expect(paceSpentSoFar(pace).toFixed()).toBe("10")
     expect(pacePreviousBySameDay(pace).toFixed()).toBe("30")
