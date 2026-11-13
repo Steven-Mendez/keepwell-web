@@ -7,11 +7,12 @@ import {
   orderedGoals,
   orderedLoans,
   savingsGoalProgress,
-  subscriptionsPerMonth,
+  subscriptionsTotal,
   type Ledger,
   type LoanProgress,
   type Money,
   type SavingsGoalProgress,
+  type UnconvertedSubscriptions,
 } from "@/lib/domain"
 import { debtTotals, type DebtTotals, type TimeZone } from "@/lib/domain"
 import type { RecurringRule, SavingsGoal } from "@/lib/schema"
@@ -20,9 +21,11 @@ import type { RecurringRule, SavingsGoal } from "@/lib/schema"
 export interface PlanSummary {
   recurring: {
     ruleCount: number
-    /** The rules `subscriptionsPerMonth` adds up: live expense subscriptions. */
+    /** The rules `subscriptionsPerMonth` adds up: live expense subscriptions it could convert. */
     subscriptionCount: number
     subscriptionsPerMonth: Money
+    /** Live expense subscriptions the total leaves out, by currency; empty when it has them all. */
+    excludedSubscriptions: UnconvertedSubscriptions[]
     /** The soonest movement an active rule will produce. */
     next?: { rule: RecurringRule; date: Date }
   }
@@ -72,18 +75,23 @@ export function planSummary(ledger: Ledger, now: Date): PlanSummary {
   const totals = debtTotals(ledger.loans, ledger.personalDebts)
   const nextLoan = orderedLoans(ledger.loans, now, ledger.timeZone).find((entry) => entry.next)
   const next = nextRecurring(ledger.recurringRules, now, ledger.timeZone)
+  const subscriptions = subscriptionsTotal(
+    ledger.recurringRules,
+    ledger.settings.currencies,
+    ledger.timeZone
+  )
+  // The count says what the total adds up: live expense subscriptions, less the ones it left out
+  // for their currency (said apart, "Not including 1 in EUR"), as iOS.
+  const live = ledger.recurringRules.filter(
+    (rule) => rule.isSubscription && rule.kind === "expense" && isActive(rule, ledger.timeZone)
+  ).length
+  const excludedCount = subscriptions.excluded.reduce((sum, entry) => sum + entry.count, 0)
   return {
     recurring: {
       ruleCount: ledger.recurringRules.length,
-      subscriptionCount: ledger.recurringRules.filter(
-        (rule) =>
-          rule.isSubscription && rule.kind === "expense" && isActive(rule, ledger.timeZone)
-      ).length,
-      subscriptionsPerMonth: subscriptionsPerMonth(
-        ledger.recurringRules,
-        ledger.settings.currencies,
-        ledger.timeZone
-      ),
+      subscriptionCount: Math.max(0, live - excludedCount),
+      subscriptionsPerMonth: subscriptions.perMonth,
+      excludedSubscriptions: subscriptions.excluded,
       ...(next ? { next } : {}),
     },
     goals: {
