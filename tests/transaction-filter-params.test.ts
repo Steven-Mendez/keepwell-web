@@ -45,6 +45,9 @@ describe("transaction list filters in the URL", () => {
     expect(amountChipLabel({ min: dec(100) }, "NIO")).toBe("≥ C$100")
     expect(amountChipLabel({ max: dec("500.5") }, "NIO")).toBe("≤ C$500.50")
     expect(amountChipLabel({ min: dec(100), max: dec(500) }, "NIO")).toBe("C$100 – 500")
+    // Both ends alike when one has cents.
+    expect(amountChipLabel({ min: dec("8.5"), max: dec(15) }, "USD")).toBe("$8.50 – 15.00")
+    expect(amountChipLabel({ min: dec(8), max: dec("15.25") }, "USD")).toBe("$8.00 – 15.25")
     expect(amountChipLabel({}, "NIO")).toBeUndefined()
   })
 })

@@ -75,21 +75,25 @@ export function writeFilterParams(
   return next
 }
 
-/** Whole amounts without cents ("C$100"), others with them ("C$99.50"). */
-function bound(value: Decimal, currency?: string): string {
-  const digits = value.isInteger() ? 0 : 2
+/** Whole amounts without cents ("C$100"), others with them ("C$99.50"); `digits` forces either. */
+function bound(value: Decimal, currency?: string, digits = value.isInteger() ? 0 : 2): string {
   return currency
     ? formatAmount(value, currency, { fractionDigits: digits })
     : formatNumber(value, digits)
 }
 
-/** The active amount chip: "≥ C$100", "≤ C$500" or "C$100 – 500"; `undefined` without bounds. */
+/**
+ * The active amount chip: "≥ C$100", "≤ C$500" or "C$100 – 500"; `undefined` without bounds. Both
+ * ends of a range read alike: with cents on both ("C$8.50 – 15.00") when either has them.
+ */
 export function amountChipLabel(
   range: AmountRange,
   currency: string
 ): string | undefined {
-  if (range.min && range.max)
-    return `${bound(range.min, currency)} – ${bound(range.max)}`
+  if (range.min && range.max) {
+    const digits = range.min.isInteger() && range.max.isInteger() ? 0 : 2
+    return `${bound(range.min, currency, digits)} – ${bound(range.max, undefined, digits)}`
+  }
   if (range.min) return `≥ ${bound(range.min, currency)}`
   if (range.max) return `≤ ${bound(range.max, currency)}`
   return undefined
