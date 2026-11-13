@@ -6,8 +6,10 @@ import { describe, expect, it } from "vitest"
 import {
   DomainError,
   InMemoryStore,
+  applyRuleToPast,
   applyingRule,
   createMerchant,
+  deleteCategory,
   deleteMerchant,
   draftFrom,
   equivalentMerchant,
@@ -16,6 +18,7 @@ import {
   merchantLinks,
   merchantName,
   normalizedDomain,
+  reassignDeletedCategories,
   saveCategorizationRule,
   saveMerchant,
   saveRecurringRule,
@@ -23,6 +26,7 @@ import {
   saveTransaction,
   searchMerchants,
   unlinkDeletedMerchants,
+  validatedMerchant,
   validatedRule,
   viaChoices,
   type TransactionDraft,
@@ -270,12 +274,13 @@ describe("Categorization rules with a merchant", () => {
 
   it("applying it sets the merchant when the movement names none; one the person chose stays", () => {
     const movement = transaction({ amount: "8", description: "SUBWAY 123" })
-    expect(applyingRule(rule, movement)).toMatchObject({ categoryId: "restaurants", merchantId: SUBWAY })
+    const merchants = [subway, uberEats, pulperia]
+    expect(applyingRule(rule, movement, merchants)).toMatchObject({ categoryId: "restaurants", merchantId: SUBWAY })
     const chosen: Transaction = { ...movement, merchantId: PULPERIA }
-    expect(applyingRule(rule, chosen).merchantId).toBe(PULPERIA)
+    expect(applyingRule(rule, chosen, merchants).merchantId).toBe(PULPERIA)
     // The rule's merchant would be the movement's own platform: the platform goes.
     const viaSubway: Transaction = { ...movement, viaMerchantId: SUBWAY }
-    const applied = applyingRule(rule, viaSubway)
+    const applied = applyingRule(rule, viaSubway, merchants)
     expect(applied.merchantId).toBe(SUBWAY)
     expect(applied.viaMerchantId).toBeUndefined()
   })
@@ -294,6 +299,124 @@ describe("Categorization rules with a merchant", () => {
     const saved = await saveCategorizationRule(ledger, { match: "Subway", categoryId: "restaurants", kind: "expense", merchantId: SUBWAY })
     expect(ledger.categorizationRules.find((r) => r.id === saved.id)?.merchantId).toBe(SUBWAY)
     await expectDomainError(() => saveCategorizationRule(ledger, { match: "x", categoryId: "restaurants", kind: "expense", merchantId: crypto.randomUUID() }), "notFound")
+  })
+})
+
+describe("Review fixes", () => {
+  const groceriesRule: CategorizationRule = { id: crypto.randomUUID(), match: "Lunch", categoryId: "groceries", kind: "expense", tags: ["work"], merchantId: PULPERIA }
+
+  it("deleting a category clears the merchant defaults that point at it", async () => {
+    const ledger = store()
+    await deleteCategory(ledger, "restaurants")
+    expect(ledger.merchants.find((m) => m.id === SUBWAY)).toEqual({ id: SUBWAY, name: "Subway", domain: "subway.com", brandId: "subway", isPlatform: false })
+  })
+
+  it("the repair after a pull clears merchant defaults pointing at a deleted category", async () => {
+    const ledger = store()
+    ledger.transactions = []
+    ledger.recurringRules = []
+    expect(await reassignDeletedCategories(ledger, new Set(["groceries"]))).toBe(0)
+    expect(await reassignDeletedCategories(ledger, new Set(["restaurants"]))).toBe(1)
+    expect(ledger.merchants.find((m) => m.id === SUBWAY)?.defaultCategoryId).toBeUndefined()
+  })
+
+  it("a stale default category the merchant already had is dropped on save; a newly chosen unknown one is refused", async () => {
+    const stale: Merchant = { ...pulperia, defaultCategoryId: "gone" }
+    const ledger = store([stale])
+    const saved = await saveMerchant(ledger, { id: PULPERIA, name: "La Esquina", defaultCategoryId: "gone" })
+    expect(saved).toEqual({ id: PULPERIA, name: "La Esquina", isPlatform: false })
+    await expectDomainError(() => saveMerchant(ledger, { id: PULPERIA, name: "La Esquina", defaultCategoryId: "other-gone" }), "notFound")
+    expect(() => validatedMerchant({ id: PULPERIA, name: "X", defaultCategoryId: "gone" }, DEFAULT_CATEGORIES)).toThrow(DomainError)
+  })
+
+  it("merging copies only a default category that still exists", async () => {
+    const ledger = store()
+    const stale: Merchant = { id: crypto.randomUUID(), name: "Old", defaultCategoryId: "gone", isPlatform: false }
+    ledger.merchants.push(stale)
+    expect((await mergeMerchants(ledger, stale.id, PULPERIA)).defaultCategoryId).toBeUndefined()
+    // A live default replaces the target's stale one.
+    const target: Merchant = { id: crypto.randomUUID(), name: "Target", defaultCategoryId: "gone", isPlatform: false }
+    ledger.merchants.push(target)
+    expect((await mergeMerchants(ledger, SUBWAY, target.id)).defaultCategoryId).toBe("restaurants")
+  })
+
+  it("a matching rule wins over the merchant's default category, its tags and merchant included", async () => {
+    const ledger = store()
+    ledger.categorizationRules = [{ ...groceriesRule, merchantId: UBER_EATS }]
+    const saved = await saveTransaction(ledger, draft({ merchantId: SUBWAY }))
+    // The rule's category and tags; the business the person chose stays.
+    expect(saved.transaction).toMatchObject({ categoryId: "groceries", tags: ["work"], merchantId: SUBWAY })
+    expect(saved.rule?.id).toBe(groceriesRule.id)
+    // No rule matches: the merchant's default.
+    expect((await saveTransaction(ledger, draft({ description: "Cena", merchantId: SUBWAY }))).transaction.categoryId).toBe("restaurants")
+  })
+
+  it("a rule's merchant is set only when it exists, and never over a business cleared on purpose", async () => {
+    const ledger = store([subway])
+    ledger.categorizationRules = [groceriesRule]
+    expect((await saveTransaction(ledger, draft())).transaction.merchantId).toBeUndefined()
+    ledger.merchants.push(pulperia)
+    expect((await saveTransaction(ledger, draft())).transaction.merchantId).toBe(PULPERIA)
+    const cleared = (await saveTransaction(ledger, draft({ merchantId: null }))).transaction
+    expect(cleared.categoryId).toBe("groceries")
+    expect(cleared.merchantId).toBeUndefined()
+    expect(applyingRule(groceriesRule, transaction({ amount: "1", description: "Lunch" }), [subway]).merchantId).toBeUndefined()
+    expect(applyingRule(groceriesRule, transaction({ amount: "1", description: "Lunch" }), [pulperia], false).merchantId).toBeUndefined()
+  })
+
+  it("applying a rule to past movements sets only a merchant that exists", async () => {
+    const ledger = store([subway])
+    ledger.transactions = [transaction({ amount: "3", description: "Lunch" })]
+    expect(await applyRuleToPast(ledger, groceriesRule)).toBe(1)
+    expect(ledger.transactions[0]).toMatchObject({ categoryId: "groceries" })
+    expect(ledger.transactions[0]?.merchantId).toBeUndefined()
+  })
+
+  it("a transfer names no merchant: turning an expense into one drops its links", async () => {
+    const ledger = store()
+    const { transaction: saved } = await saveTransaction(ledger, draft({ merchantId: SUBWAY, viaMerchantId: UBER_EATS }))
+    const { merchantId: _m, viaMerchantId: _v, categoryId: _c, ...rest } = draftFrom(saved)
+    const transfer = (await saveTransaction(ledger, { ...rest, kind: "transfer", destinationAccountId: IDs.payroll })).transaction
+    expect(transfer.merchantId).toBeUndefined()
+    expect(transfer.viaMerchantId).toBeUndefined()
+    const fresh = (await saveTransaction(ledger, draft({ kind: "transfer", destinationAccountId: IDs.payroll, merchantId: SUBWAY }))).transaction
+    expect(fresh.merchantId).toBeUndefined()
+  })
+
+  it("a recurring transfer names no merchant", async () => {
+    const ledger = store()
+    const rule = await saveRecurringRule(ledger, {
+      name: "Ahorro",
+      kind: "transfer",
+      amount: d(10),
+      currency: "USD",
+      source: { type: "card", id: IDs.savingsDebit },
+      destinationAccountId: IDs.payroll,
+      frequency: "monthly",
+      interval: 1,
+      startDate: new Date(Date.UTC(2030, 0, 1, 18)),
+      isSubscription: false,
+      autoConfirm: true,
+      note: "",
+      merchantId: SUBWAY,
+      viaMerchantId: UBER_EATS,
+    })
+    expect(rule.merchantId).toBeUndefined()
+    expect(rule.viaMerchantId).toBeUndefined()
+  })
+
+  it("an edit keeps a link to a merchant this device doesn't know, unless the draft changes it", async () => {
+    const unknown = crypto.randomUUID()
+    expect(merchantLinks({ merchantId: unknown, viaMerchantId: unknown }, [subway], { merchantId: unknown })).toEqual({ merchantId: unknown })
+    expect(merchantLinks({}, [subway], { merchantId: unknown, viaMerchantId: UBER_EATS })).toEqual({ merchantId: unknown, viaMerchantId: UBER_EATS })
+    // A newly chosen unknown one is still dropped, and null still clears.
+    expect(merchantLinks({ merchantId: crypto.randomUUID() }, [subway], { merchantId: unknown })).toEqual({})
+    expect(merchantLinks({ merchantId: null }, [subway], { merchantId: unknown })).toEqual({})
+    const ledger = store([subway])
+    const { transaction: saved } = await saveTransaction(ledger, draft({ merchantId: SUBWAY }))
+    ledger.transactions = ledger.transactions.map((t) => (t.id === saved.id ? { ...t, merchantId: unknown } : t))
+    const edited = (await saveTransaction(ledger, { ...draftFrom({ ...saved, merchantId: unknown }), note: "x" })).transaction
+    expect(edited.merchantId).toBe(unknown)
   })
 })
 

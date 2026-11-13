@@ -249,12 +249,16 @@ export function useMovementEditor(
     setSaving(true)
     setError(undefined)
     try {
-      const links = await merchantDraftLinks(ledgerStore, merchantFields, form.kind)
-      const draft = { ...form.draft, id: existing?.id ?? newID(), tags, ...links }
-      const result =
-        !existing && repeat !== "none"
-          ? await saveRepeatingTransaction(ledgerStore, draft, repeat)
-          : await saveTransaction(ledgerStore, draft)
+      // New merchants are created in the same unit as the movement: a save that fails leaves none.
+      // A business the description suggested is created too: the field shows it as the chosen value,
+      // with a button to clear it, so saving with it there keeps it.
+      const result = await ledgerStore.atomically(async () => {
+        const links = await merchantDraftLinks(ledgerStore, merchantFields, form.kind)
+        const draft = { ...form.draft, id: existing?.id ?? newID(), tags, ...links }
+        return !existing && repeat !== "none"
+          ? saveRepeatingTransaction(ledgerStore, draft, repeat)
+          : saveTransaction(ledgerStore, draft)
+      })
       if (!existing) {
         setSaved(result)
         return

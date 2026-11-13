@@ -208,7 +208,20 @@ describe("the editor's Business and Via fields", () => {
     expect(await resolveChoice(store, netflix)).toBe(id)
     expect(await merchantDraftLinks(store, { merchant: { type: "merchant", id: SUBWAY }, via: undefined }, "expense")).toEqual({ merchantId: SUBWAY, viaMerchantId: null })
     expect(await merchantDraftLinks(store, { merchant: { type: "merchant", id: SUBWAY }, via: { type: "merchant", id: SUBWAY } }, "expense")).toEqual({ merchantId: SUBWAY, viaMerchantId: null })
-    expect(await merchantDraftLinks(store, { merchant: undefined, via: undefined }, "transfer")).toEqual({})
+    // A transfer names neither, and creates nothing.
+    const before = store.merchants.length
+    expect(await merchantDraftLinks(store, { merchant: { type: "new", draft: { name: "Nuevo" } }, via: undefined }, "transfer")).toEqual({ merchantId: null, viaMerchantId: null })
+    expect(store.merchants).toHaveLength(before)
+  })
+
+  it("leaves no new merchant behind when the save in the same unit fails", async () => {
+    const store = new InMemoryStore("America/Managua", { merchants: [...merchants] })
+    const failing = store.atomically(async () => {
+      await merchantDraftLinks(store, { merchant: { type: "new", draft: { name: "Netflix", brandId: "netflix" } }, via: undefined }, "expense")
+      throw new Error("save failed")
+    })
+    await expect(failing).rejects.toThrow("save failed")
+    expect(store.merchants).toEqual(merchants)
   })
 
   it("gives each choice a key, so a suggestion made elsewhere shows in the field", () => {

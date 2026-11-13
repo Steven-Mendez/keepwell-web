@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import {
   deleteMerchant,
+  isLiveDefaultCategory,
   mergeMerchants,
   orderedCategories,
   saveMerchant,
@@ -49,7 +50,10 @@ export function MerchantEditorDialog({
   onClose: () => void
 }) {
   const [name, setName] = useState(merchant.name)
-  const [categoryId, setCategoryId] = useState(merchant.defaultCategoryId ?? "")
+  // A default whose category is gone (deleted, or not pulled yet) shows as "None" and saves as none.
+  const [categoryId, setCategoryId] = useState(() =>
+    isLiveDefaultCategory(merchant.defaultCategoryId, categories) ? merchant.defaultCategoryId : ""
+  )
   const [isPlatform, setPlatform] = useState(merchant.isPlatform)
   const [mergeInto, setMergeInto] = useState("")
   const [saving, setSaving] = useState(false)

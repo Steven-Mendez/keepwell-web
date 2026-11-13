@@ -189,7 +189,7 @@ describe("Categorization rules", () => {
     const income = movement("Uber refund", "other-income", "income")
     const matches = pastMatches({ ...uber, tags: ["trabajo"] }, [other, none, categorized, unrelated, income])
     expect(matches.map((t) => t.id)).toEqual([other.id, none.id])
-    const applied = applyingRule(uber, other)
+    const applied = applyingRule(uber, other, [])
     expect(applied.categoryId).toBe("transport")
     expect(applied.tags).toEqual(["boda", "trabajo"])
     expect(applied.id).toBe(other.id)
@@ -228,20 +228,20 @@ describe("Categorization rules on every path", () => {
 
   it("a new movement in Other takes the rule's category and tags; a chosen category and a transfer stay", () => {
     const other: Transaction = { ...transaction({ amount: "5", category: "other-expense", description: "Uber home" }), tags: ["boda"] }
-    const categorized = autoCategorized(other, [uber])
+    const categorized = autoCategorized(other, [uber], [])
     expect(categorized.categoryId).toBe("transport")
     expect(categorized.tags).toEqual(["boda", "trabajo"])
     const chosen = transaction({ amount: "5", category: "restaurants", description: "Uber eats" })
-    expect(autoCategorized(chosen, [uber])).toBe(chosen)
+    expect(autoCategorized(chosen, [uber], [])).toBe(chosen)
     const transfer: Transaction = { ...transaction({ amount: "5", description: "Uber" }), kind: "transfer" }
     delete (transfer as Partial<Transaction>).categoryId
-    expect(autoCategorized(transfer, [uber])).toBe(transfer)
+    expect(autoCategorized(transfer, [uber], [])).toBe(transfer)
   })
 
   it("with two matching rules the first in the person's order wins", () => {
     const other = transaction({ amount: "5", category: "other-expense", description: "Uber trip" })
-    expect(autoCategorized(other, [anyTrip, uber]).categoryId).toBe("travel")
-    expect(autoCategorized(other, [uber, anyTrip]).categoryId).toBe("transport")
+    expect(autoCategorized(other, [anyTrip, uber], []).categoryId).toBe("travel")
+    expect(autoCategorized(other, [uber, anyTrip], []).categoryId).toBe("transport")
   })
 
   it("saving a new movement without a category takes the rule, or Other when none matches", async () => {

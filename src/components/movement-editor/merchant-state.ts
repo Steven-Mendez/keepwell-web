@@ -152,14 +152,16 @@ export async function resolveChoice(store: LedgerStore, choice: MerchantChoice |
 
 /**
  * The links a movement saves: the business and the platform, `null` for an empty field so clearing
- * one unlinks it. A transfer names neither and keeps what it had.
+ * one unlinks it. A transfer names neither (the domain drops them too) and creates nothing. Creates
+ * the merchants of new choices: call it inside the same `store.atomically` as the save, so a save
+ * that fails leaves none behind.
  */
 export async function merchantDraftLinks(
   store: LedgerStore,
   state: Pick<MerchantFields, "merchant" | "via">,
   kind: TransactionKind
-): Promise<{ merchantId?: string | null; viaMerchantId?: string | null }> {
-  if (kind === "transfer") return {}
+): Promise<{ merchantId: string | null; viaMerchantId: string | null }> {
+  if (kind === "transfer") return { merchantId: null, viaMerchantId: null }
   const merchantId = await resolveChoice(store, state.merchant)
   const viaMerchantId = await resolveChoice(store, state.via)
   return { merchantId: merchantId ?? null, viaMerchantId: viaMerchantId === merchantId ? null : (viaMerchantId ?? null) }
