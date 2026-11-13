@@ -14,7 +14,7 @@ import {
 } from "@/lib/domain"
 import { formatMoney } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
-import { accountName, cardNumber, debitTitle, methodTitle, networkName } from "@/lib/presentation/display"
+import { accountName, cardNumber, debitTitle, fallbackCategoryName, methodTitle, networkName } from "@/lib/presentation/display"
 import { deviceTimeZone } from "@/lib/platform/time-zone"
 
 // Ports of the CreateTransaction view model's display logic (CreateTransactionViewModel+Display,
@@ -82,7 +82,8 @@ export function descriptionPlaceholder(t: Translator, type: MovementType, catego
   switch (type) {
     case "expense":
     case "income":
-      return categoryName ?? ct(t, "transfer.noun")
+      // Without a category a new one is saved in "Other" (or "Other income"), so it reads as that.
+      return categoryName ?? fallbackCategoryName(t, type)
     case "transfer":
       return ct(t, "transfer.noun")
     case "withdrawal":
