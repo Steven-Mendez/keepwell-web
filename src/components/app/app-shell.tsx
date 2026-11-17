@@ -22,6 +22,7 @@ import { AddAccountDialog } from "../accounts/add-account-dialog"
 import { NotificationsBell } from "../notifications/notifications-bell"
 import { MovementDetail } from "../transactions/movement-detail"
 import { MovementEditor } from "../movement-editor/movement-editor"
+import { RuleDetail } from "../recurring/rule-detail"
 import { RuleEditor } from "../recurring/rule-editor"
 import { AppActionsProvider, useAppActions } from "./app-actions"
 import { AppSidebar } from "./app-sidebar"
@@ -87,6 +88,7 @@ function AppShellGate({ children }: { children: ReactNode }) {
       </SidebarProvider>
       <MovementEditor />
       <MovementDetail />
+      <RuleDetail />
       <RuleEditor />
       <AddAccountDialog />
       <CommandPalette />

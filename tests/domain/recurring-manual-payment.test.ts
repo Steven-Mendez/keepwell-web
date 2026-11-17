@@ -65,9 +65,10 @@ describe("Manual payment of a recurring occurrence (T29)", () => {
     const created = await materializeRecurring(store, date(2026, 11, 1, 20))
     expect(created).toEqual([])
     expect(store.transactions.filter((tx) => tx.accountId === IDs.savings && tx.amount === "500" && tx.status === "confirmed")).toHaveLength(1)
-    // The rule moves on as if it had produced the occurrence, and the manual movement is left as typed.
+    // The rule moves on as if it had produced the occurrence, and the manual movement becomes its
+    // payment: linked to the rule, otherwise as typed.
     expect(store.recurringRules[0]?.nextDate).toBe(date(2026, 12, 1, 9).toISOString())
-    expect(store.transactions[0]?.recurringId).toBeUndefined()
+    expect(store.transactions[0]).toMatchObject({ recurringId: RULE_ID, description: "Alquiler", amount: "500" })
   })
 
   it("a rule without automatic confirmation leaves no draft for an occurrence already paid", async () => {
@@ -119,7 +120,8 @@ describe("Manual payment of a recurring occurrence (T29)", () => {
     const store = storeWith([other, rent], [manual()])
     const created = await materializeRecurring(store, date(2026, 11, 1, 20))
     expect(created.map((tx) => tx.recurringId)).toEqual([OTHER_RULE_ID])
-    expect(ruleMovements(store)).toEqual([])
+    // The lower id's only movement is the manual payment, now linked to it; it produced nothing.
+    expect(ruleMovements(store).map((tx) => tx.description)).toEqual(["Alquiler"])
     expect(store.recurringRules.map((rule) => rule.nextDate)).toEqual([date(2026, 12, 1, 9).toISOString(), date(2026, 12, 1, 9).toISOString()])
   })
 

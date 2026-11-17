@@ -46,6 +46,7 @@ import { useT, type Translator } from "@/lib/i18n"
 import type { TransactionDisplay } from "@/lib/presentation/display"
 import type { PersonalDebt, RecurringRule, Transaction } from "@/lib/schema"
 import { frequencyText } from "@/components/recurring/recurring-format"
+import { LinkToRule, linkableRules } from "@/components/recurring/link-to-rule"
 import { cn } from "@/lib/utils"
 
 import { movementReference } from "./row-menu-model"
@@ -195,6 +196,7 @@ function DetailCards({
   display,
   rule,
   onOpenRule,
+  onLinkRule,
   split,
 }: {
   t: Translator
@@ -203,6 +205,8 @@ function DetailCards({
   display: TransactionDisplay
   rule: RecurringRule | undefined
   onOpenRule: () => void
+  /** Set when the movement is confirmed, no rule recorded it and some rule could take it. */
+  onLinkRule: (() => void) | undefined
   split: SplitLine | undefined
 }) {
   return (
@@ -233,6 +237,13 @@ function DetailCards({
             label={t.in("transactions", "Repeats")}
             value={frequencyText(t, rule.frequency, rule.interval)}
             onClick={onOpenRule}
+          />
+        ) : onLinkRule ? (
+          <KWValueRow
+            label={t.in("transactions", "Recurring payment")}
+            value={t.in("transactions", "Link ›")}
+            tone="link"
+            onClick={onLinkRule}
           />
         ) : null}
       </KWGroupedCard>
@@ -277,6 +288,7 @@ function DetailBody({
   onSplit,
   rule,
   onOpenRule,
+  onLinkRule,
   split,
 }: {
   t: Translator
@@ -292,6 +304,7 @@ function DetailBody({
   /** The recurring rule that produced it, while the rule exists. */
   rule: RecurringRule | undefined
   onOpenRule: () => void
+  onLinkRule: (() => void) | undefined
   /** An expense with debts split from it: the person's part. */
   split: SplitLine | undefined
 }) {
@@ -373,6 +386,7 @@ function DetailBody({
         display={display}
         rule={rule}
         onOpenRule={onOpenRule}
+        onLinkRule={onLinkRule}
         split={split}
       />
     </>
@@ -423,10 +437,11 @@ export function MovementDetail() {
   const t = useT()
   const ledger = useLedger()
   const display = useTransactionDisplay(ledger)
-  const { detailId, showDetail, openEditor, openRuleEditor } = useAppActions()
+  const { detailId, showDetail, openEditor, showRuleDetail } = useAppActions()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [showingReceipt, setShowingReceipt] = useState(false)
   const [splitting, setSplitting] = useState<Transaction>()
+  const [linking, setLinking] = useState<Transaction>()
   const transaction = ledger?.transactions.find(
     (candidate) => candidate.id === detailId
   )
@@ -436,6 +451,11 @@ export function MovementDetail() {
         (candidate) => candidate.id === transaction.recurringId
       )
     : undefined
+  const canLinkRule =
+    transaction !== undefined &&
+    transaction.status === "confirmed" &&
+    rule === undefined &&
+    linkableRules(transaction, ledger?.recurringRules ?? []).length > 0
 
   function remove() {
     if (!transaction) return
@@ -489,8 +509,17 @@ export function MovementDetail() {
               onOpenRule={() => {
                 if (!rule) return
                 showDetail(undefined)
-                openRuleEditor({ mode: "edit", ruleId: rule.id })
+                showRuleDetail(rule.id)
               }}
+              onLinkRule={
+                canLinkRule
+                  ? () => {
+                      // Like "Split": the picker can't open over the side panel.
+                      showDetail(undefined)
+                      setLinking(transaction)
+                    }
+                  : undefined
+              }
             />
           ) : null}
         </SheetContent>
@@ -510,6 +539,14 @@ export function MovementDetail() {
           onClose={() => setSplitting(undefined)}
         />
       ) : null}
+      <LinkToRule
+        transaction={linking}
+        onClose={() => {
+          // Back to the movement, which now shows the rule it pays.
+          if (linking) showDetail(linking.id)
+          setLinking(undefined)
+        }}
+      />
       <DeleteDialog
         t={t}
         open={confirmingDelete}
