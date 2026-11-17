@@ -31,7 +31,7 @@ export type EditorRequest =
 export type AddAccountRequest = { kind?: "debit" | "credit" | "wallet" }
 
 /**
- * The recurring rule editor: a new rule, or an existing one by id (its detail lives in the editor).
+ * The recurring rule editor: a new rule, or an existing one by id (its payments live in its detail).
  * `subscription` opens a new one on the short subscription form.
  */
 export type RuleEditorRequest = { mode: "create"; subscription?: boolean } | { mode: "edit"; ruleId: string }
@@ -46,6 +46,9 @@ interface AppActions {
   ruleEditor: RuleEditorRequest | undefined
   openRuleEditor: (request?: RuleEditorRequest) => void
   closeRuleEditor: () => void
+  /** The recurring rule whose detail is open: where it stands and what it has been paid with. */
+  ruleDetailId: string | undefined
+  showRuleDetail: (id: string | undefined) => void
   addAccount: AddAccountRequest | undefined
   openAddAccount: (request?: AddAccountRequest) => void
   closeAddAccount: () => void
@@ -62,6 +65,7 @@ export function AppActionsProvider({ children }: { children: ReactNode }) {
   const [detailId, setDetailId] = useState<string>()
   const [addAccount, setAddAccount] = useState<AddAccountRequest>()
   const [ruleEditor, setRuleEditor] = useState<RuleEditorRequest>()
+  const [ruleDetailId, setRuleDetailId] = useState<string>()
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
 
@@ -97,6 +101,8 @@ export function AppActionsProvider({ children }: { children: ReactNode }) {
       ruleEditor,
       openRuleEditor,
       closeRuleEditor,
+      ruleDetailId,
+      showRuleDetail: setRuleDetailId,
       addAccount,
       openAddAccount,
       closeAddAccount,
@@ -113,6 +119,7 @@ export function AppActionsProvider({ children }: { children: ReactNode }) {
       ruleEditor,
       openRuleEditor,
       closeRuleEditor,
+      ruleDetailId,
       addAccount,
       openAddAccount,
       closeAddAccount,

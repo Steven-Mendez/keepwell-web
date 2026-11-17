@@ -13,9 +13,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { useLedger } from "@/hooks/use-ledger"
 import {
   dec,
   equalShare,
+  splitRemaining,
   splitTransaction,
   ZERO,
   Decimal,
@@ -28,7 +30,11 @@ import {
 import type { Translator } from "@/lib/i18n"
 import { newID } from "@/lib/platform/uuid"
 import { ledgerStore } from "@/lib/repositories"
-import { MAX_DEBT_NAME_LENGTH, type Transaction } from "@/lib/schema"
+import {
+  MAX_DEBT_NAME_LENGTH,
+  type PersonalDebt,
+  type Transaction,
+} from "@/lib/schema"
 
 interface Share {
   id: string
@@ -44,6 +50,8 @@ const equalRows = (rows: readonly Share[], total: Decimal) => {
 /**
  * "Split" on an expense: who shared it and how much each owes. Shares start equal between the person
  * and everyone added, and stay equal until one is typed by hand; each person then owes their share.
+ * An expense already split shares only what is left (`splitRemaining`). Opens once the ledger's
+ * debts are read, so the shares start from that.
  */
 export function SplitDialog({
   t,
@@ -54,7 +62,31 @@ export function SplitDialog({
   transaction: Transaction
   onClose: () => void
 }) {
-  const total = dec(transaction.amount)
+  const ledger = useLedger()
+  if (!ledger) return null
+  return (
+    <SplitForm
+      t={t}
+      transaction={transaction}
+      debts={ledger.personalDebts}
+      onClose={onClose}
+    />
+  )
+}
+
+function SplitForm({
+  t,
+  transaction,
+  debts,
+  onClose,
+}: {
+  t: Translator
+  transaction: Transaction
+  debts: readonly PersonalDebt[]
+  onClose: () => void
+}) {
+  const [total] = useState(() => splitRemaining(transaction, debts))
+  const alreadySplit = total.lt(dec(transaction.amount))
   const [rows, setRows] = useState<Share[]>(() =>
     equalRows([{ id: newID(), person: "", amountText: "" }], total)
   )
@@ -112,6 +144,15 @@ export function SplitDialog({
             {transaction.description} ·{" "}
             {formatAmount(transaction.amount, transaction.currency)}
           </p>
+          {alreadySplit ? (
+            <p className="type-caption text-text-secondary tabular-nums">
+              {t.in(
+                "web",
+                "Already split: %@ left to share",
+                formatAmount(total, transaction.currency)
+              )}
+            </p>
+          ) : null}
         </DialogHeader>
         <form
           className="flex flex-col gap-4"

@@ -16,7 +16,7 @@ import {
 } from "@/lib/domain"
 import { useT } from "@/lib/i18n"
 import { ledgerStore } from "@/lib/repositories"
-import type { Transaction } from "@/lib/schema"
+import type { PersonalDebt, Transaction } from "@/lib/schema"
 
 import { receiptOf } from "./receipt-model"
 import { ReceiptActions, ReceiptTicket } from "./receipt-view"
@@ -42,16 +42,20 @@ export function ReceiptDialog({
 
 function ReceiptBody({ transaction }: { transaction: Transaction }) {
   const context = useLiveQuery(() => getTransactionContext(ledgerStore), [])
-  if (!context) return null
-  return <LoadedReceipt transaction={transaction} context={context} />
+  // The category's month total counts the person's part of split expenses, as the summary does.
+  const debts = useLiveQuery(() => ledgerStore.fetchPersonalDebts(), [])
+  if (!context || !debts) return null
+  return <LoadedReceipt transaction={transaction} context={context} debts={debts} />
 }
 
 function LoadedReceipt({
   transaction,
   context,
+  debts,
 }: {
   transaction: Transaction
   context: TransactionContext
+  debts: readonly PersonalDebt[]
 }) {
   const t = useT()
   const receipt = useMemo(() => {
@@ -63,7 +67,8 @@ function LoadedReceipt({
           context.accounts,
           context.transactions,
           context.currencies.principal,
-          context.zone
+          context.zone,
+          debts
         ),
         context
       )
@@ -71,7 +76,7 @@ function LoadedReceipt({
       // Its account was deleted: there's no balance to state.
       return undefined
     }
-  }, [t, transaction, context])
+  }, [t, transaction, context, debts])
   if (!receipt) return null
   return (
     <>

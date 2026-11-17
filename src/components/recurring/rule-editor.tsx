@@ -8,9 +8,8 @@ import {
   type RuleEditorRequest,
 } from "@/components/app/app-actions"
 import { AnimatedNumber } from "@/components/kw/animated-number"
-import { KWButton, KWEmptyState, KWSegmented, KWTextAction } from "@/components/kw/design"
+import { KWButton, KWEmptyState, KWSegmented } from "@/components/kw/design"
 import { OptionSelect } from "@/components/kw/pickers"
-import { TransactionRow } from "@/components/kw/transaction-row"
 import {
   AmountSection,
   CategorySection,
@@ -29,7 +28,6 @@ import {
 } from "@/components/movement-editor/flow-parts"
 import type { MovementEditorModel } from "@/components/movement-editor/use-movement-editor"
 import { ConfirmDialog } from "@/components/settings/confirm-dialog"
-import { useShowRuleMovements } from "@/components/transactions/show-tag"
 import {
   Dialog,
   DialogContent,
@@ -39,17 +37,16 @@ import {
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
-import { useLedger, useTransactionDisplay } from "@/hooks/use-ledger"
+import { useLedger } from "@/hooks/use-ledger"
 import {
   Decimal,
   getTransactionContext,
   pickerContext,
-  type Ledger,
   type TransactionContext,
 } from "@/lib/domain"
 import { formatMoney } from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
-import { accountName, dayLabel } from "@/lib/presentation/display"
+import { accountName } from "@/lib/presentation/display"
 import { ledgerStore } from "@/lib/repositories"
 import type { RecurringFrequency, RecurringRule } from "@/lib/schema"
 import { cn } from "@/lib/utils"
@@ -58,13 +55,10 @@ import { frequencyText, frequencyUnit, nextDateText } from "./recurring-format"
 import { SUBSCRIPTION_PERIODS, periodTitle } from "./rule-draft"
 import { useRuleEditor, type RuleEditorModel } from "./use-rule-editor"
 
-/** Movements a rule created, listed in its detail. */
-const PRODUCED_COUNT = 5
-
 /**
  * A recurring rule, new or existing, in the movement editor's dialog: the same amount, method,
  * category and account pickers on the left; on the right what it will save, its next dates and,
- * for an existing rule, the movements it created, Pause/Resume and Delete. Full screen on phones.
+ * for an existing rule, Pause/Resume and Delete (its payments are in its detail). Full screen on phones.
  * "New subscription" opens the same form short: name, amount, period and billing day, with the rest
  * one "More options" away.
  */
@@ -159,7 +153,6 @@ function RuleEditorBody({
       t={t}
       title={title}
       context={context}
-      ledger={ledger}
       rule={rule}
       isNewSubscription={isNewSubscription}
       onClose={onClose}
@@ -171,7 +164,6 @@ function RuleForm({
   t,
   title,
   context,
-  ledger,
   rule,
   isNewSubscription,
   onClose,
@@ -179,7 +171,6 @@ function RuleForm({
   t: Translator
   title: string
   context: TransactionContext
-  ledger: Ledger
   rule: RecurringRule | undefined
   isNewSubscription: boolean
   onClose: () => void
@@ -290,7 +281,7 @@ function RuleForm({
               </>
             )}
           </div>
-          <RuleSummary t={t} model={model} ledger={ledger} onClose={onClose} />
+          <RuleSummary t={t} model={model} onClose={onClose} />
         </div>
       </form>
       <ConfirmDialog
@@ -529,23 +520,14 @@ function RuleDetailsSection({ t, model }: SectionProps) {
   )
 }
 
-/** The right column: what it saves, its next dates, the movements it created, and the actions. */
+/** The right column: what it saves, its next dates and the actions. */
 function RuleSummary({
   t,
   model,
-  ledger,
   onClose,
-}: SectionProps & { ledger: Ledger; onClose: () => void }) {
+}: SectionProps & { onClose: () => void }) {
   const { editor, rule } = model
   const { fields, form, review } = editor
-  const display = useTransactionDisplay(ledger)
-  const { showDetail } = useAppActions()
-  const showRuleMovements = useShowRuleMovements()
-  const produced = rule
-    ? ledger.transactions
-        .filter((transaction) => transaction.recurringId === rule.id)
-        .slice(0, PRODUCED_COUNT)
-    : []
   const method = form.movesBetweenAccounts
     ? [form.sourceAccount, form.destinationAccount]
         .map((account) => (account ? accountName(account) : "—"))
@@ -605,38 +587,6 @@ function RuleSummary({
           )}
         </ol>
       </section>
-
-      {rule && display && produced.length > 0 ? (
-        <section className="flex flex-col gap-2">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="type-label text-muted-foreground">
-              {t.in("recurring", "Recorded")}
-            </h3>
-            <KWTextAction
-              onClick={() => {
-                onClose()
-                showRuleMovements(rule.id)
-              }}
-            >
-              {t.in("recurring", "See all")}
-            </KWTextAction>
-          </div>
-          <div className="flex flex-col divide-y divide-divider overflow-hidden rounded-2xl bg-card">
-            {produced.map((transaction) => (
-              <TransactionRow
-                key={transaction.id}
-                transaction={transaction}
-                display={display}
-                dateLabel={dayLabel(t, new Date(transaction.date))}
-                onSelect={() => {
-                  onClose()
-                  showDetail(transaction.id)
-                }}
-              />
-            ))}
-          </div>
-        </section>
-      ) : null}
 
       <div className="mt-auto flex flex-col gap-2 pt-2">
         {editor.error ? (

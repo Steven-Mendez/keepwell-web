@@ -16,7 +16,10 @@ pnpm build && pnpm start   # production, with the offline service worker
 Brand logos (Brandfetch's Logo API, linked live) need `NEXT_PUBLIC_BRANDFETCH_CLIENT_ID` at build time,
 set to the account's public client id (`1idMF4-f4zDduiiadcZ`, not its secret API key). Without it, or with
 `BRAND_LOGOS_ENABLED` off in `src/lib/presentation/brand-logos.ts`, the app makes no request to
-Brandfetch and known brands show a monogram.
+Brandfetch and known brands show a monogram. The same client id drives the "Business" field's brand search
+(`api.brandfetch.io/v2/search`, `src/lib/presentation/brand-search.ts`): called from the browser, debounced,
+only with what the person types in that field and only when none of their merchants or the brand table
+matches. Brandfetch then sees that text and the device's IP address; the privacy policy has to say so.
 
 ## Checks
 

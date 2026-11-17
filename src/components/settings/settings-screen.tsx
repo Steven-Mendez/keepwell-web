@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/toast"
 import { useAccount } from "@/hooks/use-account"
-import { useLedger, usePreferredName } from "@/hooks/use-ledger"
+import { useLedger, useMerchants, usePreferredName } from "@/hooks/use-ledger"
 import { useSync } from "@/hooks/use-sync"
 import { deleteAccount, signOut } from "@/lib/api/account"
 import { compareExpiry, paymentMethodGroups, type Ledger } from "@/lib/domain"
@@ -306,6 +306,7 @@ function OrganizationSection({ t, ledger }: { t: Translator; ledger: Ledger }) {
         value={ledger.categorizationRules.length}
         href="/settings/rules"
       />
+      <MerchantsRow t={t} />
       <Dialog open={methodsOpen} onOpenChange={setMethodsOpen}>
         <DialogContent className="max-h-[85svh] gap-5 overflow-y-auto rounded-2xl bg-background p-6 ring-1 ring-border/60 sm:max-w-lg">
           <DialogHeader>
@@ -397,4 +398,18 @@ function plasticSubtitle(t: Translator, card: Card): string {
     return t.in("settings", "%@ · expired %@", base, expiryText(card.expiry))
   if (order === 0) return t.in("settings", "%@ · expires this month", base)
   return t.in("settings", "%@ · valid thru %@", base, expiryText(card.expiry))
+}
+
+/** Settings › Businesses, with how many there are. */
+function MerchantsRow({ t }: { t: Translator }) {
+  const merchants = useMerchants()
+  return (
+    <SettingsLinkRow
+      icon="cart"
+      label={t.in("web", "Businesses")}
+      description={t.in("web", "Where you spend, and the apps it goes through")}
+      value={merchants?.length ?? 0}
+      href="/settings/merchants"
+    />
+  )
 }
