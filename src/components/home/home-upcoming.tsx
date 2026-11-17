@@ -113,7 +113,7 @@ function UpcomingRow({
   onConfirm: (planned: Transaction) => void
   onSelect: (transaction: Transaction) => void
 }) {
-  const { openRuleEditor } = useAppActions()
+  const { showRuleDetail } = useAppActions()
   const row = describe(t, ledger, payment, display)
   const status = statusText(t, payment, now)
   const overdue = payment.status === "overdue"
@@ -161,7 +161,7 @@ function UpcomingRow({
     }
     case "recurring":
       return (
-        <button type="button" className={cn(rowClass, "w-full")} onClick={() => openRuleEditor({ mode: "edit", ruleId: payment.rule.id })}>
+        <button type="button" className={cn(rowClass, "w-full")} onClick={() => showRuleDetail(payment.rule.id)}>
           {content}
         </button>
       )

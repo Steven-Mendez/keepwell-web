@@ -23,13 +23,11 @@ import { useConfirmDraft } from "@/components/transactions/use-confirm-draft"
 import { useLedgerLoad, useMerchants } from "@/hooks/use-ledger"
 import { movementLogo } from "@/lib/presentation/merchants"
 import {
-  isFinished,
-  nextOccurrenceOf,
-  pendingRuleDrafts,
+  recurringMonthProgress,
   recurringOverview,
-  upcomingPayments,
+  ruleStatus,
   type Ledger,
-  type PendingRuleDraft,
+  type RuleStatus,
 } from "@/lib/domain"
 import {
   formatAmount,
@@ -42,20 +40,21 @@ import { cn } from "@/lib/utils"
 import {
   frequencyText,
   nextDateText,
-  pendingDraftText,
   rulePaymentText,
+  ruleStateClass,
+  ruleStatusText,
   sectionTitle,
 } from "./recurring-format"
 
 /**
  * Recurring movements and subscriptions: what subscriptions cost per month, then every rule by kind
- * (subscriptions, bills, income, transfers) with how often it repeats and when it comes next. A row
- * opens the rule's editor, which also shows its next dates and the movements it created.
+ * (subscriptions, bills, income, transfers) with how often it repeats and where it stands: paid, a
+ * draft waiting, or its next date. A row opens the rule's detail, with every payment linked to it.
  */
 export function RecurringScreen() {
   const t = useT()
   const { ledger, failed } = useLedgerLoad()
-  const { openRuleEditor } = useAppActions()
+  const { openRuleEditor, showRuleDetail } = useAppActions()
   const [hidden, toggleHidden] = useHiddenBalances()
   const [now] = useState(() => new Date())
   const { confirming, confirmDraft } = useConfirmDraft(t)
@@ -66,9 +65,29 @@ export function RecurringScreen() {
         : undefined,
     [ledger]
   )
-  // Once for the screen, from the list Home reads: each rule's draft waiting from today or before.
-  const pendingDrafts = useMemo(
-    () => (ledger ? pendingRuleDrafts(upcomingPayments(ledger, now, 0)) : undefined),
+  // Once for the screen: where each rule stands (paid, a draft waiting, its next date).
+  const statuses = useMemo(
+    () =>
+      ledger
+        ? new Map(
+            ledger.recurringRules.map((rule) => [
+              rule.id,
+              ruleStatus(rule, ledger.transactions, now, ledger.timeZone),
+            ])
+          )
+        : undefined,
+    [ledger, now]
+  )
+  const progress = useMemo(
+    () =>
+      ledger
+        ? recurringMonthProgress(
+            ledger.recurringRules,
+            ledger.transactions,
+            now,
+            ledger.timeZone
+          )
+        : undefined,
     [ledger, now]
   )
   const add = () => openRuleEditor({ mode: "create" })
@@ -158,6 +177,30 @@ export function RecurringScreen() {
                 )}
               </span>
             ))}
+            {progress && progress.total > 0 ? (
+              <span className="mt-2 border-t border-divider pt-3 type-body text-foreground tabular-nums">
+                {t.in(
+                  "recurring",
+                  "%lld of %lld paid this month",
+                  progress.paid,
+                  progress.total
+                )}
+                {progress.remaining.length > 0 ? (
+                  <span className="text-muted-foreground">
+                    {" · "}
+                    {t.in(
+                      "recurring",
+                      "%@ left to pay",
+                      hidden
+                        ? BALANCE_MASK
+                        : progress.remaining
+                            .map((money) => formatMoney(money))
+                            .join(" + ")
+                    )}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
           </section>
           <div className="grid gap-6 lg:grid-cols-2">
             {overview.sections.map((section) => (
@@ -167,22 +210,23 @@ export function RecurringScreen() {
               >
                 <KWGroupedCard>
                   <AnimatedList>
-                    {section.rules.map((rule) => (
-                      <RuleRow
-                        key={rule.id}
-                        t={t}
-                        rule={rule}
-                        ledger={ledger}
-                        pending={pendingDrafts?.get(rule.id)}
-                        now={now}
-                        hidden={hidden}
-                        confirming={confirming}
-                        onConfirm={confirmDraft}
-                        onSelect={() =>
-                          openRuleEditor({ mode: "edit", ruleId: rule.id })
-                        }
-                      />
-                    ))}
+                    {section.rules.map((rule) => {
+                      const status = statuses?.get(rule.id)
+                      return status ? (
+                        <RuleRow
+                          key={rule.id}
+                          t={t}
+                          rule={rule}
+                          ledger={ledger}
+                          status={status}
+                          now={now}
+                          hidden={hidden}
+                          confirming={confirming}
+                          onConfirm={confirmDraft}
+                          onSelect={() => showRuleDetail(rule.id)}
+                        />
+                      ) : null
+                    })}
                   </AnimatedList>
                 </KWGroupedCard>
               </KWSection>
@@ -195,14 +239,15 @@ export function RecurringScreen() {
 }
 
 /**
- * The rule's category (or the transfer icon), name, how often and with what, the amount and its next
- * date; or, while a draft it made waits from today or before, that draft's state and "Confirm".
+ * The rule's category (or the transfer icon), name, how often and with what, the amount and where it
+ * stands: "Paid · Nov 1" (with its next date beside the frequency), its next date and the days left,
+ * or, while a draft it made waits from today or before, that draft's state and "Confirm".
  */
 function RuleRow({
   t,
   rule,
   ledger,
-  pending,
+  status,
   now,
   hidden,
   confirming,
@@ -212,7 +257,7 @@ function RuleRow({
   t: Translator
   rule: RecurringRule
   ledger: Ledger
-  pending: PendingRuleDraft | undefined
+  status: RuleStatus
   now: Date
   hidden: boolean
   confirming: ReadonlySet<string>
@@ -223,15 +268,8 @@ function RuleRow({
     (candidate) => candidate.id === rule.categoryId
   )
   const merchants = useMerchants()
-  const next = nextOccurrenceOf(rule, ledger.timeZone)
-  const status = pending
-    ? pendingDraftText(t, pending, now)
-    : rule.isPaused
-      ? t.in("recurring", "Paused")
-      : isFinished(rule, ledger.timeZone) || !next
-        ? t.in("recurring", "Ended")
-        : nextDateText(t, next, now)
-  const inactive = !pending && (rule.isPaused || isFinished(rule, ledger.timeZone))
+  const pending = status.draft
+  const inactive = status.state === "paused" || status.state === "ended"
   const style = rule.kind
   return (
     <ListItem>
@@ -261,6 +299,14 @@ function RuleRow({
                 rule.source === "mcp" && rule.isPaused
                   ? t.in("recurring", "Proposed by Claude · resume to confirm")
                   : "",
+                // Paid: the row says so on the right, so the next date moves here.
+                status.state === "paid" && status.nextDate
+                  ? t.in(
+                      "recurring",
+                      "Next %@",
+                      nextDateText(t, status.nextDate, now)
+                    )
+                  : "",
                 rulePaymentText(t, rule, ledger),
               ]
                 .filter(Boolean)
@@ -279,17 +325,11 @@ function RuleRow({
             <span
               className={cn(
                 "type-caption",
-                // Overdue reads in the warning color, and says so in words too.
-                pending && pending.daysOverdue > 0
-                  ? "font-semibold text-pending"
-                  : pending
-                    ? "text-foreground"
-                    : rule.isPaused
-                      ? "text-pending"
-                      : "text-muted-foreground"
+                // Paid reads green and overdue in the warning color; both say so in words too.
+                ruleStateClass(status.state)
               )}
             >
-              {status}
+              {ruleStatusText(t, status, now)}
             </span>
           </span>
         </button>
@@ -297,9 +337,9 @@ function RuleRow({
           <KWButton
             size="mini"
             className="mr-4 shrink-0"
-            disabled={confirming.has(pending.transaction.id)}
-            aria-label={t.in("recurring", "Confirm %@", pending.transaction.description)}
-            onClick={() => onConfirm(pending.transaction)}
+            disabled={confirming.has(pending.id)}
+            aria-label={t.in("recurring", "Confirm %@", pending.description)}
+            onClick={() => onConfirm(pending)}
           >
             {t.in("recurring", "Confirm")}
           </KWButton>
