@@ -33,6 +33,7 @@ import {
   categoryName,
   categorySymbol,
   colorName,
+  symbolName,
 } from "@/lib/presentation/display"
 import { SYMBOL_CHOICES, symbolIcon } from "@/lib/presentation/icons"
 import { ledgerStore } from "@/lib/repositories"
@@ -287,7 +288,7 @@ export function IconChoices({
               type="button"
               onClick={() => onChange(symbol)}
               aria-pressed={icon === symbol}
-              aria-label={symbol}
+              aria-label={symbolName(t, symbol)}
               className={cn(
                 "flex aspect-square items-center justify-center rounded-xl bg-secondary/60 text-text-secondary transition-colors outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring",
                 icon === symbol && "bg-primary text-primary-foreground hover:bg-primary"
