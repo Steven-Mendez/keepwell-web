@@ -38,7 +38,7 @@ export async function exportBackup(now: Date = new Date()): Promise<Backup> {
  * replace):
  * - no row at all, alive or deleted, of the person's data (`USER_DATA_ENTITIES`: accounts, cards,
  *   movements, recurring rules, goals, loans and their payments, debts and their repayments,
- *   categorization rules). A tombstone counts: it means the ledger had that data, and the deletion
+ *   categorization rules, merchants). A tombstone counts: it means the ledger had that data, and the deletion
  *   would win over the backup's row of the same id;
  * - no category but the shipped defaults (a created one, alive or deleted, counts as data). The
  *   defaults are seeded on every device, so they don't count, edited or deleted: the backup's version

@@ -9,6 +9,7 @@ import {
   AmountSection,
   CategorySection,
   DetailsSection,
+  MerchantSection,
   MethodSection,
   TagsSection,
   TransferAccountsSection,
@@ -88,6 +89,7 @@ export function EditorForm({
           <AmountSection editor={editor} />
           {!movesBetweenAccounts ? <CategorySection editor={editor} /> : null}
           {!movesBetweenAccounts ? <MethodSection editor={editor} /> : null}
+          {!movesBetweenAccounts ? <MerchantSection editor={editor} /> : null}
           <DetailsSection editor={editor} />
           {!movesBetweenAccounts ? <TagsSection editor={editor} /> : null}
         </div>

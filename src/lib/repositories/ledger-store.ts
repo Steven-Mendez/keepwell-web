@@ -6,12 +6,13 @@ import { accountRepository, cardRepository } from "./accounts"
 import { categorizationRuleRepository } from "./categorization-rules"
 import { categoryRepository } from "./categories"
 import { loanRepository, personalDebtRepository } from "./debts"
+import { merchantRepository } from "./merchants"
 import { recurringRuleRepository } from "./recurring"
 import { savingsGoalRepository } from "./savings-goals"
 import { settingsRepository } from "./settings"
 import { transactionRepository } from "./transactions"
 
-const allTables = () => [db.accounts, db.cards, db.categories, db.transactions, db.recurring_rules, db.savings_goals, db.loans, db.loan_payments, db.personal_debts, db.personal_debt_repayments, db.categorization_rules, db.settings, db.notification_states, db.sync_outbox]
+const allTables = () => [db.accounts, db.cards, db.categories, db.transactions, db.recurring_rules, db.savings_goals, db.loans, db.loan_payments, db.personal_debts, db.personal_debt_repayments, db.categorization_rules, db.settings, db.notification_states, db.merchants, db.sync_outbox]
 
 /** What `meta` keeps through "Delete all my data": this browser's sync identity and its account. */
 const KEPT_META = ["client_id", "sync_user"]
@@ -49,6 +50,7 @@ export const ledgerStore: LedgerStore = {
   fetchPersonalDebts: () => personalDebtRepository.list(),
   savePersonalDebt: async (debt) => void (await personalDebtRepository.save(debt)),
   deletePersonalDebt: (id) => personalDebtRepository.remove(id),
+  fetchRepaymentDepositIds: () => personalDebtRepository.depositIds(),
 
   fetchCategorizationRules: () => categorizationRuleRepository.list(),
   saveCategorizationRule: async (rule) => void (await categorizationRuleRepository.save(rule)),
@@ -60,6 +62,10 @@ export const ledgerStore: LedgerStore = {
   deleteCategory: (id) => categoryRepository.remove(id),
   reorderCategories: (ids) => categoryRepository.reorder(ids),
   restoreDefaultCategories: () => categoryRepository.restoreDefaults(),
+
+  fetchMerchants: () => merchantRepository.list(),
+  saveMerchant: async (merchant) => void (await merchantRepository.save(merchant)),
+  deleteMerchant: (id) => merchantRepository.remove(id),
 
   loadSettings: () => settingsRepository.load(),
   saveSettings: async (settings) => void (await settingsRepository.save(settings)),

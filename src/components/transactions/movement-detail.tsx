@@ -34,15 +34,19 @@ import { useLedger, useTransactionDisplay } from "@/hooks/use-ledger"
 import {
   bankRate,
   rateHasSecondCurrency,
+  spendingAmountIn,
+  splitDebts,
 } from "@/lib/domain"
 import {
+  formatAmount,
   formatNumber,
   formatRate,
 } from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
 import type { TransactionDisplay } from "@/lib/presentation/display"
-import type { RecurringRule, Transaction } from "@/lib/schema"
+import type { PersonalDebt, RecurringRule, Transaction } from "@/lib/schema"
 import { frequencyText } from "@/components/recurring/recurring-format"
+import { LinkToRule, linkableRules } from "@/components/recurring/link-to-rule"
 import { cn } from "@/lib/utils"
 
 import { movementReference } from "./row-menu-model"
@@ -57,10 +61,12 @@ type Ct = (key: string, ...args: (string | number)[]) => string
 
 /** The kind-specific rows: where a transfer went, or what an expense or income was for. */
 function RouteRows({
+  t,
   ct,
   transaction,
   display,
 }: {
+  t: Translator
   ct: Ct
   transaction: Transaction
   display: TransactionDisplay
@@ -79,8 +85,10 @@ function RouteRows({
       </>
     )
   }
+  const merchant = display.merchantLine(transaction)
   return (
     <>
+      {merchant ? <KWValueRow label={t.in("web", "Business")} value={merchant} /> : null}
       <KWValueRow
         label={ct("Category")}
         value={display.categoryName(transaction) ?? "—"}
@@ -110,6 +118,49 @@ function RateCard({ ct, transaction }: { ct: Ct; transaction: Transaction }) {
           value={<span className="tabular-nums">{formatNumber(bank, 4)}</span>}
         />
       ) : null}
+    </KWGroupedCard>
+  )
+}
+
+/** What a split expense cost the person, in its own currency: "Your share: C$300 of C$900". */
+export interface SplitLine {
+  share: string
+  total: string
+  people: string[]
+}
+
+export function splitLine(
+  transaction: Transaction,
+  debts: readonly PersonalDebt[]
+): SplitLine | undefined {
+  const split = splitDebts(transaction, debts)
+  if (split.length === 0) return undefined
+  const share = spendingAmountIn(transaction, debts, transaction.currency)
+  if (share === undefined) return undefined
+  return {
+    share: formatAmount(share, transaction.currency),
+    total: formatAmount(transaction.amount, transaction.currency),
+    people: [...new Set(split.map((debt) => debt.person))],
+  }
+}
+
+function SplitCard({ t, split }: { t: Translator; split: SplitLine }) {
+  return (
+    <KWGroupedCard>
+      <div className="flex flex-col gap-1 px-4 py-3">
+        <span className="type-body font-semibold tabular-nums text-foreground">
+          {t.in("web", "Your share: %@ of %@", split.share, split.total)}
+        </span>
+        <span className="type-caption text-muted-foreground">
+          {t.in(
+            "web",
+            "Split with %@",
+            new Intl.ListFormat(t.locale, { type: "conjunction" }).format(
+              split.people
+            )
+          )}
+        </span>
+      </div>
     </KWGroupedCard>
   )
 }
@@ -145,6 +196,8 @@ function DetailCards({
   display,
   rule,
   onOpenRule,
+  onLinkRule,
+  split,
 }: {
   t: Translator
   ct: Ct
@@ -152,9 +205,13 @@ function DetailCards({
   display: TransactionDisplay
   rule: RecurringRule | undefined
   onOpenRule: () => void
+  /** Set when the movement is confirmed, no rule recorded it and some rule could take it. */
+  onLinkRule: (() => void) | undefined
+  split: SplitLine | undefined
 }) {
   return (
     <div className="flex flex-col gap-4 px-(--gutter) pb-6">
+      {split ? <SplitCard t={t} split={split} /> : null}
       <KWGroupedCard>
         <KWValueRow
           label={ct("Date")}
@@ -163,7 +220,7 @@ function DetailCards({
             timeStyle: "short",
           })}
         />
-        <RouteRows ct={ct} transaction={transaction} display={display} />
+        <RouteRows t={t} ct={ct} transaction={transaction} display={display} />
         <KWValueRow label={t.in("transactions", "Type")} value={kindText(t, transaction)} />
         <KWValueRow
           label={t.in("transactions", "Status")}
@@ -180,6 +237,13 @@ function DetailCards({
             label={t.in("transactions", "Repeats")}
             value={frequencyText(t, rule.frequency, rule.interval)}
             onClick={onOpenRule}
+          />
+        ) : onLinkRule ? (
+          <KWValueRow
+            label={t.in("transactions", "Recurring payment")}
+            value={t.in("transactions", "Link ›")}
+            tone="link"
+            onClick={onLinkRule}
           />
         ) : null}
       </KWGroupedCard>
@@ -224,6 +288,8 @@ function DetailBody({
   onSplit,
   rule,
   onOpenRule,
+  onLinkRule,
+  split,
 }: {
   t: Translator
   transaction: Transaction
@@ -238,6 +304,9 @@ function DetailBody({
   /** The recurring rule that produced it, while the rule exists. */
   rule: RecurringRule | undefined
   onOpenRule: () => void
+  onLinkRule: (() => void) | undefined
+  /** An expense with debts split from it: the person's part. */
+  split: SplitLine | undefined
 }) {
   const ct: Ct = (key, ...args) => t.in("createtransaction", key, ...args)
   const style = display.style(transaction)
@@ -317,6 +386,8 @@ function DetailBody({
         display={display}
         rule={rule}
         onOpenRule={onOpenRule}
+        onLinkRule={onLinkRule}
+        split={split}
       />
     </>
   )
@@ -366,10 +437,11 @@ export function MovementDetail() {
   const t = useT()
   const ledger = useLedger()
   const display = useTransactionDisplay(ledger)
-  const { detailId, showDetail, openEditor, openRuleEditor } = useAppActions()
+  const { detailId, showDetail, openEditor, showRuleDetail } = useAppActions()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [showingReceipt, setShowingReceipt] = useState(false)
   const [splitting, setSplitting] = useState<Transaction>()
+  const [linking, setLinking] = useState<Transaction>()
   const transaction = ledger?.transactions.find(
     (candidate) => candidate.id === detailId
   )
@@ -379,6 +451,11 @@ export function MovementDetail() {
         (candidate) => candidate.id === transaction.recurringId
       )
     : undefined
+  const canLinkRule =
+    transaction !== undefined &&
+    transaction.status === "confirmed" &&
+    rule === undefined &&
+    linkableRules(transaction, ledger?.recurringRules ?? []).length > 0
 
   function remove() {
     if (!transaction) return
@@ -428,11 +505,21 @@ export function MovementDetail() {
                 setSplitting(transaction)
               }}
               rule={rule}
+              split={splitLine(transaction, ledger?.personalDebts ?? [])}
               onOpenRule={() => {
                 if (!rule) return
                 showDetail(undefined)
-                openRuleEditor({ mode: "edit", ruleId: rule.id })
+                showRuleDetail(rule.id)
               }}
+              onLinkRule={
+                canLinkRule
+                  ? () => {
+                      // Like "Split": the picker can't open over the side panel.
+                      showDetail(undefined)
+                      setLinking(transaction)
+                    }
+                  : undefined
+              }
             />
           ) : null}
         </SheetContent>
@@ -452,6 +539,14 @@ export function MovementDetail() {
           onClose={() => setSplitting(undefined)}
         />
       ) : null}
+      <LinkToRule
+        transaction={linking}
+        onClose={() => {
+          // Back to the movement, which now shows the rule it pays.
+          if (linking) showDetail(linking.id)
+          setLinking(undefined)
+        }}
+      />
       <DeleteDialog
         t={t}
         open={confirmingDelete}

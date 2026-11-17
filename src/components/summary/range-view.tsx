@@ -4,7 +4,7 @@ import { useMemo } from "react"
 
 import { KWSegmented } from "@/components/kw/design"
 import { OptionSelect } from "@/components/kw/pickers"
-import { activityRange, compareMonths, lastMonths, monthKey, monthRange, rangeMonths, trendReport, yearToDate, yearTotals, type MonthRange, type TrendReport, type YearMonth } from "@/lib/domain"
+import { activityRange, compareMonths, lastMonths, monthKey, monthRange, rangeMonths, trendReport, yearToDate, yearTotals, NO_DEBT_LINKS, type MonthRange, type SpendingDebts, type TrendReport, type YearMonth } from "@/lib/domain"
 import type { Translator } from "@/lib/i18n"
 import type { Transaction, TransactionCategory } from "@/lib/schema"
 
@@ -41,17 +41,24 @@ function rangeFor(period: Exclude<Period, "month">, custom: CustomRange | undefi
  * Everything a period view needs, recomputed when the ledger changes. "now" is read then too, so a
  * new month or year rolls the presets over.
  */
-export function useRangeSummary(transactions: readonly Transaction[] | undefined, currency: string, period: Period, custom: CustomRange | undefined) {
+export function useRangeSummary(
+  transactions: readonly Transaction[] | undefined,
+  currency: string,
+  period: Period,
+  custom: CustomRange | undefined,
+  /** The ledger's debt links (`ledgerDebtLinks`): split expenses count only the person's part, deposits don't count. */
+  debts: SpendingDebts = NO_DEBT_LINKS,
+) {
   return useMemo(() => {
     if (!transactions || period === "month") return undefined
     const now = new Date()
     const zone = deviceTimeZone()
     return {
-      report: trendReport(transactions, currency, rangeFor(period, custom, now, zone), zone, now),
+      report: trendReport(transactions, currency, rangeFor(period, custom, now, zone), zone, now, debts),
       activity: activityRange(transactions, now, zone) ?? lastMonths(12, now, zone),
-      years: yearTotals(transactions, currency, zone, now),
+      years: yearTotals(transactions, currency, zone, now, debts),
     }
-  }, [transactions, currency, period, custom])
+  }, [transactions, currency, period, custom, debts])
 }
 
 export function PeriodPicker({ t, value, onChange }: { t: Translator; value: Period; onChange: (period: Period) => void }) {
