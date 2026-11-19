@@ -35,7 +35,7 @@ import {
 import { formatAmount, formatMoney } from "@/lib/domain/format"
 import { useT, type Translator } from "@/lib/i18n"
 import { dayLabel } from "@/lib/presentation/display"
-import { ledgerStore } from "@/lib/repositories"
+import { ledgerStore, UNDO_WINDOW_MS } from "@/lib/repositories"
 import type { RecurringRule, Transaction } from "@/lib/schema"
 import { cn } from "@/lib/utils"
 
@@ -49,6 +49,24 @@ import {
 
 /** Movements offered under "Other movements" before the person searches. */
 const OTHER_COUNT = 30
+
+/** "Payment unlinked" with "Undo", which links the movement back: the × sits right beside the row. */
+function offerRelink(t: Translator, ruleId: string, payment: Pick<Transaction, "id" | "description">) {
+  const notice = toast.add({
+    title: t.in("web", "Payment unlinked"),
+    description: payment.description,
+    timeout: UNDO_WINDOW_MS,
+    actionProps: {
+      children: t.in("sharedpresentation", "Undo"),
+      onClick: () => {
+        toast.close(notice)
+        linkPayment(ledgerStore, ruleId, payment.id).catch(() =>
+          toast.add({ title: t.in("recurring", "We couldn't link it. Try again."), type: "error" })
+        )
+      },
+    },
+  })
+}
 
 /**
  * A recurring rule read, not edited: whether this cycle is paid, when the next payment is, and every
@@ -349,7 +367,7 @@ function Detail({
                         onClick={(event) => {
                           event.stopPropagation()
                           run(
-                            () => unlinkPayment(ledgerStore, transaction.id),
+                            () => unlinkPayment(ledgerStore, transaction.id).then(() => offerRelink(t, rule.id, transaction)),
                             t.in("recurring", "We couldn't save it. Try again.")
                           )
                         }}

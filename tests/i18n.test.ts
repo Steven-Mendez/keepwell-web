@@ -5,10 +5,10 @@ import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import { hasString, translate } from "@/lib/i18n"
+import { hasString, makeTranslator, translate } from "@/lib/i18n"
 import { WEB_STRINGS } from "@/lib/i18n/web-strings"
-import { categorySymbol } from "@/lib/presentation/display"
-import { SYMBOL_ICONS } from "@/lib/presentation/icons"
+import { SYMBOL_NAMES, categorySymbol, symbolName } from "@/lib/presentation/display"
+import { SYMBOL_CHOICES, SYMBOL_ICONS } from "@/lib/presentation/icons"
 import { DEFAULT_CATEGORIES } from "@/lib/schema"
 
 function sources(dir: string): string[] {
@@ -31,6 +31,17 @@ describe("Strings", () => {
 
   it.each(calls.map((call) => [`${call.ns} › ${call.key}`, call] as const))("%s exists", (_, call) => {
     expect(hasString(call.key, call.ns), `${call.file}`).toBe(true)
+  })
+
+  it("names every icon of the picker in English and Spanish, never by its SF Symbol id", () => {
+    for (const symbol of SYMBOL_CHOICES) {
+      const key = SYMBOL_NAMES[symbol] ?? ""
+      expect(hasString(key, "sharedpresentation"), symbol).toBe(true)
+      expect(symbolName(makeTranslator("en"), symbol), symbol).toBe(key)
+      expect(symbolName(makeTranslator("es"), symbol), symbol).not.toBe(symbol)
+    }
+    expect(new Set(SYMBOL_CHOICES.map((symbol) => SYMBOL_NAMES[symbol])).size).toBe(SYMBOL_CHOICES.length)
+    expect(symbolName(makeTranslator("es"), "cup.and.saucer")).toBe("Taza de café")
   })
 
   it("every web-only string has Spanish", () => {

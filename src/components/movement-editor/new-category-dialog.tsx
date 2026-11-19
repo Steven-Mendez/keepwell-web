@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { MAX_CATEGORY_NAME_LENGTH, isDomainError, saveCategory } from "@/lib/domain"
 import { useT } from "@/lib/i18n"
-import { CATEGORY_COLOR_KEYS, colorName } from "@/lib/presentation/display"
+import { CATEGORY_COLOR_KEYS, colorName, symbolName } from "@/lib/presentation/display"
 import { SYMBOL_CHOICES, symbolIcon } from "@/lib/presentation/icons"
 import { ledgerStore } from "@/lib/repositories"
 import type { TransactionCategory, TransactionKind } from "@/lib/schema"
@@ -119,7 +119,7 @@ export function NewCategoryDialog({
                     type="button"
                     role="radio"
                     aria-checked={icon === symbol}
-                    aria-label={symbol}
+                    aria-label={symbolName(t, symbol)}
                     onClick={() => setIcon(symbol)}
                     className={cn(
                       "flex aspect-square items-center justify-center rounded-xl transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
