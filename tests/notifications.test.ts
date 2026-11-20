@@ -11,7 +11,7 @@ import { makeTranslator } from "@/lib/i18n"
 import { notificationStateRepository } from "@/lib/repositories"
 import type { PersonalDebt, RecurringRule } from "@/lib/schema"
 
-import { IDs, referenceDate, sampleStore, ZONE } from "./domain/fixtures"
+import { IDs, referenceDate, sampleStore, transaction, ZONE } from "./domain/fixtures"
 
 const t = makeTranslator("en")
 
@@ -42,6 +42,14 @@ describe("ledgerNotifications", () => {
     const december = ledgerNotifications(ledger, new Date(2026, 11, 13, 12)).find((n) => n.kind === "payment")
     expect(november?.id).toBe(`payment:${IDs.visa}:2026-11-15`)
     expect(december?.id).toBe(`payment:${IDs.visa}:2026-12-15`)
+  })
+
+  it("has no payment reminder once the statement is paid", async () => {
+    const ledger = await loadLedger(sampleStore())
+    const now = new Date(2026, 10, 13, 12)
+    const payment = transaction({ kind: "transfer", amount: "100000", currency: "NIO", account: IDs.savings, destination: IDs.visa, date: new Date(2026, 10, 12, 12) })
+    const paid = { ...ledger, transactions: [...ledger.transactions, payment] }
+    expect(ledgerNotifications(paid, now).filter((n) => n.kind === "payment")).toEqual([])
   })
 
   it("gives the same ids on any hour of the same day", async () => {
