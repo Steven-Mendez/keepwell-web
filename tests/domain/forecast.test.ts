@@ -143,6 +143,25 @@ describe("Balance forecast", () => {
     expect(cardAmountDue(due, accounts[4]!, transactions, settings, ZONE).toString()).toBe("60")
   })
 
+  it("a card opened after the cutoff walks its opening debt back to it", () => {
+    // Cutoff 28, due day 23. Opened on Nov 5 owing 250: 100 from before the Oct 28 cutoff and 150
+    // from the day after it, both recorded as history. Only the 100 is due on Nov 23.
+    const id = crypto.randomUUID()
+    const card: Account = { ...account(id, "credit", "-250", "USD", { cutoff: 28, due: 23 }), openingDate: date(2026, 11, 5, 0).toISOString() }
+    const history = [movement("expense", "100", date(2026, 10, 12), { from: id }), movement("expense", "150", date(2026, 10, 29), { from: id })]
+    const due = date(2026, 11, 23, 0)
+    expect(cardAmountDue(due, card, history, settings, ZONE).toString()).toBe("100")
+    // Paying the statement leaves nothing due, though the card still owes the new cycle's 150.
+    const paid = [...history, movement("transfer", "100", date(2026, 11, 16), { to: id })]
+    expect(cardAmountDue(due, card, paid, settings, ZONE).toString()).toBe("0")
+    // A payment made before the opening day is in the opening debt already: it counts once.
+    const early: Account = { ...card, openingBalances: [{ amount: "-150", currency: "USD" }] }
+    const paidEarly = [...history, movement("transfer", "100", date(2026, 11, 2), { to: id })]
+    expect(cardAmountDue(due, early, paidEarly, settings, ZONE).toString()).toBe("0")
+    // With no history before the opening day, the opening debt is all there is to go by.
+    expect(cardAmountDue(due, card, [], settings, ZONE).toString()).toBe("250")
+  })
+
   it("the statement cutoff is the last one before the due day", () => {
     expect(dayKey(statementCutoff(date(2026, 11, 10), 20, ZONE), ZONE)).toBe("2026-10-20")
     expect(dayKey(statementCutoff(date(2026, 11, 25), 5, ZONE), ZONE)).toBe("2026-11-05")
