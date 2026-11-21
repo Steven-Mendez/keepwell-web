@@ -162,6 +162,34 @@ describe("Balance forecast", () => {
     expect(cardAmountDue(due, card, [], settings, ZONE).toString()).toBe("250")
   })
 
+  it("a statement paid in another currency's cents asks for nothing", () => {
+    // A dual card owing C$941.30 from five charges, paid with C$940.73 and a C$0.57 refund: the same
+    // total, but each amount converts to dollars on its own, and the quotients don't add up exactly.
+    const id = crypto.randomUUID()
+    const card: Account = {
+      ...account(id, "credit", "0", "USD", { cutoff: 28, due: 23 }),
+      openingBalances: [
+        { amount: "0", currency: "USD" },
+        { amount: "0", currency: "NIO" },
+      ],
+    }
+    const charge = (amount: string, on: Date) => movement("expense", amount, on, { currency: "NIO", from: id })
+    const ledger = [
+      charge("480", date(2026, 10, 12)),
+      charge("109.87", date(2026, 10, 28)),
+      charge("140.27", date(2026, 10, 28)),
+      charge("210.59", date(2026, 10, 28)),
+      charge("0.57", date(2026, 10, 28)),
+      movement("transfer", "940.73", date(2026, 11, 16), { currency: "NIO", to: id }),
+      movement("income", "0.57", date(2026, 11, 16), { currency: "NIO", from: id }),
+    ]
+    const rate: CurrencySettings = { principal: "USD", second: "NIO", rate: "36.6243" }
+    const due = cardAmountDue(date(2026, 11, 23, 0), card, ledger, rate, ZONE)
+    expect(due.isZero()).toBe(true)
+    // What is left is in cents, like every amount shown: C$100 unpaid is $2.73.
+    expect(cardAmountDue(date(2026, 11, 23, 0), card, ledger.slice(0, 5).concat(movement("transfer", "841.30", date(2026, 11, 16), { currency: "NIO", to: id })), rate, ZONE).toString()).toBe("2.73")
+  })
+
   it("the statement cutoff is the last one before the due day", () => {
     expect(dayKey(statementCutoff(date(2026, 11, 10), 20, ZONE), ZONE)).toBe("2026-10-20")
     expect(dayKey(statementCutoff(date(2026, 11, 25), 5, ZONE), ZONE)).toBe("2026-11-05")
