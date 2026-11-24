@@ -4,6 +4,7 @@ import { transactionAmountClass } from "@/components/kw/design-styles"
 import { useState } from "react"
 
 import { useAppActions } from "@/components/app/app-actions"
+import { SplitDetailDialog } from "@/components/debts/split-detail-dialog"
 import { SplitDialog } from "@/components/debts/split-dialog"
 import { TagChip } from "@/components/kw/tag-editor"
 import {
@@ -144,10 +145,23 @@ export function splitLine(
   }
 }
 
-function SplitCard({ t, split }: { t: Translator; split: SplitLine }) {
+/** Opens each person's share and whether they paid (`SplitDetailDialog`). */
+function SplitCard({
+  t,
+  split,
+  onOpen,
+}: {
+  t: Translator
+  split: SplitLine
+  onOpen: () => void
+}) {
   return (
     <KWGroupedCard>
-      <div className="flex flex-col gap-1 px-4 py-3">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full flex-col gap-1 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-secondary/60 focus-visible:outline-2 focus-visible:outline-ring"
+      >
         <span className="type-body font-semibold tabular-nums text-foreground">
           {t.in("web", "Your share: %@ of %@", split.share, split.total)}
         </span>
@@ -160,7 +174,7 @@ function SplitCard({ t, split }: { t: Translator; split: SplitLine }) {
             )
           )}
         </span>
-      </div>
+      </button>
     </KWGroupedCard>
   )
 }
@@ -198,6 +212,7 @@ function DetailCards({
   onOpenRule,
   onLinkRule,
   split,
+  onOpenSplit,
 }: {
   t: Translator
   ct: Ct
@@ -208,10 +223,11 @@ function DetailCards({
   /** Set when the movement is confirmed, no rule recorded it and some rule could take it. */
   onLinkRule: (() => void) | undefined
   split: SplitLine | undefined
+  onOpenSplit: () => void
 }) {
   return (
     <div className="flex flex-col gap-4 px-(--gutter) pb-6">
-      {split ? <SplitCard t={t} split={split} /> : null}
+      {split ? <SplitCard t={t} split={split} onOpen={onOpenSplit} /> : null}
       <KWGroupedCard>
         <KWValueRow
           label={ct("Date")}
@@ -290,6 +306,7 @@ function DetailBody({
   onOpenRule,
   onLinkRule,
   split,
+  onOpenSplit,
 }: {
   t: Translator
   transaction: Transaction
@@ -307,6 +324,7 @@ function DetailBody({
   onLinkRule: (() => void) | undefined
   /** An expense with debts split from it: the person's part. */
   split: SplitLine | undefined
+  onOpenSplit: () => void
 }) {
   const ct: Ct = (key, ...args) => t.in("createtransaction", key, ...args)
   const style = display.style(transaction)
@@ -388,6 +406,7 @@ function DetailBody({
         onOpenRule={onOpenRule}
         onLinkRule={onLinkRule}
         split={split}
+        onOpenSplit={onOpenSplit}
       />
     </>
   )
@@ -441,6 +460,7 @@ export function MovementDetail() {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [showingReceipt, setShowingReceipt] = useState(false)
   const [splitting, setSplitting] = useState<Transaction>()
+  const [viewingSplit, setViewingSplit] = useState<Transaction>()
   const [linking, setLinking] = useState<Transaction>()
   const transaction = ledger?.transactions.find(
     (candidate) => candidate.id === detailId
@@ -506,6 +526,10 @@ export function MovementDetail() {
               }}
               rule={rule}
               split={splitLine(transaction, ledger?.personalDebts ?? [])}
+              onOpenSplit={() => {
+                showDetail(undefined)
+                setViewingSplit(transaction)
+              }}
               onOpenRule={() => {
                 if (!rule) return
                 showDetail(undefined)
@@ -529,6 +553,21 @@ export function MovementDetail() {
           transaction={transaction}
           open={showingReceipt && open}
           onOpenChange={setShowingReceipt}
+        />
+      ) : null}
+      {viewingSplit ? (
+        <SplitDetailDialog
+          key={viewingSplit.id}
+          t={t}
+          transaction={viewingSplit}
+          onEditSplit={() => {
+            setViewingSplit(undefined)
+            setSplitting(viewingSplit)
+          }}
+          onClose={() => {
+            showDetail(viewingSplit.id)
+            setViewingSplit(undefined)
+          }}
         />
       ) : null}
       {splitting ? (
