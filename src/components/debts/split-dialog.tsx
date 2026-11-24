@@ -16,17 +16,15 @@ import { Input } from "@/components/ui/input"
 import { useLedger } from "@/hooks/use-ledger"
 import {
   dec,
+  debtShareIn,
   equalShare,
-  splitRemaining,
-  splitTransaction,
+  isSettled,
+  saveSplit,
+  splitDebts,
   ZERO,
   Decimal,
 } from "@/lib/domain"
-import {
-  formatAmount,
-  formatNumber,
-  parseAmount,
-} from "@/lib/domain/format"
+import { formatAmount, formatNumber, parseAmount } from "@/lib/domain/format"
 import type { Translator } from "@/lib/i18n"
 import { newID } from "@/lib/platform/uuid"
 import { ledgerStore } from "@/lib/repositories"
@@ -38,20 +36,43 @@ import {
 
 interface Share {
   id: string
+  /** The debt this share already is; absent on a person added now. */
+  debtId?: string
   person: string
   amountText: string
+  /**
+   * Settled, or owed in another currency (edited from Debts, where the currency shows): its amount
+   * stays as it is.
+   */
+  isLocked: boolean
+  /** A locked share's part of the expense, in the expense's currency. */
+  lockedShare?: Decimal
 }
 
+const newShare = (): Share => ({
+  id: newID(),
+  person: "",
+  amountText: "",
+  isLocked: false,
+})
+
+const lockedTotal = (rows: readonly Share[]) =>
+  rows.reduce((sum, row) => sum.plus(row.lockedShare ?? ZERO), ZERO)
+
+/** The open shares split `total` equally with the person; locked ones keep theirs. */
 const equalRows = (rows: readonly Share[], total: Decimal) => {
-  const text = formatNumber(equalShare(total, rows.length))
-  return rows.map((row) => ({ ...row, amountText: text }))
+  const open = rows.filter((row) => !row.isLocked).length
+  const text = formatNumber(
+    equalShare(Decimal.max(total.minus(lockedTotal(rows)), ZERO), open)
+  )
+  return rows.map((row) => (row.isLocked ? row : { ...row, amountText: text }))
 }
 
 /**
- * "Split" on an expense: who shared it and how much each owes. Shares start equal between the person
- * and everyone added, and stay equal until one is typed by hand; each person then owes their share.
- * An expense already split shares only what is left (`splitRemaining`). Opens once the ledger's
- * debts are read, so the shares start from that.
+ * "Split" on an expense: who shared it and how much each owes. A new split starts equal between the
+ * person and everyone added, and stays equal until one is typed by hand. An expense already split
+ * opens in "Edit split": its people with their shares, ready to change, remove or add to, and the
+ * whole set is saved at once (`saveSplit`). Opens once the ledger's debts are read.
  */
 export function SplitDialog({
   t,
@@ -85,22 +106,48 @@ function SplitForm({
   debts: readonly PersonalDebt[]
   onClose: () => void
 }) {
-  const [total] = useState(() => splitRemaining(transaction, debts))
-  const alreadySplit = total.lt(dec(transaction.amount))
+  const total = dec(transaction.amount)
+  const [existing] = useState(() => splitDebts(transaction, debts))
+  const isEditing = existing.length > 0
   const [rows, setRows] = useState<Share[]>(() =>
-    equalRows([{ id: newID(), person: "", amountText: "" }], total)
+    isEditing
+      ? existing.map((debt) => {
+          const foreign = debt.amount.currency !== transaction.currency
+          const isLocked = foreign || isSettled(debt)
+          return {
+            id: debt.id,
+            debtId: debt.id,
+            person: debt.person,
+            amountText: formatNumber(dec(debt.amount.amount)),
+            isLocked,
+            ...(isLocked
+              ? {
+                  lockedShare: foreign
+                    ? (debtShareIn(debt, transaction, transaction.currency) ??
+                      ZERO)
+                    : dec(debt.amount.amount),
+                }
+              : {}),
+          }
+        })
+      : equalRows([newShare()], total)
   )
-  const [isEdited, setEdited] = useState(false)
+  // An existing split keeps its amounts as they are: adding someone doesn't redistribute them.
+  const [isEdited, setEdited] = useState(isEditing)
   const [error, setError] = useState<string>()
   const [isSaving, setSaving] = useState(false)
   const amounts = rows.map((row) => parseAmount(row.amountText))
-  const others = amounts.reduce<Decimal>(
-    (sum, amount) => sum.plus(amount ?? ZERO),
+  const others = rows.reduce<Decimal>(
+    (sum, row, index) =>
+      sum.plus(
+        row.lockedShare ?? (row.isLocked ? ZERO : (amounts[index] ?? ZERO))
+      ),
     ZERO
   )
   const yours = Decimal.max(total.minus(others), ZERO)
   const canSave =
     !isSaving &&
+    (isEditing || rows.length > 0) &&
     rows.every((row) => row.person.trim() !== "") &&
     amounts.every((amount) => amount?.gt(0))
 
@@ -117,10 +164,11 @@ function SplitForm({
       )
     setSaving(true)
     try {
-      await splitTransaction(
+      await saveSplit(
         ledgerStore,
         transaction.id,
         rows.map((row, index) => ({
+          ...(row.debtId === undefined ? {} : { debtId: row.debtId }),
           person: row.person,
           amount: amounts[index]!,
         }))
@@ -138,21 +186,14 @@ function SplitForm({
       <DialogContent className="max-h-[90svh] gap-5 overflow-y-auto rounded-2xl bg-card p-6 ring-1 ring-border/60 sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="type-heading">
-            {t.in("debts", "Split the expense")}
+            {isEditing
+              ? t.in("web", "Edit split")
+              : t.in("debts", "Split the expense")}
           </DialogTitle>
           <p className="truncate type-caption text-muted-foreground">
             {transaction.description} ·{" "}
             {formatAmount(transaction.amount, transaction.currency)}
           </p>
-          {alreadySplit ? (
-            <p className="type-caption text-text-secondary tabular-nums">
-              {t.in(
-                "web",
-                "Already split: %@ left to share",
-                formatAmount(total, transaction.currency)
-              )}
-            </p>
-          ) : null}
         </DialogHeader>
         <form
           className="flex flex-col gap-4"
@@ -171,7 +212,9 @@ function SplitForm({
                   className={SETTINGS_INPUT}
                   aria-label={t.in("debts", "Name")}
                   placeholder={t.in("debts", "Name")}
-                  autoFocus={index === rows.length - 1}
+                  autoFocus={
+                    row.debtId === undefined && index === rows.length - 1
+                  }
                   maxLength={MAX_DEBT_NAME_LENGTH}
                   value={row.person}
                   onChange={(event) =>
@@ -185,23 +228,42 @@ function SplitForm({
                     )
                   }
                 />
-                <AmountInput
-                  id={`split-${row.id}`}
-                  value={row.amountText}
-                  currency={transaction.currency}
-                  onChange={(value) => {
-                    setEdited(true)
-                    update(
-                      rows.map((other) =>
-                        other.id === row.id
-                          ? { ...other, amountText: value }
-                          : other
-                      ),
-                      false
-                    )
-                  }}
-                />
-                {rows.length > 1 ? (
+                {row.isLocked ? (
+                  <span className="flex flex-col items-end px-3 tabular-nums">
+                    <span className="type-body">
+                      {formatAmount(
+                        amounts[index] ?? ZERO,
+                        existing.find((debt) => debt.id === row.debtId)?.amount
+                          .currency ?? transaction.currency
+                      )}
+                    </span>
+                    {existing.some(
+                      (debt) => debt.id === row.debtId && isSettled(debt)
+                    ) ? (
+                      <span className="type-caption text-positive">
+                        {t.in("debts", "Paid")}
+                      </span>
+                    ) : null}
+                  </span>
+                ) : (
+                  <AmountInput
+                    id={`split-${row.id}`}
+                    value={row.amountText}
+                    currency={transaction.currency}
+                    onChange={(value) => {
+                      setEdited(true)
+                      update(
+                        rows.map((other) =>
+                          other.id === row.id
+                            ? { ...other, amountText: value }
+                            : other
+                        ),
+                        false
+                      )
+                    }}
+                  />
+                )}
+                {isEditing || rows.length > 1 ? (
                   <KWCircleButton
                     icon="close"
                     label={t.in("debts", "Remove")}
@@ -220,35 +282,41 @@ function SplitForm({
               variant="surface"
               size="small"
               icon="plus"
-              onClick={() =>
-                update([...rows, { id: newID(), person: "", amountText: "" }])
-              }
+              onClick={() => update([...rows, newShare()])}
             >
               {t.in("debts", "Add person")}
             </KWButton>
-            <KWButton
-              variant="surface"
-              size="small"
-              onClick={() => {
-                setEdited(false)
-                update(rows, true)
-              }}
-            >
-              {t.in("debts", "Split equally")}
-            </KWButton>
+            {rows.length > 0 ? (
+              <KWButton
+                variant="surface"
+                size="small"
+                onClick={() => {
+                  setEdited(false)
+                  update(rows, true)
+                }}
+              >
+                {t.in("debts", "Split equally")}
+              </KWButton>
+            ) : null}
           </div>
           <p className="type-body text-text-secondary tabular-nums">
             {t.in(
-              "debts",
-              "Your share: %@",
-              formatAmount(yours, transaction.currency)
+              "web",
+              "Your share: %@ of %@",
+              formatAmount(yours, transaction.currency),
+              formatAmount(total, transaction.currency)
             )}
           </p>
           <p className="type-caption text-muted-foreground">
-            {t.in(
-              "debts",
-              "Each person gets a debt that owes you their share. Your movement doesn't change."
-            )}
+            {isEditing
+              ? t.in(
+                  "web",
+                  "Removing someone deletes their debt. Repayments they deposited stay in their accounts."
+                )
+              : t.in(
+                  "debts",
+                  "Each person gets a debt that owes you their share. Your movement doesn't change."
+                )}
           </p>
           {error ? (
             <p role="alert" className="type-caption text-negative">
@@ -260,7 +328,7 @@ function SplitForm({
               {t.in("debts", "Cancel")}
             </KWButton>
             <KWButton type="submit" disabled={!canSave}>
-              {t.in("debts", "Split")}
+              {isEditing ? t.in("debts", "Save") : t.in("debts", "Split")}
             </KWButton>
           </DialogFooter>
         </form>

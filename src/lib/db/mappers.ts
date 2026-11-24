@@ -176,6 +176,8 @@ export function transactionToRow(transaction: Transaction): Columns<TransactionR
     // Always sent, null for none: unlinking has to reach the other devices.
     merchant_id: orNull(transaction.merchantId),
     via_merchant_id: orNull(transaction.viaMerchantId),
+    // Always sent, null when not shared: stopping sharing has to reach the server.
+    share_token: orNull(transaction.shareToken),
   }
 }
 
@@ -207,6 +209,7 @@ export function rowToTransaction(row: TransactionRow): Transaction {
     ...present("importedId", row.imported_id ?? null),
     ...present("merchantId", row.merchant_id ?? null),
     ...present("viaMerchantId", row.via_merchant_id ?? null),
+    ...present("shareToken", row.share_token ?? null),
   }
 }
 
