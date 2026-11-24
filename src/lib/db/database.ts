@@ -107,6 +107,8 @@ export interface TransactionRow extends AuditColumns {
   /** The business (`merchants`) and the platform it went through; absent on rows from before, `null` for none. No index. */
   merchant_id?: string | null
   via_merchant_id?: string | null
+  /** The public link's secret; absent on rows from before, `null` when not shared. No index. */
+  share_token?: string | null
 }
 
 /** A recurring movement or subscription (iOS `RecurringRuleRecord`). */

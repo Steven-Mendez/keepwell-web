@@ -24,6 +24,9 @@ import {
   repaymentDescription,
   repayPersonalDebt,
   savedTransactionOf,
+  saveSplit,
+  shareSplit,
+  stopSharingSplit,
   spendingAmount,
   spendingAmountIn,
   spendingPace,
@@ -398,5 +401,82 @@ describe("splitting an expense twice", () => {
   it("only an expense has anything to split", () => {
     const income = transaction({ kind: "income", amount: "100" })
     expect(splitRemaining(income, []).toFixed()).toBe("0")
+  })
+})
+
+describe("editing a split", () => {
+  async function splitLunch() {
+    const store = sampleStore()
+    const lunch = store.transactions.find((movement) => movement.description === "Lunch")!
+    const [ana, luis] = await splitTransaction(store, lunch.id, [
+      { person: "Ana", amount: d(100) },
+      { person: "Luis", amount: d(50) },
+    ])
+    return { store, lunch, ana: ana!, luis: luis! }
+  }
+
+  it("renames, changes, adds and removes shares in one save", async () => {
+    const { store, lunch, ana, luis } = await splitLunch()
+    const saved = await saveSplit(store, lunch.id, [
+      { debtId: ana.id, person: "Ana María", amount: d(120) },
+      { person: "Eva", amount: d(30) },
+    ])
+    const debts = await store.fetchPersonalDebts()
+    expect(debts.some((debt) => debt.id === luis.id)).toBe(false)
+    expect(saved.map((debt) => [debt.person, debt.amount.amount])).toEqual([["Ana María", "120"], ["Eva", "30"]])
+    expect(saved[0]!.id).toBe(ana.id)
+    expect(saved[1]).toMatchObject({ direction: "theyOweMe", transactionId: lunch.id, note: lunch.description })
+    expect(splitRemaining(lunch, debts)).toEqual(d(lunch.amount).minus(150))
+  })
+
+  it("keeps a share's repayments and refuses an amount below them", async () => {
+    const { store, lunch, ana } = await splitLunch()
+    await repayPersonalDebt(store, ana.id, "80", referenceDate)
+    await expect(saveSplit(store, lunch.id, [{ debtId: ana.id, person: "Ana", amount: d(79) }])).rejects.toMatchObject({ code: "invalidAmount" })
+    const [kept] = await saveSplit(store, lunch.id, [{ debtId: ana.id, person: "Ana", amount: d(90) }])
+    expect(kept!.repayments.map((repayment) => repayment.amount)).toEqual(["80"])
+  })
+
+  it("refuses shares that add up to more than the expense, and saves nothing", async () => {
+    const { store, lunch, ana } = await splitLunch()
+    const before = await store.fetchPersonalDebts()
+    await expect(
+      saveSplit(store, lunch.id, [
+        { debtId: ana.id, person: "Ana", amount: d(lunch.amount) },
+        { person: "Eva", amount: d("0.01") },
+      ])
+    ).rejects.toMatchObject({ code: "invalidAmount" })
+    expect(await store.fetchPersonalDebts()).toEqual(before)
+  })
+
+  it("refuses a blank name, a zero share and a debt from another expense", async () => {
+    const { store, lunch, ana } = await splitLunch()
+    await expect(saveSplit(store, lunch.id, [{ person: " ", amount: d(1) }])).rejects.toMatchObject({ code: "missingName" })
+    await expect(saveSplit(store, lunch.id, [{ debtId: ana.id, person: "Ana", amount: d(0) }])).rejects.toMatchObject({ code: "invalidAmount" })
+    await expect(saveSplit(store, lunch.id, [{ debtId: crypto.randomUUID(), person: "Ana", amount: d(1) }])).rejects.toMatchObject({ code: "notFound" })
+  })
+
+  it("with no shares left removes the split and stops sharing it", async () => {
+    const { store, lunch } = await splitLunch()
+    await shareSplit(store, lunch.id)
+    await saveSplit(store, lunch.id, [])
+    const debts = await store.fetchPersonalDebts()
+    expect(isSplit(lunch, debts)).toBe(false)
+    expect(store.transactions.find((movement) => movement.id === lunch.id)!.shareToken).toBeUndefined()
+  })
+})
+
+describe("sharing a split", () => {
+  it("gives a split expense one link, keeps it, and makes a new one after stopping", async () => {
+    const store = sampleStore()
+    const lunch = store.transactions.find((movement) => movement.description === "Lunch")!
+    await expect(shareSplit(store, lunch.id)).rejects.toMatchObject({ code: "invalidAmount" })
+    await splitTransaction(store, lunch.id, [{ person: "Ana", amount: d(100) }])
+    const shared = await shareSplit(store, lunch.id)
+    expect(shared.shareToken).toMatch(/^[A-Za-z0-9_-]{22}$/)
+    expect((await shareSplit(store, lunch.id)).shareToken).toBe(shared.shareToken)
+    expect((await stopSharingSplit(store, lunch.id)).shareToken).toBeUndefined()
+    const again = await shareSplit(store, lunch.id)
+    expect(again.shareToken).not.toBe(shared.shareToken)
   })
 })
