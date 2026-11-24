@@ -51,7 +51,7 @@ export const NOTIFICATIONS_NAV: NavItem = { title: "Notifications", ns: "web", h
 export const ONBOARDING_PATH = "/welcome"
 
 /** Routes drawn as full pages of their own, without the sidebar, top bar or tab bar. */
-export const STANDALONE_PATHS: readonly string[] = ["/design-system", "/connect", "/login", "/privacy", "/docs"]
+export const STANDALONE_PATHS: readonly string[] = ["/design-system", "/connect", "/login", "/privacy", "/docs", "/s"]
 
 export function isStandalonePath(pathname: string): boolean {
   return STANDALONE_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))

@@ -13,6 +13,7 @@ export const API_PATHS = [
   "/entitlements/:path*",
   "/webhooks/:path*",
   "/invitations/:path*",
+  "/shared/:path*",
   "/health",
   "/openapi.json",
   "/.well-known/oauth-protected-resource/:path*",
