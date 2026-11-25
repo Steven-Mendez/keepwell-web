@@ -11,9 +11,15 @@ export const metadata: Metadata = {
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>
+  /** `?p=Mario`: the link was sent to Mario, so the page leads with his share. */
+  searchParams: Promise<{ p?: string | string[] }>
 }) {
   const { token } = await params
-  return <SharedSplit token={token} />
+  const { p } = await searchParams
+  return (
+    <SharedSplit token={token} person={typeof p === "string" ? p : undefined} />
+  )
 }
