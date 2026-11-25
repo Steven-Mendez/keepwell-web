@@ -15,6 +15,7 @@ import { toast } from "@/components/ui/toast"
 import { useLedger } from "@/hooks/use-ledger"
 import {
   canDepositRepayment,
+  dec,
   debtRemaining,
   debtRepaid,
   decimalText,
@@ -34,6 +35,7 @@ import { ledgerStore } from "@/lib/repositories"
 import type { Account, PersonalDebt, Transaction } from "@/lib/schema"
 
 import { SELECT_CLASS } from "./debt-format"
+import { PersonAvatar, SplitSummary, splitProgress } from "./split-visuals"
 
 // minmax(0, 1fr): the dialog is a grid, and its column would otherwise grow to the link's width.
 const DIALOG =
@@ -83,6 +85,16 @@ export function SplitDetailDialog({
     (account) => account.kind !== "credit"
   )
   const token = current.shareToken
+  // Shares in another currency are left out of the money totals: they can't be added up.
+  const progress = splitProgress(
+    debts
+      .filter((debt) => debt.amount.currency === current.currency)
+      .map((debt) => ({
+        amount: dec(debt.amount.amount),
+        repaid: debtRepaid(debt),
+        paid: isSettled(debt),
+      }))
+  )
 
   async function run(work: () => Promise<unknown>) {
     setSaving(true)
@@ -127,6 +139,13 @@ export function SplitDetailDialog({
               {formatAmount(current.amount, current.currency)}
             </p>
           </DialogHeader>
+          {debts.length > 0 ? (
+            <SplitSummary
+              t={t}
+              progress={progress}
+              currency={current.currency}
+            />
+          ) : null}
           <KWGroupedCard className="bg-secondary/40">
             {debts.map((debt) => (
               <ShareRow
@@ -266,7 +285,8 @@ function ShareRow({
   const paid = isSettled(debt)
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
-      <div className="flex min-w-0 flex-1 basis-32 flex-col">
+      <PersonAvatar name={debt.person} paid={paid} />
+      <div className="flex min-w-0 flex-1 basis-24 flex-col">
         <span className="truncate type-body font-semibold">{debt.person}</span>
         <span
           className={
