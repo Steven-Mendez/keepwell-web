@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { KWButton, KWGroupedCard } from "@/components/kw/design"
+import { kwButtonClass } from "@/components/kw/design-styles"
 import { ConfirmDialog } from "@/components/settings/confirm-dialog"
 import {
   Dialog,
@@ -35,15 +36,21 @@ import { ledgerStore } from "@/lib/repositories"
 import type { Account, PersonalDebt, Transaction } from "@/lib/schema"
 
 import { SELECT_CLASS } from "./debt-format"
-import { PersonAvatar, SplitSummary, splitProgress } from "./split-visuals"
+import {
+  PersonAvatar,
+  ShareQR,
+  SplitSummary,
+  splitProgress,
+} from "./split-visuals"
 
 // minmax(0, 1fr): the dialog is a grid, and its column would otherwise grow to the link's width.
 const DIALOG =
   "max-h-[90svh] grid-cols-[minmax(0,1fr)] gap-5 overflow-y-auto rounded-2xl bg-card p-6 ring-1 ring-border/60 sm:max-w-lg"
 
-/** The public page of a shared split, on this same site. */
-export function shareURL(token: string): string {
-  return `${window.location.origin}/s/${token}`
+/** The public page of a shared split, on this same site; with `person`, it leads with their share. */
+export function shareURL(token: string, person?: string): string {
+  const base = `${window.location.origin}/s/${token}`
+  return person ? `${base}?p=${encodeURIComponent(person)}` : base
 }
 
 /** The repayment that settled the debt the moment it was paid; undoing it opens the debt again. */
@@ -75,6 +82,8 @@ export function SplitDetailDialog({
   const [unpaying, setUnpaying] = useState<PersonalDebt>()
   const [failed, setFailed] = useState(false)
   const [isSaving, setSaving] = useState(false)
+  /** Who the link is for: "" sends the page as is; a name opens it on that person's share. */
+  const [forPerson, setForPerson] = useState("")
   if (!ledger) return null
   // The ledger is live: after sharing or paying, the movement and its debts read back updated.
   const current =
@@ -177,17 +186,61 @@ export function SplitDetailDialog({
             </span>
             {token ? (
               <>
-                <code className="block min-w-0 truncate rounded-lg bg-background px-3 py-2 type-caption">
-                  {shareURL(token)}
-                </code>
+                <label
+                  htmlFor="split-link-for"
+                  className="type-caption text-text-secondary"
+                >
+                  {t.in("web", "Link for")}
+                </label>
+                <select
+                  id="split-link-for"
+                  className={SELECT_CLASS}
+                  value={forPerson}
+                  onChange={(event) => setForPerson(event.target.value)}
+                >
+                  <option value="">{t.in("web", "Everyone")}</option>
+                  {[...new Set(debts.map((debt) => debt.person))].map(
+                    (person) => (
+                      <option key={person} value={person}>
+                        {person}
+                      </option>
+                    )
+                  )}
+                </select>
+                <div className="flex items-center gap-4">
+                  <ShareQR url={shareURL(token, forPerson || undefined)} />
+                  <code className="block min-w-0 flex-1 truncate rounded-lg bg-background px-3 py-2 type-caption">
+                    {shareURL(token, forPerson || undefined)}
+                  </code>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <KWButton
                     size="small"
                     icon="share"
-                    onClick={() => void copy(shareURL(token))}
+                    onClick={() =>
+                      void copy(shareURL(token, forPerson || undefined))
+                    }
                   >
                     {t.in("web", "Copy link")}
                   </KWButton>
+                  <a
+                    className={kwButtonClass({
+                      variant: "surface",
+                      size: "small",
+                    })}
+                    href={`https://wa.me/?text=${encodeURIComponent(
+                      t.in(
+                        "web",
+                        "%@: see how much each person owes. %@",
+                        current.description,
+                        shareURL(token, forPerson || undefined)
+                      )
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {t.in("web", "Send on WhatsApp")}
+                  </a>
                   <KWButton
                     variant="surface"
                     size="small"
