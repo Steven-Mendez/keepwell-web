@@ -10,6 +10,7 @@ import { ApiError } from "@/lib/api/client"
 import { fetchSharedSplit, type SharedSplitView } from "@/lib/api/shared-split"
 import { dec } from "@/lib/domain"
 import {
+  namesPerson,
   PersonAvatar,
   SplitSummary,
   splitProgress,
@@ -25,7 +26,14 @@ type State =
  * A split expense's public page: anyone with the link sees each person's share and whether they paid,
  * read only, without an account. Outside the app shell, so nothing of this browser's ledger loads.
  */
-export function SharedSplit({ token }: { token: string }) {
+export function SharedSplit({
+  token,
+  person,
+}: {
+  token: string
+  /** Who the link was sent to (`?p=`): their share leads the page. */
+  person?: string | undefined
+}) {
   const t = useT()
   const [state, setState] = useState<State>({ kind: "loading" })
 
@@ -64,15 +72,25 @@ export function SharedSplit({ token }: { token: string }) {
             {t.in("web", "We couldn't load this expense. Try again.")}
           </p>
         ) : (
-          <SplitView split={state.split} />
+          <SplitView split={state.split} person={person} />
         )}
       </div>
     </main>
   )
 }
 
-function SplitView({ split }: { split: SharedSplitView }) {
+function SplitView({
+  split,
+  person,
+}: {
+  split: SharedSplitView
+  person: string | undefined
+}) {
   const t = useT()
+  const mine =
+    person === undefined
+      ? undefined
+      : split.shares.find((share) => namesPerson(share.person, person))
   const money = (amount: string, currency = split.currency) =>
     formatAmount(dec(amount), currency)
   // Shares in another currency are left out of the money totals: they can't be added up.
@@ -98,10 +116,54 @@ function SplitView({ split }: { split: SharedSplitView }) {
           {t.in("web", "Total %@", money(split.amount))}
         </p>
       </header>
+      {mine ? (
+        <section
+          className={
+            mine.paid
+              ? "flex flex-col gap-1 rounded-2xl bg-positive-tint p-5"
+              : "flex flex-col gap-1 rounded-2xl bg-brand-500 p-5 text-white"
+          }
+        >
+          <span className="type-body opacity-80">
+            {t.in("web", "Hi %@, your share", mine.person)}
+          </span>
+          <span
+            className={
+              mine.paid
+                ? "type-amount-lg text-positive tabular-nums"
+                : "type-amount-lg tabular-nums"
+            }
+          >
+            {money(
+              dec(mine.amount).minus(dec(mine.repaid)).toFixed(),
+              mine.currency
+            )}
+          </span>
+          <span className="type-caption opacity-80">
+            {mine.paid
+              ? t.in("web", "You already paid. Thank you!")
+              : dec(mine.repaid).gt(0)
+                ? t.in(
+                    "web",
+                    "Left of %@; you already paid %@.",
+                    money(mine.amount, mine.currency),
+                    money(mine.repaid, mine.currency)
+                  )
+                : t.in("web", "What you owe for this bill.")}
+          </span>
+        </section>
+      ) : null}
       <SplitSummary t={t} progress={progress} currency={split.currency} />
       <KWGroupedCard>
         {split.shares.map((share, index) => (
-          <div key={index} className="flex items-center gap-3 px-4 py-3">
+          <div
+            key={index}
+            className={
+              share === mine
+                ? "flex items-center gap-3 bg-secondary/60 px-4 py-3"
+                : "flex items-center gap-3 px-4 py-3"
+            }
+          >
             <PersonAvatar name={share.person} paid={share.paid} />
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate type-body font-semibold">

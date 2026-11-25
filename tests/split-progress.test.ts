@@ -1,7 +1,7 @@
 // The split summary: what came back of the others' shares and how many paid.
 import { describe, expect, it } from "vitest"
 
-import { splitProgress } from "@/components/debts/split-visuals"
+import { namesPerson, splitProgress } from "@/components/debts/split-visuals"
 import { dec, ZERO } from "@/lib/domain"
 
 describe("splitProgress", () => {
@@ -22,5 +22,14 @@ describe("splitProgress", () => {
       { amount: dec("10"), repaid: dec("10"), paid: true },
     ])
     expect(progress.left.isZero()).toBe(true)
+  })
+})
+
+describe("namesPerson", () => {
+  it("matches a link's ?p= whatever the case or accents", () => {
+    expect(namesPerson("Lía", "lia")).toBe(true)
+    expect(namesPerson("Mario", " MARIO ")).toBe(true)
+    expect(namesPerson("Mario", "Mari")).toBe(false)
+    expect(namesPerson("Tete", "")).toBe(false)
   })
 })
