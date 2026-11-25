@@ -1,6 +1,7 @@
 "use client"
 
-import { type CSSProperties } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
+import QRCode from "qrcode"
 
 import { KWIcon } from "@/components/kw/kw-icon"
 import { SpringFill } from "@/components/kw/motion"
@@ -143,4 +144,34 @@ export function PersonAvatar({ name, paid }: { name: string; paid: boolean }) {
       ) : null}
     </span>
   )
+}
+
+/** The public link as a QR code, to scan at the table. Drawn on the device, nothing is sent out. */
+export function ShareQR({ url }: { url: string }) {
+  const [image, setImage] = useState<string>()
+  useEffect(() => {
+    let current = true
+    QRCode.toDataURL(url, { margin: 1, width: 240 }).then(
+      (data) => current && setImage(data),
+      () => current && setImage(undefined)
+    )
+    return () => {
+      current = false
+    }
+  }, [url])
+  return (
+    <span className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1.5">
+      {image ? (
+        // eslint-disable-next-line @next/next/no-img-element -- a data URL drawn here, nothing to optimize.
+        <img src={image} alt="" className="size-full" />
+      ) : null}
+    </span>
+  )
+}
+
+/** Whether a link's `?p=` names this person: the same letters, whatever the case or accents. */
+export function namesPerson(name: string, query: string): boolean {
+  const fold = (text: string) =>
+    text.normalize("NFD").replace(/\p{M}/gu, "").trim().toLowerCase()
+  return fold(query) !== "" && fold(name) === fold(query)
 }
