@@ -183,7 +183,7 @@ function SplitForm({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90svh] gap-5 overflow-y-auto rounded-2xl bg-card p-6 ring-1 ring-border/60 sm:max-w-lg">
+      <DialogContent className="max-h-[90svh] grid-cols-[minmax(0,1fr)] gap-5 overflow-y-auto rounded-2xl bg-card p-6 ring-1 ring-border/60 sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="type-heading">
             {isEditing
@@ -206,7 +206,7 @@ function SplitForm({
             {rows.map((row, index) => (
               <div
                 key={row.id}
-                className="grid grid-cols-[1fr_9rem_auto] items-center gap-2"
+                className="grid grid-cols-[minmax(0,1fr)_8rem_auto] items-center gap-2"
               >
                 <Input
                   className={SETTINGS_INPUT}
