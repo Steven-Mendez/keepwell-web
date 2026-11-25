@@ -35,8 +35,9 @@ import type { Account, PersonalDebt, Transaction } from "@/lib/schema"
 
 import { SELECT_CLASS } from "./debt-format"
 
+// minmax(0, 1fr): the dialog is a grid, and its column would otherwise grow to the link's width.
 const DIALOG =
-  "max-h-[90svh] gap-5 overflow-y-auto rounded-2xl bg-card p-6 ring-1 ring-border/60 sm:max-w-lg"
+  "max-h-[90svh] grid-cols-[minmax(0,1fr)] gap-5 overflow-y-auto rounded-2xl bg-card p-6 ring-1 ring-border/60 sm:max-w-lg"
 
 /** The public page of a shared split, on this same site. */
 export function shareURL(token: string): string {
@@ -157,7 +158,7 @@ export function SplitDetailDialog({
             </span>
             {token ? (
               <>
-                <code className="truncate rounded-lg bg-background px-3 py-2 type-caption">
+                <code className="block min-w-0 truncate rounded-lg bg-background px-3 py-2 type-caption">
                   {shareURL(token)}
                 </code>
                 <div className="flex flex-wrap gap-2">
@@ -264,8 +265,8 @@ function ShareRow({
   const repaid = debtRepaid(debt)
   const paid = isSettled(debt)
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+      <div className="flex min-w-0 flex-1 basis-32 flex-col">
         <span className="truncate type-body font-semibold">{debt.person}</span>
         <span
           className={
@@ -286,7 +287,7 @@ function ShareRow({
               : t.in("web", "Pending")}
         </span>
       </div>
-      <span className="type-body tabular-nums">
+      <span className="ms-auto type-body tabular-nums">
         {money(debt.amount.amount)}
       </span>
       {paid ? (
