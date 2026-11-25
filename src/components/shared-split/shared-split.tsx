@@ -9,6 +9,11 @@ import { useT } from "@/lib/i18n"
 import { ApiError } from "@/lib/api/client"
 import { fetchSharedSplit, type SharedSplitView } from "@/lib/api/shared-split"
 import { dec } from "@/lib/domain"
+import {
+  PersonAvatar,
+  SplitSummary,
+  splitProgress,
+} from "@/components/debts/split-visuals"
 
 type State =
   | { kind: "loading" }
@@ -70,20 +75,34 @@ function SplitView({ split }: { split: SharedSplitView }) {
   const t = useT()
   const money = (amount: string, currency = split.currency) =>
     formatAmount(dec(amount), currency)
+  // Shares in another currency are left out of the money totals: they can't be added up.
+  const progress = splitProgress(
+    split.shares
+      .filter((share) => share.currency === split.currency)
+      .map((share) => ({
+        amount: dec(share.amount),
+        repaid: dec(share.repaid),
+        paid: share.paid,
+      }))
+  )
   return (
     <>
       <header className="flex flex-col gap-1">
-        <h1 className="type-title">{split.description}</h1>
-        <p className="type-body text-muted-foreground tabular-nums">
+        <p className="type-caption text-muted-foreground">
           {new Date(split.date).toLocaleDateString(t.locale, {
             dateStyle: "medium",
-          })}{" "}
-          · {money(split.amount)}
+          })}
+        </p>
+        <h1 className="type-title text-balance">{split.description}</h1>
+        <p className="type-body text-muted-foreground tabular-nums">
+          {t.in("web", "Total %@", money(split.amount))}
         </p>
       </header>
+      <SplitSummary t={t} progress={progress} currency={split.currency} />
       <KWGroupedCard>
         {split.shares.map((share, index) => (
           <div key={index} className="flex items-center gap-3 px-4 py-3">
+            <PersonAvatar name={share.person} paid={share.paid} />
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate type-body font-semibold">
                 {share.person}
@@ -107,7 +126,13 @@ function SplitView({ split }: { split: SharedSplitView }) {
                     : t.in("web", "Pending")}
               </span>
             </div>
-            <span className="type-body tabular-nums">
+            <span
+              className={
+                share.paid
+                  ? "type-heading text-muted-foreground tabular-nums line-through decoration-1"
+                  : "type-heading tabular-nums"
+              }
+            >
               {money(share.amount, share.currency)}
             </span>
           </div>
